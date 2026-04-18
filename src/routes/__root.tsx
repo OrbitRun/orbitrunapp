@@ -35,13 +35,13 @@ export const Route = createRootRoute({
           "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1",
       },
       { name: "theme-color", content: "#0a0d12" },
-      { title: "PULSE — Luxury Running Tracker" },
+      { title: "PULSE — Running Tracker" },
       {
         name: "description",
         content:
           "Premium GPS running tracker with live splits, speed-heatmap routes, music hub and audio cues.",
       },
-      { property: "og:title", content: "PULSE — Luxury Running Tracker" },
+      { property: "og:title", content: "PULSE — Running Tracker" },
       {
         property: "og:description",
         content:
@@ -49,6 +49,12 @@ export const Route = createRootRoute({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "PULSE — Running Tracker" },
+      { name: "description", content: "Apex Run tracks your runs with GPS, displaying distance, pace, and elevation on a dynamic speed-heatmap." },
+      { property: "og:description", content: "Apex Run tracks your runs with GPS, displaying distance, pace, and elevation on a dynamic speed-heatmap." },
+      { name: "twitter:description", content: "Apex Run tracks your runs with GPS, displaying distance, pace, and elevation on a dynamic speed-heatmap." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5f61edd5-5fb3-4369-95b7-e71159faea82/id-preview-95b44da7--3d047850-7640-45ab-ac2e-13edce4313d1.lovable.app-1776502351867.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/5f61edd5-5fb3-4369-95b7-e71159faea82/id-preview-95b44da7--3d047850-7640-45ab-ac2e-13edce4313d1.lovable.app-1776502351867.png" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
   }),
