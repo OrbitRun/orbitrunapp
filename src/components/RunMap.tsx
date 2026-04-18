@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import L from "leaflet";
+import { useEffect, useRef, useState } from "react";
+import type * as LeafletNS from "leaflet";
 import type { GeoPoint } from "@/lib/run-types";
 import { speedToColor } from "@/lib/run-utils";
 
@@ -19,33 +19,48 @@ export default function RunMap({
   interactive = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const segmentsRef = useRef<L.Polyline[]>([]);
-  const headRef = useRef<L.CircleMarker | null>(null);
+  const mapRef = useRef<LeafletNS.Map | null>(null);
+  const LRef = useRef<typeof LeafletNS | null>(null);
+  const segmentsRef = useRef<LeafletNS.Polyline[]>([]);
+  const headRef = useRef<LeafletNS.CircleMarker | null>(null);
   const fittedOnceRef = useRef(false);
+  const [ready, setReady] = useState(false);
 
+  // Init map (client-only, dynamic import)
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, {
-      zoomControl: false,
-      attributionControl: true,
-      dragging: interactive,
-      scrollWheelZoom: interactive,
-      doubleClickZoom: interactive,
-      touchZoom: interactive,
-      keyboard: interactive,
-    }).setView([51.505, -0.09], 15);
+    let cancelled = false;
+    if (typeof window === "undefined") return;
 
-    L.tileLayer(DARK_TILES, {
-      attribution: "© OpenStreetMap © CARTO",
-      subdomains: "abcd",
-      maxZoom: 19,
-    }).addTo(map);
+    (async () => {
+      const L = (await import("leaflet")).default ?? (await import("leaflet"));
+      // ensure leaflet css is loaded
+      await import("leaflet/dist/leaflet.css");
+      if (cancelled || !containerRef.current || mapRef.current) return;
 
-    mapRef.current = map;
+      LRef.current = L as unknown as typeof LeafletNS;
+      const map = L.map(containerRef.current, {
+        zoomControl: false,
+        attributionControl: true,
+        dragging: interactive,
+        scrollWheelZoom: interactive,
+        doubleClickZoom: interactive,
+        touchZoom: interactive,
+        keyboard: interactive,
+      }).setView([51.505, -0.09], 15);
+
+      L.tileLayer(DARK_TILES, {
+        attribution: "© OpenStreetMap © CARTO",
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapRef.current = map;
+      setReady(true);
+    })();
 
     return () => {
-      map.remove();
+      cancelled = true;
+      mapRef.current?.remove();
       mapRef.current = null;
       segmentsRef.current = [];
       headRef.current = null;
@@ -55,9 +70,9 @@ export default function RunMap({
   // Render segments
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    const L = LRef.current;
+    if (!map || !L || !ready) return;
 
-    // clear old
     segmentsRef.current.forEach((s) => s.remove());
     segmentsRef.current = [];
 
@@ -102,9 +117,8 @@ export default function RunMap({
     } else if (follow) {
       map.panTo([last.lat, last.lng], { animate: true, duration: 0.6 });
     }
-  }, [points, follow]);
+  }, [points, follow, ready]);
 
-  // When tracking restarts (points cleared), recenter next time
   useEffect(() => {
     if (points.length === 0) {
       fittedOnceRef.current = false;
