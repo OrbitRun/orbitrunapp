@@ -34,7 +34,6 @@ export default function RunMap({
       doubleClickZoom: interactive,
       touchZoom: interactive,
       keyboard: interactive,
-      tap: interactive,
     }).setView([51.505, -0.09], 15);
 
     L.tileLayer(DARK_TILES, {
