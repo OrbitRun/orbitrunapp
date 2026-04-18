@@ -65,7 +65,8 @@ export function setStoredToken(t: SpotifyToken | null) {
 }
 
 export function isConfigured(): boolean {
-  return SPOTIFY_CLIENT_ID !== "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID" && SPOTIFY_CLIENT_ID.length > 0;
+  const id: string = SPOTIFY_CLIENT_ID;
+  return id !== "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID" && id.length > 0;
 }
 
 export async function beginAuth(): Promise<void> {
