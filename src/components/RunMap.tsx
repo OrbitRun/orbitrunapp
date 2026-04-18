@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import type * as LeafletNS from "leaflet";
 import type { GeoPoint } from "@/lib/run-types";
 import { speedToColor } from "@/lib/run-utils";
@@ -12,7 +13,15 @@ type Props = {
 
 const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
-export default function RunMap({
+export default function RunMap(props: Props) {
+  return (
+    <ClientOnly fallback={<div className={props.className} />}>
+      <RunMapInner {...props} />
+    </ClientOnly>
+  );
+}
+
+function RunMapInner({
   points,
   className,
   follow = true,
