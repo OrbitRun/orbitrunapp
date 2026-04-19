@@ -40,7 +40,7 @@ function RunMapInner({
 
     (async () => {
       const mod = await import("mapbox-gl");
-      const mapboxgl = (mod.default ?? mod) as typeof MapboxNS;
+      const mapboxgl = (mod.default ?? mod) as unknown as typeof MapboxNS;
       await import("mapbox-gl/dist/mapbox-gl.css");
       if (cancelled || !containerRef.current || mapRef.current) return;
 
