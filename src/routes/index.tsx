@@ -6,6 +6,7 @@ import StatTile from "@/components/StatTile";
 import MusicHub from "@/components/MusicHub";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
   component: RunPage,
@@ -29,11 +30,17 @@ function RunPage() {
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       {/* Header */}
       <header className="flex items-center justify-between py-3">
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-            Pulse
-          </div>
-          <h1 className="font-display font-black text-2xl tracking-tight">
+        <div className="flex items-center gap-3 min-w-0">
+          <img
+            src={logo}
+            alt="ORBIT LAB"
+            className="h-10 w-10 object-contain drop-shadow-[0_0_12px_oklch(0.92_0.21_130/0.5)]"
+          />
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
+              Orbit Lab
+            </div>
+            <h1 className="font-display font-black text-xl tracking-tight truncate">
             {t.status === "running"
               ? "In motion"
               : t.status === "paused"
@@ -41,7 +48,8 @@ function RunPage() {
                 : t.status === "finished"
                   ? "Run saved"
                   : "Ready to run"}
-          </h1>
+            </h1>
+          </div>
         </div>
         <div className="h-10 w-10 rounded-full glass grid place-items-center">
           <span
