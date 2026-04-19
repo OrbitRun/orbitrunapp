@@ -196,6 +196,37 @@ html {
   color-scheme: dark;
 }
 
+/* Marquee for long song titles */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(0); }
+  90% { transform: translateX(var(--marquee-shift, -50%)); }
+  100% { transform: translateX(var(--marquee-shift, -50%)); }
+}
+.marquee-mask {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-track {
+  display: inline-flex;
+  gap: 2.5rem;
+  white-space: nowrap;
+  animation: marquee 12s linear infinite;
+}
+
+/* Glow for over-performing metric */
+@keyframes neon-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px oklch(0.92 0.21 130 / 0.55), 0 0 18px oklch(0.92 0.21 130 / 0.35);
+  }
+  50% {
+    text-shadow: 0 0 14px oklch(0.92 0.21 130 / 0.75), 0 0 28px oklch(0.92 0.21 130 / 0.45);
+  }
+}
+.glow-neon {
+  animation: neon-glow 2s ease-in-out infinite;
+}
+
 /* Mapbox dark tweak */
 .mapboxgl-canvas {
   outline: none;
