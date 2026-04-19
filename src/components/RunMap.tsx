@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-import type * as LeafletNS from "leaflet";
+import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { speedToColor } from "@/lib/run-utils";
+import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
 
 type Props = {
   points: GeoPoint[];
@@ -10,8 +11,6 @@ type Props = {
   follow?: boolean;
   interactive?: boolean;
 };
-
-const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
 export default function RunMap(props: Props) {
   return (
@@ -28,10 +27,9 @@ function RunMapInner({
   interactive = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<LeafletNS.Map | null>(null);
-  const LRef = useRef<typeof LeafletNS | null>(null);
-  const segmentsRef = useRef<LeafletNS.Polyline[]>([]);
-  const headRef = useRef<LeafletNS.CircleMarker | null>(null);
+  const mapRef = useRef<MapboxNS.Map | null>(null);
+  const MRef = useRef<typeof MapboxNS | null>(null);
+  const headRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
 
@@ -41,100 +39,118 @@ function RunMapInner({
     if (typeof window === "undefined") return;
 
     (async () => {
-      const L = (await import("leaflet")).default ?? (await import("leaflet"));
-      // ensure leaflet css is loaded
-      await import("leaflet/dist/leaflet.css");
+      const mod = await import("mapbox-gl");
+      const mapboxgl = (mod.default ?? mod) as typeof MapboxNS;
+      await import("mapbox-gl/dist/mapbox-gl.css");
       if (cancelled || !containerRef.current || mapRef.current) return;
 
-      LRef.current = L as unknown as typeof LeafletNS;
-      const map = L.map(containerRef.current, {
-        zoomControl: false,
-        attributionControl: true,
-        dragging: interactive,
-        scrollWheelZoom: interactive,
-        doubleClickZoom: interactive,
-        touchZoom: interactive,
-        keyboard: interactive,
-      }).setView([51.505, -0.09], 15);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mapboxgl as any).accessToken = MAPBOX_TOKEN;
+      MRef.current = mapboxgl;
 
-      L.tileLayer(DARK_TILES, {
-        attribution: "© OpenStreetMap © CARTO",
-        subdomains: "abcd",
-        maxZoom: 19,
-      }).addTo(map);
+      const map = new mapboxgl.Map({
+        container: containerRef.current,
+        style: MAPBOX_STYLE,
+        center: [-0.09, 51.505],
+        zoom: 14,
+        attributionControl: true,
+        interactive,
+        pitchWithRotate: false,
+      });
+
+      map.on("load", () => {
+        if (cancelled) return;
+        // Empty source for run line segments (FeatureCollection of LineStrings,
+        // each with a `color` property used by data-driven styling).
+        map.addSource("run-segments", {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        map.addLayer({
+          id: "run-segments-line",
+          type: "line",
+          source: "run-segments",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-width": 5,
+            "line-opacity": 0.95,
+            "line-color": ["get", "color"],
+          },
+        });
+        setReady(true);
+      });
 
       mapRef.current = map;
-      setReady(true);
     })();
 
     return () => {
       cancelled = true;
+      headRef.current?.remove();
+      headRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
-      segmentsRef.current = [];
-      headRef.current = null;
     };
   }, [interactive]);
 
-  // Render segments
+  // Render segments + head marker
   useEffect(() => {
     const map = mapRef.current;
-    const L = LRef.current;
-    if (!map || !L || !ready) return;
+    const M = MRef.current;
+    if (!map || !M || !ready) return;
 
-    segmentsRef.current.forEach((s) => s.remove());
-    segmentsRef.current = [];
+    const src = map.getSource("run-segments") as MapboxNS.GeoJSONSource | undefined;
+    if (!src) return;
 
-    if (points.length === 0) return;
+    if (points.length === 0) {
+      src.setData({ type: "FeatureCollection", features: [] });
+      headRef.current?.remove();
+      headRef.current = null;
+      return;
+    }
 
+    const features = [];
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1];
       const b = points[i];
-      const seg = L.polyline(
-        [
-          [a.lat, a.lng],
-          [b.lat, b.lng],
-        ],
-        {
-          color: speedToColor(b.speed),
-          weight: 5,
-          opacity: 0.95,
-          lineCap: "round",
-          lineJoin: "round",
+      features.push({
+        type: "Feature" as const,
+        properties: { color: speedToColor(b.speed) },
+        geometry: {
+          type: "LineString" as const,
+          coordinates: [
+            [a.lng, a.lat],
+            [b.lng, b.lat],
+          ],
         },
-      ).addTo(map);
-      segmentsRef.current.push(seg);
+      });
     }
+    src.setData({ type: "FeatureCollection", features });
 
     const last = points[points.length - 1];
     if (!headRef.current) {
-      headRef.current = L.circleMarker([last.lat, last.lng], {
-        radius: 7,
-        color: "#ffffff",
-        weight: 2,
-        fillColor: "oklch(0.92 0.21 130)",
-        fillOpacity: 1,
-      }).addTo(map);
+      const el = document.createElement("div");
+      el.style.cssText =
+        "width:14px;height:14px;border-radius:9999px;background:oklch(0.92 0.21 130);border:2px solid #fff;box-shadow:0 0 12px oklch(0.92 0.21 130 / 0.8);";
+      headRef.current = new M.Marker({ element: el })
+        .setLngLat([last.lng, last.lat])
+        .addTo(map);
     } else {
-      headRef.current.setLatLng([last.lat, last.lng]);
+      headRef.current.setLngLat([last.lng, last.lat]);
     }
 
     if (!fittedOnceRef.current && points.length >= 2) {
-      const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng] as [number, number]));
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 17 });
+      const bounds = new M.LngLatBounds();
+      points.forEach((p) => bounds.extend([p.lng, p.lat]));
+      map.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 0 });
       fittedOnceRef.current = true;
     } else if (follow) {
-      map.panTo([last.lat, last.lng], { animate: true, duration: 0.6 });
+      map.easeTo({ center: [last.lng, last.lat], duration: 600 });
     }
   }, [points, follow, ready]);
 
   useEffect(() => {
     if (points.length === 0) {
       fittedOnceRef.current = false;
-      if (headRef.current) {
-        headRef.current.remove();
-        headRef.current = null;
-      }
     }
   }, [points.length]);
 
