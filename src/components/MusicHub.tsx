@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pause, Play, SkipBack, SkipForward, Music2 } from "lucide-react";
+import Marquee from "@/components/Marquee";
 
 const MOCK_TRACKS = [
   { title: "Midnight Pulse", artist: "Neon Drift", duration: 224 },
@@ -26,8 +27,8 @@ export default function MusicHub() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <div className="text-sm font-semibold truncate">{track.title}</div>
-            <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-bold">
+            <Marquee text={track.title} className="text-sm font-semibold flex-1 min-w-0" />
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-bold flex-shrink-0">
               demo
             </span>
           </div>

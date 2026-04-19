@@ -91,29 +91,42 @@ function RunPage() {
         </div>
       </section>
 
-      {/* Hero stat */}
-      <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
-          Distance
+      {/* Hero stats: Distance + Duration */}
+      <section className="mt-4 grid grid-cols-2 gap-3">
+        <div className="glass-strong rounded-3xl p-5 text-center">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+            Distance
+          </div>
+          <div className="mt-1 flex items-baseline justify-center gap-1.5">
+            <span className="font-display font-black tabular text-[44px] leading-none text-neon">
+              {distanceKm}
+            </span>
+            <span className="text-xs text-muted-foreground font-bold">km</span>
+          </div>
         </div>
-        <div className="mt-1 flex items-baseline justify-center gap-2">
-          <span className="font-display font-black tabular text-[68px] leading-none text-neon">
-            {distanceKm}
-          </span>
-          <span className="text-sm text-muted-foreground font-semibold">km</span>
+        <div className="glass-strong rounded-3xl p-5 text-center">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+            Duration
+          </div>
+          <div className="mt-1 flex items-baseline justify-center">
+            <span className="font-display font-black tabular text-[44px] leading-none text-foreground">
+              {formatDuration(t.elapsedMs)}
+            </span>
+          </div>
         </div>
       </section>
 
-      {/* Stat grid */}
-      <section className="mt-3 grid grid-cols-2 gap-3">
-        <StatTile
-          label="Duration"
-          value={formatDuration(t.elapsedMs)}
-        />
+      {/* Secondary stat grid */}
+      <section className="mt-3 grid grid-cols-3 gap-3">
         <StatTile
           label="Pace"
           value={formatPace(t.currentPaceSecPerKm || t.avgPaceSecPerKm)}
           unit="/km"
+          glow={
+            t.currentPaceSecPerKm > 0 &&
+            t.avgPaceSecPerKm > 0 &&
+            t.currentPaceSecPerKm < t.avgPaceSecPerKm - 3
+          }
         />
         <StatTile
           label="Cadence"
@@ -121,7 +134,7 @@ function RunPage() {
           unit="spm"
         />
         <StatTile
-          label="Elevation"
+          label="Elev"
           value={Math.round(t.elevationGainM).toString()}
           unit="m"
         />
