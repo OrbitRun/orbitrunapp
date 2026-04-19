@@ -70,7 +70,7 @@ function ProfilePage() {
         {[
           { Icon: MapPin, label: "GPS accuracy", value: "High" },
           { Icon: Volume2, label: "Audio cues", value: "Every 1 km" },
-          { Icon: Headphones, label: "Music source", value: "Local (mock)" },
+          { Icon: Headphones, label: "Music source", value: "Spotify (soon)" },
           { Icon: Bell, label: "Haptic feedback", value: "On" },
         ].map(({ Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3 px-4 py-3">
@@ -84,7 +84,7 @@ function ProfilePage() {
       </section>
 
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Pulse · v1.0
+        Orbit Lab · v1.0
       </p>
     </main>
   );
