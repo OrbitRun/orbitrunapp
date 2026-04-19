@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default function StatTile({ label, value, unit, accent, glow, size = "md" }: Props) {
-  const valueSize = size === "lg" ? "text-5xl" : "text-3xl";
+  const valueSize = size === "lg" ? "text-5xl" : "text-xl";
   return (
     <div
       className={`glass rounded-2xl p-4 transition ${
