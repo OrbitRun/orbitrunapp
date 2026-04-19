@@ -222,7 +222,7 @@ export function useRunTracker() {
       tickRef.current = null;
     }
     const s = stateRef.current;
-    if (!s.startedAt || s.distanceM < 10) {
+    if (!s.startedAt) {
       setState({ ...initial });
       return null;
     }
