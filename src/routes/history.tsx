@@ -4,6 +4,7 @@ import { ChevronRight, Trash2 } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/history")({
   component: HistoryPage,
