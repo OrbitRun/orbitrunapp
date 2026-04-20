@@ -1,10 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Mountain, Pause, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
 import MusicHub from "@/components/MusicHub";
+import CountdownOverlay from "@/components/CountdownOverlay";
 import { useRunTracker } from "@/hooks/use-run-tracker";
+import { useWakeLock } from "@/hooks/use-wake-lock";
+import { primeAudio } from "@/lib/audio-cues";
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import logo from "@/assets/orbit-lab-logo.png";
 
@@ -15,6 +18,8 @@ export const Route = createFileRoute("/")({
 function RunPage() {
   const t = useRunTracker();
   const [pressed, setPressed] = useState<string | null>(null);
+  const [counting, setCounting] = useState(false);
+  const wakeLock = useWakeLock();
 
   // animate press
   useEffect(() => {
@@ -26,8 +31,34 @@ function RunPage() {
   const isActive = t.status === "running" || t.status === "paused";
   const distanceKm = useMemo(() => formatDistance(t.distanceM), [t.distanceM]);
 
+  const beginCountdown = useCallback(() => {
+    setPressed("start");
+    primeAudio();
+    void wakeLock.request();
+    setCounting(true);
+  }, [wakeLock]);
+
+  const launchRun = useCallback(() => {
+    setCounting(false);
+    t.start();
+    window.dispatchEvent(new CustomEvent("orbit:run-start"));
+  }, [t]);
+
+  const cancelCountdown = useCallback(() => {
+    setCounting(false);
+    void wakeLock.release();
+  }, [wakeLock]);
+
+  const finishRun = useCallback(() => {
+    setPressed("stop");
+    t.stop();
+    window.dispatchEvent(new CustomEvent("orbit:run-stop"));
+    void wakeLock.release();
+  }, [t, wakeLock]);
+
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+      {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {/* Header */}
       <header className="flex items-center justify-between py-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -173,10 +204,7 @@ function RunPage() {
       <section className="mt-5 mb-6 flex items-center justify-center gap-4">
         {t.status === "idle" || t.status === "finished" ? (
           <button
-            onClick={() => {
-              setPressed("start");
-              t.start();
-            }}
+            onClick={beginCountdown}
             className={`relative h-24 w-24 rounded-full bg-neon text-primary-foreground grid place-items-center shadow-neon active:scale-95 transition ${pressed === "start" ? "press-anim" : ""}`}
             aria-label="Start run"
           >
@@ -211,10 +239,7 @@ function RunPage() {
               </button>
             )}
             <button
-              onClick={() => {
-                setPressed("stop");
-                t.stop();
-              }}
+              onClick={finishRun}
               className={`h-20 w-20 rounded-full bg-destructive text-destructive-foreground grid place-items-center shadow-card active:scale-95 transition ${pressed === "stop" ? "press-anim" : ""}`}
               aria-label="Finish run"
             >
