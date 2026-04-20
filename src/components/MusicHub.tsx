@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Pause, Play, SkipBack, SkipForward, Music2 } from "lucide-react";
 import Marquee from "@/components/Marquee";
+import { useI18n } from "@/lib/i18n";
 
 const MOCK_TRACKS = [
   { title: "Midnight Pulse", artist: "Neon Drift", duration: 224 },
@@ -11,15 +12,14 @@ const MOCK_TRACKS = [
 export default function MusicHub() {
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(34);
+  const [progress] = useState(34);
+  const { t } = useI18n();
   const track = MOCK_TRACKS[idx];
 
   const skip = (dir: 1 | -1) => {
     setIdx((i) => (i + dir + MOCK_TRACKS.length) % MOCK_TRACKS.length);
-    setProgress(0);
   };
 
-  // Auto-play when run starts (after countdown)
   useEffect(() => {
     const onStart = () => setPlaying(true);
     const onStop = () => setPlaying(false);
@@ -41,7 +41,7 @@ export default function MusicHub() {
           <div className="flex items-center gap-1.5">
             <Marquee text={track.title} className="text-sm font-semibold flex-1 min-w-0" />
             <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 font-bold flex-shrink-0">
-              demo
+              {t("music.demo")}
             </span>
           </div>
           <div className="text-xs text-muted-foreground truncate">{track.artist}</div>
@@ -74,7 +74,7 @@ export default function MusicHub() {
         </div>
       </div>
       <div className="mt-2 text-[10px] text-muted-foreground/70 text-center">
-        Spotify integration coming soon
+        {t("music.spotifySoon")}
       </div>
     </div>
   );

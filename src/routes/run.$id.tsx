@@ -5,6 +5,7 @@ import { loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
+import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/run/$id")({
   component: RunDetailPage,
@@ -24,6 +25,7 @@ function RunDetailPage() {
   const { id } = useParams({ from: "/run/$id" });
   const [run, setRun] = useState<Run | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setRun(loadRuns().find((r) => r.id === id) ?? null);
@@ -33,11 +35,8 @@ function RunDetailPage() {
   if (loaded && !run) {
     return (
       <main className="mx-auto max-w-md px-4 pt-6">
-        <Link
-          to="/history"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
+        <Link to="/history" className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+          <ArrowLeft className="h-4 w-4" /> {t("history.back")}
         </Link>
         <div className="mt-10 glass rounded-2xl p-6 text-center text-muted-foreground">
           Run not found.
@@ -47,14 +46,14 @@ function RunDetailPage() {
   }
   if (!run) return null;
 
+  const max = Math.max(...run.splits.map((x) => x.paceSecPerKm), 0);
+  const min = Math.min(...run.splits.map((x) => x.paceSecPerKm), max);
+  const range = Math.max(1, max - min);
+
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3 flex items-center justify-between">
-        <Link
-          to="/history"
-          className="h-9 w-9 grid place-items-center rounded-full glass"
-          aria-label="Back"
-        >
+        <Link to="/history" className="h-9 w-9 grid place-items-center rounded-full glass" aria-label={t("history.back")}>
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
@@ -64,58 +63,43 @@ function RunDetailPage() {
       </header>
 
       <section className="rounded-3xl overflow-hidden border border-border shadow-card">
-        <RunMap
-          points={run.points}
-          className="h-[280px] w-full"
-          interactive={true}
-          follow={false}
-        />
+        <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} />
       </section>
 
       <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
-          Distance
+          {t("stat.distance")}
         </div>
         <div className="mt-1 flex items-baseline justify-center gap-2">
           <span className="font-display font-black tabular text-[64px] leading-none text-neon">
             {formatDistance(run.distanceM)}
           </span>
-          <span className="text-sm text-muted-foreground font-semibold">km</span>
+          <span className="text-sm text-muted-foreground font-semibold">{t("unit.km")}</span>
         </div>
       </section>
 
       <section className="mt-3 grid grid-cols-2 gap-3">
-        <StatTile label="Duration" value={formatDuration(run.durationMs)} />
-        <StatTile label="Avg pace" value={formatPace(run.avgPaceSecPerKm)} unit="/km" />
-        <StatTile label="Cadence" value={String(run.avgCadenceSpm)} unit="spm" />
-        <StatTile
-          label="Elevation"
-          value={Math.round(run.elevationGainM).toString()}
-          unit="m"
-        />
+        <StatTile label={t("stat.duration")} value={formatDuration(run.durationMs)} />
+        <StatTile label={t("stat.avgPace")} value={formatPace(run.avgPaceSecPerKm)} unit={t("unit.perKm")} />
+        <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
+        <StatTile label={t("stat.elevation")} value={Math.round(run.elevationGainM).toString()} unit={t("unit.m")} />
       </section>
 
       {run.splits.length > 0 && (
         <section className="mt-4 glass rounded-2xl p-4">
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-3">
-            Splits
+            {t("splits.title")}
           </div>
           <ul className="space-y-2">
             {run.splits.map((s) => {
-              const max = Math.max(...run.splits.map((x) => x.paceSecPerKm));
-              const min = Math.min(...run.splits.map((x) => x.paceSecPerKm));
-              const range = Math.max(1, max - min);
               const pct = 100 - ((s.paceSecPerKm - min) / range) * 70;
               return (
                 <li key={s.km} className="flex items-center gap-3">
                   <span className="w-10 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                    KM {s.km}
+                    {t("splits.km")} {s.km}
                   </span>
                   <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
-                    <div
-                      className="h-full bg-neon rounded-full"
-                      style={{ width: `${pct}%` }}
-                    />
+                    <div className="h-full bg-neon rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                   <span className="font-mono text-sm font-bold w-14 text-right">
                     {formatPace(s.paceSecPerKm)}

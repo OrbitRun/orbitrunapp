@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import appCss from "../styles.css?url";
 import BottomNav from "@/components/BottomNav";
+import { I18nProvider } from "@/lib/i18n";
 
 function NotFoundComponent() {
   return (
@@ -79,9 +80,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <div className="min-h-screen pb-24">
-      <Outlet />
-      <BottomNav />
-    </div>
+    <I18nProvider>
+      <div className="min-h-screen pb-24">
+        <Outlet />
+        <BottomNav />
+      </div>
+    </I18nProvider>
   );
 }
