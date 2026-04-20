@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GeoPoint, Run, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
+import { speakLocalized } from "@/lib/audio-cues";
+import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
+import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -11,7 +14,7 @@ type State = {
   elapsedMs: number;
   distanceM: number;
   elevationGainM: number;
-  currentPaceSecPerKm: number; // last 30s rolling
+  currentPaceSecPerKm: number;
   avgPaceSecPerKm: number;
   cadenceSpm: number;
   points: GeoPoint[];
@@ -27,30 +30,19 @@ const initial: State = {
   elevationGainM: 0,
   currentPaceSecPerKm: 0,
   avgPaceSecPerKm: 0,
-  cadenceSpm: 168, // simulated baseline
+  cadenceSpm: 168,
   points: [],
   splits: [],
   permissionError: null,
 };
 
-function speak(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  try {
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.05;
-    u.pitch = 1;
-    u.volume = 1;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  } catch {
-    /* noop */
-  }
-}
-
-function paceText(secPerKm: number): string {
-  const m = Math.floor(secPerKm / 60);
-  const s = Math.round(secPerKm % 60);
-  return `${m} minute${m === 1 ? "" : "s"} ${s} second${s === 1 ? "" : "s"} per kilometer`;
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang) {
+  const paceWords = paceToWords(paceSecPerKm, lang);
+  const txt =
+    lang === "da"
+      ? `Kilometer ${km} fuldført. Split-tempo ${paceWords}. Samlet distance ${km} kilometer.`
+      : `Kilometer ${km} completed. Split pace ${paceWords}. Total distance ${km} kilometer${km === 1 ? "" : "s"}.`;
+  speakLocalized(txt, lang);
 }
 
 export function useRunTracker() {
@@ -59,10 +51,11 @@ export function useRunTracker() {
   stateRef.current = state;
 
   const watchIdRef = useRef<number | null>(null);
-  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const workerRef = useRef<Worker | null>(null);
   const lastSplitKmRef = useRef(0);
   const pauseAccumRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
+  const langRef = useRef<Lang>("en");
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -72,6 +65,18 @@ export function useRunTracker() {
         /* noop */
       }
     }
+  }, []);
+
+  const ensureWorker = useCallback(() => {
+    if (workerRef.current) return workerRef.current;
+    const w = new TimerWorker();
+    w.onmessage = (ev: MessageEvent<{ type: "tick"; elapsedMs: number }>) => {
+      if (ev.data?.type === "tick") {
+        setState((p) => (p.status === "running" || p.status === "paused" ? { ...p, elapsedMs: ev.data.elapsedMs } : p));
+      }
+    };
+    workerRef.current = w;
+    return w;
   }, []);
 
   const handlePosition = useCallback(
@@ -90,10 +95,9 @@ export function useRunTracker() {
         let addElev = 0;
         if (last) {
           addDist = haversine(last, np);
-          // ignore tiny GPS jitter (<2m) and unrealistic jumps (>50m in <2s)
           const dt = (np.t - last.t) / 1000;
           if (addDist < 2) addDist = 0;
-          if (dt > 0 && addDist / dt > 12) addDist = 0; // >12 m/s sprinting cap
+          if (dt > 0 && addDist / dt > 12) addDist = 0;
           if (np.alt != null && last.alt != null) {
             const da = np.alt - last.alt;
             if (da > 0.5) addElev = da;
@@ -102,7 +106,6 @@ export function useRunTracker() {
         const newDist = prev.distanceM + addDist;
         const newPoints = [...prev.points, np];
 
-        // current pace from last ~30s
         let currentPace = prev.currentPaceSecPerKm;
         const cutoff = np.t - 30000;
         const recent = newPoints.filter((p) => p.t >= cutoff);
@@ -112,11 +115,10 @@ export function useRunTracker() {
           const dur = (recent[recent.length - 1].t - recent[0].t) / 1000;
           if (d > 5 && dur > 0) {
             const speedMs = d / dur;
-            currentPace = 1000 / speedMs; // sec per km
+            currentPace = 1000 / speedMs;
           }
         }
 
-        // splits
         const newSplits = [...prev.splits];
         const kmCount = Math.floor(newDist / 1000);
         if (kmCount > lastSplitKmRef.current) {
@@ -134,17 +136,13 @@ export function useRunTracker() {
             };
             newSplits.push(split);
             haptic(80);
-            speak(
-              `Kilometer ${k} completed. Split pace ${paceText(splitPace)}. Total distance ${k} kilometer${k === 1 ? "" : "s"}.`,
-            );
+            speakSplit(k, splitPace, langRef.current);
           }
           lastSplitKmRef.current = kmCount;
         }
 
         const avgPace =
           newDist > 50 && prev.elapsedMs > 0 ? prev.elapsedMs / 1000 / (newDist / 1000) : 0;
-
-        // cadence: subtle drift around 165–180 based on pace
         const cad = avgPace > 0 ? Math.round(180 - Math.min(20, (avgPace - 240) / 12)) : 168;
 
         return {
@@ -166,61 +164,64 @@ export function useRunTracker() {
     setState((p) => ({ ...p, permissionError: err.message || "Location unavailable" }));
   }, []);
 
-  const start = useCallback(() => {
+  // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
+  const armGps = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState((p) => ({ ...p, permissionError: "Geolocation not supported in this browser." }));
       return;
     }
-    haptic(40);
-    lastSplitKmRef.current = 0;
-    pauseAccumRef.current = 0;
-    pausedAtRef.current = null;
-    setState({
-      ...initial,
-      status: "running",
-      startedAt: Date.now(),
-    });
-
+    if (watchIdRef.current != null) return;
     watchIdRef.current = navigator.geolocation.watchPosition(handlePosition, handleError, {
       enableHighAccuracy: true,
       maximumAge: 1000,
       timeout: 15000,
     });
+  }, [handlePosition, handleError]);
 
-    tickRef.current = setInterval(() => {
-      setState((prev) => {
-        if (prev.status !== "running" || !prev.startedAt) return prev;
-        const elapsed = Date.now() - prev.startedAt - pauseAccumRef.current;
-        return { ...prev, elapsedMs: elapsed };
-      });
-    }, 250);
-  }, [handlePosition, handleError, haptic]);
+  const start = useCallback(() => {
+    haptic(40);
+    langRef.current = getStoredLang();
+    lastSplitKmRef.current = 0;
+    pauseAccumRef.current = 0;
+    pausedAtRef.current = null;
+    const startedAt = Date.now();
+    setState({
+      ...initial,
+      status: "running",
+      startedAt,
+    });
+    armGps();
+    const w = ensureWorker();
+    w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
+  }, [haptic, armGps, ensureWorker]);
 
   const pause = useCallback(() => {
     haptic(25);
     pausedAtRef.current = Date.now();
+    workerRef.current?.postMessage({ type: "pause", at: pausedAtRef.current });
     setState((p) => ({ ...p, status: "paused" }));
   }, [haptic]);
 
   const resume = useCallback(() => {
     haptic(25);
+    const at = Date.now();
     if (pausedAtRef.current) {
-      pauseAccumRef.current += Date.now() - pausedAtRef.current;
+      pauseAccumRef.current += at - pausedAtRef.current;
       pausedAtRef.current = null;
     }
+    workerRef.current?.postMessage({ type: "resume", at });
     setState((p) => ({ ...p, status: "running" }));
   }, [haptic]);
 
+  // Stops tracking and returns the in-memory Run WITHOUT persisting it.
+  // Caller decides whether to save (commitRun) or discard (discardRun).
   const stop = useCallback((): Run | null => {
     haptic(60);
     if (watchIdRef.current != null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
-    if (tickRef.current) {
-      clearInterval(tickRef.current);
-      tickRef.current = null;
-    }
+    workerRef.current?.postMessage({ type: "stop" });
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
@@ -238,22 +239,37 @@ export function useRunTracker() {
       points: s.points,
       splits: s.splits,
     };
-    saveRun(run);
-    speak(
-      `Run finished. Distance ${(s.distanceM / 1000).toFixed(2)} kilometers. Average pace ${paceText(s.avgPaceSecPerKm)}.`,
-    );
-    setState({ ...initial, status: "finished" });
+    setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
   }, [haptic]);
+
+  const commitRun = useCallback((run: Run) => {
+    saveRun(run);
+    const lang = langRef.current;
+    const km = (run.distanceM / 1000).toFixed(2);
+    const paceWords = paceToWords(run.avgPaceSecPerKm, lang);
+    speakLocalized(
+      lang === "da"
+        ? `Løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
+        : `Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
+      lang,
+    );
+    setState({ ...initial, status: "finished" });
+  }, []);
+
+  const discardRun = useCallback(() => {
+    setState({ ...initial });
+  }, []);
 
   const reset = useCallback(() => setState({ ...initial }), []);
 
   useEffect(() => {
     return () => {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
-      if (tickRef.current) clearInterval(tickRef.current);
+      workerRef.current?.terminate();
+      workerRef.current = null;
     };
   }, []);
 
-  return { ...state, start, pause, resume, stop, reset };
+  return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps };
 }
