@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pause, Play, SkipBack, SkipForward, Music2 } from "lucide-react";
 import Marquee from "@/components/Marquee";
 
@@ -18,6 +18,18 @@ export default function MusicHub() {
     setIdx((i) => (i + dir + MOCK_TRACKS.length) % MOCK_TRACKS.length);
     setProgress(0);
   };
+
+  // Auto-play when run starts (after countdown)
+  useEffect(() => {
+    const onStart = () => setPlaying(true);
+    const onStop = () => setPlaying(false);
+    window.addEventListener("orbit:run-start", onStart);
+    window.addEventListener("orbit:run-stop", onStop);
+    return () => {
+      window.removeEventListener("orbit:run-start", onStart);
+      window.removeEventListener("orbit:run-stop", onStop);
+    };
+  }, []);
 
   return (
     <div className="glass rounded-2xl p-4">
