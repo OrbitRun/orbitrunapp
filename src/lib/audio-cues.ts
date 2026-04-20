@@ -1,4 +1,6 @@
-// Lightweight WebAudio beep + spoken "Go!" cue. No assets needed.
+// Lightweight WebAudio beep + localized speech cues. No assets needed.
+
+import type { Lang } from "@/lib/i18n";
 
 let ctx: AudioContext | null = null;
 function getCtx(): AudioContext | null {
@@ -30,16 +32,26 @@ export function beep(frequency = 880, durationMs = 150, volume = 0.25) {
   }
 }
 
-export function speakGo() {
+function pickVoice(lang: Lang): SpeechSynthesisVoice | undefined {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return undefined;
+  const target = lang === "da" ? "da" : "en";
+  const voices = window.speechSynthesis.getVoices();
+  return voices.find((v) => v.lang?.toLowerCase().startsWith(target));
+}
+
+export function speakLocalized(text: string, lang: Lang) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     beep(1320, 320, 0.3);
     return;
   }
   try {
-    const u = new SpeechSynthesisUtterance("Go!");
-    u.rate = 1.1;
-    u.pitch = 1.2;
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 1.05;
+    u.pitch = 1;
     u.volume = 1;
+    u.lang = lang === "da" ? "da-DK" : "en-US";
+    const v = pickVoice(lang);
+    if (v) u.voice = v;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
   } catch {
@@ -47,8 +59,19 @@ export function speakGo() {
   }
 }
 
-// Pre-warm the audio context on a user gesture so iOS allows playback later.
+export function speakGo(lang: Lang = "en") {
+  speakLocalized(lang === "da" ? "Løb!" : "Go!", lang);
+}
+
+// Pre-warm the audio context + voice list on a user gesture so iOS allows playback later.
 export function primeAudio() {
   const ac = getCtx();
   if (ac && ac.state === "suspended") void ac.resume();
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    try {
+      window.speechSynthesis.getVoices();
+    } catch {
+      /* noop */
+    }
+  }
 }
