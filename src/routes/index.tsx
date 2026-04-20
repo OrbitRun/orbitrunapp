@@ -58,6 +58,7 @@ function RunPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+      {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {/* Header */}
       <header className="flex items-center justify-between py-3">
         <div className="flex items-center gap-3 min-w-0">
