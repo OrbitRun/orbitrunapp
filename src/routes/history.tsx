@@ -12,6 +12,7 @@ export const Route = createFileRoute("/history")({
 
 function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
+  const { t } = useI18n();
 
   useEffect(() => {
     setRuns(loadRuns());
@@ -25,32 +26,30 @@ function HistoryPage() {
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-          Archive
+          {t("history.eyebrow")}
         </div>
-        <h1 className="font-display font-black text-3xl tracking-tight">Past runs</h1>
+        <h1 className="font-display font-black text-3xl tracking-tight">{t("history.title")}</h1>
       </header>
 
       <section className="grid grid-cols-3 gap-3 mb-4">
         <div className="glass rounded-2xl p-3 text-center">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Runs
+            {t("history.runs")}
           </div>
-          <div className="font-display font-black text-2xl text-neon tabular">
-            {totalRuns}
-          </div>
+          <div className="font-display font-black text-2xl text-neon tabular">{totalRuns}</div>
         </div>
         <div className="glass rounded-2xl p-3 text-center">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Distance
+            {t("history.distance")}
           </div>
           <div className="font-display font-black text-2xl tabular">
             {formatDistance(totalDistance)}
-            <span className="text-xs text-muted-foreground ml-1">km</span>
+            <span className="text-xs text-muted-foreground ml-1">{t("unit.km")}</span>
           </div>
         </div>
         <div className="glass rounded-2xl p-3 text-center">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            Time
+            {t("history.time")}
           </div>
           <div className="font-display font-black text-2xl tabular">
             {Math.floor(totalTime / 3600000)}
@@ -61,14 +60,12 @@ function HistoryPage() {
 
       {runs.length === 0 ? (
         <div className="glass rounded-3xl p-8 text-center">
-          <p className="text-muted-foreground text-sm">
-            No runs yet. Hit the start button to log your first one.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("history.empty")}</p>
           <Link
             to="/"
             className="inline-block mt-4 rounded-xl bg-neon text-primary-foreground px-5 py-2.5 text-sm font-bold"
           >
-            Start a run
+            {t("history.startCta")}
           </Link>
         </div>
       ) : (
@@ -92,7 +89,7 @@ function HistoryPage() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (confirm("Delete this run?")) {
+                      if (confirm(t("history.deleteConfirm"))) {
                         deleteRun(r.id);
                         setRuns(loadRuns());
                       }
@@ -112,14 +109,15 @@ function HistoryPage() {
                       <span className="font-display font-black text-2xl text-neon tabular">
                         {formatDistance(r.distanceM)}
                         <span className="text-xs text-muted-foreground ml-1 font-semibold">
-                          km
+                          {t("unit.km")}
                         </span>
                       </span>
                       <span className="font-mono text-sm text-foreground/80">
                         {formatDuration(r.durationMs)}
                       </span>
                       <span className="font-mono text-sm text-foreground/60">
-                        {formatPace(r.avgPaceSecPerKm)}/km
+                        {formatPace(r.avgPaceSecPerKm)}
+                        {t("unit.perKm")}
                       </span>
                     </div>
                   </div>
