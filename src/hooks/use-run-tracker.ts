@@ -63,6 +63,10 @@ export function useRunTracker() {
   const pauseAccumRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const langRef = useRef<Lang>("en");
+  const nameRef = useRef<string>("");
+  const cueIntervalKmRef = useRef<number>(1);
+  const lastCueKmRef = useRef<number>(0);
+  const levelRef = useRef<Level>("beginner");
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
