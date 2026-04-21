@@ -29,11 +29,30 @@ export const Route = createFileRoute("/")({
 
 function RunPage() {
   const t = useRunTracker();
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
+  const navigate = useNavigate();
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [runs, setRuns] = useState<{ distanceM: number; startedAt: number }[]>([]);
   const wakeLock = useWakeLock();
+
+  useEffect(() => {
+    const p = loadProfile();
+    if (!p) {
+      void navigate({ to: "/onboarding" });
+      return;
+    }
+    setProfile(p);
+    setRuns(loadRuns());
+    const handler = () => {
+      setProfile(loadProfile());
+      setRuns(loadRuns());
+    };
+    window.addEventListener("orbit:profile-change", handler);
+    return () => window.removeEventListener("orbit:profile-change", handler);
+  }, [navigate]);
 
   useEffect(() => {
     if (!pressed) return;
@@ -51,6 +70,12 @@ function RunPage() {
   useEffect(() => {
     setLayout(loadLayout());
   }, []);
+
+  const displayName = getDisplayName(profile, lang);
+  const goalProgress = useMemo(
+    () => (profile ? computeGoalProgress(profile, runs, lang) : null),
+    [profile, runs, lang],
+  );
 
   const isActive = t.status === "running" || t.status === "paused";
 
