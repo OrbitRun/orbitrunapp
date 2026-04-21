@@ -40,8 +40,18 @@ function RunPage() {
     return () => clearTimeout(id);
   }, [pressed]);
 
+  // Editable stat layout
+  const [layout, setLayout] = useState<StatLayout>(DEFAULT_LAYOUT);
+  const [editMode, setEditMode] = useState(false);
+  const [pickerSlot, setPickerSlot] = useState<
+    { kind: "hero" | "secondary"; index: number } | null
+  >(null);
+
+  useEffect(() => {
+    setLayout(loadLayout());
+  }, []);
+
   const isActive = t.status === "running" || t.status === "paused";
-  const distanceKm = useMemo(() => formatDistance(t.distanceM), [t.distanceM]);
 
   const beginCountdown = useCallback(() => {
     setPressed("start");
