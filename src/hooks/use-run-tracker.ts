@@ -37,12 +37,18 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang) {
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string) {
   const paceWords = paceToWords(paceSecPerKm, lang);
+  const greeting = name
+    ? lang === "da"
+      ? `Godt kæmpet, ${name}! `
+      : `Nice work, ${name}! `
+    : "";
+  const kmLabel = Number.isInteger(km) ? `${km}` : km.toFixed(1);
   const txt =
     lang === "da"
-      ? `Kilometer ${km} fuldført. Split-tempo ${paceWords}. Samlet distance ${km} kilometer.`
-      : `Kilometer ${km} completed. Split pace ${paceWords}. Total distance ${km} kilometer${km === 1 ? "" : "s"}.`;
+      ? `${greeting}${kmLabel} kilometer fuldført. Tempo ${paceWords}.`
+      : `${greeting}${kmLabel} kilometers done. Pace ${paceWords}.`;
   speakLocalized(txt, lang);
 }
 
