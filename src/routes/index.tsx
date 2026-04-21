@@ -256,8 +256,6 @@ function RunPage() {
         }}
       />
 
-      {/* Reference unused import to keep ESLint happy when pace not in layout */}
-      {false && <span>{formatPace(0)}</span>}
 
       {t.splits.length > 0 && (
         <section className="mt-3 glass rounded-2xl p-3">
