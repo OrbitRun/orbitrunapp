@@ -192,7 +192,12 @@ export function useRunTracker() {
   const start = useCallback(() => {
     haptic(40);
     langRef.current = getStoredLang();
+    const profile = loadProfile();
+    nameRef.current = profile ? getDisplayName(profile, langRef.current) : "";
+    levelRef.current = profile?.level ?? "beginner";
+    cueIntervalKmRef.current = cueIntervalKm(levelRef.current);
     lastSplitKmRef.current = 0;
+    lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
@@ -202,7 +207,7 @@ export function useRunTracker() {
       startedAt,
     });
     armGps();
-    startSilentLoop(); // keep iOS from suspending JS when screen locks
+    startSilentLoop();
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
