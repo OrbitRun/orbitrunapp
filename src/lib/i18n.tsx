@@ -95,9 +95,17 @@ const en: Dict = {
   // Summary
   "summary.title": "Run complete",
   "summary.subtitle": "Review your session",
-  "summary.save": "Save session",
-  "summary.discard": "Discard session",
-  "summary.discardConfirm": "Discard this run? This cannot be undone.",
+  "summary.save": "Save run",
+  "summary.discard": "Delete run",
+  "summary.discardConfirm": "Delete this run? This cannot be undone.",
+  "summary.discardConfirmTitle": "Are you sure?",
+  "summary.cancel": "Cancel",
+  "summary.confirmDelete": "Yes, delete",
+
+  "edit.pickMetric": "Choose metric",
+  "edit.pickHint": "Tap a stat to assign it to this slot.",
+  "edit.exit": "Done",
+  "edit.hint": "Long-press any tile to customize",
 
   // Voice cues
   "voice.kmDone": "Kilometer {km} completed.",
@@ -187,9 +195,17 @@ const da: Dict = {
 
   "summary.title": "Løb fuldført",
   "summary.subtitle": "Gennemse din session",
-  "summary.save": "Gem session",
-  "summary.discard": "Kassér session",
-  "summary.discardConfirm": "Kassér dette løb? Dette kan ikke fortrydes.",
+  "summary.save": "Gem løbetur",
+  "summary.discard": "Slet løbetur",
+  "summary.discardConfirm": "Slet dette løb? Dette kan ikke fortrydes.",
+  "summary.discardConfirmTitle": "Er du sikker?",
+  "summary.cancel": "Annullér",
+  "summary.confirmDelete": "Ja, slet",
+
+  "edit.pickMetric": "Vælg måling",
+  "edit.pickHint": "Tryk på en måling for at tildele den til feltet.",
+  "edit.exit": "Færdig",
+  "edit.hint": "Hold på et felt for at tilpasse",
 
   "voice.kmDone": "Kilometer {km} fuldført.",
   "voice.splitPace": "Split-tempo {pace}.",
