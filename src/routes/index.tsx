@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
@@ -9,7 +9,7 @@ import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { primeAudio } from "@/lib/audio-cues";
+import { primeAudio, speakLocalized } from "@/lib/audio-cues";
 import { formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -19,7 +19,8 @@ import {
   type MetricId,
   type StatLayout,
 } from "@/lib/stat-metrics";
-import type { Run } from "@/lib/run-types";
+import { loadProfile, getDisplayName, computeGoalProgress, type UserProfile } from "@/lib/user-profile";
+import { loadRuns, type Run } from "@/lib/run-types";
 import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
