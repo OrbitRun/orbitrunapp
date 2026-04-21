@@ -191,6 +191,7 @@ export function useRunTracker() {
       startedAt,
     });
     armGps();
+    startSilentLoop(); // keep iOS from suspending JS when screen locks
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
@@ -222,6 +223,7 @@ export function useRunTracker() {
       watchIdRef.current = null;
     }
     workerRef.current?.postMessage({ type: "stop" });
+    stopSilentLoop();
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
@@ -268,6 +270,7 @@ export function useRunTracker() {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
       workerRef.current?.terminate();
       workerRef.current = null;
+      stopSilentLoop();
     };
   }, []);
 
