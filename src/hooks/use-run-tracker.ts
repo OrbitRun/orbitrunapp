@@ -276,10 +276,12 @@ export function useRunTracker() {
     const lang = langRef.current;
     const km = (run.distanceM / 1000).toFixed(2);
     const paceWords = paceToWords(run.avgPaceSecPerKm, lang);
+    const name = nameRef.current;
+    const prefix = name ? (lang === "da" ? `${name}, ` : `${name}, `) : "";
     speakLocalized(
       lang === "da"
-        ? `Løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
-        : `Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
+        ? `${prefix}løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
+        : `${prefix}run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
       lang,
     );
     setState({ ...initial, status: "finished" });
