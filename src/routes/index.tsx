@@ -1,16 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Mountain, Pause, Play, Square, Timer, Zap } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
-import StatTile from "@/components/StatTile";
 import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
+import EditableStat from "@/components/EditableStat";
+import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { primeAudio } from "@/lib/audio-cues";
-import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import { formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
+import {
+  DEFAULT_LAYOUT,
+  loadLayout,
+  saveLayout,
+  type MetricId,
+  type StatLayout,
+} from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
 import logo from "@/assets/orbit-lab-logo.png";
 
