@@ -4,6 +4,7 @@ import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
+import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/user-profile";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -36,12 +37,18 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang) {
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string) {
   const paceWords = paceToWords(paceSecPerKm, lang);
+  const greeting = name
+    ? lang === "da"
+      ? `Godt kæmpet, ${name}! `
+      : `Nice work, ${name}! `
+    : "";
+  const kmLabel = Number.isInteger(km) ? `${km}` : km.toFixed(1);
   const txt =
     lang === "da"
-      ? `Kilometer ${km} fuldført. Split-tempo ${paceWords}. Samlet distance ${km} kilometer.`
-      : `Kilometer ${km} completed. Split pace ${paceWords}. Total distance ${km} kilometer${km === 1 ? "" : "s"}.`;
+      ? `${greeting}${kmLabel} kilometer fuldført. Tempo ${paceWords}.`
+      : `${greeting}${kmLabel} kilometers done. Pace ${paceWords}.`;
   speakLocalized(txt, lang);
 }
 
@@ -56,6 +63,10 @@ export function useRunTracker() {
   const pauseAccumRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const langRef = useRef<Lang>("en");
+  const nameRef = useRef<string>("");
+  const cueIntervalKmRef = useRef<number>(1);
+  const lastCueKmRef = useRef<number>(0);
+  const levelRef = useRef<Level>("beginner");
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -136,9 +147,19 @@ export function useRunTracker() {
             };
             newSplits.push(split);
             haptic(80);
-            speakSplit(k, splitPace, langRef.current);
           }
           lastSplitKmRef.current = kmCount;
+        }
+        // Voice cue at user-configured interval (1km beginner, 0.5km expert)
+        const interval = cueIntervalKmRef.current;
+        const totalKm = newDist / 1000;
+        const reachedCue = Math.floor(totalKm / interval) * interval;
+        if (reachedCue > lastCueKmRef.current + 1e-6 && reachedCue >= interval) {
+          const lastSplitPace = newSplits.length
+            ? newSplits[newSplits.length - 1].paceSecPerKm
+            : prev.avgPaceSecPerKm;
+          speakSplit(reachedCue, lastSplitPace, langRef.current, nameRef.current);
+          lastCueKmRef.current = reachedCue;
         }
 
         const avgPace =
@@ -181,7 +202,12 @@ export function useRunTracker() {
   const start = useCallback(() => {
     haptic(40);
     langRef.current = getStoredLang();
+    const profile = loadProfile();
+    nameRef.current = profile ? getDisplayName(profile, langRef.current) : "";
+    levelRef.current = profile?.level ?? "beginner";
+    cueIntervalKmRef.current = cueIntervalKm(levelRef.current);
     lastSplitKmRef.current = 0;
+    lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
@@ -191,7 +217,7 @@ export function useRunTracker() {
       startedAt,
     });
     armGps();
-    startSilentLoop(); // keep iOS from suspending JS when screen locks
+    startSilentLoop();
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
@@ -250,10 +276,12 @@ export function useRunTracker() {
     const lang = langRef.current;
     const km = (run.distanceM / 1000).toFixed(2);
     const paceWords = paceToWords(run.avgPaceSecPerKm, lang);
+    const name = nameRef.current;
+    const prefix = name ? (lang === "da" ? `${name}, ` : `${name}, `) : "";
     speakLocalized(
       lang === "da"
-        ? `Løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
-        : `Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
+        ? `${prefix}løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
+        : `${prefix}run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
       lang,
     );
     setState({ ...initial, status: "finished" });

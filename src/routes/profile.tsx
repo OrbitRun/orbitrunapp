@@ -1,9 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, Headphones, Languages, MapPin, Volume2 } from "lucide-react";
+import { Bell, Check, Headphones, Languages, MapPin, Sparkles, Volume2 } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
+import {
+  GOAL_IDS,
+  loadProfile,
+  saveProfile,
+  defaultLayoutForLevel,
+  getDisplayName,
+  type GoalId,
+  type Level,
+  type UserProfile,
+} from "@/lib/user-profile";
+import { saveLayout } from "@/lib/stat-metrics";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -12,6 +23,10 @@ export const Route = createFileRoute("/profile")({
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
   const { t, lang, setLang } = useI18n();
+  const [name, setName] = useState("");
+  const [level, setLevel] = useState<Level>("beginner");
+  const [goal, setGoal] = useState<GoalId>("complete5k");
+  const [savedFlash, setSavedFlash] = useState(false);
 
   useEffect(() => {
     const runs = loadRuns();
@@ -20,50 +35,159 @@ function ProfilePage() {
       distance: runs.reduce((a, r) => a + r.distanceM, 0),
       time: runs.reduce((a, r) => a + r.durationMs, 0),
     });
+    const p = loadProfile();
+    if (p) {
+      setName(p.name);
+      setLevel(p.level);
+      setGoal(p.goal);
+    }
   }, []);
+
+  const persist = (patch: Partial<UserProfile>) => {
+    const next: UserProfile = {
+      name: patch.name ?? name,
+      level: patch.level ?? level,
+      goal: patch.goal ?? goal,
+      createdAt: loadProfile()?.createdAt ?? Date.now(),
+    };
+    saveProfile(next);
+    if (patch.level && patch.level !== level) {
+      saveLayout(defaultLayoutForLevel(patch.level));
+    }
+    setSavedFlash(true);
+    window.setTimeout(() => setSavedFlash(false), 1200);
+  };
 
   const langs: { code: Lang; label: string }[] = [
     { code: "en", label: "English" },
     { code: "da", label: "Dansk" },
   ];
 
+  const displayName = getDisplayName({ name, level, goal, createdAt: 0 }, lang);
+  const initial = displayName.charAt(0).toUpperCase();
+
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
-      <header className="py-3">
-        <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-          {t("profile.eyebrow")}
+      <header className="py-3 flex items-center justify-between">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+            {t("profile.eyebrow")}
+          </div>
+          <h1 className="font-display font-black text-3xl tracking-tight">{t("profile.title")}</h1>
         </div>
-        <h1 className="font-display font-black text-3xl tracking-tight">{t("profile.title")}</h1>
+        {savedFlash && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neon/15 text-neon text-[10px] font-bold uppercase tracking-[0.18em]">
+            <Check className="h-3 w-3" /> {t("profile.saved")}
+          </span>
+        )}
       </header>
 
-      <section className="glass-strong rounded-3xl p-5 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background">
-          R
+      {/* Premium member card */}
+      <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card">
+        <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/15 blur-3xl pointer-events-none" />
+        <div className="relative flex items-center gap-4">
+          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
+              Orbit · Member
+            </div>
+            <div className="font-display font-black text-2xl truncate">{displayName}</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">
+              {t(`level.${level}`)} · {t(`goal.${goal}`)}
+            </div>
+          </div>
         </div>
-        <div>
-          <div className="font-display font-bold text-lg">{t("profile.runner")}</div>
-          <div className="text-xs text-muted-foreground">{t("profile.member")}</div>
+        <div className="relative mt-5 grid grid-cols-3 gap-3">
+          <div className="text-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.runs")}
+            </div>
+            <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.km")}
+            </div>
+            <div className="font-display font-black text-2xl tabular">
+              {formatDistance(stats.distance)}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.time")}
+            </div>
+            <div className="font-display font-black text-2xl tabular">
+              {formatDuration(stats.time)}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mt-4 grid grid-cols-3 gap-3">
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.runs")}
-          </div>
-          <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
+      {/* Name */}
+      <section className="mt-4 glass rounded-2xl p-4">
+        <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+          {t("profile.name")}
+        </label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={() => persist({ name })}
+          placeholder={t("profile.namePlaceholder")}
+          maxLength={24}
+          className="mt-1.5 w-full bg-transparent border-b-2 border-white/10 focus:border-neon focus:shadow-[0_4px_20px_-4px_oklch(0.92_0.21_140/0.5)] outline-none py-2 text-lg font-display font-bold tracking-tight transition"
+        />
+      </section>
+
+      {/* Level */}
+      <section className="mt-4">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold mb-2 px-1">
+          {t("profile.level")}
         </div>
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.km")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">{formatDistance(stats.distance)}</div>
+        <div className="grid grid-cols-2 gap-2">
+          {(["beginner", "expert"] as Level[]).map((l) => (
+            <button
+              key={l}
+              onClick={() => {
+                setLevel(l);
+                persist({ level: l });
+              }}
+              className={`text-left rounded-2xl p-3 transition active:scale-[0.98] ${
+                level === l
+                  ? "bg-neon/10 border-2 border-neon shadow-neon"
+                  : "glass border-2 border-transparent"
+              }`}
+            >
+              <div className="font-display font-black text-base">{t(`level.${l}`)}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{t(`level.${l}.desc`)}</div>
+            </button>
+          ))}
         </div>
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.time")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">{formatDuration(stats.time)}</div>
+      </section>
+
+      {/* Goal */}
+      <section className="mt-4">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold mb-2 px-1">
+          {t("profile.goal")}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {GOAL_IDS.map((g) => (
+            <button
+              key={g}
+              onClick={() => {
+                setGoal(g);
+                persist({ goal: g });
+              }}
+              className={`rounded-2xl p-3 text-left transition active:scale-[0.98] ${
+                goal === g
+                  ? "bg-neon/10 border-2 border-neon shadow-neon"
+                  : "glass border-2 border-transparent"
+              }`}
+            >
+              <div className="font-display font-bold text-sm leading-tight">{t(`goal.${g}`)}</div>
+            </button>
+          ))}
         </div>
       </section>
 
@@ -108,6 +232,14 @@ function ProfilePage() {
           </div>
         ))}
       </section>
+
+      <Link
+        to="/onboarding"
+        className="mt-4 flex items-center justify-center gap-2 glass rounded-2xl py-3 text-xs font-bold uppercase tracking-[0.22em] text-neon active:scale-[0.98] transition"
+      >
+        <Sparkles className="h-4 w-4" />
+        {t("onb.welcome")}
+      </Link>
 
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Orbit Lab · v1.0

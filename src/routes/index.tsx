@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
@@ -9,7 +9,7 @@ import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { primeAudio } from "@/lib/audio-cues";
+import { primeAudio, speakLocalized } from "@/lib/audio-cues";
 import { formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -19,7 +19,8 @@ import {
   type MetricId,
   type StatLayout,
 } from "@/lib/stat-metrics";
-import type { Run } from "@/lib/run-types";
+import { loadProfile, getDisplayName, computeGoalProgress, type UserProfile } from "@/lib/user-profile";
+import { loadRuns, type Run } from "@/lib/run-types";
 import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
@@ -28,11 +29,30 @@ export const Route = createFileRoute("/")({
 
 function RunPage() {
   const t = useRunTracker();
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
+  const navigate = useNavigate();
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [runs, setRuns] = useState<{ distanceM: number; startedAt: number }[]>([]);
   const wakeLock = useWakeLock();
+
+  useEffect(() => {
+    const p = loadProfile();
+    if (!p) {
+      void navigate({ to: "/onboarding" });
+      return;
+    }
+    setProfile(p);
+    setRuns(loadRuns());
+    const handler = () => {
+      setProfile(loadProfile());
+      setRuns(loadRuns());
+    };
+    window.addEventListener("orbit:profile-change", handler);
+    return () => window.removeEventListener("orbit:profile-change", handler);
+  }, [navigate]);
 
   useEffect(() => {
     if (!pressed) return;
@@ -51,6 +71,12 @@ function RunPage() {
     setLayout(loadLayout());
   }, []);
 
+  const displayName = getDisplayName(profile, lang);
+  const goalProgress = useMemo(
+    () => (profile ? computeGoalProgress(profile, runs, lang) : null),
+    [profile, runs, lang],
+  );
+
   const isActive = t.status === "running" || t.status === "paused";
 
   const beginCountdown = useCallback(() => {
@@ -65,8 +91,12 @@ function RunPage() {
   const launchRun = useCallback(() => {
     setCounting(false);
     t.start();
+    speakLocalized(
+      lang === "da" ? `Kom så ${displayName}!` : `Let's go ${displayName}!`,
+      lang,
+    );
     window.dispatchEvent(new CustomEvent("orbit:run-start"));
-  }, [t]);
+  }, [t, lang, displayName]);
 
   const cancelCountdown = useCallback(() => {
     setCounting(false);
@@ -128,6 +158,28 @@ function RunPage() {
           />
         </div>
       </header>
+
+      {!isActive && profile && (
+        <section className="mb-3 glass-strong rounded-2xl px-4 py-3">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-bold">
+            {tr("greet.ready", { name: displayName })}
+          </div>
+          {goalProgress && (
+            <>
+              <div className="mt-2 flex items-baseline justify-between">
+                <div className="font-display font-bold text-sm">{goalProgress.label}</div>
+                <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div
+                  className="h-full bg-neon shadow-neon transition-all"
+                  style={{ width: `${Math.round(goalProgress.pct * 100)}%` }}
+                />
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="relative">
         <div className="rounded-3xl overflow-hidden border border-border shadow-card">

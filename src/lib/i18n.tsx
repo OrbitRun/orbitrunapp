@@ -116,6 +116,48 @@ const en: Dict = {
   "voice.minutes": "minutes",
   "voice.seconds": "seconds",
   "voice.perKm": "per kilometer",
+
+  // Onboarding
+  "onb.welcome": "Welcome to Orbit Lab",
+  "onb.subtitle": "Let's set up your profile",
+  "onb.step": "Step {n} of 3",
+  "onb.next": "Next",
+  "onb.back": "Back",
+  "onb.finish": "Start running",
+  "onb.namePrompt": "What should we call you?",
+  "onb.nameHint": "We'll use this in voice cues and the dashboard.",
+  "onb.namePlaceholder": "Your name",
+  "onb.levelPrompt": "Pick your experience level",
+  "onb.levelHint": "This sets your default tiles and how often the coach speaks.",
+  "onb.goalPrompt": "What's your primary goal?",
+  "onb.goalHint": "We'll personalize your dashboard around it.",
+  "onb.skip": "Skip",
+
+  // Levels
+  "level.beginner": "Beginner",
+  "level.beginner.desc": "Simple tiles · cues every 1 km",
+  "level.expert": "Expert",
+  "level.expert.desc": "More metrics · cues every 0.5 km",
+
+  // Goals
+  "goal.complete5k": "Finish 5 km",
+  "goal.faster": "Run faster",
+  "goal.weightloss": "Weight loss",
+  "goal.marathon": "Marathon training",
+
+  // Personalized greeting / coach
+  "greet.ready": "Ready for your run, {name}?",
+  "greet.goal": "Let's hit your goal: {goal}",
+  "greet.weekly": "Keep the streak going, {name}",
+  "coach.halfway": "Nice work, {name}! You're halfway to your goal.",
+  "coach.runStart": "Let's go {name}!",
+  "progress.title": "Goal progress",
+  "profile.name": "Name",
+  "profile.level": "Level",
+  "profile.goal": "Goal",
+  "profile.namePlaceholder": "Your name",
+  "profile.save": "Save",
+  "profile.saved": "Saved",
 };
 
 const da: Dict = {
@@ -215,6 +257,44 @@ const da: Dict = {
   "voice.minutes": "minutter",
   "voice.seconds": "sekunder",
   "voice.perKm": "per kilometer",
+
+  "onb.welcome": "Velkommen til Orbit Lab",
+  "onb.subtitle": "Lad os sætte din profil op",
+  "onb.step": "Trin {n} af 3",
+  "onb.next": "Næste",
+  "onb.back": "Tilbage",
+  "onb.finish": "Start løbet",
+  "onb.namePrompt": "Hvad skal vi kalde dig?",
+  "onb.nameHint": "Vi bruger det i stemmesignaler og på forsiden.",
+  "onb.namePlaceholder": "Dit navn",
+  "onb.levelPrompt": "Vælg dit niveau",
+  "onb.levelHint": "Dette styrer dine standard-felter og hvor ofte coachen taler.",
+  "onb.goalPrompt": "Hvad er dit primære mål?",
+  "onb.goalHint": "Vi tilpasser dit dashboard derefter.",
+  "onb.skip": "Spring over",
+
+  "level.beginner": "Begynder",
+  "level.beginner.desc": "Enkle felter · signaler hver 1 km",
+  "level.expert": "Ekspert",
+  "level.expert.desc": "Flere målinger · signaler hver 0,5 km",
+
+  "goal.complete5k": "Gennemfør 5 km",
+  "goal.faster": "Løb hurtigere",
+  "goal.weightloss": "Vægttab",
+  "goal.marathon": "Marathontræning",
+
+  "greet.ready": "Klar til din tur, {name}?",
+  "greet.goal": "Lad os ramme dit mål: {goal}",
+  "greet.weekly": "Hold momentum, {name}",
+  "coach.halfway": "Godt kæmpet, {name}! Du er halvvejs mod dit mål.",
+  "coach.runStart": "Kom så {name}!",
+  "progress.title": "Mål-fremgang",
+  "profile.name": "Navn",
+  "profile.level": "Niveau",
+  "profile.goal": "Mål",
+  "profile.namePlaceholder": "Dit navn",
+  "profile.save": "Gem",
+  "profile.saved": "Gemt",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
