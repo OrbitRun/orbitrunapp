@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GeoPoint, Run, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
-import { speakLocalized } from "@/lib/audio-cues";
+import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
