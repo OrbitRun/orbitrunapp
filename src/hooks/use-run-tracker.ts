@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GeoPoint, Run, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
-import { speakLocalized } from "@/lib/audio-cues";
+import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
@@ -191,6 +191,7 @@ export function useRunTracker() {
       startedAt,
     });
     armGps();
+    startSilentLoop(); // keep iOS from suspending JS when screen locks
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
@@ -222,6 +223,7 @@ export function useRunTracker() {
       watchIdRef.current = null;
     }
     workerRef.current?.postMessage({ type: "stop" });
+    stopSilentLoop();
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
@@ -268,6 +270,7 @@ export function useRunTracker() {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
       workerRef.current?.terminate();
       workerRef.current = null;
+      stopSilentLoop();
     };
   }, []);
 

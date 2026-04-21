@@ -75,3 +75,41 @@ export function primeAudio() {
     }
   }
 }
+
+// ---- Silent audio loop ----------------------------------------------------
+// iOS Safari aggressively suspends JavaScript timers (and even Web Workers)
+// when the screen locks or the tab is backgrounded. Keeping a near-silent
+// audio source playing tricks the OS into treating the tab as an active
+// audio session, which keeps JS, geolocation callbacks, and our timer worker
+// running. This is the same workaround used by RunKeeper / Strava-style PWAs.
+let silentNode: { osc: OscillatorNode; gain: GainNode } | null = null;
+
+export function startSilentLoop() {
+  const ac = getCtx();
+  if (!ac || silentNode) return;
+  try {
+    if (ac.state === "suspended") void ac.resume();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 1; // sub-audible
+    gain.gain.value = 0.0001; // effectively inaudible
+    osc.connect(gain).connect(ac.destination);
+    osc.start();
+    silentNode = { osc, gain };
+  } catch {
+    /* noop */
+  }
+}
+
+export function stopSilentLoop() {
+  if (!silentNode) return;
+  try {
+    silentNode.osc.stop();
+    silentNode.osc.disconnect();
+    silentNode.gain.disconnect();
+  } catch {
+    /* noop */
+  }
+  silentNode = null;
+}

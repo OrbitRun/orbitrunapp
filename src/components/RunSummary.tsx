@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { Check, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
@@ -13,6 +24,7 @@ type Props = {
 
 export default function RunSummary({ run, onSave, onDiscard }: Props) {
   const { t } = useI18n();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const max = run.splits.length ? Math.max(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const min = run.splits.length ? Math.min(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const range = Math.max(1, max - min);
@@ -86,10 +98,8 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
       <div className="fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 px-4 bg-gradient-to-t from-background via-background/95 to-transparent">
         <div className="mx-auto max-w-md grid grid-cols-2 gap-3">
           <button
-            onClick={() => {
-              if (confirm(t("summary.discardConfirm"))) onDiscard();
-            }}
-            className="h-14 rounded-2xl glass-strong flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition"
+            onClick={() => setConfirmOpen(true)}
+            className="h-14 rounded-2xl border border-destructive/60 bg-destructive/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition"
           >
             <Trash2 className="h-4 w-4" />
             {t("summary.discard")}
@@ -103,6 +113,30 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           </button>
         </div>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent className="glass-strong border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-black text-xl">
+              {t("summary.discardConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              {t("summary.discardConfirm")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">
+              {t("summary.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDiscard}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("summary.confirmDelete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

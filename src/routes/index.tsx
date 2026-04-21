@@ -1,16 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Mountain, Pause, Play, Square, Timer, Zap } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
-import StatTile from "@/components/StatTile";
 import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
+import EditableStat from "@/components/EditableStat";
+import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { primeAudio } from "@/lib/audio-cues";
-import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import { formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
+import {
+  DEFAULT_LAYOUT,
+  loadLayout,
+  saveLayout,
+  type MetricId,
+  type StatLayout,
+} from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
 import logo from "@/assets/orbit-lab-logo.png";
 
@@ -32,8 +40,18 @@ function RunPage() {
     return () => clearTimeout(id);
   }, [pressed]);
 
+  // Editable stat layout
+  const [layout, setLayout] = useState<StatLayout>(DEFAULT_LAYOUT);
+  const [editMode, setEditMode] = useState(false);
+  const [pickerSlot, setPickerSlot] = useState<
+    { kind: "hero" | "secondary"; index: number } | null
+  >(null);
+
+  useEffect(() => {
+    setLayout(loadLayout());
+  }, []);
+
   const isActive = t.status === "running" || t.status === "paused";
-  const distanceKm = useMemo(() => formatDistance(t.distanceM), [t.distanceM]);
 
   const beginCountdown = useCallback(() => {
     setPressed("start");
@@ -138,44 +156,106 @@ function RunPage() {
         </div>
       </section>
 
-      <section className="mt-4 grid grid-cols-2 gap-3">
-        <div className="glass-strong rounded-3xl p-5 text-center">
-          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
-            {tr("stat.distance")}
-          </div>
-          <div className="mt-1 flex items-baseline justify-center gap-1.5">
-            <span className="font-display font-black tabular text-[44px] leading-none text-neon">
-              {distanceKm}
-            </span>
-            <span className="text-xs text-muted-foreground font-bold">{tr("unit.km")}</span>
-          </div>
+      <section className="mt-4 flex items-center justify-between px-1">
+        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+          {editMode ? tr("edit.pickHint") : tr("edit.hint")}
         </div>
-        <div className="glass-strong rounded-3xl p-5 text-center">
-          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
-            {tr("stat.duration")}
-          </div>
-          <div className="mt-1 flex items-baseline justify-center">
-            <span className="font-display font-black tabular text-[44px] leading-none text-foreground">
-              {formatDuration(t.elapsedMs)}
-            </span>
-          </div>
-        </div>
+        {editMode && (
+          <button
+            onClick={() => setEditMode(false)}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon text-primary-foreground text-[10px] font-black uppercase tracking-[0.18em] shadow-neon"
+          >
+            <Check className="h-3 w-3" />
+            {tr("edit.exit")}
+          </button>
+        )}
+        {!editMode && (
+          <button
+            onClick={() => setEditMode(true)}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-full glass text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground"
+            aria-label="Edit layout"
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+        )}
+      </section>
+
+      <section className="mt-2 grid grid-cols-2 gap-3">
+        {layout.hero.map((id, i) => (
+          <EditableStat
+            key={`hero-${i}`}
+            metricId={id}
+            stats={t}
+            variant="hero"
+            editMode={editMode}
+            onLongPress={() => {
+              setEditMode(true);
+              setPickerSlot({ kind: "hero", index: i });
+            }}
+            onTap={() => setPickerSlot({ kind: "hero", index: i })}
+          />
+        ))}
       </section>
 
       <section className="mt-3 grid grid-cols-3 gap-3">
-        <StatTile
-          label={tr("stat.pace")}
-          value={formatPace(t.currentPaceSecPerKm || t.avgPaceSecPerKm)}
-          unit={tr("unit.perKm")}
-          glow={
-            t.currentPaceSecPerKm > 0 &&
-            t.avgPaceSecPerKm > 0 &&
-            t.currentPaceSecPerKm < t.avgPaceSecPerKm - 3
-          }
-        />
-        <StatTile label={tr("stat.cadence")} value={String(t.cadenceSpm)} unit={tr("unit.spm")} />
-        <StatTile label={tr("stat.elev")} value={Math.round(t.elevationGainM).toString()} unit={tr("unit.m")} />
+        {layout.secondary.map((id, i) => (
+          <EditableStat
+            key={`sec-${i}`}
+            metricId={id}
+            stats={t}
+            variant="secondary"
+            editMode={editMode}
+            onLongPress={() => {
+              setEditMode(true);
+              setPickerSlot({ kind: "secondary", index: i });
+            }}
+            onTap={() => setPickerSlot({ kind: "secondary", index: i })}
+            glow={
+              id === "pace" &&
+              t.currentPaceSecPerKm > 0 &&
+              t.avgPaceSecPerKm > 0 &&
+              t.currentPaceSecPerKm < t.avgPaceSecPerKm - 3
+            }
+          />
+        ))}
       </section>
+
+      <MetricPicker
+        open={pickerSlot !== null}
+        current={
+          pickerSlot
+            ? pickerSlot.kind === "hero"
+              ? layout.hero[pickerSlot.index]
+              : layout.secondary[pickerSlot.index]
+            : null
+        }
+        used={[...layout.hero, ...layout.secondary]}
+        onOpenChange={(o) => !o && setPickerSlot(null)}
+        onSelect={(metric: MetricId) => {
+          if (!pickerSlot) return;
+          setLayout((prev) => {
+            const next: StatLayout = {
+              hero: [...prev.hero] as [MetricId, MetricId],
+              secondary: [...prev.secondary] as [MetricId, MetricId, MetricId],
+            };
+            // If metric exists elsewhere, swap with current slot's metric.
+            const currentMetric =
+              pickerSlot.kind === "hero"
+                ? next.hero[pickerSlot.index]
+                : next.secondary[pickerSlot.index];
+            const heroIdx = next.hero.indexOf(metric);
+            const secIdx = next.secondary.indexOf(metric);
+            if (heroIdx >= 0) next.hero[heroIdx] = currentMetric;
+            if (secIdx >= 0) next.secondary[secIdx] = currentMetric;
+            if (pickerSlot.kind === "hero") next.hero[pickerSlot.index] = metric;
+            else next.secondary[pickerSlot.index] = metric;
+            saveLayout(next);
+            return next;
+          });
+          setPickerSlot(null);
+        }}
+      />
+
 
       {t.splits.length > 0 && (
         <section className="mt-3 glass rounded-2xl p-3">
