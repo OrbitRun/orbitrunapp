@@ -78,6 +78,12 @@ export function useRunTracker() {
   const shoeSnapshotRef = useRef<{ brand: string; model: string } | null>(null);
   const weatherRef = useRef<WeatherSnapshot | null>(null);
   const weatherFetchedRef = useRef(false);
+  // GPS smoothing: rolling buffer of recent raw fixes used for moving average,
+  // plus a min-distance gate so we don't append tiny zigzag jitter to the path.
+  const rawBufferRef = useRef<GeoPoint[]>([]);
+  const SMOOTH_WINDOW = 5;
+  const MIN_MOVE_M = 3;
+  const MAX_ACCURACY_M = 30;
 
   const haptic = useCallback((ms = 30) => {
     if (!hapticEnabledRef.current) return;
@@ -143,21 +149,56 @@ export function useRunTracker() {
 
       setState((prev) => {
         if (prev.status !== "running") return prev;
-        const np: GeoPoint = {
+
+        // Reject low-accuracy fixes — they cause most of the zigzag.
+        if (pos.coords.accuracy != null && pos.coords.accuracy > MAX_ACCURACY_M) {
+          return prev;
+        }
+
+        const raw: GeoPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           alt: pos.coords.altitude,
           t: pos.timestamp,
           speed: pos.coords.speed,
         };
+
+        // Push into rolling raw buffer and compute moving average across last
+        // N fixes. This smooths jitter while preserving direction changes.
+        const buf = rawBufferRef.current;
+        buf.push(raw);
+        if (buf.length > SMOOTH_WINDOW) buf.shift();
+        const n = buf.length;
+        let lat = 0;
+        let lng = 0;
+        let altSum = 0;
+        let altCount = 0;
+        for (const p of buf) {
+          lat += p.lat;
+          lng += p.lng;
+          if (p.alt != null) {
+            altSum += p.alt;
+            altCount++;
+          }
+        }
+        const np: GeoPoint = {
+          lat: lat / n,
+          lng: lng / n,
+          alt: altCount > 0 ? altSum / altCount : raw.alt,
+          t: raw.t,
+          speed: raw.speed,
+        };
+
         const last = prev.points[prev.points.length - 1];
         let addDist = 0;
         let addElev = 0;
         if (last) {
           addDist = haversine(last, np);
           const dt = (np.t - last.t) / 1000;
-          if (addDist < 2) addDist = 0;
-          if (dt > 0 && addDist / dt > 12) addDist = 0;
+          // Movement threshold: ignore <3 m drift.
+          if (addDist < MIN_MOVE_M) return prev;
+          // Sanity cap on speed (12 m/s ≈ 43 km/h).
+          if (dt > 0 && addDist / dt > 12) return prev;
           if (np.alt != null && last.alt != null) {
             const da = np.alt - last.alt;
             if (da > 0.5) addElev = da;
@@ -245,7 +286,7 @@ export function useRunTracker() {
     if (watchIdRef.current != null) return;
     watchIdRef.current = navigator.geolocation.watchPosition(handlePosition, handleError, {
       enableHighAccuracy: true,
-      maximumAge: 1000,
+      maximumAge: 0,
       timeout: 15000,
     });
   }, [handlePosition, handleError]);
@@ -263,6 +304,7 @@ export function useRunTracker() {
     hapticEnabledRef.current = settings.haptic;
     autoPausedRef.current = false;
     slowSinceRef.current = null;
+    rawBufferRef.current = [];
     lastSplitKmRef.current = 0;
     lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
