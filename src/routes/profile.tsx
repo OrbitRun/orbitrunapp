@@ -10,6 +10,7 @@ import {
   saveProfile,
   defaultLayoutForLevel,
   getDisplayName,
+  computeGoalProgress,
   type GoalId,
   type Level,
   type UserProfile,
@@ -18,6 +19,7 @@ import { saveLayout } from "@/lib/stat-metrics";
 import { loadSettings, updateSettings, type AppSettings, type CueInterval } from "@/lib/settings";
 import ShoeTracker from "@/components/ShoeTracker";
 import PRCarousel from "@/components/PRCarousel";
+import StatusBar from "@/components/StatusBar";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
