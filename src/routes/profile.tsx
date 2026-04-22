@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Bell, Check, Headphones, Languages, MapPin, Sparkles, Volume2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bell, Check, Headphones, Languages, MapPin, Pencil, Sparkles, Volume2 } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -15,6 +15,9 @@ import {
   type UserProfile,
 } from "@/lib/user-profile";
 import { saveLayout } from "@/lib/stat-metrics";
+import { loadSettings, updateSettings, type AppSettings } from "@/lib/settings";
+import ShoeTracker from "@/components/ShoeTracker";
+import PRCarousel from "@/components/PRCarousel";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -27,6 +30,9 @@ function ProfilePage() {
   const [level, setLevel] = useState<Level>("beginner");
   const [goal, setGoal] = useState<GoalId>("complete5k");
   const [savedFlash, setSavedFlash] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const runs = loadRuns();
@@ -41,7 +47,12 @@ function ProfilePage() {
       setLevel(p.level);
       setGoal(p.goal);
     }
+    setSettings(loadSettings());
   }, []);
+
+  useEffect(() => {
+    if (editingName) inputRef.current?.focus();
+  }, [editingName]);
 
   const persist = (patch: Partial<UserProfile>) => {
     const next: UserProfile = {
@@ -58,6 +69,11 @@ function ProfilePage() {
     window.setTimeout(() => setSavedFlash(false), 1200);
   };
 
+  const commitName = () => {
+    setEditingName(false);
+    persist({ name });
+  };
+
   const langs: { code: Lang; label: string }[] = [
     { code: "en", label: "English" },
     { code: "da", label: "Dansk" },
@@ -65,6 +81,12 @@ function ProfilePage() {
 
   const displayName = getDisplayName({ name, level, goal, createdAt: 0 }, lang);
   const initial = displayName.charAt(0).toUpperCase();
+
+  const toggleAutoPause = () => {
+    const next = { ...settings, autoPause: !settings.autoPause };
+    setSettings(next);
+    updateSettings({ autoPause: next.autoPause });
+  };
 
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
@@ -82,18 +104,44 @@ function ProfilePage() {
         )}
       </header>
 
-      {/* Premium member card */}
+      {/* Premium member card with inline-editable name */}
       <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card">
         <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/15 blur-3xl pointer-events-none" />
         <div className="relative flex items-center gap-4">
           <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
             {initial}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
               Orbit · Member
             </div>
-            <div className="font-display font-black text-2xl truncate">{displayName}</div>
+            {editingName ? (
+              <input
+                ref={inputRef}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={commitName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitName();
+                  if (e.key === "Escape") {
+                    setName(loadProfile()?.name ?? "");
+                    setEditingName(false);
+                  }
+                }}
+                placeholder={t("profile.namePlaceholder")}
+                maxLength={24}
+                className="w-full bg-transparent border-b-2 border-neon outline-none py-0.5 font-display font-black text-2xl tracking-tight focus:shadow-[0_4px_20px_-4px_oklch(0.92_0.21_140/0.5)] transition"
+              />
+            ) : (
+              <button
+                onClick={() => setEditingName(true)}
+                className="group w-full text-left flex items-center gap-2"
+                aria-label={t("profile.tapToEdit")}
+              >
+                <span className="font-display font-black text-2xl truncate">{displayName}</span>
+                <Pencil className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-neon transition" />
+              </button>
+            )}
             <div className="text-[11px] text-muted-foreground mt-0.5">
               {t(`level.${level}`)} · {t(`goal.${goal}`)}
             </div>
@@ -125,20 +173,11 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Name */}
-      <section className="mt-4 glass rounded-2xl p-4">
-        <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
-          {t("profile.name")}
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={() => persist({ name })}
-          placeholder={t("profile.namePlaceholder")}
-          maxLength={24}
-          className="mt-1.5 w-full bg-transparent border-b-2 border-white/10 focus:border-neon focus:shadow-[0_4px_20px_-4px_oklch(0.92_0.21_140/0.5)] outline-none py-2 text-lg font-display font-bold tracking-tight transition"
-        />
-      </section>
+      {/* Personal Bests carousel */}
+      <PRCarousel />
+
+      {/* Shoe tracker */}
+      <ShoeTracker />
 
       {/* Level */}
       <section className="mt-4">
@@ -189,6 +228,31 @@ function ProfilePage() {
             </button>
           ))}
         </div>
+      </section>
+
+      {/* Auto-pause toggle */}
+      <section className="mt-4 glass rounded-2xl p-4 flex items-center gap-3">
+        <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+          <Sparkles className="h-4 w-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold">{t("settings.autoPause")}</div>
+          <div className="text-[11px] text-muted-foreground">{t("settings.autoPauseDesc")}</div>
+        </div>
+        <button
+          onClick={toggleAutoPause}
+          role="switch"
+          aria-checked={settings.autoPause}
+          className={`relative h-7 w-12 rounded-full transition ${
+            settings.autoPause ? "bg-neon shadow-neon" : "bg-white/10"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-6 w-6 rounded-full bg-background transition-transform ${
+              settings.autoPause ? "translate-x-5" : "translate-x-0.5"
+            }`}
+          />
+        </button>
       </section>
 
       {/* Language selector */}
