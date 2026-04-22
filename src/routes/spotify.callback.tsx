@@ -13,6 +13,7 @@ function SpotifyCallback() {
   useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
     const err = url.searchParams.get("error");
     if (err) {
       setError(err);
@@ -22,7 +23,7 @@ function SpotifyCallback() {
       setError("Missing authorization code");
       return;
     }
-    exchangeCode(code)
+    exchangeCode(code, state)
       .then(() => navigate({ to: "/" }))
       .catch((e) => setError(e instanceof Error ? e.message : "Auth failed"));
   }, [navigate]);

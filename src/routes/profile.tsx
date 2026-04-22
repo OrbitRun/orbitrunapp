@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Headphones, Languages, MapPin, Mic, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
+import { Bell, Check, Headphones, Languages, Lock, MapPin, Mic, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
+import { sanitizeName } from "@/lib/sanitize";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -125,7 +126,7 @@ function ProfilePage() {
               <input
                 ref={inputRef}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(sanitizeName(e.target.value))}
                 onBlur={commitName}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") commitName();
