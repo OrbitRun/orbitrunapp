@@ -73,7 +73,7 @@ function OnboardingPage() {
         </p>
       </header>
 
-      <section className="mt-4 flex-1 min-h-0 px-1 pb-2">
+      <section className="mt-4 flex-1 min-h-0 px-3 py-3">
         {step === 0 && (
           <div className="px-1">
             <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
