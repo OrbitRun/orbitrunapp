@@ -241,8 +241,10 @@ export function useRunTracker() {
     const profile = loadProfile();
     nameRef.current = profile ? getDisplayName(profile, langRef.current) : "";
     levelRef.current = profile?.level ?? "beginner";
-    cueIntervalKmRef.current = cueIntervalKm(levelRef.current);
-    autoPauseEnabledRef.current = loadSettings().autoPause;
+    const settings = loadSettings();
+    // User-controlled voice cue interval (settings) overrides the level default.
+    cueIntervalKmRef.current = settings.cueIntervalKm ?? cueIntervalKm(levelRef.current);
+    autoPauseEnabledRef.current = settings.autoPause;
     autoPausedRef.current = false;
     slowSinceRef.current = null;
     lastSplitKmRef.current = 0;
