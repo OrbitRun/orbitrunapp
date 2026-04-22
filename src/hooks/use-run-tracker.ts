@@ -96,8 +96,8 @@ export function useRunTracker() {
     return w;
   }, []);
 
-  const pause = useRef<() => void>(() => {});
-  const resume = useRef<() => void>(() => {});
+  const pauseFnRef = useRef<() => void>(() => {});
+  const resumeFnRef = useRef<() => void>(() => {});
 
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
@@ -112,7 +112,7 @@ export function useRunTracker() {
             else if (!autoPausedRef.current && pos.timestamp - slowSinceRef.current >= 3000) {
               autoPausedRef.current = true;
               beep(440, 120, 0.18);
-              pause.current();
+              pauseFnRef.current();
             }
           } else {
             slowSinceRef.current = null;
@@ -123,7 +123,7 @@ export function useRunTracker() {
             autoPausedRef.current = false;
             slowSinceRef.current = null;
             beep(880, 100, 0.2);
-            resume.current();
+            resumeFnRef.current();
           }
         }
       }
