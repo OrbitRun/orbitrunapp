@@ -363,6 +363,23 @@ function ProfilePage() {
         {t("onb.welcome")}
       </Link>
 
+      {/* Privacy notice */}
+      <section className="mt-4 glass rounded-2xl p-4 flex gap-3">
+        <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon shrink-0">
+          <Lock className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-neon font-bold mb-1">
+            {lang === "da" ? "Privatliv" : "Privacy"}
+          </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            {lang === "da"
+              ? "Din GPS-data bruges udelukkende til at spore dine løb og gemmes lokalt på din enhed. Vi sender ingen personlige data til tredjepart."
+              : "Your GPS data is used only to track your runs and is stored locally on this device. No personal data is shared with third parties."}
+          </p>
+        </div>
+      </section>
+
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Orbit Lab · v1.0
       </p>
