@@ -31,7 +31,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in">
-      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-32">
+      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-44">
         <header className="py-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
             {t("summary.subtitle")}
@@ -94,18 +94,31 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         )}
       </main>
 
-      {/* Sticky action bar */}
-      <div className="fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 px-4 bg-gradient-to-t from-background via-background/95 to-transparent">
-        <div className="mx-auto max-w-md grid grid-cols-2 gap-3">
+      {/* Sticky action bar — sits above the bottom navigation (h-20 / 5rem) */}
+      <div
+        className="fixed inset-x-0 z-50 px-4 pt-6 pb-3 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none"
+        style={{ bottom: `calc(5rem + env(safe-area-inset-bottom, 0px))` }}
+      >
+        <div className="mx-auto max-w-md grid grid-cols-2 gap-3 pointer-events-auto">
           <button
-            onClick={() => setConfirmOpen(true)}
-            className="h-14 rounded-2xl border border-destructive/60 bg-destructive/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition"
+            onClick={() => {
+              if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+                try { navigator.vibrate(40); } catch { /* noop */ }
+              }
+              setConfirmOpen(true);
+            }}
+            className="h-14 rounded-2xl glass border border-destructive/60 backdrop-blur-xl flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition shadow-[0_8px_24px_-12px_oklch(0.55_0.22_25/0.6)]"
           >
             <Trash2 className="h-4 w-4" />
             {t("summary.discard")}
           </button>
           <button
-            onClick={onSave}
+            onClick={() => {
+              if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+                try { navigator.vibrate(60); } catch { /* noop */ }
+              }
+              onSave();
+            }}
             className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
           >
             <Check className="h-4 w-4" />
