@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Footprints, Thermometer, Trash2 } from "lucide-react";
-import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
+import { ChevronRight, Footprints, Trash2 } from "lucide-react";
+import { deleteRun, loadRuns, RUNS_KEY, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import { buildHeatmapSnapshot } from "@/lib/heatmap-snapshot";
 import RunMap from "@/components/RunMap";
 import { useI18n } from "@/lib/i18n";
 
@@ -15,7 +16,25 @@ function HistoryPage() {
   const { t } = useI18n();
 
   useEffect(() => {
-    setRuns(loadRuns());
+    // Load runs and backfill heatmap snapshots for any older runs that were
+    // saved before snapshots existed. Persist the backfill so it's a one-time cost.
+    const all = loadRuns();
+    let mutated = false;
+    const enriched = all.map((r) => {
+      if (r.heatmapSnapshot || !r.points || r.points.length < 2) return r;
+      const snap = buildHeatmapSnapshot(r.points);
+      if (!snap) return r;
+      mutated = true;
+      return { ...r, heatmapSnapshot: snap };
+    });
+    if (mutated && typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(RUNS_KEY, JSON.stringify(enriched));
+      } catch {
+        /* storage may be full — render in-memory snapshots anyway */
+      }
+    }
+    setRuns(enriched);
   }, []);
 
   return (
