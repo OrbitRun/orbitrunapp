@@ -149,6 +149,18 @@ export async function beginAuth(): Promise<void> {
   window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
+// Endpoint for our server-side proxy that forwards to Spotify's token API.
+// Keeps CORS surface and request validation off the page itself.
+const TOKEN_PROXY_URL = "/api/spotify/token";
+
+async function tokenProxy(body: Record<string, string>): Promise<Response> {
+  return fetch(TOKEN_PROXY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function exchangeCode(code: string, returnedState?: string | null): Promise<SpotifyToken> {
   const verifier = sessionStorage.getItem(VERIFIER_KEY);
   const expectedState = sessionStorage.getItem(STATE_KEY);
@@ -159,19 +171,24 @@ export async function exchangeCode(code: string, returnedState?: string | null):
     sessionStorage.removeItem(STATE_KEY);
     throw new Error("Invalid OAuth state");
   }
-  const body = new URLSearchParams({
-    client_id: SPOTIFY_CLIENT_ID,
+  const res = await tokenProxy({
     grant_type: "authorization_code",
+    client_id: SPOTIFY_CLIENT_ID,
     code,
     redirect_uri: getRedirectUri(),
     code_verifier: verifier,
   });
-  const res = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
+  if (!res.ok) {
+    let msg = `Token exchange failed: ${res.status}`;
+    try {
+      const err = await res.json();
+      if (err?.error_description) msg = `Spotify: ${err.error_description}`;
+      else if (err?.error) msg = `Spotify: ${err.error}`;
+    } catch {
+      /* keep generic message */
+    }
+    throw new Error(msg);
+  }
   const data = await res.json();
   const tok: SpotifyToken = {
     access_token: data.access_token,
@@ -189,15 +206,10 @@ export async function exchangeCode(code: string, returnedState?: string | null):
 async function refreshToken(): Promise<SpotifyToken | null> {
   const cur = getStoredToken();
   if (!cur?.refresh_token) return null;
-  const body = new URLSearchParams({
-    client_id: SPOTIFY_CLIENT_ID,
+  const res = await tokenProxy({
     grant_type: "refresh_token",
+    client_id: SPOTIFY_CLIENT_ID,
     refresh_token: cur.refresh_token,
-  });
-  const res = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
   });
   if (!res.ok) {
     setStoredToken(null);

@@ -58,6 +58,18 @@ function ProfilePage() {
     setSpotifyConnected(isAuthed());
   }, []);
 
+  // Re-check Spotify connection when the tab regains focus, so the status
+  // pill updates immediately after returning from the OAuth callback.
+  useEffect(() => {
+    const recheck = () => setSpotifyConnected(isAuthed());
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
+    return () => {
+      window.removeEventListener("focus", recheck);
+      document.removeEventListener("visibilitychange", recheck);
+    };
+  }, []);
+
   useEffect(() => {
     if (editingName) inputRef.current?.focus();
   }, [editingName]);
@@ -328,7 +340,25 @@ function ProfilePage() {
             <Music2 className="h-5 w-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold">Spotify</div>
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-semibold">Spotify</div>
+              <span
+                className={`text-[9px] uppercase tracking-[0.18em] font-bold px-1.5 py-0.5 rounded-full ${
+                  spotifyConnected
+                    ? "bg-neon/15 text-neon"
+                    : "bg-white/5 text-muted-foreground"
+                }`}
+              >
+                <span
+                  className={`inline-block h-1.5 w-1.5 rounded-full mr-1 align-middle ${
+                    spotifyConnected ? "bg-neon shadow-neon" : "bg-muted-foreground/60"
+                  }`}
+                />
+                {spotifyConnected
+                  ? lang === "da" ? "Forbundet" : "Connected"
+                  : lang === "da" ? "Ikke forbundet" : "Not connected"}
+              </span>
+            </div>
             <div className="text-[11px] text-muted-foreground">
               {spotifyConnected
                 ? (lang === "da" ? "Forbundet — styr afspilning under løb" : "Connected — control playback during runs")
