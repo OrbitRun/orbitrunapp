@@ -13,7 +13,16 @@ export const SPOTIFY_SCOPES = [
   "user-read-private",
 ].join(" ");
 
-const TOKEN_KEY = "pulse.spotify.token";
+// Token storage strategy (security):
+// - access_token + expiry: in-memory only (lost on full reload — we transparently
+//   recover via refresh_token).
+// - refresh_token: sessionStorage (auto-cleared when the tab closes). Deliberate
+//   trade-off: we lose "stay signed in across browser restarts" so a long-lived
+//   credential is never sitting in persistent storage where future XSS or a
+//   third-party script could exfiltrate it.
+// - Any legacy localStorage entry from earlier versions is migrated then deleted.
+const LEGACY_TOKEN_KEY = "pulse.spotify.token";
+const REFRESH_KEY = "pulse.spotify.refresh";
 const VERIFIER_KEY = "pulse.spotify.verifier";
 const STATE_KEY = "pulse.spotify.state";
 
@@ -24,6 +33,47 @@ export type SpotifyToken = {
   token_type: string;
   scope: string;
 };
+
+// In-memory access token (not persisted across full reloads).
+let memoryToken: SpotifyToken | null = null;
+
+function readRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(REFRESH_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeRefreshToken(rt: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (rt) sessionStorage.setItem(REFRESH_KEY, rt);
+    else sessionStorage.removeItem(REFRESH_KEY);
+  } catch {
+    /* ignore quota/availability errors */
+  }
+}
+
+// One-time migration from the old localStorage location to split storage.
+function migrateLegacyToken() {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(LEGACY_TOKEN_KEY);
+    if (!raw) return;
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+    const parsed = JSON.parse(raw) as Partial<SpotifyToken>;
+    if (parsed?.refresh_token) writeRefreshToken(parsed.refresh_token);
+  } catch {
+    try {
+      localStorage.removeItem(LEGACY_TOKEN_KEY);
+    } catch {
+      /* ignore */
+    }
+  }
+}
+migrateLegacyToken();
 
 export function getRedirectUri(): string {
   if (typeof window === "undefined") return "";
@@ -49,20 +99,28 @@ function randomString(len = 64): string {
 }
 
 export function getStoredToken(): SpotifyToken | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(TOKEN_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as SpotifyToken;
-  } catch {
-    return null;
-  }
+  if (memoryToken) return memoryToken;
+  // No in-memory token yet, but a refresh token may exist from this tab session.
+  const rt = readRefreshToken();
+  if (!rt) return null;
+  // Stub with expires_at=0 forces a refresh on the next getValidToken() call.
+  return {
+    access_token: "",
+    refresh_token: rt,
+    expires_at: 0,
+    token_type: "Bearer",
+    scope: "",
+  };
 }
 
 export function setStoredToken(t: SpotifyToken | null) {
-  if (typeof window === "undefined") return;
-  if (!t) localStorage.removeItem(TOKEN_KEY);
-  else localStorage.setItem(TOKEN_KEY, JSON.stringify(t));
+  if (!t) {
+    memoryToken = null;
+    writeRefreshToken(null);
+    return;
+  }
+  memoryToken = t;
+  if (t.refresh_token) writeRefreshToken(t.refresh_token);
 }
 
 export function isConfigured(): boolean {
