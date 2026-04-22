@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
-import { speedToColor } from "@/lib/run-utils";
+import { haversine, speedToColor } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
 
 type Props = {
