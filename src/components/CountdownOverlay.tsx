@@ -43,7 +43,7 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
         </div>
         <div
           key={count}
-          className="font-display font-black text-neon tabular leading-none text-[180px] drop-shadow-[0_0_40px_oklch(0.92_0.21_130/0.55)] animate-scale-in"
+          className="font-display font-black text-neon tabular leading-none text-[180px] py-6 px-8 [filter:drop-shadow(0_0_30px_oklch(0.92_0.21_130/0.6))_drop-shadow(0_0_60px_oklch(0.92_0.21_130/0.35))] animate-scale-in"
           aria-live="assertive"
         >
           {count > 0 ? count : t("cd.go")}
