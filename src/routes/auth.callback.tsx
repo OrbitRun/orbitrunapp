@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { exchangeCode } from "@/lib/spotify";
 
-export const Route = createFileRoute("/spotify/callback")({
-  component: SpotifyCallback,
+export const Route = createFileRoute("/auth/callback")({
+  component: AuthCallback,
 });
 
-function SpotifyCallback() {
+function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ function SpotifyCallback() {
       return;
     }
     exchangeCode(code, state)
-      .then(() => navigate({ to: "/" }))
+      .then(() => navigate({ to: "/profile" }))
       .catch((e) => setError(e instanceof Error ? e.message : "Auth failed"));
   }, [navigate]);
 
@@ -38,8 +38,8 @@ function SpotifyCallback() {
           </>
         ) : (
           <>
-            <div className="font-display font-black text-xl text-neon">Connecting Spotify…</div>
-            <div className="text-sm text-muted-foreground mt-2">One moment.</div>
+            <div className="font-display font-black text-xl text-neon">Forbinder Spotify…</div>
+            <div className="text-sm text-muted-foreground mt-2">Et øjeblik.</div>
           </>
         )}
       </div>

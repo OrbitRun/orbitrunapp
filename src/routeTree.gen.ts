@@ -13,8 +13,8 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SpotifyCallbackRouteImport } from './routes/spotify.callback'
 import { Route as RunIdRouteImport } from './routes/run.$id'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -36,14 +36,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpotifyCallbackRoute = SpotifyCallbackRouteImport.update({
-  id: '/spotify/callback',
-  path: '/spotify/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RunIdRoute = RunIdRouteImport.update({
   id: '/run/$id',
   path: '/run/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -52,16 +52,16 @@ export interface FileRoutesByFullPath {
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/run/$id': typeof RunIdRoute
-  '/spotify/callback': typeof SpotifyCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/run/$id': typeof RunIdRoute
-  '/spotify/callback': typeof SpotifyCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,8 +69,8 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/run/$id': typeof RunIdRoute
-  '/spotify/callback': typeof SpotifyCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,24 +79,24 @@ export interface FileRouteTypes {
     | '/history'
     | '/onboarding'
     | '/profile'
+    | '/auth/callback'
     | '/run/$id'
-    | '/spotify/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/history'
     | '/onboarding'
     | '/profile'
+    | '/auth/callback'
     | '/run/$id'
-    | '/spotify/callback'
   id:
     | '__root__'
     | '/'
     | '/history'
     | '/onboarding'
     | '/profile'
+    | '/auth/callback'
     | '/run/$id'
-    | '/spotify/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,8 +104,8 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   RunIdRoute: typeof RunIdRoute
-  SpotifyCallbackRoute: typeof SpotifyCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -138,18 +138,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/spotify/callback': {
-      id: '/spotify/callback'
-      path: '/spotify/callback'
-      fullPath: '/spotify/callback'
-      preLoaderRoute: typeof SpotifyCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/run/$id': {
       id: '/run/$id'
       path: '/run/$id'
       fullPath: '/run/$id'
       preLoaderRoute: typeof RunIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -160,8 +160,8 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   RunIdRoute: RunIdRoute,
-  SpotifyCallbackRoute: SpotifyCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

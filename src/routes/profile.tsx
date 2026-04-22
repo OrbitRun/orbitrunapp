@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Headphones, Languages, Lock, MapPin, Mic, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
+import { Bell, Check, Headphones, Languages, Lock, MapPin, Mic, Music2, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
+import { beginAuth, isAuthed, isConfigured as isSpotifyConfigured, logout as spotifyLogout } from "@/lib/spotify";
 import { sanitizeName } from "@/lib/sanitize";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
@@ -36,6 +37,7 @@ function ProfilePage() {
   const [savedFlash, setSavedFlash] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -53,6 +55,7 @@ function ProfilePage() {
       setGoal(p.goal);
     }
     setSettings(loadSettings());
+    setSpotifyConnected(isAuthed());
   }, []);
 
   useEffect(() => {
@@ -232,6 +235,45 @@ function ProfilePage() {
       <div className="mb-5">
         <ShoeTracker />
       </div>
+
+      {/* Spotify connect */}
+      <section className="mb-5 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-background shrink-0">
+            <Music2 className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold">Spotify</div>
+            <div className="text-[11px] text-muted-foreground">
+              {spotifyConnected
+                ? (lang === "da" ? "Forbundet — styr afspilning under løb" : "Connected — control playback during runs")
+                : (lang === "da" ? "Forbind for at styre musik fra dit løb" : "Connect to control music during runs")}
+            </div>
+          </div>
+          {spotifyConnected ? (
+            <button
+              onClick={() => {
+                spotifyLogout();
+                setSpotifyConnected(false);
+              }}
+              className="px-3 py-1.5 rounded-lg bg-white/5 text-foreground/80 text-[11px] font-bold uppercase tracking-[0.18em] hover:bg-white/10 transition active:scale-95"
+            >
+              {lang === "da" ? "Log ud" : "Disconnect"}
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (!isSpotifyConfigured()) return;
+                void beginAuth();
+              }}
+              disabled={!isSpotifyConfigured()}
+              className="px-3 py-1.5 rounded-lg bg-neon text-primary-foreground text-[11px] font-bold uppercase tracking-[0.18em] shadow-neon hover:opacity-90 transition active:scale-95 disabled:opacity-40"
+            >
+              {lang === "da" ? "Forbind" : "Connect"}
+            </button>
+          )}
+        </div>
+      </section>
 
 
       {/* Level */}
