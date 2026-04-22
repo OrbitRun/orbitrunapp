@@ -5,8 +5,9 @@ import { genId, haversine } from "@/lib/run-utils";
 import { beep, speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/user-profile";
-import { addDistanceToActiveShoe } from "@/lib/shoes";
+import { addDistanceToActiveShoe, loadShoes } from "@/lib/shoes";
 import { loadSettings } from "@/lib/settings";
+import { fetchWeather, type WeatherSnapshot } from "@/lib/weather";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -73,8 +74,13 @@ export function useRunTracker() {
   const autoPauseEnabledRef = useRef(true);
   const autoPausedRef = useRef(false);
   const slowSinceRef = useRef<number | null>(null);
+  const hapticEnabledRef = useRef(true);
+  const shoeSnapshotRef = useRef<{ brand: string; model: string } | null>(null);
+  const weatherRef = useRef<WeatherSnapshot | null>(null);
+  const weatherFetchedRef = useRef(false);
 
   const haptic = useCallback((ms = 30) => {
+    if (!hapticEnabledRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(ms);
