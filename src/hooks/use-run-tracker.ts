@@ -383,7 +383,13 @@ export function useRunTracker() {
   }, [haptic]);
 
   const commitRun = useCallback((run: Run) => {
-    saveRun(run);
+    // Generate the heatmap snapshot once, on save, so history cards render
+    // instantly without spinning up Mapbox per item.
+    const enriched: Run = {
+      ...run,
+      heatmapSnapshot: run.heatmapSnapshot ?? buildHeatmapSnapshot(run.points),
+    };
+    saveRun(enriched);
     addDistanceToActiveShoe(run.distanceM);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("orbit:run-saved"));
