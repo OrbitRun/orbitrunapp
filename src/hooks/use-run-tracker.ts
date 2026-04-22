@@ -304,6 +304,7 @@ export function useRunTracker() {
     hapticEnabledRef.current = settings.haptic;
     autoPausedRef.current = false;
     slowSinceRef.current = null;
+    rawBufferRef.current = [];
     lastSplitKmRef.current = 0;
     lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
