@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GeoPoint, Run, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
-import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
+import { beep, speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/user-profile";
+import { addDistanceToActiveShoe } from "@/lib/shoes";
+import { loadSettings } from "@/lib/settings";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -67,6 +69,10 @@ export function useRunTracker() {
   const cueIntervalKmRef = useRef<number>(1);
   const lastCueKmRef = useRef<number>(0);
   const levelRef = useRef<Level>("beginner");
+  // Auto-pause: speed under 2 km/h (~0.555 m/s) sustained for 3s.
+  const autoPauseEnabledRef = useRef(true);
+  const autoPausedRef = useRef(false);
+  const slowSinceRef = useRef<number | null>(null);
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -90,8 +96,38 @@ export function useRunTracker() {
     return w;
   }, []);
 
+  const pauseFnRef = useRef<() => void>(() => {});
+  const resumeFnRef = useRef<() => void>(() => {});
+
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
+      // Auto-pause detection (runs regardless of running/paused)
+      if (autoPauseEnabledRef.current && stateRef.current.startedAt) {
+        const speedMs = pos.coords.speed; // null on some devices
+        const slow = speedMs != null && speedMs < 0.555; // <2 km/h
+        const status = stateRef.current.status;
+        if (status === "running") {
+          if (slow) {
+            if (slowSinceRef.current == null) slowSinceRef.current = pos.timestamp;
+            else if (!autoPausedRef.current && pos.timestamp - slowSinceRef.current >= 3000) {
+              autoPausedRef.current = true;
+              beep(440, 120, 0.18);
+              pauseFnRef.current();
+            }
+          } else {
+            slowSinceRef.current = null;
+          }
+        } else if (status === "paused" && autoPausedRef.current) {
+          // Movement detected — resume.
+          if (speedMs != null && speedMs > 0.83) {
+            autoPausedRef.current = false;
+            slowSinceRef.current = null;
+            beep(880, 100, 0.2);
+            resumeFnRef.current();
+          }
+        }
+      }
+
       setState((prev) => {
         if (prev.status !== "running") return prev;
         const np: GeoPoint = {
@@ -206,6 +242,9 @@ export function useRunTracker() {
     nameRef.current = profile ? getDisplayName(profile, langRef.current) : "";
     levelRef.current = profile?.level ?? "beginner";
     cueIntervalKmRef.current = cueIntervalKm(levelRef.current);
+    autoPauseEnabledRef.current = loadSettings().autoPause;
+    autoPausedRef.current = false;
+    slowSinceRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
@@ -240,7 +279,10 @@ export function useRunTracker() {
     setState((p) => ({ ...p, status: "running" }));
   }, [haptic]);
 
-  // Stops tracking and returns the in-memory Run WITHOUT persisting it.
+  // Bind ref-callable versions for handlePosition's auto-pause path.
+  pauseFnRef.current = pause;
+  resumeFnRef.current = resume;
+
   // Caller decides whether to save (commitRun) or discard (discardRun).
   const stop = useCallback((): Run | null => {
     haptic(60);
@@ -273,6 +315,10 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    addDistanceToActiveShoe(run.distanceM);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("orbit:run-saved"));
+    }
     const lang = langRef.current;
     const km = (run.distanceM / 1000).toFixed(2);
     const paceWords = paceToWords(run.avgPaceSecPerKm, lang);

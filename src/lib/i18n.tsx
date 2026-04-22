@@ -158,6 +158,32 @@ const en: Dict = {
   "profile.namePlaceholder": "Your name",
   "profile.save": "Save",
   "profile.saved": "Saved",
+  "profile.tapToEdit": "Tap to edit",
+
+  // Shoes
+  "shoes.title": "My shoes",
+  "shoes.add": "Add",
+  "shoes.brand": "Brand",
+  "shoes.model": "Model",
+  "shoes.maxKm": "Max distance (km)",
+  "shoes.save": "Save",
+  "shoes.empty": "No shoes yet. Add a pair to track lifetime distance.",
+  "shoes.setActive": "Set active",
+  "shoes.remove": "Remove",
+
+  // Personal bests
+  "pr.title": "Personal bests",
+  "pr.best": "Best time",
+  "pr.5k": "5 km",
+  "pr.10k": "10 km",
+  "pr.half": "Half marathon",
+  "pr.full": "Marathon",
+
+  // Auto-pause
+  "settings.autoPause": "Auto-pause",
+  "settings.autoPauseDesc": "Pause when you stop moving",
+  "settings.on": "On",
+  "settings.off": "Off",
 };
 
 const da: Dict = {
@@ -295,6 +321,29 @@ const da: Dict = {
   "profile.namePlaceholder": "Dit navn",
   "profile.save": "Gem",
   "profile.saved": "Gemt",
+  "profile.tapToEdit": "Tryk for at redigere",
+
+  "shoes.title": "Mine sko",
+  "shoes.add": "Tilføj",
+  "shoes.brand": "Mærke",
+  "shoes.model": "Model",
+  "shoes.maxKm": "Maks distance (km)",
+  "shoes.save": "Gem",
+  "shoes.empty": "Ingen sko endnu. Tilføj et par for at spore distance.",
+  "shoes.setActive": "Vælg aktiv",
+  "shoes.remove": "Fjern",
+
+  "pr.title": "Personlige rekorder",
+  "pr.best": "Bedste tid",
+  "pr.5k": "5 km",
+  "pr.10k": "10 km",
+  "pr.half": "Halvmarathon",
+  "pr.full": "Marathon",
+
+  "settings.autoPause": "Auto-pause",
+  "settings.autoPauseDesc": "Pauser automatisk når du stopper",
+  "settings.on": "Til",
+  "settings.off": "Fra",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
