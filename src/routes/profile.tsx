@@ -27,6 +27,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
+  const [runsForGoal, setRunsForGoal] = useState<{ distanceM: number; startedAt: number }[]>([]);
   const { t, lang, setLang } = useI18n();
   const [name, setName] = useState("");
   const [level, setLevel] = useState<Level>("beginner");
@@ -43,6 +44,7 @@ function ProfilePage() {
       distance: runs.reduce((a, r) => a + r.distanceM, 0),
       time: runs.reduce((a, r) => a + r.durationMs, 0),
     });
+    setRunsForGoal(runs);
     const p = loadProfile();
     if (p) {
       setName(p.name);
