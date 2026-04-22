@@ -50,7 +50,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </section>
 
         {/* 2. Hero distance + stats grid */}
-        <section className="glass-strong rounded-3xl p-5 text-center">
+        <section className="glass-strong rounded-3xl p-5 text-center overflow-visible">
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
             {t("stat.distance")}
           </div>
