@@ -67,6 +67,18 @@ function RunMapInner({
           data: { type: "FeatureCollection", features: [] },
         });
         map.addLayer({
+          id: "run-segments-glow",
+          type: "line",
+          source: "run-segments",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-width": 12,
+            "line-opacity": 0.25,
+            "line-blur": 6,
+            "line-color": ["get", "color"],
+          },
+        });
+        map.addLayer({
           id: "run-segments-line",
           type: "line",
           source: "run-segments",
