@@ -6,6 +6,12 @@ export type AppSettings = {
   autoPause: boolean;
   cueIntervalKm: CueInterval;
   haptic: boolean;
+  /**
+   * When true, the heatmap ignores the device's reported GPS speed if it looks
+   * unrealistic (e.g. sudden spikes), and falls back to a smoothed rolling
+   * window over recent points instead.
+   */
+  ignoreGpsSpeedSpikes: boolean;
 };
 
 const STORAGE_KEY = "orbit:settings:v1";
@@ -14,6 +20,7 @@ const DEFAULTS: AppSettings = {
   autoPause: true,
   cueIntervalKm: 1,
   haptic: true,
+  ignoreGpsSpeedSpikes: true,
 };
 
 export function loadSettings(): AppSettings {
