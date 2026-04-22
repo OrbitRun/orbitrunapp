@@ -108,6 +108,30 @@ function ProfilePage() {
         )}
       </header>
 
+      {/* Personalized greeting + goal progress (relocated from run screen) */}
+      <section className="mb-3 glass-strong rounded-2xl px-4 py-3">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-bold">
+          {t("greet.ready", { name: displayName })}
+        </div>
+        {goalProgress && (
+          <>
+            <div className="mt-2 flex items-baseline justify-between">
+              <div className="font-display font-bold text-sm">{goalProgress.label}</div>
+              <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div
+                className="h-full bg-neon shadow-neon transition-all"
+                style={{ width: `${Math.round(goalProgress.pct * 100)}%` }}
+              />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Telemetry status (relocated from run screen) */}
+      <StatusBar gpsActive={false} />
+
       {/* Premium member card with inline-editable name */}
       <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card">
         <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/15 blur-3xl pointer-events-none" />
