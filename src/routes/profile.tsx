@@ -82,10 +82,10 @@ function ProfilePage() {
   const displayName = getDisplayName({ name, level, goal, createdAt: 0 }, lang);
   const initial = displayName.charAt(0).toUpperCase();
 
-  const toggleAutoPause = () => {
-    const next = { ...settings, autoPause: !settings.autoPause };
+  const setCueInterval = (v: CueInterval) => {
+    const next = { ...settings, cueIntervalKm: v };
     setSettings(next);
-    updateSettings({ autoPause: next.autoPause });
+    updateSettings({ cueIntervalKm: v });
   };
 
   return (
