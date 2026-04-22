@@ -2,7 +2,7 @@
 // Replace SPOTIFY_CLIENT_ID with your own Client ID from
 // https://developer.spotify.com/dashboard
 
-export const SPOTIFY_CLIENT_ID = "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID";
+export const SPOTIFY_CLIENT_ID = "60749f03c1184bc6905c571975d97208";
 
 export const SPOTIFY_SCOPES = [
   "user-read-playback-state",
@@ -27,7 +27,7 @@ export type SpotifyToken = {
 
 export function getRedirectUri(): string {
   if (typeof window === "undefined") return "";
-  return `${window.location.origin}/spotify/callback`;
+  return `${window.location.origin}/auth/callback`;
 }
 
 function base64url(bytes: Uint8Array): string {
@@ -66,8 +66,7 @@ export function setStoredToken(t: SpotifyToken | null) {
 }
 
 export function isConfigured(): boolean {
-  const id: string = SPOTIFY_CLIENT_ID;
-  return id !== "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID" && id.length > 0;
+  return SPOTIFY_CLIENT_ID.length > 0;
 }
 
 export async function beginAuth(): Promise<void> {
