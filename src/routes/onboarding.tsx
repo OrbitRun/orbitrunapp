@@ -133,21 +133,14 @@ function OnboardingPage() {
         )}
       </section>
 
-      <footer className="mt-4 pt-3 flex items-center gap-3 shrink-0">
-        {step > 0 ? (
+      <footer className="pt-3 pb-2 flex items-center gap-3 shrink-0">
+        {step > 0 && (
           <button
             onClick={() => setStep((s) => s - 1)}
             className="h-12 px-5 rounded-2xl glass flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em]"
           >
             <ArrowLeft className="h-4 w-4" />
             {t("onb.back")}
-          </button>
-        ) : (
-          <button
-            onClick={() => void navigate({ to: "/" })}
-            className="h-12 px-5 rounded-2xl text-sm font-semibold text-muted-foreground"
-          >
-            {t("onb.skip")}
           </button>
         )}
         <button

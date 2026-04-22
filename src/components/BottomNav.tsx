@@ -5,6 +5,9 @@ import { useI18n } from "@/lib/i18n";
 export default function BottomNav() {
   const { location } = useRouterState();
   const { t } = useI18n();
+  if (location.pathname.startsWith("/onboarding") || location.pathname.startsWith("/auth")) {
+    return null;
+  }
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },
     { to: "/history", label: t("nav.history"), Icon: History },
