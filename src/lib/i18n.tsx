@@ -184,6 +184,24 @@ const en: Dict = {
   "settings.autoPauseDesc": "Pause when you stop moving",
   "settings.on": "On",
   "settings.off": "Off",
+
+  // Voice cue interval
+  "settings.cueInterval": "Voice cue frequency",
+  "settings.cueIntervalDesc": "How often the coach speaks during a run",
+  "settings.cue.500m": "Every 500 m",
+  "settings.cue.1km": "Every 1 km",
+
+  // Status row (live dashboard)
+  "status.telemetry": "Telemetry",
+  "status.live": "Live",
+  "status.gps": "GPS",
+  "status.gps.live": "Locked",
+  "status.gps.idle": "Searching",
+  "status.music": "Music",
+  "status.music.value": "Spotify",
+  "status.voice": "Voice",
+  "status.voice.500m": "500 m",
+  "status.voice.1km": "1 km",
 };
 
 const da: Dict = {
@@ -344,6 +362,22 @@ const da: Dict = {
   "settings.autoPauseDesc": "Pauser automatisk når du stopper",
   "settings.on": "Til",
   "settings.off": "Fra",
+
+  "settings.cueInterval": "Stemmesignal-frekvens",
+  "settings.cueIntervalDesc": "Hvor ofte coachen taler under løbet",
+  "settings.cue.500m": "Hver 500 m",
+  "settings.cue.1km": "Hver 1 km",
+
+  "status.telemetry": "Telemetri",
+  "status.live": "Live",
+  "status.gps": "GPS",
+  "status.gps.live": "Låst",
+  "status.gps.idle": "Søger",
+  "status.music": "Musik",
+  "status.music.value": "Spotify",
+  "status.voice": "Stemme",
+  "status.voice.500m": "500 m",
+  "status.voice.1km": "1 km",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
