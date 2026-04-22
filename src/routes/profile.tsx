@@ -83,8 +83,10 @@ function ProfilePage() {
     { code: "da", label: "Dansk" },
   ];
 
-  const displayName = getDisplayName({ name, level, goal, createdAt: 0 }, lang);
+  const profileObj: UserProfile = { name, level, goal, createdAt: 0 };
+  const displayName = getDisplayName(profileObj, lang);
   const initial = displayName.charAt(0).toUpperCase();
+  const goalProgress = computeGoalProgress(profileObj, runsForGoal, lang);
 
   const setCueInterval = (v: CueInterval) => {
     const next = { ...settings, cueIntervalKm: v };
