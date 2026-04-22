@@ -202,6 +202,8 @@ const en: Dict = {
   "status.voice": "Voice",
   "status.voice.500m": "500 m",
   "status.voice.1km": "1 km",
+  "status.haptic": "Haptics",
+  "settings.haptic": "Haptic feedback",
 };
 
 const da: Dict = {
@@ -378,6 +380,8 @@ const da: Dict = {
   "status.voice": "Stemme",
   "status.voice.500m": "500 m",
   "status.voice.1km": "1 km",
+  "status.haptic": "Haptik",
+  "settings.haptic": "Haptisk feedback",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };

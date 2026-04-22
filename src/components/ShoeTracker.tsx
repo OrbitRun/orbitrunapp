@@ -109,7 +109,7 @@ export default function ShoeTracker() {
         </div>
       )}
 
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {shoes.map((s) => {
           const pct = Math.min(100, (s.distanceM / s.maxDistanceM) * 100);
           const km = (s.distanceM / 1000).toFixed(1);
@@ -118,7 +118,11 @@ export default function ShoeTracker() {
           return (
             <li
               key={s.id}
-              className={`glass rounded-2xl p-3 ${s.active ? "border border-neon/40 shadow-neon" : ""}`}
+              className={`relative glass rounded-2xl p-3 transition ${
+                s.active
+                  ? "border border-neon/50 ring-1 ring-neon/30 shadow-[0_0_0_1px_oklch(0.92_0.21_130/0.18)_inset,0_4px_14px_-6px_oklch(0.92_0.21_130/0.45)]"
+                  : "border border-transparent"
+              }`}
             >
               <div className="flex items-center gap-3">
                 <button
@@ -151,7 +155,7 @@ export default function ShoeTracker() {
               <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    warn ? "bg-destructive" : "bg-neon shadow-neon"
+                    warn ? "bg-destructive" : "bg-neon"
                   }`}
                   style={{ width: `${pct}%` }}
                 />
