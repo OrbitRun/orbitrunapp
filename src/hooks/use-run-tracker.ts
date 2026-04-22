@@ -8,6 +8,7 @@ import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/us
 import { addDistanceToActiveShoe, loadShoes } from "@/lib/shoes";
 import { loadSettings } from "@/lib/settings";
 import { fetchWeather, type WeatherSnapshot } from "@/lib/weather";
+import { buildHeatmapSnapshot } from "@/lib/heatmap-snapshot";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -383,7 +384,13 @@ export function useRunTracker() {
   }, [haptic]);
 
   const commitRun = useCallback((run: Run) => {
-    saveRun(run);
+    // Generate the heatmap snapshot once, on save, so history cards render
+    // instantly without spinning up Mapbox per item.
+    const enriched: Run = {
+      ...run,
+      heatmapSnapshot: run.heatmapSnapshot ?? buildHeatmapSnapshot(run.points),
+    };
+    saveRun(enriched);
     addDistanceToActiveShoe(run.distanceM);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("orbit:run-saved"));
