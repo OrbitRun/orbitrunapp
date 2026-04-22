@@ -28,6 +28,7 @@ function RunMapInner({
   className,
   follow = true,
   interactive = true,
+  ignoreGpsSpeedSpikes,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
@@ -35,6 +36,21 @@ function RunMapInner({
   const headRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
+  const [ignoreSpikes, setIgnoreSpikes] = useState<boolean>(
+    ignoreGpsSpeedSpikes ?? (typeof window !== "undefined" ? loadSettings().ignoreGpsSpeedSpikes : true),
+  );
+
+  // Live-update on settings changes if no explicit prop is given.
+  useEffect(() => {
+    if (ignoreGpsSpeedSpikes !== undefined) {
+      setIgnoreSpikes(ignoreGpsSpeedSpikes);
+      return;
+    }
+    if (typeof window === "undefined") return;
+    const handler = () => setIgnoreSpikes(loadSettings().ignoreGpsSpeedSpikes);
+    window.addEventListener("orbit:settings-change", handler);
+    return () => window.removeEventListener("orbit:settings-change", handler);
+  }, [ignoreGpsSpeedSpikes]);
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
