@@ -331,6 +331,8 @@ export function useRunTracker() {
       avgCadenceSpm: s.cadenceSpm,
       points: s.points,
       splits: s.splits,
+      shoe: shoeSnapshotRef.current,
+      weather: weatherRef.current,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
