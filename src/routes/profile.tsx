@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Headphones, Languages, MapPin, Mic, Pencil, Sparkles, Volume2 } from "lucide-react";
+import { Bell, Check, Headphones, Languages, MapPin, Mic, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -19,7 +19,7 @@ import { saveLayout } from "@/lib/stat-metrics";
 import { loadSettings, updateSettings, type AppSettings, type CueInterval } from "@/lib/settings";
 import ShoeTracker from "@/components/ShoeTracker";
 import PRCarousel from "@/components/PRCarousel";
-import StatusBar from "@/components/StatusBar";
+import NeonToggle from "@/components/NeonToggle";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
