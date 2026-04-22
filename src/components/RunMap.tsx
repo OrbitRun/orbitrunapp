@@ -240,7 +240,7 @@ function RunMapInner({
     } else if (follow) {
       map.easeTo({ center: [last.lng, last.lat], duration: 600 });
     }
-  }, [points, follow, ready]);
+  }, [points, follow, ready, ignoreSpikes]);
 
   useEffect(() => {
     if (points.length === 0) {
