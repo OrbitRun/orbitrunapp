@@ -37,6 +37,7 @@ function ProfilePage() {
   const [savedFlash, setSavedFlash] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
+  const [spotifyConnected, setSpotifyConnected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,6 +55,7 @@ function ProfilePage() {
       setGoal(p.goal);
     }
     setSettings(loadSettings());
+    setSpotifyConnected(isAuthed());
   }, []);
 
   useEffect(() => {
