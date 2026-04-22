@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Headphones, Languages, Lock, MapPin, Mic, Music2, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
+import { Bell, Check, Headphones, Languages, Lock, MapPin, Mic, Music2, Pause, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
 import { beginAuth, isAuthed, isConfigured as isSpotifyConfigured, logout as spotifyLogout } from "@/lib/spotify";
 import { sanitizeName } from "@/lib/sanitize";
 import { loadRuns } from "@/lib/run-types";
@@ -190,18 +190,34 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Status & Settings — small discrete row */}
-      <section className="mb-3 flex items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Satellite className="h-3.5 w-3.5 text-neon" />
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
-            {t("status.gps.idle")}
-          </span>
+      {/* Unified telemetry & quick-settings grid */}
+      <section className="mb-3 grid grid-cols-2 gap-2">
+        {/* GPS status */}
+        <div className="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <div className="h-7 w-7 shrink-0 rounded-lg bg-neon/15 grid place-items-center text-neon">
+            <Satellite className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+              {t("status.gps")}
+            </div>
+            <div className="text-[11px] font-bold truncate">{t("status.gps.idle")}</div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            {t("settings.autoPause")}
-          </span>
+
+        {/* Auto-Pause */}
+        <div className="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <div className={`h-7 w-7 shrink-0 rounded-lg grid place-items-center ${settings.autoPause ? "bg-neon/15 text-neon" : "bg-white/5 text-muted-foreground"}`}>
+            <Pause className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+              {t("settings.autoPause")}
+            </div>
+            <div className="text-[11px] font-bold truncate">
+              {settings.autoPause ? t("settings.on") : t("settings.off")}
+            </div>
+          </div>
           <NeonToggle
             checked={settings.autoPause}
             size="sm"
@@ -210,6 +226,50 @@ function ProfilePage() {
               const next = { ...settings, autoPause: v };
               setSettings(next);
               updateSettings({ autoPause: v });
+            }}
+          />
+        </div>
+
+        {/* Voice cue frequency (cycles between 500 m / 1 km) */}
+        <button
+          onClick={() => setCueInterval(settings.cueIntervalKm === 1 ? 0.5 : 1)}
+          className="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5 text-left active:scale-[0.98] transition"
+          aria-label={t("settings.cueInterval")}
+        >
+          <div className="h-7 w-7 shrink-0 rounded-lg bg-neon/15 grid place-items-center text-neon">
+            <Mic className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+              {t("status.voice")}
+            </div>
+            <div className="text-[11px] font-bold truncate tabular">
+              {settings.cueIntervalKm === 0.5 ? t("status.voice.500m") : t("status.voice.1km")}
+            </div>
+          </div>
+        </button>
+
+        {/* Haptic feedback */}
+        <div className="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <div className={`h-7 w-7 shrink-0 rounded-lg grid place-items-center ${settings.haptic ? "bg-neon/15 text-neon" : "bg-white/5 text-muted-foreground"}`}>
+            <Bell className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+              {t("status.haptic")}
+            </div>
+            <div className="text-[11px] font-bold truncate">
+              {settings.haptic ? t("settings.on") : t("settings.off")}
+            </div>
+          </div>
+          <NeonToggle
+            checked={settings.haptic}
+            size="sm"
+            ariaLabel={t("settings.haptic")}
+            onChange={(v) => {
+              const next = { ...settings, haptic: v };
+              setSettings(next);
+              updateSettings({ haptic: v });
             }}
           />
         </div>
