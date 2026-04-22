@@ -108,13 +108,40 @@ function RunMapInner({
       return;
     }
 
+    // Build per-segment features. For each segment, derive a smoothed speed
+    // (rolling ~6s window) so the heatmap reflects actual tempo even when the
+    // device's GPS `speed` field is null or noisy. This re-runs on every new
+    // point, so colors continuously update during the run.
     const features = [];
+    const WINDOW_MS = 6000;
+    const MIN_DIST_M = 4;
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1];
       const b = points[i];
+
+      // Rolling window ending at b
+      let j = i;
+      let dist = 0;
+      while (j > 0 && b.t - points[j - 1].t <= WINDOW_MS) {
+        dist += haversine(points[j - 1], points[j]);
+        j--;
+      }
+      const dur = (b.t - points[j].t) / 1000;
+      let speed: number | null = null;
+      if (dur > 0 && dist >= MIN_DIST_M) {
+        speed = dist / dur;
+      } else if (b.speed != null && b.speed >= 0) {
+        speed = b.speed;
+      } else {
+        // Fallback: instantaneous segment speed
+        const segDist = haversine(a, b);
+        const segDur = (b.t - a.t) / 1000;
+        if (segDur > 0) speed = segDist / segDur;
+      }
+
       features.push({
         type: "Feature" as const,
-        properties: { color: speedToColor(b.speed) },
+        properties: { color: speedToColor(speed) },
         geometry: {
           type: "LineString" as const,
           coordinates: [
