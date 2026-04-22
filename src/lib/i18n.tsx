@@ -204,6 +204,7 @@ const en: Dict = {
   "status.voice.1km": "1 km",
   "status.haptic": "Haptics",
   "settings.haptic": "Haptic feedback",
+  "settings.ignoreGpsSpikes": "Ignore GPS spikes",
 };
 
 const da: Dict = {
@@ -382,6 +383,7 @@ const da: Dict = {
   "status.voice.1km": "1 km",
   "status.haptic": "Haptik",
   "settings.haptic": "Haptisk feedback",
+  "settings.ignoreGpsSpikes": "Ignorér GPS-spring",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
