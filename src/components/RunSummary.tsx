@@ -30,8 +30,8 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
   const range = Math.max(1, max - min);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in">
-      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-44">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in flex flex-col">
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[calc(5rem+5.5rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
         <header className="py-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
             {t("summary.subtitle")}
@@ -44,11 +44,13 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           </div>
         </header>
 
-        <section className="rounded-3xl overflow-hidden border border-border shadow-card mt-2">
+        {/* 1. Map */}
+        <section className="rounded-3xl overflow-hidden border border-border shadow-card">
           <RunMap points={run.points} className="h-[240px] w-full" interactive={true} follow={false} />
         </section>
 
-        <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
+        {/* 2. Hero distance + stats grid */}
+        <section className="glass-strong rounded-3xl p-5 text-center">
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
             {t("stat.distance")}
           </div>
@@ -60,7 +62,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           </div>
         </section>
 
-        <section className="mt-3 grid grid-cols-2 gap-3">
+        <section className="grid grid-cols-2 gap-3">
           <StatTile label={t("stat.duration")} value={formatDuration(run.durationMs)} />
           <StatTile label={t("stat.avgPace")} value={formatPace(run.avgPaceSecPerKm)} unit={t("unit.perKm")} />
           <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
@@ -68,7 +70,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </section>
 
         {run.splits.length > 0 && (
-          <section className="mt-4 glass rounded-2xl p-4">
+          <section className="glass rounded-2xl p-4">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-3">
               {t("splits.title")}
             </div>
@@ -94,12 +96,12 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         )}
       </main>
 
-      {/* Sticky action bar — sits above the bottom navigation (h-20 / 5rem) */}
+      {/* Persistent action bar — z-40 sits below BottomNav (z-50) and above map */}
       <div
-        className="fixed inset-x-0 z-50 px-4 pt-6 pb-3 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none"
+        className="fixed inset-x-0 z-40 px-4 pt-6 pb-3 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none"
         style={{ bottom: `calc(5rem + env(safe-area-inset-bottom, 0px))` }}
       >
-        <div className="mx-auto max-w-md grid grid-cols-2 gap-3 pointer-events-auto">
+        <div className="mx-auto max-w-md flex flex-row gap-4 pointer-events-auto">
           <button
             onClick={() => {
               if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -107,7 +109,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               }
               setConfirmOpen(true);
             }}
-            className="h-14 rounded-2xl glass border border-destructive/60 backdrop-blur-xl flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition shadow-[0_8px_24px_-12px_oklch(0.55_0.22_25/0.6)]"
+            className="flex-1 h-14 rounded-2xl glass border border-destructive/60 backdrop-blur-xl flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition shadow-[0_8px_24px_-12px_oklch(0.55_0.22_25/0.6)]"
           >
             <Trash2 className="h-4 w-4" />
             {t("summary.discard")}
@@ -119,7 +121,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               }
               onSave();
             }}
-            className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
+            className="flex-1 h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
           >
             <Check className="h-4 w-4" />
             {t("summary.save")}
