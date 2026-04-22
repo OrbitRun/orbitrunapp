@@ -2,6 +2,7 @@
 
 import type { Lang } from "@/lib/i18n";
 import type { MetricId, StatLayout } from "@/lib/stat-metrics";
+import { sanitizeName } from "@/lib/sanitize";
 
 export type Level = "beginner" | "expert";
 export type GoalId = "complete5k" | "faster" | "weightloss" | "marathon";
@@ -23,7 +24,11 @@ export function loadProfile(): UserProfile | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const p = JSON.parse(raw) as UserProfile;
-    if (typeof p?.name === "string" && (p.level === "beginner" || p.level === "expert")) return p;
+    if (typeof p?.name === "string" && (p.level === "beginner" || p.level === "expert")) {
+      // Defensive sanitization: strip any HTML/scripts that could have been
+      // injected into localStorage via DevTools or a stale build.
+      return { ...p, name: sanitizeName(p.name) };
+    }
   } catch {
     /* noop */
   }
@@ -33,7 +38,8 @@ export function loadProfile(): UserProfile | null {
 export function saveProfile(p: UserProfile) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+    const safe: UserProfile = { ...p, name: sanitizeName(p.name) };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
     window.dispatchEvent(new CustomEvent("orbit:profile-change"));
   } catch {
     /* noop */

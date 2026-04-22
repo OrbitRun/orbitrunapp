@@ -1,5 +1,7 @@
 // Shoe tracker — store user's running shoes + lifetime distance, persisted in localStorage.
 
+import { sanitizeShoeField } from "@/lib/sanitize";
+
 export type Shoe = {
   id: string;
   brand: string;
@@ -28,7 +30,13 @@ export function loadShoes(): Shoe[] {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const arr = JSON.parse(raw) as Shoe[];
-    return Array.isArray(arr) ? arr : [];
+    if (!Array.isArray(arr)) return [];
+    // Defensive sanitization on read so legacy/tampered values can't reach the DOM unsafely.
+    return arr.map((s) => ({
+      ...s,
+      brand: sanitizeShoeField(s?.brand),
+      model: sanitizeShoeField(s?.model),
+    }));
   } catch {
     return [];
   }
@@ -48,8 +56,8 @@ export function addShoe(input: { brand: string; model: string; maxDistanceM?: nu
   const shoes = loadShoes();
   const shoe: Shoe = {
     id: uid(),
-    brand: input.brand.trim(),
-    model: input.model.trim(),
+    brand: sanitizeShoeField(input.brand),
+    model: sanitizeShoeField(input.model),
     maxDistanceM: input.maxDistanceM ?? DEFAULT_MAX_M,
     distanceM: 0,
     active: shoes.every((s) => !s.active), // first shoe becomes active automatically

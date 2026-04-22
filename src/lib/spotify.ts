@@ -15,6 +15,7 @@ export const SPOTIFY_SCOPES = [
 
 const TOKEN_KEY = "pulse.spotify.token";
 const VERIFIER_KEY = "pulse.spotify.verifier";
+const STATE_KEY = "pulse.spotify.state";
 
 export type SpotifyToken = {
   access_token: string;
@@ -73,7 +74,10 @@ export async function beginAuth(): Promise<void> {
   if (!isConfigured()) throw new Error("Spotify Client ID not configured");
   const verifier = randomString(96);
   const challenge = base64url(await sha256(verifier));
+  // CSRF protection: random state we'll verify on callback.
+  const state = randomString(32);
   sessionStorage.setItem(VERIFIER_KEY, verifier);
+  sessionStorage.setItem(STATE_KEY, state);
 
   const params = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
@@ -82,13 +86,22 @@ export async function beginAuth(): Promise<void> {
     code_challenge_method: "S256",
     code_challenge: challenge,
     scope: SPOTIFY_SCOPES,
+    state,
   });
+  // Force HTTPS endpoint (Spotify requires it; explicit for clarity).
   window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
-export async function exchangeCode(code: string): Promise<SpotifyToken> {
+export async function exchangeCode(code: string, returnedState?: string | null): Promise<SpotifyToken> {
   const verifier = sessionStorage.getItem(VERIFIER_KEY);
+  const expectedState = sessionStorage.getItem(STATE_KEY);
   if (!verifier) throw new Error("Missing PKCE verifier");
+  // CSRF check: returned state must match what we generated.
+  if (expectedState && returnedState !== expectedState) {
+    sessionStorage.removeItem(VERIFIER_KEY);
+    sessionStorage.removeItem(STATE_KEY);
+    throw new Error("Invalid OAuth state");
+  }
   const body = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
     grant_type: "authorization_code",
@@ -112,6 +125,7 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
   };
   setStoredToken(tok);
   sessionStorage.removeItem(VERIFIER_KEY);
+  sessionStorage.removeItem(STATE_KEY);
   return tok;
 }
 
@@ -155,6 +169,11 @@ async function getValidToken(): Promise<string | null> {
 
 export function logout() {
   setStoredToken(null);
+  // Wipe any in-flight OAuth artifacts so a stale state can't be reused.
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem(VERIFIER_KEY);
+    sessionStorage.removeItem(STATE_KEY);
+  }
 }
 
 export function isAuthed(): boolean {
