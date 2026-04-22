@@ -58,6 +58,18 @@ function ProfilePage() {
     setSpotifyConnected(isAuthed());
   }, []);
 
+  // Re-check Spotify connection when the tab regains focus, so the status
+  // pill updates immediately after returning from the OAuth callback.
+  useEffect(() => {
+    const recheck = () => setSpotifyConnected(isAuthed());
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
+    return () => {
+      window.removeEventListener("focus", recheck);
+      document.removeEventListener("visibilitychange", recheck);
+    };
+  }, []);
+
   useEffect(() => {
     if (editingName) inputRef.current?.focus();
   }, [editingName]);
