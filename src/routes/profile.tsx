@@ -215,9 +215,9 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* C. Active Goal */}
+      {/* Active Goal */}
       {goalProgress && (
-        <section className="mb-5 glass-strong rounded-2xl px-4 py-3">
+        <section className="mb-3 glass-strong rounded-2xl px-4 py-2.5">
           <div className="flex items-baseline justify-between">
             <div className="font-display font-bold text-sm">{goalProgress.label}</div>
             <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
@@ -231,39 +231,8 @@ function ProfilePage() {
         </section>
       )}
 
-      {/* D. Stats Row */}
-      <section className="mb-5 grid grid-cols-3 gap-3 glass rounded-2xl p-4">
-        <div className="text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.runs")}
-          </div>
-          <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.km")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">
-            {formatDistance(stats.distance)}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.time")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">
-            {formatDuration(stats.time)}
-          </div>
-        </div>
-      </section>
-
-      {/* E. Personal Bests carousel */}
-      <div className="mb-5">
-        <PRCarousel />
-      </div>
-
-      {/* F. Shoe tracker */}
-      <div className="mb-5">
+      {/* Shoe tracker */}
+      <div className="mb-3">
         <ShoeTracker />
       </div>
 
