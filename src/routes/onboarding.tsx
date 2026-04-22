@@ -48,7 +48,7 @@ function OnboardingPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md min-h-screen flex flex-col px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-8">
+    <main className="mx-auto max-w-md h-[100dvh] flex flex-col px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
       <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold text-center">
         {t("onb.step", { n: step + 1 })}
       </div>
@@ -61,19 +61,19 @@ function OnboardingPage() {
         ))}
       </div>
 
-      <header className="mt-6 text-center">
-        <div className="inline-flex h-14 w-14 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] items-center justify-center text-background shadow-neon">
-          {step === 0 ? <User className="h-6 w-6" /> : step === 1 ? <Sparkles className="h-6 w-6" /> : <Flag className="h-6 w-6" />}
+      <header className="mt-4 text-center">
+        <div className="inline-flex h-12 w-12 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] items-center justify-center text-background shadow-neon">
+          {step === 0 ? <User className="h-5 w-5" /> : step === 1 ? <Sparkles className="h-5 w-5" /> : <Flag className="h-5 w-5" />}
         </div>
-        <h1 className="mt-4 font-display font-black text-3xl tracking-tight">
+        <h1 className="mt-3 font-display font-black text-2xl tracking-tight">
           {step === 0 ? t("onb.namePrompt") : step === 1 ? t("onb.levelPrompt") : t("onb.goalPrompt")}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-1.5 text-xs text-muted-foreground">
           {step === 0 ? t("onb.nameHint") : step === 1 ? t("onb.levelHint") : t("onb.goalHint")}
         </p>
       </header>
 
-      <section className="mt-8 flex-1">
+      <section className="mt-5 flex-1 min-h-0 overflow-y-auto">
         {step === 0 && (
           <div className="glass-strong rounded-3xl p-5">
             <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
@@ -133,7 +133,7 @@ function OnboardingPage() {
         )}
       </section>
 
-      <footer className="mt-6 flex items-center gap-3">
+      <footer className="mt-4 pt-3 flex items-center gap-3 shrink-0">
         {step > 0 ? (
           <button
             onClick={() => setStep((s) => s - 1)}

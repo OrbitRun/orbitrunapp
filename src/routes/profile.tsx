@@ -99,8 +99,8 @@ function ProfilePage() {
   };
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-32">
-      <header className="py-3 flex items-center justify-between mb-5">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),0.75rem)] pb-32">
+      <header className="py-2 flex items-center justify-between mb-3">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
             {t("profile.eyebrow")}
@@ -114,11 +114,16 @@ function ProfilePage() {
         )}
       </header>
 
-      {/* A. User Header — premium member card with inline-editable name */}
-      <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card mb-5">
+      {/* PR Carousel — top placement to showcase records first */}
+      <div className="mb-3">
+        <PRCarousel />
+      </div>
+
+      {/* User card with inline-editable name + integrated stats */}
+      <section className="relative overflow-hidden rounded-3xl p-4 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card mb-3">
         <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/15 blur-3xl pointer-events-none" />
-        <div className="relative flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
+        <div className="relative flex items-center gap-3">
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon shrink-0">
             {initial}
           </div>
           <div className="min-w-0 flex-1">
@@ -157,10 +162,36 @@ function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* Integrated stats row */}
+        <div className="relative mt-4 grid grid-cols-3 gap-2 pt-4 border-t border-white/10">
+          <div className="text-center">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.runs")}
+            </div>
+            <div className="font-display font-black text-xl text-neon tabular">{stats.count}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.km")}
+            </div>
+            <div className="font-display font-black text-xl tabular">
+              {formatDistance(stats.distance)}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.time")}
+            </div>
+            <div className="font-display font-black text-xl tabular">
+              {formatDuration(stats.time)}
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* B. Status & Settings — small discrete row */}
-      <section className="mb-5 flex items-center justify-between gap-3 px-1">
+      {/* Status & Settings — small discrete row */}
+      <section className="mb-3 flex items-center justify-between gap-3 px-1">
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <Satellite className="h-3.5 w-3.5 text-neon" />
           <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
@@ -184,9 +215,9 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* C. Active Goal */}
+      {/* Active Goal */}
       {goalProgress && (
-        <section className="mb-5 glass-strong rounded-2xl px-4 py-3">
+        <section className="mb-3 glass-strong rounded-2xl px-4 py-2.5">
           <div className="flex items-baseline justify-between">
             <div className="font-display font-bold text-sm">{goalProgress.label}</div>
             <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
@@ -200,39 +231,8 @@ function ProfilePage() {
         </section>
       )}
 
-      {/* D. Stats Row */}
-      <section className="mb-5 grid grid-cols-3 gap-3 glass rounded-2xl p-4">
-        <div className="text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.runs")}
-          </div>
-          <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.km")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">
-            {formatDistance(stats.distance)}
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.time")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">
-            {formatDuration(stats.time)}
-          </div>
-        </div>
-      </section>
-
-      {/* E. Personal Bests carousel */}
-      <div className="mb-5">
-        <PRCarousel />
-      </div>
-
-      {/* F. Shoe tracker */}
-      <div className="mb-5">
+      {/* Shoe tracker */}
+      <div className="mb-3">
         <ShoeTracker />
       </div>
 
