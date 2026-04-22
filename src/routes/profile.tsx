@@ -273,6 +273,31 @@ function ProfilePage() {
             }}
           />
         </div>
+
+        {/* Ignore GPS speed spikes */}
+        <div className="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <div className={`h-7 w-7 shrink-0 rounded-lg grid place-items-center ${settings.ignoreGpsSpeedSpikes ? "bg-neon/15 text-neon" : "bg-white/5 text-muted-foreground"}`}>
+            <Satellite className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+              {t("settings.ignoreGpsSpikes")}
+            </div>
+            <div className="text-[11px] font-bold truncate">
+              {settings.ignoreGpsSpeedSpikes ? t("settings.on") : t("settings.off")}
+            </div>
+          </div>
+          <NeonToggle
+            checked={settings.ignoreGpsSpeedSpikes}
+            size="sm"
+            ariaLabel={t("settings.ignoreGpsSpikes")}
+            onChange={(v) => {
+              const next = { ...settings, ignoreGpsSpeedSpikes: v };
+              setSettings(next);
+              updateSettings({ ignoreGpsSpeedSpikes: v });
+            }}
+          />
+        </div>
       </section>
 
       {/* Active Goal */}
