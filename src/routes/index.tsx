@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
@@ -19,8 +19,8 @@ import {
   type MetricId,
   type StatLayout,
 } from "@/lib/stat-metrics";
-import { loadProfile, getDisplayName, computeGoalProgress, type UserProfile } from "@/lib/user-profile";
-import { loadRuns, type Run } from "@/lib/run-types";
+import { loadProfile, getDisplayName, type UserProfile } from "@/lib/user-profile";
+import { type Run } from "@/lib/run-types";
 import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
@@ -35,7 +35,6 @@ function RunPage() {
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [runs, setRuns] = useState<{ distanceM: number; startedAt: number }[]>([]);
   const wakeLock = useWakeLock();
 
   useEffect(() => {
@@ -45,10 +44,8 @@ function RunPage() {
       return;
     }
     setProfile(p);
-    setRuns(loadRuns());
     const handler = () => {
       setProfile(loadProfile());
-      setRuns(loadRuns());
     };
     window.addEventListener("orbit:profile-change", handler);
     return () => window.removeEventListener("orbit:profile-change", handler);
@@ -72,10 +69,6 @@ function RunPage() {
   }, []);
 
   const displayName = getDisplayName(profile, lang);
-  const goalProgress = useMemo(
-    () => (profile ? computeGoalProgress(profile, runs, lang) : null),
-    [profile, runs, lang],
-  );
 
   const isActive = t.status === "running" || t.status === "paused";
 
