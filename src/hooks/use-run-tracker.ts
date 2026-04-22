@@ -242,6 +242,9 @@ export function useRunTracker() {
     nameRef.current = profile ? getDisplayName(profile, langRef.current) : "";
     levelRef.current = profile?.level ?? "beginner";
     cueIntervalKmRef.current = cueIntervalKm(levelRef.current);
+    autoPauseEnabledRef.current = loadSettings().autoPause;
+    autoPausedRef.current = false;
+    slowSinceRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
@@ -276,7 +279,10 @@ export function useRunTracker() {
     setState((p) => ({ ...p, status: "running" }));
   }, [haptic]);
 
-  // Stops tracking and returns the in-memory Run WITHOUT persisting it.
+  // Bind ref-callable versions for handlePosition's auto-pause path.
+  pauseFnRef.current = pause;
+  resumeFnRef.current = resume;
+
   // Caller decides whether to save (commitRun) or discard (discardRun).
   const stop = useCallback((): Run | null => {
     haptic(60);
