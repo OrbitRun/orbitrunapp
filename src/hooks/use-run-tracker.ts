@@ -286,7 +286,7 @@ export function useRunTracker() {
     if (watchIdRef.current != null) return;
     watchIdRef.current = navigator.geolocation.watchPosition(handlePosition, handleError, {
       enableHighAccuracy: true,
-      maximumAge: 1000,
+      maximumAge: 0,
       timeout: 15000,
     });
   }, [handlePosition, handleError]);
