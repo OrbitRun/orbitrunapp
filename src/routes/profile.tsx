@@ -230,29 +230,32 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Auto-pause toggle */}
-      <section className="mt-4 glass rounded-2xl p-4 flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-          <Sparkles className="h-4 w-4" />
+      {/* Voice cue frequency */}
+      <section className="mt-4 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Mic className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold">{t("settings.cueInterval")}</div>
+            <div className="text-[11px] text-muted-foreground">{t("settings.cueIntervalDesc")}</div>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold">{t("settings.autoPause")}</div>
-          <div className="text-[11px] text-muted-foreground">{t("settings.autoPauseDesc")}</div>
+        <div className="grid grid-cols-2 gap-2">
+          {([0.5, 1] as CueInterval[]).map((v) => (
+            <button
+              key={v}
+              onClick={() => setCueInterval(v)}
+              className={`py-2.5 rounded-xl text-sm font-bold uppercase tracking-[0.18em] transition active:scale-95 ${
+                settings.cueIntervalKm === v
+                  ? "bg-neon text-primary-foreground shadow-neon"
+                  : "bg-white/5 text-foreground/80 hover:bg-white/10"
+              }`}
+            >
+              {v === 0.5 ? t("settings.cue.500m") : t("settings.cue.1km")}
+            </button>
+          ))}
         </div>
-        <button
-          onClick={toggleAutoPause}
-          role="switch"
-          aria-checked={settings.autoPause}
-          className={`relative h-7 w-12 rounded-full transition ${
-            settings.autoPause ? "bg-neon shadow-neon" : "bg-white/10"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 h-6 w-6 rounded-full bg-background transition-transform ${
-              settings.autoPause ? "translate-x-5" : "translate-x-0.5"
-            }`}
-          />
-        </button>
       </section>
 
       {/* Language selector */}
