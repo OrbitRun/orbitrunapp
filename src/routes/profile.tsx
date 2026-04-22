@@ -10,6 +10,7 @@ import {
   saveProfile,
   defaultLayoutForLevel,
   getDisplayName,
+  computeGoalProgress,
   type GoalId,
   type Level,
   type UserProfile,
@@ -18,6 +19,7 @@ import { saveLayout } from "@/lib/stat-metrics";
 import { loadSettings, updateSettings, type AppSettings, type CueInterval } from "@/lib/settings";
 import ShoeTracker from "@/components/ShoeTracker";
 import PRCarousel from "@/components/PRCarousel";
+import StatusBar from "@/components/StatusBar";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
+  const [runsForGoal, setRunsForGoal] = useState<{ distanceM: number; startedAt: number }[]>([]);
   const { t, lang, setLang } = useI18n();
   const [name, setName] = useState("");
   const [level, setLevel] = useState<Level>("beginner");
@@ -41,6 +44,7 @@ function ProfilePage() {
       distance: runs.reduce((a, r) => a + r.distanceM, 0),
       time: runs.reduce((a, r) => a + r.durationMs, 0),
     });
+    setRunsForGoal(runs);
     const p = loadProfile();
     if (p) {
       setName(p.name);
@@ -79,8 +83,10 @@ function ProfilePage() {
     { code: "da", label: "Dansk" },
   ];
 
-  const displayName = getDisplayName({ name, level, goal, createdAt: 0 }, lang);
+  const profileObj: UserProfile = { name, level, goal, createdAt: 0 };
+  const displayName = getDisplayName(profileObj, lang);
   const initial = displayName.charAt(0).toUpperCase();
+  const goalProgress = computeGoalProgress(profileObj, runsForGoal, lang);
 
   const setCueInterval = (v: CueInterval) => {
     const next = { ...settings, cueIntervalKm: v };
@@ -103,6 +109,30 @@ function ProfilePage() {
           </span>
         )}
       </header>
+
+      {/* Personalized greeting + goal progress (relocated from run screen) */}
+      <section className="mb-3 glass-strong rounded-2xl px-4 py-3">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-bold">
+          {t("greet.ready", { name: displayName })}
+        </div>
+        {goalProgress && (
+          <>
+            <div className="mt-2 flex items-baseline justify-between">
+              <div className="font-display font-bold text-sm">{goalProgress.label}</div>
+              <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <div
+                className="h-full bg-neon shadow-neon transition-all"
+                style={{ width: `${Math.round(goalProgress.pct * 100)}%` }}
+              />
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* Telemetry status (relocated from run screen) */}
+      <StatusBar gpsActive={false} />
 
       {/* Premium member card with inline-editable name */}
       <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card">
