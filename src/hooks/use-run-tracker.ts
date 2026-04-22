@@ -107,6 +107,13 @@ export function useRunTracker() {
 
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
+      // Fetch weather snapshot once per run from the first GPS fix.
+      if (!weatherFetchedRef.current && stateRef.current.startedAt) {
+        weatherFetchedRef.current = true;
+        void fetchWeather(pos.coords.latitude, pos.coords.longitude, langRef.current).then((w) => {
+          if (w) weatherRef.current = w;
+        });
+      }
       // Auto-pause detection (runs regardless of running/paused)
       if (autoPauseEnabledRef.current && stateRef.current.startedAt) {
         const speedMs = pos.coords.speed; // null on some devices
