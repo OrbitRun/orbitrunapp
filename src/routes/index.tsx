@@ -6,7 +6,6 @@ import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
-import StatusBar from "@/components/StatusBar";
 import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -160,28 +159,6 @@ function RunPage() {
         </div>
       </header>
 
-      {!isActive && profile && (
-        <section className="mb-3 glass-strong rounded-2xl px-4 py-3">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-bold">
-            {tr("greet.ready", { name: displayName })}
-          </div>
-          {goalProgress && (
-            <>
-              <div className="mt-2 flex items-baseline justify-between">
-                <div className="font-display font-bold text-sm">{goalProgress.label}</div>
-                <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
-              </div>
-              <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                <div
-                  className="h-full bg-neon shadow-neon transition-all"
-                  style={{ width: `${Math.round(goalProgress.pct * 100)}%` }}
-                />
-              </div>
-            </>
-          )}
-        </section>
-      )}
-
       <section className="relative">
         <div className="rounded-3xl overflow-hidden border border-border shadow-card">
           <RunMap points={t.points} className="h-[260px] w-full" interactive={!isActive} />
@@ -208,8 +185,6 @@ function RunPage() {
           </span>
         </div>
       </section>
-
-      <StatusBar gpsActive={t.points.length > 0} />
 
       <section className="mt-4 flex items-center justify-between px-1">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
