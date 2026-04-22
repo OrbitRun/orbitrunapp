@@ -4,12 +4,15 @@ import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { haversine, speedToColor } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { loadSettings } from "@/lib/settings";
 
 type Props = {
   points: GeoPoint[];
   className?: string;
   follow?: boolean;
   interactive?: boolean;
+  /** Override for the user setting; primarily for tests/storybook. */
+  ignoreGpsSpeedSpikes?: boolean;
 };
 
 export default function RunMap(props: Props) {
