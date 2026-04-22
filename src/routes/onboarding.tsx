@@ -133,7 +133,7 @@ function OnboardingPage() {
         )}
       </section>
 
-      <footer className="mt-6 flex items-center gap-3">
+      <footer className="mt-4 pt-3 flex items-center gap-3 shrink-0">
         {step > 0 ? (
           <button
             onClick={() => setStep((s) => s - 1)}
