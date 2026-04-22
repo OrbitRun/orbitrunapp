@@ -69,6 +69,10 @@ export function useRunTracker() {
   const cueIntervalKmRef = useRef<number>(1);
   const lastCueKmRef = useRef<number>(0);
   const levelRef = useRef<Level>("beginner");
+  // Auto-pause: speed under 2 km/h (~0.555 m/s) sustained for 3s.
+  const autoPauseEnabledRef = useRef(true);
+  const autoPausedRef = useRef(false);
+  const slowSinceRef = useRef<number | null>(null);
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
