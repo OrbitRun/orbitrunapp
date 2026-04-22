@@ -232,11 +232,6 @@ function ProfilePage() {
         <ShoeTracker />
       </div>
 
-      {/* Personal Bests carousel */}
-      <PRCarousel />
-
-      {/* Shoe tracker */}
-      <ShoeTracker />
 
       {/* Level */}
       <section className="mt-4">
