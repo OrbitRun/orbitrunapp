@@ -34,6 +34,8 @@ export type Run = {
   splits: Split[];
   shoe?: { brand: string; model: string } | null;
   weather?: RunWeather | null;
+  /** Pre-rendered SVG data URL of the speed heatmap, generated on save. */
+  heatmapSnapshot?: string | null;
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";
