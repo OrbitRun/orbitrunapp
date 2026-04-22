@@ -47,12 +47,22 @@ function HistoryPage() {
                 className="block glass rounded-2xl overflow-hidden active:scale-[0.99] transition"
               >
                 <div className="h-32 relative">
-                  <RunMap
-                    points={r.points}
-                    className="h-full w-full"
-                    interactive={false}
-                    follow={false}
-                  />
+                  {r.heatmapSnapshot ? (
+                    <img
+                      src={r.heatmapSnapshot}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <RunMap
+                      points={r.points}
+                      className="h-full w-full"
+                      interactive={false}
+                      follow={false}
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
                   <button
                     onClick={(e) => {
