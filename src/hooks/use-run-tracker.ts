@@ -315,6 +315,10 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    addDistanceToActiveShoe(run.distanceM);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("orbit:run-saved"));
+    }
     const lang = langRef.current;
     const km = (run.distanceM / 1000).toFixed(2);
     const paceWords = paceToWords(run.avgPaceSecPerKm, lang);
