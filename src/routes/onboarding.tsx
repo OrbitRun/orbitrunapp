@@ -75,7 +75,7 @@ function OnboardingPage() {
 
       <section className="mt-4 flex-1 min-h-0 px-1 pb-2">
         {step === 0 && (
-          <div className="glass-strong rounded-3xl p-5">
+          <div className="px-1">
             <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
               {t("profile.name")}
             </label>
@@ -84,7 +84,7 @@ function OnboardingPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={t("onb.namePlaceholder")}
-              className="mt-2 w-full bg-transparent border-b-2 border-white/10 focus:border-neon focus:shadow-[0_4px_20px_-4px_oklch(0.92_0.21_140/0.5)] outline-none py-3 text-2xl font-display font-bold tracking-tight transition"
+              className="mt-2 w-full bg-transparent appearance-none rounded-none border-0 border-b-2 border-neon outline-none py-1 text-2xl font-display font-black tracking-tight"
               maxLength={24}
             />
           </div>
