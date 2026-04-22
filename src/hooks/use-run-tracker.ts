@@ -78,6 +78,12 @@ export function useRunTracker() {
   const shoeSnapshotRef = useRef<{ brand: string; model: string } | null>(null);
   const weatherRef = useRef<WeatherSnapshot | null>(null);
   const weatherFetchedRef = useRef(false);
+  // GPS smoothing: rolling buffer of recent raw fixes used for moving average,
+  // plus a min-distance gate so we don't append tiny zigzag jitter to the path.
+  const rawBufferRef = useRef<GeoPoint[]>([]);
+  const SMOOTH_WINDOW = 5;
+  const MIN_MOVE_M = 3;
+  const MAX_ACCURACY_M = 30;
 
   const haptic = useCallback((ms = 30) => {
     if (!hapticEnabledRef.current) return;
