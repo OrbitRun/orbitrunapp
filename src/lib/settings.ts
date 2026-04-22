@@ -1,13 +1,17 @@
 // App settings persisted in localStorage.
 
+export type CueInterval = 0.5 | 1;
+
 export type AppSettings = {
   autoPause: boolean;
+  cueIntervalKm: CueInterval;
 };
 
 const STORAGE_KEY = "orbit:settings:v1";
 
 const DEFAULTS: AppSettings = {
   autoPause: true,
+  cueIntervalKm: 1,
 };
 
 export function loadSettings(): AppSettings {
@@ -15,7 +19,13 @@ export function loadSettings(): AppSettings {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<AppSettings>) };
+    const parsed = JSON.parse(raw) as Partial<AppSettings>;
+    const merged: AppSettings = { ...DEFAULTS, ...parsed };
+    // sanitize cue interval
+    if (merged.cueIntervalKm !== 0.5 && merged.cueIntervalKm !== 1) {
+      merged.cueIntervalKm = 1;
+    }
+    return merged;
   } catch {
     return DEFAULTS;
   }
