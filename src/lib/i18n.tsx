@@ -383,6 +383,7 @@ const da: Dict = {
   "status.voice.1km": "1 km",
   "status.haptic": "Haptik",
   "settings.haptic": "Haptisk feedback",
+  "settings.ignoreGpsSpikes": "Ignorér GPS-spring",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
