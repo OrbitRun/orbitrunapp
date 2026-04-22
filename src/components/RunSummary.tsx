@@ -50,12 +50,12 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </section>
 
         {/* 2. Hero distance + stats grid */}
-        <section className="glass-strong rounded-3xl p-5 text-center">
+        <section className="glass-strong rounded-3xl p-5 text-center overflow-visible">
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
             {t("stat.distance")}
           </div>
-          <div className="mt-1 flex items-baseline justify-center gap-2">
-            <span className="font-display font-black tabular text-[64px] leading-none text-neon">
+          <div className="mt-1 flex items-baseline justify-center gap-2 overflow-visible">
+            <span className="font-display font-black tabular text-[64px] leading-none text-neon [filter:drop-shadow(0_0_24px_oklch(0.92_0.21_130/0.55))_drop-shadow(0_0_48px_oklch(0.92_0.21_130/0.3))]">
               {formatDistance(run.distanceM)}
             </span>
             <span className="text-sm text-muted-foreground font-semibold">{t("unit.km")}</span>
