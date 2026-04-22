@@ -209,6 +209,8 @@ function RunPage() {
         </div>
       </section>
 
+      <StatusBar gpsActive={t.points.length > 0} />
+
       <section className="mt-4 flex items-center justify-between px-1">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
           {editMode ? tr("edit.pickHint") : tr("edit.hint")}
