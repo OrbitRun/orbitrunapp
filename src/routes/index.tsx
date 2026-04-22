@@ -6,6 +6,7 @@ import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
+import StatusBar from "@/components/StatusBar";
 import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -207,6 +208,8 @@ function RunPage() {
           </span>
         </div>
       </section>
+
+      <StatusBar gpsActive={t.points.length > 0} />
 
       <section className="mt-4 flex items-center justify-between px-1">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
