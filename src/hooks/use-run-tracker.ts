@@ -96,8 +96,38 @@ export function useRunTracker() {
     return w;
   }, []);
 
+  const pause = useRef<() => void>(() => {});
+  const resume = useRef<() => void>(() => {});
+
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
+      // Auto-pause detection (runs regardless of running/paused)
+      if (autoPauseEnabledRef.current && stateRef.current.startedAt) {
+        const speedMs = pos.coords.speed; // null on some devices
+        const slow = speedMs != null && speedMs < 0.555; // <2 km/h
+        const status = stateRef.current.status;
+        if (status === "running") {
+          if (slow) {
+            if (slowSinceRef.current == null) slowSinceRef.current = pos.timestamp;
+            else if (!autoPausedRef.current && pos.timestamp - slowSinceRef.current >= 3000) {
+              autoPausedRef.current = true;
+              beep(440, 120, 0.18);
+              pause.current();
+            }
+          } else {
+            slowSinceRef.current = null;
+          }
+        } else if (status === "paused" && autoPausedRef.current) {
+          // Movement detected — resume.
+          if (speedMs != null && speedMs > 0.83) {
+            autoPausedRef.current = false;
+            slowSinceRef.current = null;
+            beep(880, 100, 0.2);
+            resume.current();
+          }
+        }
+      }
+
       setState((prev) => {
         if (prev.status !== "running") return prev;
         const np: GeoPoint = {
