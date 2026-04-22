@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Headphones, Languages, MapPin, Mic, Pencil, Sparkles, Volume2 } from "lucide-react";
+import { Bell, Check, Headphones, Languages, MapPin, Mic, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -19,7 +19,7 @@ import { saveLayout } from "@/lib/stat-metrics";
 import { loadSettings, updateSettings, type AppSettings, type CueInterval } from "@/lib/settings";
 import ShoeTracker from "@/components/ShoeTracker";
 import PRCarousel from "@/components/PRCarousel";
-import StatusBar from "@/components/StatusBar";
+import NeonToggle from "@/components/NeonToggle";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -95,8 +95,8 @@ function ProfilePage() {
   };
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
-      <header className="py-3 flex items-center justify-between">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-32">
+      <header className="py-3 flex items-center justify-between mb-5">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
             {t("profile.eyebrow")}
@@ -110,32 +110,8 @@ function ProfilePage() {
         )}
       </header>
 
-      {/* Personalized greeting + goal progress (relocated from run screen) */}
-      <section className="mb-3 glass-strong rounded-2xl px-4 py-3">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-bold">
-          {t("greet.ready", { name: displayName })}
-        </div>
-        {goalProgress && (
-          <>
-            <div className="mt-2 flex items-baseline justify-between">
-              <div className="font-display font-bold text-sm">{goalProgress.label}</div>
-              <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
-            </div>
-            <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
-              <div
-                className="h-full bg-neon shadow-neon transition-all"
-                style={{ width: `${Math.round(goalProgress.pct * 100)}%` }}
-              />
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Telemetry status (relocated from run screen) */}
-      <StatusBar gpsActive={false} />
-
-      {/* Premium member card with inline-editable name */}
-      <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card">
+      {/* A. User Header — premium member card with inline-editable name */}
+      <section className="relative overflow-hidden rounded-3xl p-5 border border-white/10 bg-gradient-to-br from-[oklch(0.18_0.02_180)] via-[oklch(0.12_0.02_180)] to-[oklch(0.08_0.01_200)] shadow-card mb-5">
         <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/15 blur-3xl pointer-events-none" />
         <div className="relative flex items-center gap-4">
           <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
@@ -177,37 +153,85 @@ function ProfilePage() {
             </div>
           </div>
         </div>
-        <div className="relative mt-5 grid grid-cols-3 gap-3">
-          <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              {t("profile.runs")}
-            </div>
-            <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
+      </section>
+
+      {/* B. Status & Settings — small discrete row */}
+      <section className="mb-5 flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-1.5 text-muted-foreground">
+          <Satellite className="h-3.5 w-3.5 text-neon" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+            {t("status.gps.idle")}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            {t("settings.autoPause")}
+          </span>
+          <NeonToggle
+            checked={settings.autoPause}
+            size="sm"
+            ariaLabel={t("settings.autoPause")}
+            onChange={(v) => {
+              const next = { ...settings, autoPause: v };
+              setSettings(next);
+              updateSettings({ autoPause: v });
+            }}
+          />
+        </div>
+      </section>
+
+      {/* C. Active Goal */}
+      {goalProgress && (
+        <section className="mb-5 glass-strong rounded-2xl px-4 py-3">
+          <div className="flex items-baseline justify-between">
+            <div className="font-display font-bold text-sm">{goalProgress.label}</div>
+            <div className="text-xs text-muted-foreground tabular">{goalProgress.detail}</div>
           </div>
-          <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              {t("profile.km")}
-            </div>
-            <div className="font-display font-black text-2xl tabular">
-              {formatDistance(stats.distance)}
-            </div>
+          <div className="mt-2 h-1.5 rounded-full bg-white/5 overflow-hidden">
+            <div
+              className="h-full bg-neon shadow-neon transition-all"
+              style={{ width: `${Math.round(goalProgress.pct * 100)}%` }}
+            />
           </div>
-          <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              {t("profile.time")}
-            </div>
-            <div className="font-display font-black text-2xl tabular">
-              {formatDuration(stats.time)}
-            </div>
+        </section>
+      )}
+
+      {/* D. Stats Row */}
+      <section className="mb-5 grid grid-cols-3 gap-3 glass rounded-2xl p-4">
+        <div className="text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("profile.runs")}
+          </div>
+          <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("profile.km")}
+          </div>
+          <div className="font-display font-black text-2xl tabular">
+            {formatDistance(stats.distance)}
+          </div>
+        </div>
+        <div className="text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("profile.time")}
+          </div>
+          <div className="font-display font-black text-2xl tabular">
+            {formatDuration(stats.time)}
           </div>
         </div>
       </section>
 
-      {/* Personal Bests carousel */}
-      <PRCarousel />
+      {/* E. Personal Bests carousel */}
+      <div className="mb-5">
+        <PRCarousel />
+      </div>
 
-      {/* Shoe tracker */}
-      <ShoeTracker />
+      {/* F. Shoe tracker */}
+      <div className="mb-5">
+        <ShoeTracker />
+      </div>
+
 
       {/* Level */}
       <section className="mt-4">
