@@ -14,6 +14,13 @@ export type Split = {
   totalDurationMs: number;
 };
 
+export type RunWeather = {
+  tempC: number;
+  code: number;
+  label: string;
+  icon: string;
+};
+
 export type Run = {
   id: string;
   startedAt: number;
@@ -25,6 +32,8 @@ export type Run = {
   avgCadenceSpm: number;
   points: GeoPoint[];
   splits: Split[];
+  shoe?: { brand: string; model: string } | null;
+  weather?: RunWeather | null;
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";

@@ -5,8 +5,9 @@ import { genId, haversine } from "@/lib/run-utils";
 import { beep, speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/user-profile";
-import { addDistanceToActiveShoe } from "@/lib/shoes";
+import { addDistanceToActiveShoe, loadShoes } from "@/lib/shoes";
 import { loadSettings } from "@/lib/settings";
+import { fetchWeather, type WeatherSnapshot } from "@/lib/weather";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -73,8 +74,13 @@ export function useRunTracker() {
   const autoPauseEnabledRef = useRef(true);
   const autoPausedRef = useRef(false);
   const slowSinceRef = useRef<number | null>(null);
+  const hapticEnabledRef = useRef(true);
+  const shoeSnapshotRef = useRef<{ brand: string; model: string } | null>(null);
+  const weatherRef = useRef<WeatherSnapshot | null>(null);
+  const weatherFetchedRef = useRef(false);
 
   const haptic = useCallback((ms = 30) => {
+    if (!hapticEnabledRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(ms);
@@ -101,6 +107,13 @@ export function useRunTracker() {
 
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
+      // Fetch weather snapshot once per run from the first GPS fix.
+      if (!weatherFetchedRef.current && stateRef.current.startedAt) {
+        weatherFetchedRef.current = true;
+        void fetchWeather(pos.coords.latitude, pos.coords.longitude, langRef.current).then((w) => {
+          if (w) weatherRef.current = w;
+        });
+      }
       // Auto-pause detection (runs regardless of running/paused)
       if (autoPauseEnabledRef.current && stateRef.current.startedAt) {
         const speedMs = pos.coords.speed; // null on some devices
@@ -245,12 +258,20 @@ export function useRunTracker() {
     // User-controlled voice cue interval (settings) overrides the level default.
     cueIntervalKmRef.current = settings.cueIntervalKm ?? cueIntervalKm(levelRef.current);
     autoPauseEnabledRef.current = settings.autoPause;
+    hapticEnabledRef.current = settings.haptic;
     autoPausedRef.current = false;
     slowSinceRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
+    // Snapshot active shoe + reset weather fetch flag for this run.
+    const activeShoe = loadShoes().find((s) => s.active) ?? null;
+    shoeSnapshotRef.current = activeShoe
+      ? { brand: activeShoe.brand, model: activeShoe.model }
+      : null;
+    weatherRef.current = null;
+    weatherFetchedRef.current = false;
     const startedAt = Date.now();
     setState({
       ...initial,
@@ -310,6 +331,8 @@ export function useRunTracker() {
       avgCadenceSpm: s.cadenceSpm,
       points: s.points,
       splits: s.splits,
+      shoe: shoeSnapshotRef.current,
+      weather: weatherRef.current,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;

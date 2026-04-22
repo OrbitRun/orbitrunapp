@@ -5,6 +5,7 @@ export type CueInterval = 0.5 | 1;
 export type AppSettings = {
   autoPause: boolean;
   cueIntervalKm: CueInterval;
+  haptic: boolean;
 };
 
 const STORAGE_KEY = "orbit:settings:v1";
@@ -12,6 +13,7 @@ const STORAGE_KEY = "orbit:settings:v1";
 const DEFAULTS: AppSettings = {
   autoPause: true,
   cueIntervalKm: 1,
+  haptic: true,
 };
 
 export function loadSettings(): AppSettings {

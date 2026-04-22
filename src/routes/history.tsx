@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Trash2 } from "lucide-react";
+import { ChevronRight, Footprints, Thermometer, Trash2 } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
@@ -70,7 +70,7 @@ function HistoryPage() {
                   </button>
                 </div>
                 <div className="p-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                       {formatDate(r.startedAt)}
                     </div>
@@ -89,6 +89,25 @@ function HistoryPage() {
                         {t("unit.perKm")}
                       </span>
                     </div>
+                    {(r.shoe || r.weather) && (
+                      <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
+                        {r.shoe && (
+                          <span className="flex items-center gap-1 min-w-0">
+                            <Footprints className="h-3 w-3 text-neon shrink-0" />
+                            <span className="truncate font-semibold">
+                              {r.shoe.brand} {r.shoe.model}
+                            </span>
+                          </span>
+                        )}
+                        {r.weather && (
+                          <span className="flex items-center gap-1 shrink-0">
+                            <span aria-hidden>{r.weather.icon}</span>
+                            <span className="font-mono font-bold tabular">{r.weather.tempC}°C</span>
+                            <span className="hidden sm:inline">· {r.weather.label}</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 </div>
