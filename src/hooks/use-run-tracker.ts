@@ -251,12 +251,20 @@ export function useRunTracker() {
     // User-controlled voice cue interval (settings) overrides the level default.
     cueIntervalKmRef.current = settings.cueIntervalKm ?? cueIntervalKm(levelRef.current);
     autoPauseEnabledRef.current = settings.autoPause;
+    hapticEnabledRef.current = settings.haptic;
     autoPausedRef.current = false;
     slowSinceRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
+    // Snapshot active shoe + reset weather fetch flag for this run.
+    const activeShoe = loadShoes().find((s) => s.active) ?? null;
+    shoeSnapshotRef.current = activeShoe
+      ? { brand: activeShoe.brand, model: activeShoe.model }
+      : null;
+    weatherRef.current = null;
+    weatherFetchedRef.current = false;
     const startedAt = Date.now();
     setState({
       ...initial,
