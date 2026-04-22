@@ -36,17 +36,24 @@ export default function EditableStat({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const triggeredRef = useRef(false);
 
+  const vibrate = (ms: number | number[]) => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(ms);
+      } catch {
+        /* noop */
+      }
+    }
+  };
+
   const start = () => {
     triggeredRef.current = false;
+    // Immediate tap feedback so the long-press feels responsive.
+    vibrate(15);
     timerRef.current = setTimeout(() => {
       triggeredRef.current = true;
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try {
-          navigator.vibrate(40);
-        } catch {
-          /* noop */
-        }
-      }
+      // Stronger double-pulse when edit mode actually activates.
+      vibrate([60, 40, 80]);
       onLongPress();
     }, LONG_PRESS_MS);
   };
