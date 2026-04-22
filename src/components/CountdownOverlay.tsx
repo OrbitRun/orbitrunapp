@@ -15,10 +15,18 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
   useEffect(() => {
     if (count <= 0) {
       speakGo(lang);
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try { navigator.vibrate([80, 60, 160]); } catch { /* noop */ }
+      }
       const id = setTimeout(onComplete, 250);
       return () => clearTimeout(id);
     }
-    if (count <= 3) beep(880, 140, 0.3);
+    if (count <= 3) {
+      beep(880, 140, 0.3);
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        try { navigator.vibrate(50); } catch { /* noop */ }
+      }
+    }
     const id = setTimeout(() => setCount((c) => c - 1), 1000);
     return () => clearTimeout(id);
   }, [count, onComplete, lang]);

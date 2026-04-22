@@ -208,6 +208,8 @@ export function useRunTracker() {
             ? newSplits[newSplits.length - 1].paceSecPerKm
             : prev.avgPaceSecPerKm;
           speakSplit(reachedCue, lastSplitPace, langRef.current, nameRef.current);
+          // Haptic pulse at every cue interval (500 m or 1 km).
+          haptic(120);
           lastCueKmRef.current = reachedCue;
         }
 
