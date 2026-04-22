@@ -61,7 +61,7 @@ function OnboardingPage() {
         ))}
       </div>
 
-      <header className="mt-4 text-center">
+      <header className="mt-3 text-center">
         <div className="inline-flex h-12 w-12 rounded-2xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] items-center justify-center text-background shadow-neon">
           {step === 0 ? <User className="h-5 w-5" /> : step === 1 ? <Sparkles className="h-5 w-5" /> : <Flag className="h-5 w-5" />}
         </div>
@@ -73,7 +73,7 @@ function OnboardingPage() {
         </p>
       </header>
 
-      <section className="mt-5 flex-1 min-h-0 overflow-y-auto">
+      <section className="mt-4 flex-1 min-h-0 px-1 pb-2">
         {step === 0 && (
           <div className="glass-strong rounded-3xl p-5">
             <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
@@ -90,7 +90,7 @@ function OnboardingPage() {
           </div>
         )}
         {step === 1 && (
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3 mb-2">
             {(["beginner", "expert"] as Level[]).map((l) => (
               <button
                 key={l}
@@ -115,7 +115,7 @@ function OnboardingPage() {
           </div>
         )}
         {step === 2 && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mb-2">
             {GOAL_IDS.map((g) => (
               <button
                 key={g}

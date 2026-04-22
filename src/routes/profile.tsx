@@ -145,7 +145,7 @@ function ProfilePage() {
                 }}
                 placeholder={t("profile.namePlaceholder")}
                 maxLength={24}
-                className="w-full bg-transparent border-b-2 border-neon outline-none py-0.5 font-display font-black text-2xl tracking-tight focus:shadow-[0_4px_20px_-4px_oklch(0.92_0.21_140/0.5)] transition"
+                className="w-full bg-transparent appearance-none rounded-none border-0 border-b-2 border-neon outline-none py-0 font-display font-black text-2xl tracking-tight"
               />
             ) : (
               <button
