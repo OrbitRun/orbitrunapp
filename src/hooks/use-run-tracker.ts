@@ -8,6 +8,7 @@ import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/us
 import { addDistanceToActiveShoe, loadShoes } from "@/lib/shoes";
 import { loadSettings } from "@/lib/settings";
 import { fetchWeather, type WeatherSnapshot } from "@/lib/weather";
+import { buildHeatmapSnapshot } from "@/lib/heatmap-snapshot";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
