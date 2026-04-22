@@ -18,45 +18,14 @@ function HistoryPage() {
     setRuns(loadRuns());
   }, []);
 
-  const totalDistance = runs.reduce((a, r) => a + r.distanceM, 0);
-  const totalRuns = runs.length;
-  const totalTime = runs.reduce((a, r) => a + r.durationMs, 0);
-
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
-      <header className="py-3">
+      <header className="py-3 mb-2">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("history.eyebrow")}
         </div>
         <h1 className="font-display font-black text-3xl tracking-tight">{t("history.title")}</h1>
       </header>
-
-      <section className="grid grid-cols-3 gap-3 mb-4">
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("history.runs")}
-          </div>
-          <div className="font-display font-black text-2xl text-neon tabular">{totalRuns}</div>
-        </div>
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("history.distance")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">
-            {formatDistance(totalDistance)}
-            <span className="text-xs text-muted-foreground ml-1">{t("unit.km")}</span>
-          </div>
-        </div>
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("history.time")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">
-            {Math.floor(totalTime / 3600000)}
-            <span className="text-xs text-muted-foreground ml-1">h</span>
-          </div>
-        </div>
-      </section>
 
       {runs.length === 0 ? (
         <div className="glass rounded-3xl p-8 text-center">
