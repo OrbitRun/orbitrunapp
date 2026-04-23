@@ -20,7 +20,7 @@ export default function BottomNav() {
               <Link
                 key={to}
                 to={to}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition ${active ? "text-neon" : "text-muted-foreground"}`}
+                className={`flex-1 flex flex-col items-center gap-1 py-3 rounded-xl transition ${active ? "text-neon" : "text-muted-foreground"}`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-semibold tracking-wide uppercase">{label}</span>
