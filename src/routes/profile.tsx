@@ -59,18 +59,22 @@ function ProfilePage() {
       </header>
 
       {/* Premium Member Card */}
-      <section className="relative overflow-hidden rounded-3xl p-5 border border-neon/20 bg-gradient-to-br from-[oklch(0.18_0.04_160)] via-[oklch(0.14_0.02_160)] to-[oklch(0.12_0.01_160)] shadow-card">
-        <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/10 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden rounded-2xl p-4 border border-neon/20 bg-gradient-to-br from-[oklch(0.18_0.04_160)] via-[oklch(0.13_0.02_160)] to-[oklch(0.10_0.01_160)] shadow-card">
+        <div className="absolute -top-16 -right-16 h-40 w-40 rounded-full bg-neon/10 blur-3xl pointer-events-none" />
+        <div
+          className="absolute inset-x-0 top-0 h-px pointer-events-none"
+          style={{ background: "linear-gradient(90deg, transparent, oklch(0.92 0.21 130 / 0.5), transparent)" }}
+        />
         <div className="relative flex items-center justify-between">
-          <div className="text-[9px] uppercase tracking-[0.3em] text-neon font-black">
+          <div className="text-[8px] uppercase tracking-[0.4em] text-neon font-black">
             {t("profile.memberCard")}
           </div>
-          <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+          <div className="text-[8px] uppercase tracking-[0.3em] text-muted-foreground/80 font-bold">
             Orbit Lab
           </div>
         </div>
-        <div className="relative mt-4 flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
+        <div className="relative mt-3 flex items-center gap-3">
+          <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-lg font-black text-background shadow-neon ring-1 ring-neon/40">
             {initial}
           </div>
           <div className="min-w-0 flex-1">
@@ -80,36 +84,36 @@ function ProfilePage() {
               placeholder={t("profile.namePlaceholder")}
               maxLength={24}
               aria-label={t("profile.name")}
-              className="w-full bg-transparent border-0 border-b border-transparent hover:border-white/10 focus:border-neon focus:outline-none font-display font-bold text-lg truncate px-0 py-0.5 transition-colors placeholder:text-muted-foreground/60"
+              className="w-full bg-transparent border-0 border-b border-transparent hover:border-white/10 focus:border-neon focus:outline-none font-display font-bold text-base leading-tight truncate px-0 py-0 transition-colors placeholder:text-muted-foreground/60"
             />
-            <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-              <Target className="h-3 w-3 text-neon" />
+            <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5 uppercase tracking-[0.14em] font-semibold">
+              <Target className="h-2.5 w-2.5 text-neon" />
               {goalLabel(profile.goal, lang)}
             </div>
           </div>
         </div>
-        <div className="relative mt-5 pt-4 border-t border-white/10 grid grid-cols-3 gap-3">
+        <div className="relative mt-3 pt-3 border-t border-white/10 grid grid-cols-3">
           <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
+            <div className="text-[8px] uppercase tracking-[0.25em] text-muted-foreground font-bold leading-none">
               {t("profile.runs")}
             </div>
-            <div className="mt-0.5 font-display font-black text-2xl text-neon tabular leading-none">
+            <div className="mt-1 font-display font-black text-xl text-neon tabular leading-none">
               {stats.count}
             </div>
           </div>
           <div className="text-center border-x border-white/10">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
+            <div className="text-[8px] uppercase tracking-[0.25em] text-muted-foreground font-bold leading-none">
               {t("profile.km")}
             </div>
-            <div className="mt-0.5 font-display font-black text-2xl tabular leading-none">
+            <div className="mt-1 font-display font-black text-xl tabular leading-none">
               {formatDistance(stats.distance)}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
+            <div className="text-[8px] uppercase tracking-[0.25em] text-muted-foreground font-bold leading-none">
               {t("profile.time")}
             </div>
-            <div className="mt-0.5 font-display font-black text-2xl tabular leading-none">
+            <div className="mt-1 font-display font-black text-xl tabular leading-none">
               {formatDuration(stats.time)}
             </div>
           </div>
