@@ -48,7 +48,7 @@ function OnboardingPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md h-[100dvh] flex flex-col px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
+    <main className="mx-auto max-w-md min-h-[100svh] h-[100svh] flex flex-col px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),5rem)]">
       <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold text-center">
         {t("onb.step", { n: step + 1 })}
       </div>
