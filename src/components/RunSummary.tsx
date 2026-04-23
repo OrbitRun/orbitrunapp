@@ -26,6 +26,7 @@ type Props = {
 export default function RunSummary({ run, onSave, onDiscard }: Props) {
   const { t } = useI18n();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
   const max = run.splits.length ? Math.max(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const min = run.splits.length ? Math.min(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const range = Math.max(1, max - min);

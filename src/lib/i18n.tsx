@@ -101,6 +101,10 @@ const en: Dict = {
   "summary.discardConfirmTitle": "Are you sure?",
   "summary.cancel": "Cancel",
   "summary.confirmDelete": "Yes, delete",
+  "summary.finalConfirmTitle": "Final warning",
+  "summary.finalConfirm": "This will permanently erase the run and all its data. There's no undo.",
+  "summary.finalDelete": "Delete permanently",
+  "summary.keep": "Keep run",
 
   "edit.pickMetric": "Choose metric",
   "edit.pickHint": "Tap a stat to assign it to this slot.",
