@@ -16,7 +16,7 @@ type Props = {
   accent?: boolean;
 };
 
-const LONG_PRESS_MS = 500;
+const LONG_PRESS_MS = 1000;
 
 export default function EditableStat({
   metricId,
