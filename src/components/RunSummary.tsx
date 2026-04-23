@@ -32,7 +32,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in">
-      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-32">
+      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-8">
         <header className="py-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
             {t("summary.subtitle")}
@@ -93,11 +93,9 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             </ul>
           </section>
         )}
-      </main>
 
-      {/* Sticky action bar */}
-      <div className="fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 px-4 bg-gradient-to-t from-background via-background/95 to-transparent">
-        <div className="mx-auto max-w-md grid grid-cols-2 gap-3">
+        {/* Action buttons fixed directly under stats */}
+        <section className="mt-4 grid grid-cols-2 gap-3">
           <button
             onClick={() => setConfirmOpen(true)}
             className="h-14 rounded-2xl border border-destructive/60 bg-destructive/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition"
@@ -120,8 +118,8 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             <Check className="h-4 w-4" />
             {t("summary.save")}
           </button>
-        </div>
-      </div>
+        </section>
+      </main>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="glass-strong border-border">
