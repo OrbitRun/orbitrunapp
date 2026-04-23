@@ -162,7 +162,8 @@ export function useRunTracker() {
           for (let i = lastCueIndexRef.current + 1; i <= cueIndex; i++) {
             // Pace for the cue: use rolling currentPace as best estimate
             const paceForCue = currentPace || prev.avgPaceSecPerKm || 0;
-            haptic(80);
+            // Distinct strong split haptic: triple buzz pattern
+            haptic([120, 80, 120, 80, 220]);
             speakSplit(i, paceForCue, langRef.current, nameRef.current, interval);
           }
           lastCueIndexRef.current = cueIndex;
