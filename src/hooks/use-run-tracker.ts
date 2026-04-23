@@ -4,6 +4,7 @@ import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
+import { displayName, loadProfile } from "@/lib/user-profile";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -36,12 +37,12 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang) {
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string) {
   const paceWords = paceToWords(paceSecPerKm, lang);
   const txt =
     lang === "da"
-      ? `Kilometer ${km} fuldført. Split-tempo ${paceWords}. Samlet distance ${km} kilometer.`
-      : `Kilometer ${km} completed. Split pace ${paceWords}. Total distance ${km} kilometer${km === 1 ? "" : "s"}.`;
+      ? `Godt kæmpet ${name}! Kilometer ${km} fuldført. Split-tempo ${paceWords}.`
+      : `Great work ${name}! Kilometer ${km} completed. Split pace ${paceWords}.`;
   speakLocalized(txt, lang);
 }
 
@@ -56,6 +57,7 @@ export function useRunTracker() {
   const pauseAccumRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const langRef = useRef<Lang>("en");
+  const nameRef = useRef<string>("Runner");
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -136,7 +138,7 @@ export function useRunTracker() {
             };
             newSplits.push(split);
             haptic(80);
-            speakSplit(k, splitPace, langRef.current);
+            speakSplit(k, splitPace, langRef.current, nameRef.current);
           }
           lastSplitKmRef.current = kmCount;
         }
@@ -181,6 +183,7 @@ export function useRunTracker() {
   const start = useCallback(() => {
     haptic(40);
     langRef.current = getStoredLang();
+    nameRef.current = displayName(loadProfile(), langRef.current);
     lastSplitKmRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
@@ -248,12 +251,13 @@ export function useRunTracker() {
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
     const lang = langRef.current;
+    const name = nameRef.current;
     const km = (run.distanceM / 1000).toFixed(2);
     const paceWords = paceToWords(run.avgPaceSecPerKm, lang);
     speakLocalized(
       lang === "da"
-        ? `Løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
-        : `Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
+        ? `Flot klaret ${name}! Løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
+        : `Well done ${name}! Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
       lang,
     );
     setState({ ...initial, status: "finished" });
