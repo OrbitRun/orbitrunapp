@@ -9,6 +9,7 @@ export type UserProfile = {
   goal: RunningGoal;
   level: ExperienceLevel;
   audioCueMeters: AudioCueMeters;
+  hapticEnabled: boolean;
   onboarded: boolean;
 };
 
@@ -19,6 +20,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   goal: "run5k",
   level: "beginner",
   audioCueMeters: 500,
+  hapticEnabled: true,
   onboarded: false,
 };
 
