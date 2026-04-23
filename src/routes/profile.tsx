@@ -37,34 +37,55 @@ function ProfilePage() {
         <h1 className="font-display font-black text-3xl tracking-tight">{t("profile.title")}</h1>
       </header>
 
-      <section className="glass-strong rounded-3xl p-5 flex items-center gap-4">
-        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background">
-          R
+      <section className="glass-strong rounded-3xl p-5">
+        <div className="flex items-center gap-4">
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background">
+            R
+          </div>
+          <div>
+            <div className="font-display font-bold text-lg">{t("profile.runner")}</div>
+            <div className="text-xs text-muted-foreground">{t("profile.member")}</div>
+          </div>
         </div>
-        <div>
-          <div className="font-display font-bold text-lg">{t("profile.runner")}</div>
-          <div className="text-xs text-muted-foreground">{t("profile.member")}</div>
+        <div className="mt-5 pt-4 border-t border-white/10 grid grid-cols-3 gap-3">
+          <div className="text-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.runs")}
+            </div>
+            <div className="mt-1 font-display font-black text-2xl text-neon tabular leading-none">
+              {stats.count}
+            </div>
+          </div>
+          <div className="text-center border-x border-white/10">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.km")}
+            </div>
+            <div className="mt-1 font-display font-black text-2xl tabular leading-none">
+              {formatDistance(stats.distance)}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {t("profile.time")}
+            </div>
+            <div className="mt-1 font-display font-black text-2xl tabular leading-none">
+              {formatDuration(stats.time)}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mt-4 grid grid-cols-3 gap-3">
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.runs")}
-          </div>
-          <div className="font-display font-black text-2xl text-neon tabular">{stats.count}</div>
+      {/* Slim status row */}
+      <section className="mt-3 glass rounded-2xl px-3 py-2 flex items-center justify-between text-[11px]">
+        <div className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 text-neon" />
+          <span className="font-semibold">{t("profile.gps")}</span>
+          <span className="text-muted-foreground">· {t("profile.gps.value")}</span>
         </div>
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.km")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">{formatDistance(stats.distance)}</div>
-        </div>
-        <div className="glass rounded-2xl p-3 text-center">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-            {t("profile.time")}
-          </div>
-          <div className="font-display font-black text-2xl tabular">{formatDuration(stats.time)}</div>
+        <div className="flex items-center gap-1.5">
+          <Headphones className="h-3.5 w-3.5 text-neon" />
+          <span className="font-semibold">{t("profile.music")}</span>
+          <span className="text-muted-foreground">· {t("profile.music.value")}</span>
         </div>
       </section>
 
@@ -97,9 +118,7 @@ function ProfilePage() {
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         {[
-          { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
           { Icon: Volume2, label: t("profile.audio"), value: t("profile.audio.value") },
-          { Icon: Headphones, label: t("profile.music"), value: t("profile.music.value") },
           { Icon: Bell, label: t("profile.haptic"), value: t("profile.haptic.value") },
         ].map(({ Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3 px-4 py-3">

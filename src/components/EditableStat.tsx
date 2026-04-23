@@ -67,7 +67,13 @@ export default function EditableStat({
   const isHero = variant === "hero";
   const valueClass = isHero
     ? "font-display font-black tabular text-[44px] leading-none"
-    : "font-display font-black tabular text-xl leading-none";
+    : "font-display font-black tabular text-lg leading-none";
+
+  // Auto-shrink secondary value+unit if combined string is long, to keep on one line.
+  const combinedLen = value.length + (unit ? unit.length + 1 : 0);
+  const secondaryValueSize =
+    combinedLen >= 11 ? "text-sm" : combinedLen >= 9 ? "text-base" : "text-lg";
+  const secondaryUnitSize = combinedLen >= 11 ? "text-[9px]" : "text-[10px]";
 
   return (
     <button
@@ -78,7 +84,9 @@ export default function EditableStat({
       onPointerCancel={cancel}
       onContextMenu={(e) => e.preventDefault()}
       className={`relative w-full text-left ${
-        isHero ? "glass-strong rounded-3xl p-5" : "glass rounded-2xl p-4"
+        isHero
+          ? "glass-strong rounded-3xl p-5"
+          : "glass rounded-2xl px-2 py-3 h-[78px] flex flex-col items-center justify-between"
       } transition active:scale-[0.98] ${
         glow ? "ring-1 ring-[var(--neon)]/40 shadow-[0_0_24px_oklch(0.92_0.21_130/0.18)]" : ""
       } ${editMode ? "ring-2 ring-neon/70 animate-pulse" : ""}`}
@@ -86,29 +94,47 @@ export default function EditableStat({
       style={{ touchAction: "manipulation", WebkitUserSelect: "none", userSelect: "none" }}
     >
       {editMode && (
-        <span className="absolute top-2 right-2 h-6 w-6 rounded-full bg-neon text-primary-foreground grid place-items-center shadow-neon">
-          <Pencil className="h-3 w-3" />
+        <span className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-neon text-primary-foreground grid place-items-center shadow-neon">
+          <Pencil className="h-2.5 w-2.5" />
         </span>
       )}
-      <div
-        className={`text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold ${
-          isHero ? "text-center" : ""
-        }`}
-      >
-        {t(def.labelKey)}
-      </div>
-      <div
-        className={`mt-1 flex items-baseline gap-1.5 ${isHero ? "justify-center" : ""}`}
-      >
-        <span
-          className={`${valueClass} ${
-            accent || glow || (isHero && metricId === "distance") ? "text-neon" : "text-foreground"
-          } ${glow ? "glow-neon" : ""}`}
-        >
-          {value}
-        </span>
-        {unit && <span className="text-xs text-muted-foreground font-bold">{unit}</span>}
-      </div>
+      {isHero ? (
+        <>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold text-center">
+            {t(def.labelKey)}
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5 justify-center">
+            <span
+              className={`${valueClass} ${
+                accent || glow || metricId === "distance" ? "text-neon" : "text-foreground"
+              } ${glow ? "glow-neon" : ""}`}
+            >
+              {value}
+            </span>
+            {unit && <span className="text-xs text-muted-foreground font-bold">{unit}</span>}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold text-center leading-none">
+            {t(def.labelKey)}
+          </div>
+          <div className="flex items-baseline justify-center gap-1 whitespace-nowrap w-full px-1">
+            <span
+              className={`font-display font-black tabular ${secondaryValueSize} leading-none ${
+                accent || glow ? "text-neon" : "text-foreground"
+              } ${glow ? "glow-neon" : ""}`}
+            >
+              {value}
+            </span>
+            {unit && (
+              <span className={`${secondaryUnitSize} text-muted-foreground font-bold leading-none`}>
+                {unit}
+              </span>
+            )}
+          </div>
+        </>
+      )}
     </button>
   );
 }
