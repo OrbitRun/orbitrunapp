@@ -140,10 +140,10 @@ const en: Dict = {
   "level.expert.desc": "More metrics · cues every 0.5 km",
 
   // Goals
-  "goal.complete5k": "Finish 5 km",
-  "goal.faster": "Run faster",
-  "goal.weightloss": "Weight loss",
-  "goal.marathon": "Marathon training",
+  "goal.complete5k": "5k",
+  "goal.faster": "10k",
+  "goal.weightloss": "Half Marathon",
+  "goal.marathon": "Marathon",
 
   // Personalized greeting / coach
   "greet.ready": "Ready for your run, {name}?",
@@ -325,10 +325,10 @@ const da: Dict = {
   "level.expert": "Ekspert",
   "level.expert.desc": "Flere målinger · signaler hver 0,5 km",
 
-  "goal.complete5k": "Gennemfør 5 km",
-  "goal.faster": "Løb hurtigere",
-  "goal.weightloss": "Vægttab",
-  "goal.marathon": "Marathontræning",
+  "goal.complete5k": "5 km",
+  "goal.faster": "10 km",
+  "goal.weightloss": "Halvmarathon",
+  "goal.marathon": "Marathon",
 
   "greet.ready": "Klar til din tur, {name}?",
   "greet.goal": "Lad os ramme dit mål: {goal}",

@@ -105,9 +105,9 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             }}
             className="flex-1 h-14 rounded-2xl glass backdrop-blur-xl flex items-center justify-center text-sm font-black uppercase tracking-[0.22em] active:scale-95 transition"
             style={{
-              color: "oklch(0.72 0.14 25)",
+              color: "oklch(0.75 0.13 25)",
               boxShadow:
-                "0 0 32px 4px oklch(0.65 0.18 25 / 0.28), 0 0 64px 12px oklch(0.65 0.18 25 / 0.18)",
+                "0 0 24px 0 oklch(0.65 0.18 25 / 0.18), 0 0 56px 16px oklch(0.65 0.18 25 / 0.12)",
             }}
           >
             {t("summary.discard")}

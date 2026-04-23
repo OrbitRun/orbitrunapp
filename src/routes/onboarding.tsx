@@ -90,7 +90,7 @@ function OnboardingPage() {
           </div>
         )}
         {step === 1 && (
-          <div className="grid grid-cols-1 gap-4 p-2 mb-2 overflow-visible">
+          <div className="grid grid-cols-1 gap-4 px-2 py-6 mb-2 overflow-visible">
             {(["beginner", "expert"] as Level[]).map((l) => (
               <button
                 key={l}
@@ -115,18 +115,18 @@ function OnboardingPage() {
           </div>
         )}
         {step === 2 && (
-          <div className="grid grid-cols-2 gap-4 p-2 mb-2 overflow-visible">
+          <div className="grid grid-cols-2 gap-4 px-2 py-6 mb-2 overflow-visible">
             {GOAL_IDS.map((g) => (
               <button
                 key={g}
                 onClick={() => setGoal(g)}
-                className={`rounded-2xl p-4 text-left transition active:scale-[0.98] min-h-[88px] flex items-center ${
+                className={`rounded-2xl p-4 text-center transition active:scale-[0.98] min-h-[88px] flex items-center justify-center ${
                   goal === g
                     ? "bg-neon/10 border-2 border-neon shadow-neon"
                     : "glass border-2 border-transparent"
                 }`}
               >
-                <div className="font-display font-bold text-[clamp(0.72rem,3.4vw,0.95rem)] leading-tight whitespace-nowrap">
+                <div className="font-display font-black text-xl leading-tight whitespace-nowrap">
                   {t(`goal.${g}`)}
                 </div>
               </button>
