@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
+import { AlertTriangle, Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
+import { MAPBOX_TOKEN } from "@/lib/mapbox";
 import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
@@ -151,6 +152,37 @@ function RunPage() {
           />
         </div>
       </header>
+
+      {!MAPBOX_TOKEN && (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/50 bg-destructive/10 backdrop-blur-md px-3 py-2.5 mb-3 flex items-start gap-2.5 shadow-card"
+        >
+          <div className="h-7 w-7 shrink-0 rounded-lg bg-destructive/20 grid place-items-center text-destructive mt-0.5">
+            <AlertTriangle className="h-3.5 w-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-destructive">
+              {lang === "da" ? "Kort utilgængeligt" : "Map unavailable"}
+            </div>
+            <p className="text-[11px] leading-snug text-foreground/85 mt-0.5">
+              {lang === "da" ? (
+                <>
+                  Tilføj din Mapbox-token som build secret{" "}
+                  <code className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px]">VITE_MAPBOX_TOKEN</code>{" "}
+                  under Workspace Settings → Build Secrets, og genbyg appen for at se kortet.
+                </>
+              ) : (
+                <>
+                  Add your Mapbox token as a build secret{" "}
+                  <code className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px]">VITE_MAPBOX_TOKEN</code>{" "}
+                  under Workspace Settings → Build Secrets, then rebuild to restore the map.
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className="relative">
         <div className="rounded-3xl overflow-hidden border border-border shadow-card">
