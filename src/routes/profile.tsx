@@ -65,12 +65,9 @@ function ProfilePage() {
           className="absolute inset-x-0 top-0 h-px pointer-events-none"
           style={{ background: "linear-gradient(90deg, transparent, oklch(0.92 0.21 130 / 0.5), transparent)" }}
         />
-        <div className="relative flex items-center justify-between">
+        <div className="relative flex items-center">
           <div className="text-[8px] uppercase tracking-[0.4em] text-neon font-black">
-            {t("profile.memberCard")}
-          </div>
-          <div className="text-[8px] uppercase tracking-[0.3em] text-muted-foreground/80 font-bold">
-            Orbit Lab
+            Orbit Lab · Runner
           </div>
         </div>
         <div className="relative mt-3 flex items-center gap-3">
