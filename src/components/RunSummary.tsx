@@ -15,6 +15,7 @@ import {
 import type { Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
+import { addDistanceToPrimary } from "@/lib/shoes";
 
 type Props = {
   run: Run;
@@ -105,7 +106,15 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             {t("summary.discard")}
           </button>
           <button
-            onClick={onSave}
+            onClick={() => {
+              addDistanceToPrimary(run.distanceM);
+              try {
+                window.dispatchEvent(new Event("orbit:shoes-updated"));
+              } catch {
+                /* noop */
+              }
+              onSave();
+            }}
             className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
           >
             <Check className="h-4 w-4" />

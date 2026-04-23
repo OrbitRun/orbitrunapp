@@ -4,6 +4,7 @@ import { Bell, Headphones, Languages, MapPin, Volume2 } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
+import ShoesSection from "@/components/ShoesSection";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -91,6 +92,8 @@ function ProfilePage() {
           ))}
         </div>
       </section>
+
+      <ShoesSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         {[

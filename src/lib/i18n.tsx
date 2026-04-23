@@ -116,6 +116,26 @@ const en: Dict = {
   "voice.minutes": "minutes",
   "voice.seconds": "seconds",
   "voice.perKm": "per kilometer",
+
+  // Shoes
+  "shoes.title": "My shoes",
+  "shoes.add": "Add",
+  "shoes.empty": "No shoes yet. Add your first pair to track mileage.",
+  "shoes.addTitle": "Add a shoe",
+  "shoes.addHint": "Track mileage and get notified when it's time for a new pair.",
+  "shoes.brand": "Brand",
+  "shoes.model": "Model",
+  "shoes.startKm": "Starting km",
+  "shoes.maxKm": "Max km",
+  "shoes.makePrimary": "Set as primary shoe",
+  "shoes.save": "Save shoe",
+  "shoes.primary": "Primary",
+  "shoes.retired": "Retired",
+  "shoes.setPrimary": "Set primary",
+  "shoes.retire": "Retire",
+  "shoes.reactivate": "Reactivate",
+  "shoes.warn": "Time to consider new shoes",
+  "shoes.deleteTitle": "Delete this shoe?",
 };
 
 const da: Dict = {
@@ -215,6 +235,26 @@ const da: Dict = {
   "voice.minutes": "minutter",
   "voice.seconds": "sekunder",
   "voice.perKm": "per kilometer",
+
+  // Shoes
+  "shoes.title": "Mine sko",
+  "shoes.add": "Tilføj",
+  "shoes.empty": "Ingen sko endnu. Tilføj dit første par for at spore kilometer.",
+  "shoes.addTitle": "Tilføj et par sko",
+  "shoes.addHint": "Spor kilometer og få besked, når det er tid til nye sko.",
+  "shoes.brand": "Mærke",
+  "shoes.model": "Model",
+  "shoes.startKm": "Start-km",
+  "shoes.maxKm": "Maks-km",
+  "shoes.makePrimary": "Sæt som primære sko",
+  "shoes.save": "Gem sko",
+  "shoes.primary": "Primær",
+  "shoes.retired": "Pensioneret",
+  "shoes.setPrimary": "Sæt primær",
+  "shoes.retire": "Pensionér",
+  "shoes.reactivate": "Genaktivér",
+  "shoes.warn": "Tid til at overveje nye sko",
+  "shoes.deleteTitle": "Slet disse sko?",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
