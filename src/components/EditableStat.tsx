@@ -116,7 +116,7 @@ export default function EditableStat({
         </>
       ) : (
         <>
-          <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold text-center leading-none">
+          <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold text-center leading-none mb-0.5">
             {t(def.labelKey)}
           </div>
           <div className="flex items-baseline justify-center gap-1 whitespace-nowrap w-full px-1">
