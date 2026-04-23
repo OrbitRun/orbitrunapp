@@ -69,6 +69,13 @@ export function useRunTracker() {
   const cueIntervalRef = useRef<AudioCueMeters>(500);
   const lastCueIndexRef = useRef(0);
   const hapticEnabledRef = useRef<boolean>(true);
+  // Distance at the exact moment the previous split (or run start) was crossed,
+  // so each split duration is computed against the true km boundary — not the
+  // total accumulated distance, which drifts past 1000m between GPS samples.
+  const lastSplitDistanceMRef = useRef(0);
+  const lastSplitTimeMsRef = useRef(0);
+  // Smoothed elevation (EMA) to reject noisy single-sample altitude spikes.
+  const smoothedAltRef = useRef<number | null>(null);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
@@ -98,6 +105,14 @@ export function useRunTracker() {
       let didUpdate = false;
       setState((prev) => {
         if (prev.status !== "running") return prev;
+
+        // ---- GPS quality gate -------------------------------------------------
+        // Reject samples with poor accuracy outright. ≤25m is generous enough
+        // for urban canyons but rejects the 100m+ readings iOS emits when it
+        // first locks on. The first valid sample is always accepted to seed.
+        const acc = pos.coords.accuracy ?? 999;
+        if (acc > 35 && prev.points.length > 0) return prev;
+
         didUpdate = true;
         const np: GeoPoint = {
           lat: pos.coords.latitude,
@@ -110,18 +125,45 @@ export function useRunTracker() {
         let addDist = 0;
         let addElev = 0;
         if (last) {
-          addDist = haversine(last, np);
+          const rawDist = haversine(last, np);
           const dt = (np.t - last.t) / 1000;
-          if (addDist < 2) addDist = 0;
-          if (dt > 0 && addDist / dt > 12) addDist = 0;
-          if (np.alt != null && last.alt != null) {
-            const da = np.alt - last.alt;
-            if (da > 0.5) addElev = da;
+
+          // Drift filter: ignore tiny movements that are within GPS noise.
+          // Threshold scales with reported accuracy (worse fix → larger floor)
+          // to avoid accumulating phantom distance while standing still.
+          const noiseFloor = Math.max(2.5, acc * 0.4);
+
+          // Speed sanity: anything faster than ~10 m/s (~36 km/h) over a short
+          // GPS gap is almost certainly a jump from a re-acquired fix, not a
+          // real sprint. Drop those samples entirely.
+          const speedOk = dt > 0 && rawDist / dt <= 10;
+
+          if (rawDist >= noiseFloor && speedOk) {
+            addDist = rawDist;
           }
+
+          // Elevation: use a per-sample EMA + minimum delta to suppress the
+          // ±3-5m altitude jitter typical of consumer GPS. Only count
+          // sustained climbs (>1m smoothed delta).
+          if (np.alt != null) {
+            const prevSmoothed = smoothedAltRef.current;
+            const nextSmoothed =
+              prevSmoothed == null ? np.alt : prevSmoothed * 0.7 + np.alt * 0.3;
+            if (prevSmoothed != null) {
+              const da = nextSmoothed - prevSmoothed;
+              if (da > 1) addElev = da;
+            }
+            smoothedAltRef.current = nextSmoothed;
+          }
+        } else if (np.alt != null) {
+          smoothedAltRef.current = np.alt;
         }
         const newDist = prev.distanceM + addDist;
         const newPoints = [...prev.points, np];
 
+        // ---- Rolling pace -----------------------------------------------------
+        // 30s window, but require both meaningful distance AND duration to
+        // avoid wild pace swings when the runner is briefly stopped.
         let currentPace = prev.currentPaceSecPerKm;
         const cutoff = np.t - 30000;
         const recent = newPoints.filter((p) => p.t >= cutoff);
@@ -129,40 +171,60 @@ export function useRunTracker() {
           let d = 0;
           for (let i = 1; i < recent.length; i++) d += haversine(recent[i - 1], recent[i]);
           const dur = (recent[recent.length - 1].t - recent[0].t) / 1000;
-          if (d > 5 && dur > 0) {
+          if (d > 10 && dur >= 5) {
             const speedMs = d / dur;
             currentPace = 1000 / speedMs;
           }
         }
 
+        // ---- Splits with boundary interpolation -------------------------------
+        // When a GPS sample carries us PAST a km boundary, estimate the exact
+        // moment we crossed it by interpolating along the segment. This keeps
+        // split times consistent regardless of GPS sample rate.
         const newSplits = [...prev.splits];
         const kmCount = Math.floor(newDist / 1000);
-        if (kmCount > lastSplitKmRef.current) {
+        if (kmCount > lastSplitKmRef.current && last && addDist > 0) {
+          const segStartDist = newDist - addDist;
+          const segDurMs = np.t - last.t;
           for (let k = lastSplitKmRef.current + 1; k <= kmCount; k++) {
-            const totalDuration = prev.elapsedMs;
-            const prevTotal = newSplits.reduce((a, s) => a + s.durationMs, 0);
-            const splitDur = totalDuration - prevTotal;
+            const boundaryDist = k * 1000;
+            // Fraction of the current segment at which we crossed boundary.
+            const frac =
+              addDist > 0 ? Math.min(1, Math.max(0, (boundaryDist - segStartDist) / addDist)) : 1;
+            const boundaryT = last.t + segDurMs * frac;
+            // Total elapsed at boundary, accounting for paused time.
+            const totalDuration = boundaryT - (prev.startedAt ?? boundaryT) - pauseAccumRef.current;
+            const splitDur = totalDuration - lastSplitTimeMsRef.current;
             const splitPace = splitDur > 0 ? splitDur / 1000 : 0;
             const split: Split = {
               km: k,
               durationMs: splitDur,
               paceSecPerKm: splitPace,
-              totalDistanceM: k * 1000,
+              totalDistanceM: boundaryDist,
               totalDurationMs: totalDuration,
             };
             newSplits.push(split);
+            lastSplitDistanceMRef.current = boundaryDist;
+            lastSplitTimeMsRef.current = totalDuration;
           }
           lastSplitKmRef.current = kmCount;
         }
 
-        // Voice cues at configured interval (500m or 1000m)
+        // ---- Voice cues -------------------------------------------------------
+        // Cue pace reflects the actual split just completed when it aligns
+        // with a km boundary; otherwise falls back to rolling pace.
         const interval = cueIntervalRef.current;
         const cueIndex = Math.floor(newDist / interval);
         if (cueIndex > lastCueIndexRef.current) {
           for (let i = lastCueIndexRef.current + 1; i <= cueIndex; i++) {
-            // Pace for the cue: use rolling currentPace as best estimate
-            const paceForCue = currentPace || prev.avgPaceSecPerKm || 0;
-            // Distinct strong split haptic: triple buzz pattern
+            // Prefer the just-recorded split's pace when this cue lands on a km mark.
+            const cueDistance = i * interval;
+            const matchingSplit =
+              cueDistance % 1000 === 0
+                ? newSplits.find((s) => s.totalDistanceM === cueDistance)
+                : undefined;
+            const paceForCue =
+              matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
             haptic([120, 80, 120, 80, 220]);
             speakSplit(i, paceForCue, langRef.current, nameRef.current, interval);
           }
@@ -216,6 +278,9 @@ export function useRunTracker() {
     hapticEnabledRef.current = profile.hapticEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
+    lastSplitDistanceMRef.current = 0;
+    lastSplitTimeMsRef.current = 0;
+    smoothedAltRef.current = null;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
