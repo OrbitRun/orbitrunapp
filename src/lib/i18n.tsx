@@ -414,12 +414,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function useI18n() {
   const ctx = useContext(Ctx);
   if (!ctx) {
-    // Fallback so SSR / non-wrapped trees don't crash
+    const fallbackLang: Lang = typeof window === "undefined" ? "en" : (getSavedLang() ?? detectOSLang());
     return {
-      lang: "en" as Lang,
+      lang: fallbackLang,
       setLang: () => {},
       t: (k: string, vars?: Record<string, string | number>) => {
-        let s = en[k] ?? k;
+        const dict = dicts[fallbackLang];
+        let s = dict[k] ?? en[k] ?? k;
         if (vars) for (const [kk, v] of Object.entries(vars)) s = s.replace(new RegExp(`\\{${kk}\\}`, "g"), String(v));
         return s;
       },
@@ -430,14 +431,7 @@ export function useI18n() {
 
 export function getStoredLang(): Lang {
   if (typeof window === "undefined") return "en";
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
-    if (saved === "en" || saved === "da") return saved;
-  } catch {
-    /* noop */
-  }
-  const nav = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
-  return nav.startsWith("da") ? "da" : "en";
+  return getSavedLang() ?? detectOSLang();
 }
 
 export function paceToWords(secPerKm: number, lang: Lang): string {
