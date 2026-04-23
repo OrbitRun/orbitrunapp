@@ -91,6 +91,35 @@ const en: Dict = {
   "profile.haptic.value": "On",
   "profile.language": "Language",
   "profile.runner": "Runner",
+  "profile.name": "Your name",
+  "profile.namePlaceholder": "Enter your name",
+  "profile.goal": "Primary goal",
+  "profile.level": "Experience level",
+  "profile.level.beginner": "Beginner",
+  "profile.level.expert": "Expert",
+  "profile.level.beginnerHint": "Simpler stats · more voice cues",
+  "profile.level.expertHint": "Advanced metrics · fewer cues",
+  "profile.memberCard": "Member Card",
+
+  // Greeting
+  "greet.ready": "Ready for your run, {name}?",
+  "greet.goal": "Let's hit your goal: {goal}!",
+  "greet.welcome": "Welcome, {name}",
+
+  // Onboarding
+  "onb.title": "Welcome to Orbit Lab",
+  "onb.subtitle": "Let's personalize your experience",
+  "onb.step.name": "What's your name?",
+  "onb.step.goal": "What's your primary goal?",
+  "onb.step.level": "What's your experience level?",
+  "onb.next": "Next",
+  "onb.back": "Back",
+  "onb.finish": "Get started",
+  "onb.skip": "Skip",
+
+  // Voice with name
+  "voice.kmDoneName": "Great work {name}! Kilometer {km} done.",
+  "voice.halfway": "Halfway to your goal, {name}!",
 
   // Summary
   "summary.title": "Run complete",
@@ -216,6 +245,32 @@ const da: Dict = {
   "profile.haptic.value": "Til",
   "profile.language": "Sprog",
   "profile.runner": "Løber",
+  "profile.name": "Dit navn",
+  "profile.namePlaceholder": "Indtast dit navn",
+  "profile.goal": "Primært mål",
+  "profile.level": "Erfaringsniveau",
+  "profile.level.beginner": "Begynder",
+  "profile.level.expert": "Ekspert",
+  "profile.level.beginnerHint": "Simple stats · flere stemmesignaler",
+  "profile.level.expertHint": "Avancerede mål · færre signaler",
+  "profile.memberCard": "Medlemskort",
+
+  "greet.ready": "Klar til din tur, {name}?",
+  "greet.goal": "Lad os ramme dit mål om {goal}!",
+  "greet.welcome": "Velkommen, {name}",
+
+  "onb.title": "Velkommen til Orbit Lab",
+  "onb.subtitle": "Lad os personalisere din oplevelse",
+  "onb.step.name": "Hvad hedder du?",
+  "onb.step.goal": "Hvad er dit primære mål?",
+  "onb.step.level": "Hvad er dit erfaringsniveau?",
+  "onb.next": "Næste",
+  "onb.back": "Tilbage",
+  "onb.finish": "Kom i gang",
+  "onb.skip": "Spring over",
+
+  "voice.kmDoneName": "Godt kæmpet {name}! Kilometer {km} fuldført.",
+  "voice.halfway": "Du er halvvejs mod dit mål, {name}!",
 
   "summary.title": "Løb fuldført",
   "summary.subtitle": "Gennemse din session",

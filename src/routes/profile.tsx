@@ -1,10 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bell, Headphones, Languages, MapPin, Volume2 } from "lucide-react";
+import { Bell, Headphones, Languages, MapPin, Target, User2, Volume2, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
+import {
+  DEFAULT_PROFILE,
+  goalLabel,
+  loadProfile,
+  saveProfile,
+  type ExperienceLevel,
+  type RunningGoal,
+  type UserProfile,
+} from "@/lib/user-profile";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -12,6 +21,7 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
 
   useEffect(() => {
@@ -21,15 +31,25 @@ function ProfilePage() {
       distance: runs.reduce((a, r) => a + r.distanceM, 0),
       time: runs.reduce((a, r) => a + r.durationMs, 0),
     });
+    setProfile(loadProfile());
   }, []);
+
+  const update = (patch: Partial<UserProfile>) => {
+    const next = { ...profile, ...patch, onboarded: true };
+    setProfile(next);
+    saveProfile(next);
+  };
 
   const langs: { code: Lang; label: string }[] = [
     { code: "en", label: "English" },
     { code: "da", label: "Dansk" },
   ];
 
+  const goals: RunningGoal[] = ["run5k", "runFaster", "weightLoss", "marathon"];
+  const initial = (profile.name?.trim()?.charAt(0) || "R").toUpperCase();
+
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-8">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("profile.eyebrow")}
@@ -37,17 +57,32 @@ function ProfilePage() {
         <h1 className="font-display font-black text-3xl tracking-tight">{t("profile.title")}</h1>
       </header>
 
-      <section className="glass-strong rounded-3xl p-5">
-        <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background">
-            R
+      {/* Premium Member Card */}
+      <section className="relative overflow-hidden rounded-3xl p-5 border border-neon/20 bg-gradient-to-br from-[oklch(0.18_0.04_160)] via-[oklch(0.14_0.02_160)] to-[oklch(0.12_0.01_160)] shadow-card">
+        <div className="absolute -top-12 -right-12 h-40 w-40 rounded-full bg-neon/10 blur-3xl pointer-events-none" />
+        <div className="relative flex items-center justify-between">
+          <div className="text-[9px] uppercase tracking-[0.3em] text-neon font-black">
+            {t("profile.memberCard")}
           </div>
-          <div>
-            <div className="font-display font-bold text-lg">{t("profile.runner")}</div>
-            <div className="text-xs text-muted-foreground">{t("profile.member")}</div>
+          <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+            Orbit Lab
           </div>
         </div>
-        <div className="mt-5 pt-4 border-t border-white/10 grid grid-cols-3 gap-3">
+        <div className="relative mt-4 flex items-center gap-4">
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <div className="font-display font-bold text-lg truncate">
+              {profile.name?.trim() || t("profile.runner")}
+            </div>
+            <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+              <Target className="h-3 w-3 text-neon" />
+              {goalLabel(profile.goal, lang)}
+            </div>
+          </div>
+        </div>
+        <div className="relative mt-5 pt-4 border-t border-white/10 grid grid-cols-3 gap-3">
           <div className="text-center">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
               {t("profile.runs")}
@@ -86,6 +121,80 @@ function ProfilePage() {
           <Headphones className="h-3.5 w-3.5 text-neon" />
           <span className="font-semibold">{t("profile.music")}</span>
           <span className="text-muted-foreground">· {t("profile.music.value")}</span>
+        </div>
+      </section>
+
+      {/* Name input */}
+      <section className="mt-4 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <User2 className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.name")}</div>
+        </div>
+        <input
+          value={profile.name}
+          onChange={(e) => update({ name: e.target.value })}
+          placeholder={t("profile.namePlaceholder")}
+          maxLength={24}
+          className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-neon focus:shadow-neon transition"
+        />
+      </section>
+
+      {/* Goal */}
+      <section className="mt-4 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Target className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.goal")}</div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {goals.map((g) => (
+            <button
+              key={g}
+              onClick={() => update({ goal: g })}
+              className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
+                profile.goal === g
+                  ? "bg-neon text-primary-foreground shadow-neon"
+                  : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
+              }`}
+            >
+              {goalLabel(g, lang)}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Experience level */}
+      <section className="mt-4 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Zap className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.level")}</div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {(["beginner", "expert"] as ExperienceLevel[]).map((lv) => (
+            <button
+              key={lv}
+              onClick={() => update({ level: lv })}
+              className={`p-3 rounded-xl text-left transition active:scale-95 ${
+                profile.level === lv
+                  ? "bg-neon/15 border-2 border-neon shadow-neon"
+                  : "bg-white/5 border-2 border-white/10 hover:bg-white/10"
+              }`}
+            >
+              <div
+                className={`text-xs font-black uppercase tracking-[0.12em] ${profile.level === lv ? "text-neon" : ""}`}
+              >
+                {t(`profile.level.${lv}`)}
+              </div>
+              <div className="mt-1 text-[10px] text-muted-foreground leading-tight">
+                {t(`profile.level.${lv}Hint`)}
+              </div>
+            </button>
+          ))}
         </div>
       </section>
 

@@ -7,6 +7,7 @@ import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
+import Onboarding from "@/components/Onboarding";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { primeAudio } from "@/lib/audio-cues";
@@ -20,6 +21,7 @@ import {
   type StatLayout,
 } from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
+import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE } from "@/lib/user-profile";
 import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
@@ -28,11 +30,22 @@ export const Route = createFileRoute("/")({
 
 function RunPage() {
   const t = useRunTracker();
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const wakeLock = useWakeLock();
+
+  useEffect(() => {
+    const p = loadProfile();
+    setProfile(p);
+    if (!p.onboarded) setShowOnboarding(true);
+    const onUpdate = () => setProfile(loadProfile());
+    window.addEventListener("orbit:profile-update", onUpdate);
+    return () => window.removeEventListener("orbit:profile-update", onUpdate);
+  }, []);
 
   useEffect(() => {
     if (!pressed) return;
@@ -96,8 +109,19 @@ function RunPage() {
     void wakeLock.release();
   }, [t, wakeLock]);
 
+  const userName = displayName(profile, lang);
+  const greeting =
+    t.status === "idle" || t.status === "finished"
+      ? tr("greet.ready", { name: userName })
+      : t.status === "running"
+        ? tr("status.running")
+        : t.status === "paused"
+          ? tr("status.paused")
+          : tr("status.finished");
+
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
       <header className="flex items-center justify-between py-3">
@@ -111,15 +135,12 @@ function RunPage() {
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
               {tr("app.brand")}
             </div>
-            <h1 className="font-display font-black text-xl tracking-tight truncate">
-              {t.status === "running"
-                ? tr("status.running")
-                : t.status === "paused"
-                  ? tr("status.paused")
-                  : t.status === "finished"
-                    ? tr("status.finished")
-                    : tr("status.ready")}
-            </h1>
+            <h1 className="font-display font-black text-xl tracking-tight truncate">{greeting}</h1>
+            {(t.status === "idle" || t.status === "finished") && (
+              <div className="text-[10px] text-muted-foreground font-semibold truncate mt-0.5">
+                {tr("greet.goal", { goal: goalLabel(profile.goal, lang) })}
+              </div>
+            )}
           </div>
         </div>
         <div className="h-10 w-10 rounded-full glass grid place-items-center">
