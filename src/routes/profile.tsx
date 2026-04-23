@@ -188,8 +188,19 @@ function ProfilePage() {
       <ShoesSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <button
+          onClick={toggleAudioCue}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Volume2 className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.audio")}</div>
+          <div className="text-xs text-neon font-bold tabular">
+            {t(`profile.audio.value.${profile.audioCueMeters}`)}
+          </div>
+        </button>
         {[
-          { Icon: Volume2, label: t("profile.audio"), value: t("profile.audio.value") },
           { Icon: Bell, label: t("profile.haptic"), value: t("profile.haptic.value") },
           { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
           { Icon: Headphones, label: t("profile.music"), value: t("profile.music.value") },
