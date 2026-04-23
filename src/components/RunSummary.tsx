@@ -137,10 +137,38 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               {t("summary.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                setConfirmOpen(false);
+                setTimeout(() => setFinalConfirmOpen(true), 120);
+              }}
+              className="rounded-xl bg-destructive/80 text-destructive-foreground hover:bg-destructive"
+            >
+              {t("summary.confirmDelete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={finalConfirmOpen} onOpenChange={setFinalConfirmOpen}>
+        <AlertDialogContent className="glass-strong border-destructive/40">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-display font-black text-xl text-destructive">
+              {t("summary.finalConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              {t("summary.finalConfirm")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl bg-neon text-primary-foreground hover:bg-neon/90 border-0 font-bold">
+              {t("summary.keep")}
+            </AlertDialogCancel>
+            <AlertDialogAction
               onClick={onDiscard}
               className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {t("summary.confirmDelete")}
+              {t("summary.finalDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
