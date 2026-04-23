@@ -86,7 +86,7 @@ export default function EditableStat({
       className={`relative w-full text-left ${
         isHero
           ? "glass-strong rounded-3xl p-5"
-          : "glass rounded-3xl px-2 py-2 h-[58px] flex flex-col items-center justify-center gap-0.5"
+          : "glass-strong rounded-3xl px-2 py-2 h-[58px] flex flex-col items-center justify-center gap-0.5"
       } transition active:scale-[0.98] ${
         glow ? "ring-1 ring-[var(--neon)]/40 shadow-[0_0_24px_oklch(0.92_0.21_130/0.18)]" : ""
       } ${editMode ? "ring-2 ring-neon/70 animate-pulse" : ""}`}
