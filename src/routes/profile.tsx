@@ -49,26 +49,26 @@ function ProfilePage() {
         </div>
         <div className="mt-5 pt-4 border-t border-white/10 grid grid-cols-3 gap-3">
           <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
               {t("profile.runs")}
             </div>
-            <div className="mt-1 font-display font-black text-2xl text-neon tabular leading-none">
+            <div className="mt-0.5 font-display font-black text-2xl text-neon tabular leading-none">
               {stats.count}
             </div>
           </div>
           <div className="text-center border-x border-white/10">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
               {t("profile.km")}
             </div>
-            <div className="mt-1 font-display font-black text-2xl tabular leading-none">
+            <div className="mt-0.5 font-display font-black text-2xl tabular leading-none">
               {formatDistance(stats.distance)}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold leading-none">
               {t("profile.time")}
             </div>
-            <div className="mt-1 font-display font-black text-2xl tabular leading-none">
+            <div className="mt-0.5 font-display font-black text-2xl tabular leading-none">
               {formatDuration(stats.time)}
             </div>
           </div>
