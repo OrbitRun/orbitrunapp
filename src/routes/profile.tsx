@@ -196,7 +196,7 @@ function ProfilePage() {
             <Volume2 className="h-4 w-4" />
           </div>
           <div className="flex-1 text-sm font-semibold">{t("profile.audio")}</div>
-          <div className="text-xs text-neon font-bold tabular">
+          <div className="text-xs text-muted-foreground">
             {t(`profile.audio.value.${profile.audioCueMeters}`)}
           </div>
         </button>
