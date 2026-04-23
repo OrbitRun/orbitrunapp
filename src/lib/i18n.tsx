@@ -338,21 +338,45 @@ type I18nCtx = {
 
 const Ctx = createContext<I18nCtx | null>(null);
 
+function detectOSLang(): Lang {
+  if (typeof navigator === "undefined") return "en";
+  const candidates: string[] = [];
+  if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+  if (navigator.language) candidates.push(navigator.language);
+  for (const c of candidates) {
+    if (typeof c === "string" && c.toLowerCase().startsWith("da")) return "da";
+  }
+  return "en";
+}
+
+function getSavedLang(): Lang | null {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
+    if (saved === "en" || saved === "da") return saved;
+  } catch {
+    /* noop */
+  }
+  return null;
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
-      if (saved === "en" || saved === "da") {
-        setLangState(saved);
-      } else {
-        const nav = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
-        if (nav.startsWith("da")) setLangState("da");
+    const saved = getSavedLang();
+    setLangState(saved ?? detectOSLang());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLangChange = () => {
+      // Only auto-update when user has not made a manual choice
+      if (getSavedLang() === null) {
+        setLangState(detectOSLang());
       }
-    } catch {
-      /* noop */
-    }
+    };
+    window.addEventListener("languagechange", onLangChange);
+    return () => window.removeEventListener("languagechange", onLangChange);
   }, []);
 
   const setLang = useCallback((l: Lang) => {
