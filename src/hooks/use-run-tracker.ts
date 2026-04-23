@@ -69,6 +69,13 @@ export function useRunTracker() {
   const cueIntervalRef = useRef<AudioCueMeters>(500);
   const lastCueIndexRef = useRef(0);
   const hapticEnabledRef = useRef<boolean>(true);
+  // Distance at the exact moment the previous split (or run start) was crossed,
+  // so each split duration is computed against the true km boundary — not the
+  // total accumulated distance, which drifts past 1000m between GPS samples.
+  const lastSplitDistanceMRef = useRef(0);
+  const lastSplitTimeMsRef = useRef(0);
+  // Smoothed elevation (EMA) to reject noisy single-sample altitude spikes.
+  const smoothedAltRef = useRef<number | null>(null);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
