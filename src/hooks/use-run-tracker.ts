@@ -147,10 +147,21 @@ export function useRunTracker() {
               totalDurationMs: totalDuration,
             };
             newSplits.push(split);
-            haptic(80);
-            speakSplit(k, splitPace, langRef.current, nameRef.current);
           }
           lastSplitKmRef.current = kmCount;
+        }
+
+        // Voice cues at configured interval (500m or 1000m)
+        const interval = cueIntervalRef.current;
+        const cueIndex = Math.floor(newDist / interval);
+        if (cueIndex > lastCueIndexRef.current) {
+          for (let i = lastCueIndexRef.current + 1; i <= cueIndex; i++) {
+            // Pace for the cue: use rolling currentPace as best estimate
+            const paceForCue = currentPace || prev.avgPaceSecPerKm || 0;
+            haptic(80);
+            speakSplit(i, paceForCue, langRef.current, nameRef.current, interval);
+          }
+          lastCueIndexRef.current = cueIndex;
         }
 
         const avgPace =
