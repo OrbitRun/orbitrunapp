@@ -73,7 +73,7 @@ function OnboardingPage() {
         </p>
       </header>
 
-      <section className="mt-4 flex-1 min-h-0 px-3 py-3 overflow-y-auto">
+      <section className="mt-4 flex-1 min-h-0 px-4 py-4 overflow-y-auto overflow-x-visible">
         {step === 0 && (
           <div className="px-1">
             <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
@@ -90,7 +90,7 @@ function OnboardingPage() {
           </div>
         )}
         {step === 1 && (
-          <div className="grid grid-cols-1 gap-3 mb-2">
+          <div className="grid grid-cols-1 gap-4 p-2 mb-2 overflow-visible">
             {(["beginner", "expert"] as Level[]).map((l) => (
               <button
                 key={l}
@@ -115,18 +115,20 @@ function OnboardingPage() {
           </div>
         )}
         {step === 2 && (
-          <div className="grid grid-cols-2 gap-3 mb-2">
+          <div className="grid grid-cols-2 gap-4 p-2 mb-2 overflow-visible">
             {GOAL_IDS.map((g) => (
               <button
                 key={g}
                 onClick={() => setGoal(g)}
-                className={`rounded-2xl p-4 text-left transition active:scale-[0.98] ${
+                className={`rounded-2xl p-4 text-left transition active:scale-[0.98] min-h-[88px] flex items-center ${
                   goal === g
                     ? "bg-neon/10 border-2 border-neon shadow-neon"
                     : "glass border-2 border-transparent"
                 }`}
               >
-                <div className="font-display font-bold text-sm leading-tight break-words hyphens-auto">{t(`goal.${g}`)}</div>
+                <div className="font-display font-bold text-[clamp(0.72rem,3.4vw,0.95rem)] leading-tight whitespace-nowrap">
+                  {t(`goal.${g}`)}
+                </div>
               </button>
             ))}
           </div>

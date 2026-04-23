@@ -36,6 +36,7 @@ function RunMapInner({
   const headRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [ignoreSpikes, setIgnoreSpikes] = useState<boolean>(
     ignoreGpsSpeedSpikes ?? (typeof window !== "undefined" ? loadSettings().ignoreGpsSpeedSpikes : true),
   );
@@ -70,11 +71,17 @@ function RunMapInner({
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: MAPBOX_STYLE,
-        center: [-0.09, 51.505],
-        zoom: 14,
+        center: [12.56, 55.67],
+        zoom: 12,
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
+      });
+
+      map.on("error", (e) => {
+        // eslint-disable-next-line no-console
+        console.warn("[mapbox] error", e?.error?.message ?? e);
+        if (!cancelled) setLoadError(true);
       });
 
       map.on("load", () => {
@@ -248,5 +255,19 @@ function RunMapInner({
     }
   }, [points.length]);
 
-  return <div ref={containerRef} className={className} />;
+  return (
+    <div className={`relative ${className ?? ""}`}>
+      <div ref={containerRef} className="absolute inset-0" />
+      {!ready && !loadError && (
+        <div className="absolute inset-0 grid place-items-center text-xs uppercase tracking-[0.25em] text-muted-foreground font-bold pointer-events-none">
+          Map is loading…
+        </div>
+      )}
+      {loadError && (
+        <div className="absolute inset-0 grid place-items-center text-xs uppercase tracking-[0.25em] text-destructive/80 font-bold pointer-events-none">
+          Map unavailable
+        </div>
+      )}
+    </div>
+  );
 }
