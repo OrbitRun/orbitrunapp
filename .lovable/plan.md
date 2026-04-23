@@ -1,28 +1,41 @@
 
 
-## Skjul scrollbaren på højre side
+## Swipe mellem Løb, Historik og Profil
 
-Brugeren vil fjerne den synlige scrollbar i højre side af appen. Scroll-funktionaliteten bevares — kun den visuelle scrollbar skjules (som de fleste mobilapps).
+Tilføj horisontal swipe-navigation mellem de tre hovedsider, så brugeren kan swipe til venstre/højre for at skifte mellem `/` (Løb), `/history` (Historik) og `/profil` (Profil) — som i en native mobilapp. Bottom-nav forbliver uændret som alternativ navigation.
+
+### Adfærd
+
+- Swipe venstre på `/` → går til `/history`
+- Swipe venstre på `/history` → går til `/profile`
+- Swipe højre på `/profile` → går til `/history`
+- Swipe højre på `/history` → går til `/`
+- Swipe i enderne (højre på `/`, venstre på `/profile`) gør intet
+- Swipe ignoreres hvis gesten starter på interaktive elementer der selv håndterer touch (kortet i `RunMap`, slidere, knapper). Vi tjekker `event.target` mod en liste af selectors (`.mapboxgl-canvas`, `[role="slider"]`, `input`, `button`, osv.) — hvis swipe starter inde i et af dem, ignoreres det.
+- Kun horisontale swipes tæller (horisontal afstand > vertikal afstand, og > ~60px tærskel) — så vertikal scroll i historiklisten forstyrres ikke.
+- Et aktivt løb (timer kører på `/`) blokerer ikke swipe — brugeren kan stadig se historik/profil mens et løb kører, præcis som bottom-nav allerede tillader.
 
 ### Implementering
 
-Tilføj en global CSS-regel i `src/styles.css` der skjuler scrollbaren på tværs af browsere, mens scroll fortsat fungerer:
+1. **Ny hook `src/hooks/use-swipe-nav.ts`**
+   - Tager `{ prev?: string, next?: string }` (route paths).
+   - Returnerer en `ref` der bindes til side-containerens rod-element.
+   - Lytter på `touchstart` / `touchmove` / `touchend` (passive listeners).
+   - Filtrerer touches der starter inde i ignorerede selectors.
+   - Ved succesfuld horisontal swipe (>60px, vinkel < 30°) kalder `useNavigate()` med target-pathen.
 
-```css
-/* Hide scrollbars globally (scrolling still works) */
-html, body {
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* IE/Edge legacy */
-}
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;                /* Chrome/Safari/WebKit */
-}
-```
+2. **Anvend hook i de tre routes**
+   - `src/routes/index.tsx`: `useSwipeNav({ next: "/history" })`
+   - `src/routes/history.tsx`: `useSwipeNav({ prev: "/", next: "/profile" })`
+   - `src/routes/profile.tsx`: `useSwipeNav({ prev: "/history" })`
+   - Ref bindes til `<main>` rod-elementet på hver side.
 
-Den eksisterende `.no-scrollbar`-utility forbliver uændret til lokale brug (fx horisontale lister).
+### Ingen UI-ændringer
+
+Bottom-nav, layouts og indhold på siderne ændres ikke.
 
 ### Filer
 
-- Redigeret: `src/styles.css`
+- Ny: `src/hooks/use-swipe-nav.ts`
+- Redigeret: `src/routes/index.tsx`, `src/routes/history.tsx`, `src/routes/profile.tsx`
 
