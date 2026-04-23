@@ -7,6 +7,7 @@ import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
+import Onboarding from "@/components/Onboarding";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { primeAudio } from "@/lib/audio-cues";
@@ -20,6 +21,7 @@ import {
   type StatLayout,
 } from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
+import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE } from "@/lib/user-profile";
 import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
