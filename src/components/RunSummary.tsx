@@ -31,7 +31,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in flex flex-col">
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[calc(5rem+5.5rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
+      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[calc(6rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
         <header className="py-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
             {t("summary.subtitle")}
@@ -94,14 +94,9 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             </ul>
           </section>
         )}
-      </main>
 
-      {/* Persistent action bar — z-40 sits below BottomNav (z-50) and above map */}
-      <div
-        className="fixed inset-x-0 z-40 px-4 pt-6 pb-3 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none"
-        style={{ bottom: `calc(5rem + env(safe-area-inset-bottom, 0px))` }}
-      >
-        <div className="mx-auto max-w-md flex flex-row gap-4 pointer-events-auto">
+        {/* Action buttons in natural flow, below all stats */}
+        <section className="flex flex-row gap-4 pt-2">
           <button
             onClick={() => {
               if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -126,8 +121,8 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             <Check className="h-4 w-4" />
             {t("summary.save")}
           </button>
-        </div>
-      </div>
+        </section>
+      </main>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="glass-strong border-border">

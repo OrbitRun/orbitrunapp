@@ -48,7 +48,7 @@ function OnboardingPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md min-h-[100svh] h-[100svh] flex flex-col px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),5rem)]">
+    <main className="mx-auto max-w-md min-h-[100svh] h-[100svh] flex flex-col px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]">
       <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold text-center">
         {t("onb.step", { n: step + 1 })}
       </div>
@@ -73,7 +73,7 @@ function OnboardingPage() {
         </p>
       </header>
 
-      <section className="mt-4 flex-1 min-h-0 px-3 py-3">
+      <section className="mt-4 flex-1 min-h-0 px-3 py-3 overflow-y-auto">
         {step === 0 && (
           <div className="px-1">
             <label className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
@@ -126,30 +126,35 @@ function OnboardingPage() {
                     : "glass border-2 border-transparent"
                 }`}
               >
-                <div className="font-display font-bold text-base leading-tight">{t(`goal.${g}`)}</div>
+                <div className="font-display font-bold text-sm leading-tight break-words hyphens-auto">{t(`goal.${g}`)}</div>
               </button>
             ))}
           </div>
         )}
       </section>
 
-      <footer className="pt-3 pb-2 flex items-center gap-3 shrink-0">
-        {step > 0 && (
+      <footer
+        className="fixed inset-x-0 z-50 px-4 pt-6 pb-3 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none"
+        style={{ bottom: `env(safe-area-inset-bottom, 0px)` }}
+      >
+        <div className="mx-auto max-w-md flex items-center gap-3 pointer-events-auto">
+          {step > 0 && (
+            <button
+              onClick={() => setStep((s) => s - 1)}
+              className="h-12 px-5 rounded-2xl glass flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em]"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {t("onb.back")}
+            </button>
+          )}
           <button
-            onClick={() => setStep((s) => s - 1)}
-            className="h-12 px-5 rounded-2xl glass flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em]"
+            onClick={() => (step < 2 ? setStep((s) => s + 1) : finish())}
+            className="ml-auto h-12 px-6 rounded-2xl bg-neon text-primary-foreground font-black uppercase tracking-[0.18em] text-sm flex items-center gap-2 shadow-neon active:scale-95 transition"
           >
-            <ArrowLeft className="h-4 w-4" />
-            {t("onb.back")}
+            {step < 2 ? t("onb.next") : t("onb.finish")}
+            <ArrowRight className="h-4 w-4" />
           </button>
-        )}
-        <button
-          onClick={() => (step < 2 ? setStep((s) => s + 1) : finish())}
-          className="ml-auto h-12 px-6 rounded-2xl bg-neon text-primary-foreground font-black uppercase tracking-[0.18em] text-sm flex items-center gap-2 shadow-neon active:scale-95 transition"
-        >
-          {step < 2 ? t("onb.next") : t("onb.finish")}
-          <ArrowRight className="h-4 w-4" />
-        </button>
+        </div>
       </footer>
     </main>
   );
