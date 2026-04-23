@@ -249,6 +249,8 @@ const da: Dict = {
   "profile.music.value": "Spotify (snart)",
   "profile.haptic": "Haptisk feedback",
   "profile.haptic.value": "Til",
+  "profile.haptic.value.on": "Til",
+  "profile.haptic.value.off": "Fra",
   "profile.language": "Sprog",
   "profile.runner": "Løber",
   "profile.name": "Dit navn",
