@@ -200,8 +200,25 @@ function ProfilePage() {
             {t(`profile.audio.value.${profile.audioCueMeters}`)}
           </div>
         </button>
+        <button
+          onClick={() => {
+            const next = !profile.hapticEnabled;
+            update({ hapticEnabled: next });
+            if (next && typeof navigator !== "undefined" && "vibrate" in navigator) {
+              try { navigator.vibrate(40); } catch { /* noop */ }
+            }
+          }}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Bell className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.haptic")}</div>
+          <div className="text-xs text-muted-foreground">
+            {profile.hapticEnabled ? t("profile.haptic.value.on") : t("profile.haptic.value.off")}
+          </div>
+        </button>
         {[
-          { Icon: Bell, label: t("profile.haptic"), value: t("profile.haptic.value") },
           { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
           { Icon: Headphones, label: t("profile.music"), value: t("profile.music.value") },
         ].map(({ Icon, label, value }) => (
