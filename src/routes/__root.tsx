@@ -64,7 +64,7 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
       { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "mask-icon", href: "/safari-pinned-tab.svg", color: "#0a0d12" },
+      { rel: "mask-icon", href: "/safari-pinned-tab.svg", color: "#C6F432" },
     ],
   }),
   shellComponent: RootShell,
