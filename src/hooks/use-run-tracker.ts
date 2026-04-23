@@ -204,8 +204,11 @@ export function useRunTracker() {
   const start = useCallback(() => {
     haptic(40);
     langRef.current = getStoredLang();
-    nameRef.current = displayName(loadProfile(), langRef.current);
+    const profile = loadProfile();
+    nameRef.current = displayName(profile, langRef.current);
+    cueIntervalRef.current = profile.audioCueMeters ?? 500;
     lastSplitKmRef.current = 0;
+    lastCueIndexRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
