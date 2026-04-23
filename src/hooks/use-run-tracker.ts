@@ -4,7 +4,7 @@ import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
-import { displayName, loadProfile } from "@/lib/user-profile";
+import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";

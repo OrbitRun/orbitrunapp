@@ -2,11 +2,13 @@
 
 export type ExperienceLevel = "beginner" | "expert";
 export type RunningGoal = "run5k" | "runFaster" | "weightLoss" | "marathon";
+export type AudioCueMeters = 500 | 1000;
 
 export type UserProfile = {
   name: string;
   goal: RunningGoal;
   level: ExperienceLevel;
+  audioCueMeters: AudioCueMeters;
   onboarded: boolean;
 };
 
@@ -16,6 +18,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   name: "",
   goal: "run5k",
   level: "beginner",
+  audioCueMeters: 500,
   onboarded: false,
 };
 
