@@ -72,11 +72,16 @@ function ProfilePage() {
           <div className="h-16 w-16 rounded-full bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-2xl font-black text-background shadow-neon">
             {initial}
           </div>
-          <div className="min-w-0">
-            <div className="font-display font-bold text-lg truncate">
-              {profile.name?.trim() || t("profile.runner")}
-            </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <input
+              value={profile.name}
+              onChange={(e) => update({ name: e.target.value })}
+              placeholder={t("profile.namePlaceholder")}
+              maxLength={24}
+              aria-label={t("profile.name")}
+              className="w-full bg-transparent border-0 border-b border-transparent hover:border-white/10 focus:border-neon focus:outline-none font-display font-bold text-lg truncate px-0 py-0.5 transition-colors placeholder:text-muted-foreground/60"
+            />
+            <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
               <Target className="h-3 w-3 text-neon" />
               {goalLabel(profile.goal, lang)}
             </div>
