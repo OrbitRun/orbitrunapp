@@ -129,23 +129,6 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Name input */}
-      <section className="mt-4 glass rounded-2xl p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <User2 className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.name")}</div>
-        </div>
-        <input
-          value={profile.name}
-          onChange={(e) => update({ name: e.target.value })}
-          placeholder={t("profile.namePlaceholder")}
-          maxLength={24}
-          className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-neon focus:shadow-neon transition"
-        />
-      </section>
-
       {/* Goal */}
       <section className="mt-4 glass rounded-2xl p-4">
         <div className="flex items-center gap-3 mb-3">
