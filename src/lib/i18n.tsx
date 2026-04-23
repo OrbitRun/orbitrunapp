@@ -338,21 +338,45 @@ type I18nCtx = {
 
 const Ctx = createContext<I18nCtx | null>(null);
 
+function detectOSLang(): Lang {
+  if (typeof navigator === "undefined") return "en";
+  const candidates: string[] = [];
+  if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+  if (navigator.language) candidates.push(navigator.language);
+  for (const c of candidates) {
+    if (typeof c === "string" && c.toLowerCase().startsWith("da")) return "da";
+  }
+  return "en";
+}
+
+function getSavedLang(): Lang | null {
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
+    if (saved === "en" || saved === "da") return saved;
+  } catch {
+    /* noop */
+  }
+  return null;
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
-      if (saved === "en" || saved === "da") {
-        setLangState(saved);
-      } else {
-        const nav = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
-        if (nav.startsWith("da")) setLangState("da");
+    const saved = getSavedLang();
+    setLangState(saved ?? detectOSLang());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLangChange = () => {
+      // Only auto-update when user has not made a manual choice
+      if (getSavedLang() === null) {
+        setLangState(detectOSLang());
       }
-    } catch {
-      /* noop */
-    }
+    };
+    window.addEventListener("languagechange", onLangChange);
+    return () => window.removeEventListener("languagechange", onLangChange);
   }, []);
 
   const setLang = useCallback((l: Lang) => {
@@ -390,12 +414,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 export function useI18n() {
   const ctx = useContext(Ctx);
   if (!ctx) {
-    // Fallback so SSR / non-wrapped trees don't crash
+    const fallbackLang: Lang = typeof window === "undefined" ? "en" : (getSavedLang() ?? detectOSLang());
     return {
-      lang: "en" as Lang,
+      lang: fallbackLang,
       setLang: () => {},
       t: (k: string, vars?: Record<string, string | number>) => {
-        let s = en[k] ?? k;
+        const dict = dicts[fallbackLang];
+        let s = dict[k] ?? en[k] ?? k;
         if (vars) for (const [kk, v] of Object.entries(vars)) s = s.replace(new RegExp(`\\{${kk}\\}`, "g"), String(v));
         return s;
       },
@@ -406,14 +431,7 @@ export function useI18n() {
 
 export function getStoredLang(): Lang {
   if (typeof window === "undefined") return "en";
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY) as Lang | null;
-    if (saved === "en" || saved === "da") return saved;
-  } catch {
-    /* noop */
-  }
-  const nav = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
-  return nav.startsWith("da") ? "da" : "en";
+  return getSavedLang() ?? detectOSLang();
 }
 
 export function paceToWords(secPerKm: number, lang: Lang): string {
