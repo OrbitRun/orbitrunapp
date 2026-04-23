@@ -278,6 +278,9 @@ export function useRunTracker() {
     hapticEnabledRef.current = profile.hapticEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
+    lastSplitDistanceMRef.current = 0;
+    lastSplitTimeMsRef.current = 0;
+    smoothedAltRef.current = null;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
