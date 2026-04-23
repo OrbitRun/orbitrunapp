@@ -95,8 +95,10 @@ export function useRunTracker() {
 
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
+      let didUpdate = false;
       setState((prev) => {
         if (prev.status !== "running") return prev;
+        didUpdate = true;
         const np: GeoPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
