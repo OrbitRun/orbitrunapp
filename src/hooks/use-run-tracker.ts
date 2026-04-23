@@ -183,6 +183,7 @@ export function useRunTracker() {
           splits: newSplits,
         };
       });
+      if (didUpdate) haptic(15);
     },
     [haptic],
   );
