@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Check, Headphones, Languages, Lock, MapPin, Mic, Music2, Pause, Pencil, Satellite, Sparkles, Volume2 } from "lucide-react";
+import { Bell, Check, Languages, Lock, Mic, Music2, Pause, Pencil, Satellite, Sparkles } from "lucide-react";
 import { beginAuth, isAuthed, isConfigured as isSpotifyConfigured, logout as spotifyLogout } from "@/lib/spotify";
 import { sanitizeName } from "@/lib/sanitize";
 import { loadRuns } from "@/lib/run-types";
