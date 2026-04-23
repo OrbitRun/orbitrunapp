@@ -1,41 +1,35 @@
 
 
-## Swipe mellem Løb, Historik og Profil
+## Sikker bund-padding for iOS gestures
 
-Tilføj horisontal swipe-navigation mellem de tre hovedsider, så brugeren kan swipe til venstre/højre for at skifte mellem `/` (Løb), `/history` (Historik) og `/profil` (Profil) — som i en native mobilapp. Bottom-nav forbliver uændret som alternativ navigation.
+Bottom-nav'en bruger allerede `pb-[env(safe-area-inset-bottom)]` på `<nav>`, men på iOS-enheder med home-indikator (iPhone X og nyere) lægger gesture-zonen sig stadig tæt på pillen, fordi `pb-3` på den indre container kun giver 12px under nav-linkene. Vi sikrer ordentlig clearance.
 
-### Adfærd
+### Ændringer
 
-- Swipe venstre på `/` → går til `/history`
-- Swipe venstre på `/history` → går til `/profile`
-- Swipe højre på `/profile` → går til `/history`
-- Swipe højre på `/history` → går til `/`
-- Swipe i enderne (højre på `/`, venstre på `/profile`) gør intet
-- Swipe ignoreres hvis gesten starter på interaktive elementer der selv håndterer touch (kortet i `RunMap`, slidere, knapper). Vi tjekker `event.target` mod en liste af selectors (`.mapboxgl-canvas`, `[role="slider"]`, `input`, `button`, osv.) — hvis swipe starter inde i et af dem, ignoreres det.
-- Kun horisontale swipes tæller (horisontal afstand > vertikal afstand, og > ~60px tærskel) — så vertikal scroll i historiklisten forstyrres ikke.
-- Et aktivt løb (timer kører på `/`) blokerer ikke swipe — brugeren kan stadig se historik/profil mens et løb kører, præcis som bottom-nav allerede tillader.
+**`src/components/BottomNav.tsx`**
+- Skift den ydre `<nav>` fra `pb-[env(safe-area-inset-bottom)]` til `pb-[max(env(safe-area-inset-bottom),12px)]`, så vi altid har minimum 12px afstand til skærmkanten — også på enheder uden safe-area-inset (Android, ældre iPhones).
+- Sørg for at `pointer-events` på `<nav>` ikke fanger touches i safe-area-zonen: tilføj `pointer-events-none` på `<nav>` og `pointer-events-auto` på pillen, så swipes/gestures i hjemmeknap-området ikke blokeres af nav-containeren.
+- Behold `pb-3` på den indre container for visuel åndelig plads inde i pillen.
 
-### Implementering
+**`src/routes/__root.tsx`** (verificeres — kun hvis nødvendigt)
+- Tjek at `<main>`-indholdet på de tre sider har bundpadding der matcher nav-højden + safe-area, så indhold ikke gemmer sig under pillen. Hvis ikke allerede tilfældet, tilføjes `pb-[calc(env(safe-area-inset-bottom)+96px)]` på siderne.
 
-1. **Ny hook `src/hooks/use-swipe-nav.ts`**
-   - Tager `{ prev?: string, next?: string }` (route paths).
-   - Returnerer en `ref` der bindes til side-containerens rod-element.
-   - Lytter på `touchstart` / `touchmove` / `touchend` (passive listeners).
-   - Filtrerer touches der starter inde i ignorerede selectors.
-   - Ved succesfuld horisontal swipe (>60px, vinkel < 30°) kalder `useNavigate()` med target-pathen.
+### Resultat
 
-2. **Anvend hook i de tre routes**
-   - `src/routes/index.tsx`: `useSwipeNav({ next: "/history" })`
-   - `src/routes/history.tsx`: `useSwipeNav({ prev: "/", next: "/profile" })`
-   - `src/routes/profile.tsx`: `useSwipeNav({ prev: "/history" })`
-   - Ref bindes til `<main>` rod-elementet på hver side.
-
-### Ingen UI-ændringer
-
-Bottom-nav, layouts og indhold på siderne ændres ikke.
+```text
+┌─────────────────────────┐
+│        Page content     │
+│                         │
+│  ┌───────────────────┐  │  ← 16px margin (mx-4)
+│  │ 🏃  📊  👤        │  │  ← Pill (pointer-events-auto)
+│  └───────────────────┘  │
+│  ↕ max(safe-area, 12px) │  ← Clearance over home indicator
+└─────────────────────────┘
+   ↕ iOS gesture zone (~34px) — nu fri for touch-fangst
+```
 
 ### Filer
 
-- Ny: `src/hooks/use-swipe-nav.ts`
-- Redigeret: `src/routes/index.tsx`, `src/routes/history.tsx`, `src/routes/profile.tsx`
+- Redigeret: `src/components/BottomNav.tsx`
+- Verificeret/evt. redigeret: `src/routes/index.tsx`, `src/routes/history.tsx`, `src/routes/profile.tsx` (kun hvis bund-padding mangler)
 
