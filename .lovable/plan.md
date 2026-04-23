@@ -1,39 +1,28 @@
 
-## Fix app icon to match in-app logo (neon green on dark background)
+## Sprog følger automatisk operativsystemet
 
-The current app launcher icons (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png`, `favicon.ico`) were generated directly from the uploaded PNG, which doesn't have the neon green + dark background treatment used inside the app. I'll regenerate all icons so they match the in-app branding.
+I dag tjekker appen `navigator.language` ved første besøg, men kun hvis intet er gemt i localStorage. Så snart brugeren skifter sprog manuelt (eller får gemt en værdi), følger appen ikke længere telefonens sprog. Derudover bruger flere steder (`getStoredLang()` i `use-run-tracker.ts` og `useI18n`-fallback) en hårdkodet "en"-default i stedet for at tjekke OS-sproget.
 
-### Design
+### Ny adfærd
 
-- **Background**: solid dark `#0a0d12` (matches `theme_color` / `background_color` in manifest and app shell)
-- **Logo mark**: neon green (`#C6F432` — the `--neon` token used throughout the app)
-- **Padding**: ~12% safe-area padding around the mark so iOS/Android rounded-corner masks don't clip it
-- **Shape**: full-bleed square (the OS applies its own rounded mask)
+- Standardsprog = telefonens/browserens sprog:
+  - `navigator.language` (eller `navigator.languages[0]`) starter med `da` → **Dansk**
+  - alt andet → **Engelsk**
+- Manuelt valg i Profil overstyrer stadig OS-sproget (gemt i `localStorage`), så en bruger der bevidst vælger fx Engelsk på en dansk telefon, bliver ved engelsk.
+- Hvis intet er gemt manuelt, opdateres sproget automatisk efter OS — også på efterfølgende besøg.
 
-### Implementation steps
+### Implementering (`src/lib/i18n.tsx`)
 
-1. **Build a recolored master PNG** from `src/assets/5ceb6f47-d99d-4cc8-8db5-fe46db27659c.png`:
-   - Extract the logo silhouette (alpha channel)
-   - Recolor opaque pixels to neon green `#C6F432`
-   - Composite onto a dark `#0a0d12` square with ~12% padding
-   - Produce a 1024×1024 master via ImageMagick
+1. **Ny hjælpefunktion `detectOSLang(): Lang`** — læser `navigator.language` + `navigator.languages`, returnerer `"da"` hvis nogen starter med `da`, ellers `"en"`. Bruges som eneste kilde til OS-sprog.
+2. **`I18nProvider` init**: hvis intet er gemt → brug `detectOSLang()`. Hvis gemt værdi findes → brug den (manuelt valg vinder).
+3. **`getStoredLang()`**: samme logik — gemt værdi vinder, ellers `detectOSLang()` (i dag har den allerede ca. denne logik, men opdateres til at bruge fælles helper og også tjekke `navigator.languages`).
+4. **`useI18n` SSR/fallback-grenen**: bruger også `detectOSLang()` i stedet for hårdkodet `"en"`.
+5. **Lyt på systemskift**: tilføj en `languagechange`-event listener på `window` i `I18nProvider`. Hvis brugeren ikke har et manuelt gemt valg, opdateres sproget live, når OS-sproget skifter.
 
-2. **Generate all required sizes** from the master:
-   - `public/icon-192.png` (192×192) — Android / PWA
-   - `public/icon-512.png` (512×512) — Android / PWA
-   - `public/apple-touch-icon.png` (180×180) — iOS home screen
-   - `public/favicon-32.png` (32×32) — browser tab
-   - `public/favicon.ico` (multi-size 16/32/48) — legacy favicon
+### Ingen UI-ændringer
 
-3. **Update `public/safari-pinned-tab.svg` color binding**: keep the monochrome SVG silhouette as-is (Safari requires monochrome), but update the `mask-icon` color in `src/routes/__root.tsx` from `#0a0d12` to `#C6F432` so Safari renders the pinned tab in neon green.
+Sprogvælgeren i Profil bevares uændret som manuel override.
 
-4. **No manifest changes needed** — `background_color` and `theme_color` are already `#0a0d12`, which matches the new icons.
+### Filer
 
-### Files touched
-
-- Regenerated: `public/icon-192.png`, `public/icon-512.png`, `public/apple-touch-icon.png`, `public/favicon-32.png`, `public/favicon.ico`
-- Edited: `src/routes/__root.tsx` (mask-icon color → `#C6F432`)
-
-### QA
-
-After generation I'll inspect each PNG to confirm: neon-green mark, dark background, mark centered with safe padding, no clipping, no transparency bleed.
+- Redigeret: `src/lib/i18n.tsx`
