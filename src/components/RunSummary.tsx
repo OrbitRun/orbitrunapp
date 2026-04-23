@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Check, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
 import {
@@ -96,7 +95,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         )}
 
         {/* Action buttons in natural flow, below all stats */}
-        <section className="flex flex-row gap-4 pt-2">
+        <section className="flex flex-row gap-4 pt-2 px-1 pb-2 overflow-visible">
           <button
             onClick={() => {
               if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -104,9 +103,13 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               }
               setConfirmOpen(true);
             }}
-            className="flex-1 h-14 rounded-2xl glass border border-destructive/60 backdrop-blur-xl flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition shadow-[0_8px_24px_-12px_oklch(0.55_0.22_25/0.6)]"
+            className="flex-1 h-14 rounded-2xl glass backdrop-blur-xl flex items-center justify-center text-sm font-black uppercase tracking-[0.22em] active:scale-95 transition"
+            style={{
+              color: "oklch(0.72 0.14 25)",
+              boxShadow:
+                "0 0 32px 4px oklch(0.65 0.18 25 / 0.28), 0 0 64px 12px oklch(0.65 0.18 25 / 0.18)",
+            }}
           >
-            <Trash2 className="h-4 w-4" />
             {t("summary.discard")}
           </button>
           <button
@@ -116,9 +119,8 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               }
               onSave();
             }}
-            className="flex-1 h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
+            className="flex-1 h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center text-sm font-black uppercase tracking-[0.22em] shadow-neon active:scale-95 transition"
           >
-            <Check className="h-4 w-4" />
             {t("summary.save")}
           </button>
         </section>

@@ -95,8 +95,8 @@ const en: Dict = {
   // Summary
   "summary.title": "Run complete",
   "summary.subtitle": "Review your session",
-  "summary.save": "Save run",
-  "summary.discard": "Delete run",
+  "summary.save": "Save",
+  "summary.discard": "Delete",
   "summary.discardConfirm": "Delete this run? This cannot be undone.",
   "summary.discardConfirmTitle": "Are you sure?",
   "summary.cancel": "Cancel",
@@ -284,8 +284,8 @@ const da: Dict = {
 
   "summary.title": "Løb fuldført",
   "summary.subtitle": "Gennemse din session",
-  "summary.save": "Gem løbetur",
-  "summary.discard": "Slet løbetur",
+  "summary.save": "Gem",
+  "summary.discard": "Slet",
   "summary.discardConfirm": "Slet dette løb? Dette kan ikke fortrydes.",
   "summary.discardConfirmTitle": "Er du sikker?",
   "summary.cancel": "Annullér",
