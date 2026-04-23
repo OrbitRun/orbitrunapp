@@ -128,31 +128,6 @@ function ProfilePage() {
       </section>
 
 
-      {/* Goal */}
-      <section className="mt-4 glass rounded-2xl p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Target className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.goal")}</div>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {goals.map((g) => (
-            <button
-              key={g}
-              onClick={() => update({ goal: g })}
-              className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
-                profile.goal === g
-                  ? "bg-neon text-primary-foreground shadow-neon"
-                  : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
-              }`}
-            >
-              {goalLabel(g, lang)}
-            </button>
-          ))}
-        </div>
-      </section>
-
       {/* Experience level */}
       <section className="mt-4 glass rounded-2xl p-4">
         <div className="flex items-center gap-3 mb-3">
@@ -180,6 +155,31 @@ function ProfilePage() {
               <div className={`mt-1 text-[10px] leading-tight ${profile.level === lv ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                 {t(`profile.level.${lv}Hint`)}
               </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Goal */}
+      <section className="mt-4 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Target className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.goal")}</div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {goals.map((g) => (
+            <button
+              key={g}
+              onClick={() => update({ goal: g })}
+              className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
+                profile.goal === g
+                  ? "bg-neon text-primary-foreground shadow-neon"
+                  : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
+              }`}
+            >
+              {goalLabel(g, lang)}
             </button>
           ))}
         </div>
