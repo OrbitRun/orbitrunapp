@@ -95,7 +95,7 @@ function ProfilePage() {
             />
             <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5 uppercase tracking-[0.14em] font-semibold">
               <Target className="h-2.5 w-2.5 text-neon" />
-              {goalLabel(profile.goal, lang)}
+              {t(`profile.level.${profile.level}`)} · {goalLabel(profile.goal, lang)}
             </div>
           </div>
         </div>
