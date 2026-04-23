@@ -204,6 +204,8 @@ function ProfilePage() {
         {[
           { Icon: Volume2, label: t("profile.audio"), value: t("profile.audio.value") },
           { Icon: Bell, label: t("profile.haptic"), value: t("profile.haptic.value") },
+          { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
+          { Icon: Headphones, label: t("profile.music"), value: t("profile.music.value") },
         ].map(({ Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3 px-4 py-3">
             <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
