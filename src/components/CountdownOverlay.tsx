@@ -15,18 +15,10 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
   useEffect(() => {
     if (count <= 0) {
       speakGo(lang);
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try { navigator.vibrate([80, 60, 160]); } catch { /* noop */ }
-      }
       const id = setTimeout(onComplete, 250);
       return () => clearTimeout(id);
     }
-    if (count <= 3) {
-      beep(880, 140, 0.3);
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try { navigator.vibrate(50); } catch { /* noop */ }
-      }
-    }
+    if (count <= 3) beep(880, 140, 0.3);
     const id = setTimeout(() => setCount((c) => c - 1), 1000);
     return () => clearTimeout(id);
   }, [count, onComplete, lang]);
@@ -43,7 +35,7 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
         </div>
         <div
           key={count}
-          className="font-display font-black text-neon tabular leading-none text-[180px] py-6 px-8 [filter:drop-shadow(0_0_30px_oklch(0.92_0.21_130/0.6))_drop-shadow(0_0_60px_oklch(0.92_0.21_130/0.35))] animate-scale-in"
+          className="font-display font-black text-neon tabular leading-none text-[180px] drop-shadow-[0_0_40px_oklch(0.92_0.21_130/0.55)] animate-scale-in"
           aria-live="assertive"
         >
           {count > 0 ? count : t("cd.go")}

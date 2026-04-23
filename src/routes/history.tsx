@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Footprints, Trash2 } from "lucide-react";
-import { deleteRun, loadRuns, RUNS_KEY, type Run } from "@/lib/run-types";
+import { ChevronRight, Trash2 } from "lucide-react";
+import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
-import { buildHeatmapSnapshot } from "@/lib/heatmap-snapshot";
 import RunMap from "@/components/RunMap";
 import { useI18n } from "@/lib/i18n";
 
@@ -16,35 +15,48 @@ function HistoryPage() {
   const { t } = useI18n();
 
   useEffect(() => {
-    // Load runs and backfill heatmap snapshots for any older runs that were
-    // saved before snapshots existed. Persist the backfill so it's a one-time cost.
-    const all = loadRuns();
-    let mutated = false;
-    const enriched = all.map((r) => {
-      if (r.heatmapSnapshot || !r.points || r.points.length < 2) return r;
-      const snap = buildHeatmapSnapshot(r.points);
-      if (!snap) return r;
-      mutated = true;
-      return { ...r, heatmapSnapshot: snap };
-    });
-    if (mutated && typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(RUNS_KEY, JSON.stringify(enriched));
-      } catch {
-        /* storage may be full — render in-memory snapshots anyway */
-      }
-    }
-    setRuns(enriched);
+    setRuns(loadRuns());
   }, []);
+
+  const totalDistance = runs.reduce((a, r) => a + r.distanceM, 0);
+  const totalRuns = runs.length;
+  const totalTime = runs.reduce((a, r) => a + r.durationMs, 0);
 
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
-      <header className="py-3 mb-2">
+      <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("history.eyebrow")}
         </div>
         <h1 className="font-display font-black text-3xl tracking-tight">{t("history.title")}</h1>
       </header>
+
+      <section className="grid grid-cols-3 gap-3 mb-4">
+        <div className="glass rounded-2xl p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("history.runs")}
+          </div>
+          <div className="font-display font-black text-2xl text-neon tabular">{totalRuns}</div>
+        </div>
+        <div className="glass rounded-2xl p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("history.distance")}
+          </div>
+          <div className="font-display font-black text-2xl tabular">
+            {formatDistance(totalDistance)}
+            <span className="text-xs text-muted-foreground ml-1">{t("unit.km")}</span>
+          </div>
+        </div>
+        <div className="glass rounded-2xl p-3 text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {t("history.time")}
+          </div>
+          <div className="font-display font-black text-2xl tabular">
+            {Math.floor(totalTime / 3600000)}
+            <span className="text-xs text-muted-foreground ml-1">h</span>
+          </div>
+        </div>
+      </section>
 
       {runs.length === 0 ? (
         <div className="glass rounded-3xl p-8 text-center">
@@ -66,22 +78,12 @@ function HistoryPage() {
                 className="block glass rounded-2xl overflow-hidden active:scale-[0.99] transition"
               >
                 <div className="h-32 relative">
-                  {r.heatmapSnapshot ? (
-                    <img
-                      src={r.heatmapSnapshot}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <RunMap
-                      points={r.points}
-                      className="h-full w-full"
-                      interactive={false}
-                      follow={false}
-                    />
-                  )}
+                  <RunMap
+                    points={r.points}
+                    className="h-full w-full"
+                    interactive={false}
+                    follow={false}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
                   <button
                     onClick={(e) => {
@@ -99,7 +101,7 @@ function HistoryPage() {
                   </button>
                 </div>
                 <div className="p-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                       {formatDate(r.startedAt)}
                     </div>
@@ -118,25 +120,6 @@ function HistoryPage() {
                         {t("unit.perKm")}
                       </span>
                     </div>
-                    {(r.shoe || r.weather) && (
-                      <div className="mt-1.5 flex items-center gap-3 text-[10px] text-muted-foreground">
-                        {r.shoe && (
-                          <span className="flex items-center gap-1 min-w-0">
-                            <Footprints className="h-3 w-3 text-neon shrink-0" />
-                            <span className="truncate font-semibold">
-                              {r.shoe.brand} {r.shoe.model}
-                            </span>
-                          </span>
-                        )}
-                        {r.weather && (
-                          <span className="flex items-center gap-1 shrink-0">
-                            <span aria-hidden>{r.weather.icon}</span>
-                            <span className="font-mono font-bold tabular">{r.weather.tempC}°C</span>
-                            <span className="hidden sm:inline">· {r.weather.label}</span>
-                          </span>
-                        )}
-                      </div>
-                    )}
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 </div>

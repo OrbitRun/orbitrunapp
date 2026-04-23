@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Check, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
 import {
@@ -29,8 +30,8 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
   const range = Math.max(1, max - min);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in flex flex-col">
-      <main className="mx-auto w-full max-w-md flex-1 px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-[calc(6rem+env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in">
+      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-32">
         <header className="py-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
             {t("summary.subtitle")}
@@ -43,25 +44,23 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           </div>
         </header>
 
-        {/* 1. Map */}
-        <section className="rounded-3xl overflow-hidden border border-border shadow-card">
+        <section className="rounded-3xl overflow-hidden border border-border shadow-card mt-2">
           <RunMap points={run.points} className="h-[240px] w-full" interactive={true} follow={false} />
         </section>
 
-        {/* 2. Hero distance + stats grid */}
-        <section className="glass-strong rounded-3xl p-5 text-center overflow-visible">
+        <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
             {t("stat.distance")}
           </div>
-          <div className="mt-1 flex items-baseline justify-center gap-2 overflow-visible">
-            <span className="font-display font-black tabular text-[64px] leading-none text-neon [filter:drop-shadow(0_0_24px_oklch(0.92_0.21_130/0.55))_drop-shadow(0_0_48px_oklch(0.92_0.21_130/0.3))]">
+          <div className="mt-1 flex items-baseline justify-center gap-2">
+            <span className="font-display font-black tabular text-[64px] leading-none text-neon">
               {formatDistance(run.distanceM)}
             </span>
             <span className="text-sm text-muted-foreground font-semibold">{t("unit.km")}</span>
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3">
+        <section className="mt-3 grid grid-cols-2 gap-3">
           <StatTile label={t("stat.duration")} value={formatDuration(run.durationMs)} />
           <StatTile label={t("stat.avgPace")} value={formatPace(run.avgPaceSecPerKm)} unit={t("unit.perKm")} />
           <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
@@ -69,7 +68,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </section>
 
         {run.splits.length > 0 && (
-          <section className="glass rounded-2xl p-4">
+          <section className="mt-4 glass rounded-2xl p-4">
             <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-3">
               {t("splits.title")}
             </div>
@@ -93,38 +92,27 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
             </ul>
           </section>
         )}
+      </main>
 
-        {/* Action buttons in natural flow, below all stats */}
-        <section className="flex flex-row gap-4 pt-2 px-1 pb-2 overflow-visible">
+      {/* Sticky action bar */}
+      <div className="fixed bottom-0 inset-x-0 z-50 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 px-4 bg-gradient-to-t from-background via-background/95 to-transparent">
+        <div className="mx-auto max-w-md grid grid-cols-2 gap-3">
           <button
-            onClick={() => {
-              if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-                try { navigator.vibrate(40); } catch { /* noop */ }
-              }
-              setConfirmOpen(true);
-            }}
-            className="flex-1 h-14 rounded-2xl glass backdrop-blur-xl flex items-center justify-center text-sm font-black uppercase tracking-[0.22em] active:scale-95 transition"
-            style={{
-              color: "oklch(0.75 0.13 25)",
-              boxShadow:
-                "0 0 24px 0 oklch(0.65 0.18 25 / 0.18), 0 0 56px 16px oklch(0.65 0.18 25 / 0.12)",
-            }}
+            onClick={() => setConfirmOpen(true)}
+            className="h-14 rounded-2xl border border-destructive/60 bg-destructive/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition"
           >
+            <Trash2 className="h-4 w-4" />
             {t("summary.discard")}
           </button>
           <button
-            onClick={() => {
-              if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-                try { navigator.vibrate(60); } catch { /* noop */ }
-              }
-              onSave();
-            }}
-            className="flex-1 h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center text-sm font-black uppercase tracking-[0.22em] shadow-neon active:scale-95 transition"
+            onClick={onSave}
+            className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
           >
+            <Check className="h-4 w-4" />
             {t("summary.save")}
           </button>
-        </section>
-      </main>
+        </div>
+      </div>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="glass-strong border-border">

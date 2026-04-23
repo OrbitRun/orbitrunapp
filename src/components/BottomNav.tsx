@@ -5,16 +5,13 @@ import { useI18n } from "@/lib/i18n";
 export default function BottomNav() {
   const { location } = useRouterState();
   const { t } = useI18n();
-  if (location.pathname.startsWith("/onboarding") || location.pathname.startsWith("/auth")) {
-    return null;
-  }
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },
     { to: "/history", label: t("nav.history"), Icon: History },
     { to: "/profile", label: t("nav.profile"), Icon: User },
   ] as const;
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 inset-x-0 z-40 pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto max-w-md px-4 pb-3">
         <div className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around shadow-card">
           {items.map(({ to, label, Icon }) => {

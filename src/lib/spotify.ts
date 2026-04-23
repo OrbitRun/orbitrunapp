@@ -2,7 +2,7 @@
 // Replace SPOTIFY_CLIENT_ID with your own Client ID from
 // https://developer.spotify.com/dashboard
 
-export const SPOTIFY_CLIENT_ID = "60749f03c1184bc6905c571975d97208";
+export const SPOTIFY_CLIENT_ID = "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID";
 
 export const SPOTIFY_SCOPES = [
   "user-read-playback-state",
@@ -13,18 +13,8 @@ export const SPOTIFY_SCOPES = [
   "user-read-private",
 ].join(" ");
 
-// Token storage strategy (security):
-// - access_token + expiry: in-memory only (lost on full reload — we transparently
-//   recover via refresh_token).
-// - refresh_token: sessionStorage (auto-cleared when the tab closes). Deliberate
-//   trade-off: we lose "stay signed in across browser restarts" so a long-lived
-//   credential is never sitting in persistent storage where future XSS or a
-//   third-party script could exfiltrate it.
-// - Any legacy localStorage entry from earlier versions is migrated then deleted.
-const LEGACY_TOKEN_KEY = "pulse.spotify.token";
-const REFRESH_KEY = "pulse.spotify.refresh";
+const TOKEN_KEY = "pulse.spotify.token";
 const VERIFIER_KEY = "pulse.spotify.verifier";
-const STATE_KEY = "pulse.spotify.state";
 
 export type SpotifyToken = {
   access_token: string;
@@ -34,50 +24,9 @@ export type SpotifyToken = {
   scope: string;
 };
 
-// In-memory access token (not persisted across full reloads).
-let memoryToken: SpotifyToken | null = null;
-
-function readRefreshToken(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return sessionStorage.getItem(REFRESH_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function writeRefreshToken(rt: string | null) {
-  if (typeof window === "undefined") return;
-  try {
-    if (rt) sessionStorage.setItem(REFRESH_KEY, rt);
-    else sessionStorage.removeItem(REFRESH_KEY);
-  } catch {
-    /* ignore quota/availability errors */
-  }
-}
-
-// One-time migration from the old localStorage location to split storage.
-function migrateLegacyToken() {
-  if (typeof window === "undefined") return;
-  try {
-    const raw = localStorage.getItem(LEGACY_TOKEN_KEY);
-    if (!raw) return;
-    localStorage.removeItem(LEGACY_TOKEN_KEY);
-    const parsed = JSON.parse(raw) as Partial<SpotifyToken>;
-    if (parsed?.refresh_token) writeRefreshToken(parsed.refresh_token);
-  } catch {
-    try {
-      localStorage.removeItem(LEGACY_TOKEN_KEY);
-    } catch {
-      /* ignore */
-    }
-  }
-}
-migrateLegacyToken();
-
 export function getRedirectUri(): string {
   if (typeof window === "undefined") return "";
-  return `${window.location.origin}/auth/callback`;
+  return `${window.location.origin}/spotify/callback`;
 }
 
 function base64url(bytes: Uint8Array): string {
@@ -99,42 +48,32 @@ function randomString(len = 64): string {
 }
 
 export function getStoredToken(): SpotifyToken | null {
-  if (memoryToken) return memoryToken;
-  // No in-memory token yet, but a refresh token may exist from this tab session.
-  const rt = readRefreshToken();
-  if (!rt) return null;
-  // Stub with expires_at=0 forces a refresh on the next getValidToken() call.
-  return {
-    access_token: "",
-    refresh_token: rt,
-    expires_at: 0,
-    token_type: "Bearer",
-    scope: "",
-  };
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(TOKEN_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as SpotifyToken;
+  } catch {
+    return null;
+  }
 }
 
 export function setStoredToken(t: SpotifyToken | null) {
-  if (!t) {
-    memoryToken = null;
-    writeRefreshToken(null);
-    return;
-  }
-  memoryToken = t;
-  if (t.refresh_token) writeRefreshToken(t.refresh_token);
+  if (typeof window === "undefined") return;
+  if (!t) localStorage.removeItem(TOKEN_KEY);
+  else localStorage.setItem(TOKEN_KEY, JSON.stringify(t));
 }
 
 export function isConfigured(): boolean {
-  return SPOTIFY_CLIENT_ID.length > 0;
+  const id: string = SPOTIFY_CLIENT_ID;
+  return id !== "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID" && id.length > 0;
 }
 
 export async function beginAuth(): Promise<void> {
   if (!isConfigured()) throw new Error("Spotify Client ID not configured");
   const verifier = randomString(96);
   const challenge = base64url(await sha256(verifier));
-  // CSRF protection: random state we'll verify on callback.
-  const state = randomString(32);
   sessionStorage.setItem(VERIFIER_KEY, verifier);
-  sessionStorage.setItem(STATE_KEY, state);
 
   const params = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
@@ -143,52 +82,26 @@ export async function beginAuth(): Promise<void> {
     code_challenge_method: "S256",
     code_challenge: challenge,
     scope: SPOTIFY_SCOPES,
-    state,
   });
-  // Force HTTPS endpoint (Spotify requires it; explicit for clarity).
   window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
 }
 
-// Endpoint for our server-side proxy that forwards to Spotify's token API.
-// Keeps CORS surface and request validation off the page itself.
-const TOKEN_PROXY_URL = "/api/spotify/token";
-
-async function tokenProxy(body: Record<string, string>): Promise<Response> {
-  return fetch(TOKEN_PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-}
-
-export async function exchangeCode(code: string, returnedState?: string | null): Promise<SpotifyToken> {
+export async function exchangeCode(code: string): Promise<SpotifyToken> {
   const verifier = sessionStorage.getItem(VERIFIER_KEY);
-  const expectedState = sessionStorage.getItem(STATE_KEY);
   if (!verifier) throw new Error("Missing PKCE verifier");
-  // CSRF check: returned state must match what we generated.
-  if (expectedState && returnedState !== expectedState) {
-    sessionStorage.removeItem(VERIFIER_KEY);
-    sessionStorage.removeItem(STATE_KEY);
-    throw new Error("Invalid OAuth state");
-  }
-  const res = await tokenProxy({
-    grant_type: "authorization_code",
+  const body = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
+    grant_type: "authorization_code",
     code,
     redirect_uri: getRedirectUri(),
     code_verifier: verifier,
   });
-  if (!res.ok) {
-    let msg = `Token exchange failed: ${res.status}`;
-    try {
-      const err = await res.json();
-      if (err?.error_description) msg = `Spotify: ${err.error_description}`;
-      else if (err?.error) msg = `Spotify: ${err.error}`;
-    } catch {
-      /* keep generic message */
-    }
-    throw new Error(msg);
-  }
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
   const data = await res.json();
   const tok: SpotifyToken = {
     access_token: data.access_token,
@@ -199,17 +112,21 @@ export async function exchangeCode(code: string, returnedState?: string | null):
   };
   setStoredToken(tok);
   sessionStorage.removeItem(VERIFIER_KEY);
-  sessionStorage.removeItem(STATE_KEY);
   return tok;
 }
 
 async function refreshToken(): Promise<SpotifyToken | null> {
   const cur = getStoredToken();
   if (!cur?.refresh_token) return null;
-  const res = await tokenProxy({
-    grant_type: "refresh_token",
+  const body = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
+    grant_type: "refresh_token",
     refresh_token: cur.refresh_token,
+  });
+  const res = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
   });
   if (!res.ok) {
     setStoredToken(null);
@@ -238,11 +155,6 @@ async function getValidToken(): Promise<string | null> {
 
 export function logout() {
   setStoredToken(null);
-  // Wipe any in-flight OAuth artifacts so a stale state can't be reused.
-  if (typeof window !== "undefined") {
-    sessionStorage.removeItem(VERIFIER_KEY);
-    sessionStorage.removeItem(STATE_KEY);
-  }
 }
 
 export function isAuthed(): boolean {

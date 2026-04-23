@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
 import BottomNav from "@/components/BottomNav";
@@ -81,18 +81,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <I18nProvider>
-      <AppShell />
+      <div className="min-h-screen pb-24">
+        <Outlet />
+        <BottomNav />
+      </div>
     </I18nProvider>
-  );
-}
-
-function AppShell() {
-  const path = useRouterState({ select: (s) => s.location.pathname });
-  const hideNav = path.startsWith("/onboarding") || path.startsWith("/auth");
-  return (
-    <div className={`min-h-screen ${hideNav ? "" : "pb-24"}`}>
-      <Outlet />
-      <BottomNav />
-    </div>
   );
 }

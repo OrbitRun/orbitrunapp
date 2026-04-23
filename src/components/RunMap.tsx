@@ -2,17 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
-import { haversine, speedToColor } from "@/lib/run-utils";
+import { speedToColor } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
-import { loadSettings } from "@/lib/settings";
 
 type Props = {
   points: GeoPoint[];
   className?: string;
   follow?: boolean;
   interactive?: boolean;
-  /** Override for the user setting; primarily for tests/storybook. */
-  ignoreGpsSpeedSpikes?: boolean;
 };
 
 export default function RunMap(props: Props) {
@@ -28,7 +25,6 @@ function RunMapInner({
   className,
   follow = true,
   interactive = true,
-  ignoreGpsSpeedSpikes,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
@@ -36,22 +32,6 @@ function RunMapInner({
   const headRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-  const [ignoreSpikes, setIgnoreSpikes] = useState<boolean>(
-    ignoreGpsSpeedSpikes ?? (typeof window !== "undefined" ? loadSettings().ignoreGpsSpeedSpikes : true),
-  );
-
-  // Live-update on settings changes if no explicit prop is given.
-  useEffect(() => {
-    if (ignoreGpsSpeedSpikes !== undefined) {
-      setIgnoreSpikes(ignoreGpsSpeedSpikes);
-      return;
-    }
-    if (typeof window === "undefined") return;
-    const handler = () => setIgnoreSpikes(loadSettings().ignoreGpsSpeedSpikes);
-    window.addEventListener("orbit:settings-change", handler);
-    return () => window.removeEventListener("orbit:settings-change", handler);
-  }, [ignoreGpsSpeedSpikes]);
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
@@ -71,17 +51,11 @@ function RunMapInner({
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: MAPBOX_STYLE,
-        center: [12.56, 55.67],
-        zoom: 12,
+        center: [-0.09, 51.505],
+        zoom: 14,
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
-      });
-
-      map.on("error", (e) => {
-        // eslint-disable-next-line no-console
-        console.warn("[mapbox] error", e?.error?.message ?? e);
-        if (!cancelled) setLoadError(true);
       });
 
       map.on("load", () => {
@@ -91,18 +65,6 @@ function RunMapInner({
         map.addSource("run-segments", {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
-        });
-        map.addLayer({
-          id: "run-segments-glow",
-          type: "line",
-          source: "run-segments",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: {
-            "line-width": 12,
-            "line-opacity": 0.25,
-            "line-blur": 6,
-            "line-color": ["get", "color"],
-          },
         });
         map.addLayer({
           id: "run-segments-line",
@@ -146,76 +108,13 @@ function RunMapInner({
       return;
     }
 
-    // Build per-segment features. For each segment, derive a smoothed speed
-    // (rolling ~6s window) so the heatmap reflects actual tempo even when the
-    // device's GPS `speed` field is null or noisy. This re-runs on every new
-    // point, so colors continuously update during the run.
-    //
-    // When `ignoreSpikes` is on, we treat the device-reported `b.speed` as
-    // unreliable if it deviates wildly from the rolling estimate (or is
-    // physically implausible for running) and fall back to the rolling value.
     const features = [];
-    const WINDOW_MS = 6000;
-    const MIN_DIST_M = 4;
-    // Hard cap: ~10 m/s ≈ 36 km/h — anything above is a GPS spike for runners.
-    const MAX_PLAUSIBLE_MS = 10;
-    // Relative cap: device speed must stay within 2.5× of rolling estimate.
-    const SPIKE_RATIO = 2.5;
-
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1];
       const b = points[i];
-
-      // Rolling window ending at b
-      let j = i;
-      let dist = 0;
-      while (j > 0 && b.t - points[j - 1].t <= WINDOW_MS) {
-        dist += haversine(points[j - 1], points[j]);
-        j--;
-      }
-      const dur = (b.t - points[j].t) / 1000;
-      const rolling = dur > 0 && dist >= MIN_DIST_M ? dist / dur : null;
-      const reported = b.speed != null && b.speed >= 0 ? b.speed : null;
-
-      let speed: number | null = null;
-      if (ignoreSpikes) {
-        // Prefer rolling; only use reported if rolling is unavailable AND it
-        // looks plausible.
-        if (rolling != null) {
-          speed = rolling;
-        } else if (reported != null && reported <= MAX_PLAUSIBLE_MS) {
-          speed = reported;
-        }
-      } else {
-        // Trust rolling first, then reported, then instantaneous segment speed.
-        if (rolling != null) speed = rolling;
-        else if (reported != null) speed = reported;
-      }
-
-      // Final guard against spikes when both signals exist.
-      if (
-        ignoreSpikes &&
-        speed != null &&
-        rolling != null &&
-        reported != null &&
-        (reported > MAX_PLAUSIBLE_MS || reported > rolling * SPIKE_RATIO)
-      ) {
-        speed = rolling;
-      }
-
-      // Last-resort fallback when both rolling and reported are missing.
-      if (speed == null) {
-        const segDist = haversine(a, b);
-        const segDur = (b.t - a.t) / 1000;
-        if (segDur > 0) {
-          const inst = segDist / segDur;
-          if (!ignoreSpikes || inst <= MAX_PLAUSIBLE_MS) speed = inst;
-        }
-      }
-
       features.push({
         type: "Feature" as const,
-        properties: { color: speedToColor(speed) },
+        properties: { color: speedToColor(b.speed) },
         geometry: {
           type: "LineString" as const,
           coordinates: [
@@ -247,7 +146,7 @@ function RunMapInner({
     } else if (follow) {
       map.easeTo({ center: [last.lng, last.lat], duration: 600 });
     }
-  }, [points, follow, ready, ignoreSpikes]);
+  }, [points, follow, ready]);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -255,19 +154,5 @@ function RunMapInner({
     }
   }, [points.length]);
 
-  return (
-    <div className={`relative ${className ?? ""}`}>
-      <div ref={containerRef} className="absolute inset-0" />
-      {!ready && !loadError && (
-        <div className="absolute inset-0 grid place-items-center text-xs uppercase tracking-[0.25em] text-muted-foreground font-bold pointer-events-none">
-          Map is loading…
-        </div>
-      )}
-      {loadError && (
-        <div className="absolute inset-0 grid place-items-center text-xs uppercase tracking-[0.25em] text-destructive/80 font-bold pointer-events-none">
-          Map unavailable
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={containerRef} className={className} />;
 }

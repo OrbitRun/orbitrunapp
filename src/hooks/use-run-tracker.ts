@@ -2,13 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { GeoPoint, Run, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
-import { beep, speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
+import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
-import { loadProfile, getDisplayName, cueIntervalKm, type Level } from "@/lib/user-profile";
-import { addDistanceToActiveShoe, loadShoes } from "@/lib/shoes";
-import { loadSettings } from "@/lib/settings";
-import { fetchWeather, type WeatherSnapshot } from "@/lib/weather";
-import { buildHeatmapSnapshot } from "@/lib/heatmap-snapshot";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -41,18 +36,12 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string) {
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang) {
   const paceWords = paceToWords(paceSecPerKm, lang);
-  const greeting = name
-    ? lang === "da"
-      ? `Godt kæmpet, ${name}! `
-      : `Nice work, ${name}! `
-    : "";
-  const kmLabel = Number.isInteger(km) ? `${km}` : km.toFixed(1);
   const txt =
     lang === "da"
-      ? `${greeting}${kmLabel} kilometer fuldført. Tempo ${paceWords}.`
-      : `${greeting}${kmLabel} kilometers done. Pace ${paceWords}.`;
+      ? `Kilometer ${km} fuldført. Split-tempo ${paceWords}. Samlet distance ${km} kilometer.`
+      : `Kilometer ${km} completed. Split pace ${paceWords}. Total distance ${km} kilometer${km === 1 ? "" : "s"}.`;
   speakLocalized(txt, lang);
 }
 
@@ -67,27 +56,8 @@ export function useRunTracker() {
   const pauseAccumRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const langRef = useRef<Lang>("en");
-  const nameRef = useRef<string>("");
-  const cueIntervalKmRef = useRef<number>(1);
-  const lastCueKmRef = useRef<number>(0);
-  const levelRef = useRef<Level>("beginner");
-  // Auto-pause: speed under 2 km/h (~0.555 m/s) sustained for 3s.
-  const autoPauseEnabledRef = useRef(true);
-  const autoPausedRef = useRef(false);
-  const slowSinceRef = useRef<number | null>(null);
-  const hapticEnabledRef = useRef(true);
-  const shoeSnapshotRef = useRef<{ brand: string; model: string } | null>(null);
-  const weatherRef = useRef<WeatherSnapshot | null>(null);
-  const weatherFetchedRef = useRef(false);
-  // GPS smoothing: rolling buffer of recent raw fixes used for moving average,
-  // plus a min-distance gate so we don't append tiny zigzag jitter to the path.
-  const rawBufferRef = useRef<GeoPoint[]>([]);
-  const SMOOTH_WINDOW = 5;
-  const MIN_MOVE_M = 3;
-  const MAX_ACCURACY_M = 30;
 
   const haptic = useCallback((ms = 30) => {
-    if (!hapticEnabledRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(ms);
@@ -109,97 +79,25 @@ export function useRunTracker() {
     return w;
   }, []);
 
-  const pauseFnRef = useRef<() => void>(() => {});
-  const resumeFnRef = useRef<() => void>(() => {});
-
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
-      // Fetch weather snapshot once per run from the first GPS fix.
-      if (!weatherFetchedRef.current && stateRef.current.startedAt) {
-        weatherFetchedRef.current = true;
-        void fetchWeather(pos.coords.latitude, pos.coords.longitude, langRef.current).then((w) => {
-          if (w) weatherRef.current = w;
-        });
-      }
-      // Auto-pause detection (runs regardless of running/paused)
-      if (autoPauseEnabledRef.current && stateRef.current.startedAt) {
-        const speedMs = pos.coords.speed; // null on some devices
-        const slow = speedMs != null && speedMs < 0.555; // <2 km/h
-        const status = stateRef.current.status;
-        if (status === "running") {
-          if (slow) {
-            if (slowSinceRef.current == null) slowSinceRef.current = pos.timestamp;
-            else if (!autoPausedRef.current && pos.timestamp - slowSinceRef.current >= 3000) {
-              autoPausedRef.current = true;
-              beep(440, 120, 0.18);
-              pauseFnRef.current();
-            }
-          } else {
-            slowSinceRef.current = null;
-          }
-        } else if (status === "paused" && autoPausedRef.current) {
-          // Movement detected — resume.
-          if (speedMs != null && speedMs > 0.83) {
-            autoPausedRef.current = false;
-            slowSinceRef.current = null;
-            beep(880, 100, 0.2);
-            resumeFnRef.current();
-          }
-        }
-      }
-
       setState((prev) => {
         if (prev.status !== "running") return prev;
-
-        // Reject low-accuracy fixes — they cause most of the zigzag.
-        if (pos.coords.accuracy != null && pos.coords.accuracy > MAX_ACCURACY_M) {
-          return prev;
-        }
-
-        const raw: GeoPoint = {
+        const np: GeoPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           alt: pos.coords.altitude,
           t: pos.timestamp,
           speed: pos.coords.speed,
         };
-
-        // Push into rolling raw buffer and compute moving average across last
-        // N fixes. This smooths jitter while preserving direction changes.
-        const buf = rawBufferRef.current;
-        buf.push(raw);
-        if (buf.length > SMOOTH_WINDOW) buf.shift();
-        const n = buf.length;
-        let lat = 0;
-        let lng = 0;
-        let altSum = 0;
-        let altCount = 0;
-        for (const p of buf) {
-          lat += p.lat;
-          lng += p.lng;
-          if (p.alt != null) {
-            altSum += p.alt;
-            altCount++;
-          }
-        }
-        const np: GeoPoint = {
-          lat: lat / n,
-          lng: lng / n,
-          alt: altCount > 0 ? altSum / altCount : raw.alt,
-          t: raw.t,
-          speed: raw.speed,
-        };
-
         const last = prev.points[prev.points.length - 1];
         let addDist = 0;
         let addElev = 0;
         if (last) {
           addDist = haversine(last, np);
           const dt = (np.t - last.t) / 1000;
-          // Movement threshold: ignore <3 m drift.
-          if (addDist < MIN_MOVE_M) return prev;
-          // Sanity cap on speed (12 m/s ≈ 43 km/h).
-          if (dt > 0 && addDist / dt > 12) return prev;
+          if (addDist < 2) addDist = 0;
+          if (dt > 0 && addDist / dt > 12) addDist = 0;
           if (np.alt != null && last.alt != null) {
             const da = np.alt - last.alt;
             if (da > 0.5) addElev = da;
@@ -238,21 +136,9 @@ export function useRunTracker() {
             };
             newSplits.push(split);
             haptic(80);
+            speakSplit(k, splitPace, langRef.current);
           }
           lastSplitKmRef.current = kmCount;
-        }
-        // Voice cue at user-configured interval (1km beginner, 0.5km expert)
-        const interval = cueIntervalKmRef.current;
-        const totalKm = newDist / 1000;
-        const reachedCue = Math.floor(totalKm / interval) * interval;
-        if (reachedCue > lastCueKmRef.current + 1e-6 && reachedCue >= interval) {
-          const lastSplitPace = newSplits.length
-            ? newSplits[newSplits.length - 1].paceSecPerKm
-            : prev.avgPaceSecPerKm;
-          speakSplit(reachedCue, lastSplitPace, langRef.current, nameRef.current);
-          // Haptic pulse at every cue interval (500 m or 1 km).
-          haptic(120);
-          lastCueKmRef.current = reachedCue;
         }
 
         const avgPace =
@@ -287,7 +173,7 @@ export function useRunTracker() {
     if (watchIdRef.current != null) return;
     watchIdRef.current = navigator.geolocation.watchPosition(handlePosition, handleError, {
       enableHighAccuracy: true,
-      maximumAge: 0,
+      maximumAge: 1000,
       timeout: 15000,
     });
   }, [handlePosition, handleError]);
@@ -295,28 +181,9 @@ export function useRunTracker() {
   const start = useCallback(() => {
     haptic(40);
     langRef.current = getStoredLang();
-    const profile = loadProfile();
-    nameRef.current = profile ? getDisplayName(profile, langRef.current) : "";
-    levelRef.current = profile?.level ?? "beginner";
-    const settings = loadSettings();
-    // User-controlled voice cue interval (settings) overrides the level default.
-    cueIntervalKmRef.current = settings.cueIntervalKm ?? cueIntervalKm(levelRef.current);
-    autoPauseEnabledRef.current = settings.autoPause;
-    hapticEnabledRef.current = settings.haptic;
-    autoPausedRef.current = false;
-    slowSinceRef.current = null;
-    rawBufferRef.current = [];
     lastSplitKmRef.current = 0;
-    lastCueKmRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
-    // Snapshot active shoe + reset weather fetch flag for this run.
-    const activeShoe = loadShoes().find((s) => s.active) ?? null;
-    shoeSnapshotRef.current = activeShoe
-      ? { brand: activeShoe.brand, model: activeShoe.model }
-      : null;
-    weatherRef.current = null;
-    weatherFetchedRef.current = false;
     const startedAt = Date.now();
     setState({
       ...initial,
@@ -324,7 +191,7 @@ export function useRunTracker() {
       startedAt,
     });
     armGps();
-    startSilentLoop();
+    startSilentLoop(); // keep iOS from suspending JS when screen locks
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
@@ -347,10 +214,7 @@ export function useRunTracker() {
     setState((p) => ({ ...p, status: "running" }));
   }, [haptic]);
 
-  // Bind ref-callable versions for handlePosition's auto-pause path.
-  pauseFnRef.current = pause;
-  resumeFnRef.current = resume;
-
+  // Stops tracking and returns the in-memory Run WITHOUT persisting it.
   // Caller decides whether to save (commitRun) or discard (discardRun).
   const stop = useCallback((): Run | null => {
     haptic(60);
@@ -376,34 +240,20 @@ export function useRunTracker() {
       avgCadenceSpm: s.cadenceSpm,
       points: s.points,
       splits: s.splits,
-      shoe: shoeSnapshotRef.current,
-      weather: weatherRef.current,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
   }, [haptic]);
 
   const commitRun = useCallback((run: Run) => {
-    // Generate the heatmap snapshot once, on save, so history cards render
-    // instantly without spinning up Mapbox per item.
-    const enriched: Run = {
-      ...run,
-      heatmapSnapshot: run.heatmapSnapshot ?? buildHeatmapSnapshot(run.points),
-    };
-    saveRun(enriched);
-    addDistanceToActiveShoe(run.distanceM);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("orbit:run-saved"));
-    }
+    saveRun(run);
     const lang = langRef.current;
     const km = (run.distanceM / 1000).toFixed(2);
     const paceWords = paceToWords(run.avgPaceSecPerKm, lang);
-    const name = nameRef.current;
-    const prefix = name ? (lang === "da" ? `${name}, ` : `${name}, `) : "";
     speakLocalized(
       lang === "da"
-        ? `${prefix}løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
-        : `${prefix}run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
+        ? `Løb afsluttet. Distance ${km} kilometer. Gennemsnitstempo ${paceWords}.`
+        : `Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
       lang,
     );
     setState({ ...initial, status: "finished" });

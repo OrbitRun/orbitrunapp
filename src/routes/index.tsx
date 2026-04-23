@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
+import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
 import RunMap from "@/components/RunMap";
-import { MAPBOX_TOKEN } from "@/lib/mapbox";
 import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
@@ -10,7 +9,7 @@ import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { primeAudio, speakLocalized } from "@/lib/audio-cues";
+import { primeAudio } from "@/lib/audio-cues";
 import { formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -20,8 +19,7 @@ import {
   type MetricId,
   type StatLayout,
 } from "@/lib/stat-metrics";
-import { loadProfile, getDisplayName, type UserProfile } from "@/lib/user-profile";
-import { type Run } from "@/lib/run-types";
+import type { Run } from "@/lib/run-types";
 import logo from "@/assets/orbit-lab-logo.png";
 
 export const Route = createFileRoute("/")({
@@ -30,27 +28,11 @@ export const Route = createFileRoute("/")({
 
 function RunPage() {
   const t = useRunTracker();
-  const { t: tr, lang } = useI18n();
-  const navigate = useNavigate();
+  const { t: tr } = useI18n();
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const wakeLock = useWakeLock();
-
-  useEffect(() => {
-    const p = loadProfile();
-    if (!p) {
-      void navigate({ to: "/onboarding" });
-      return;
-    }
-    setProfile(p);
-    const handler = () => {
-      setProfile(loadProfile());
-    };
-    window.addEventListener("orbit:profile-change", handler);
-    return () => window.removeEventListener("orbit:profile-change", handler);
-  }, [navigate]);
 
   useEffect(() => {
     if (!pressed) return;
@@ -69,8 +51,6 @@ function RunPage() {
     setLayout(loadLayout());
   }, []);
 
-  const displayName = getDisplayName(profile, lang);
-
   const isActive = t.status === "running" || t.status === "paused";
 
   const beginCountdown = useCallback(() => {
@@ -85,12 +65,8 @@ function RunPage() {
   const launchRun = useCallback(() => {
     setCounting(false);
     t.start();
-    speakLocalized(
-      lang === "da" ? `Kom så ${displayName}!` : `Let's go ${displayName}!`,
-      lang,
-    );
     window.dispatchEvent(new CustomEvent("orbit:run-start"));
-  }, [t, lang, displayName]);
+  }, [t]);
 
   const cancelCountdown = useCallback(() => {
     setCounting(false);
@@ -153,37 +129,6 @@ function RunPage() {
         </div>
       </header>
 
-      {!MAPBOX_TOKEN && (
-        <div
-          role="alert"
-          className="rounded-2xl border border-destructive/50 bg-destructive/10 backdrop-blur-md px-3 py-2.5 mb-3 flex items-start gap-2.5 shadow-card"
-        >
-          <div className="h-7 w-7 shrink-0 rounded-lg bg-destructive/20 grid place-items-center text-destructive mt-0.5">
-            <AlertTriangle className="h-3.5 w-3.5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.22em] font-bold text-destructive">
-              {lang === "da" ? "Kort utilgængeligt" : "Map unavailable"}
-            </div>
-            <p className="text-[11px] leading-snug text-foreground/85 mt-0.5">
-              {lang === "da" ? (
-                <>
-                  Tilføj din Mapbox-token som build secret{" "}
-                  <code className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px]">VITE_MAPBOX_TOKEN</code>{" "}
-                  under Workspace Settings → Build Secrets, og genbyg appen for at se kortet.
-                </>
-              ) : (
-                <>
-                  Add your Mapbox token as a build secret{" "}
-                  <code className="px-1 py-0.5 rounded bg-white/10 font-mono text-[10px]">VITE_MAPBOX_TOKEN</code>{" "}
-                  under Workspace Settings → Build Secrets, then rebuild to restore the map.
-                </>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-
       <section className="relative">
         <div className="rounded-3xl overflow-hidden border border-border shadow-card">
           <RunMap points={t.points} className="h-[260px] w-full" interactive={!isActive} />
@@ -213,7 +158,7 @@ function RunPage() {
 
       <section className="mt-4 flex items-center justify-between px-1">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
-          {editMode ? tr("edit.pickHint") : ""}
+          {editMode ? tr("edit.pickHint") : tr("edit.hint")}
         </div>
         {editMode && (
           <button

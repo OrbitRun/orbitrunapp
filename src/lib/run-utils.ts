@@ -43,38 +43,16 @@ export function formatDate(ts: number): string {
   });
 }
 
-// m/s -> color along a smooth slow→mid→fast palette.
-// Interpolates in OKLCH for a continuous heatmap that updates with every
-// new GPS sample. Calibrated for running: ~1.4 m/s (12:00/km walk) →
-// ~2.5 m/s (6:40/km easy) → ~3.6 m/s (4:38/km tempo) → ~4.8 m/s+ (3:28/km sprint).
-const SPEED_STOPS: Array<{ s: number; l: number; c: number; h: number }> = [
-  { s: 1.2, l: 0.6, c: 0.23, h: 18 }, // deep red — walking
-  { s: 2.2, l: 0.72, c: 0.22, h: 45 }, // orange — jog
-  { s: 3.0, l: 0.85, c: 0.19, h: 90 }, // amber — steady
-  { s: 3.8, l: 0.9, c: 0.2, h: 130 }, // lime — tempo
-  { s: 4.8, l: 0.88, c: 0.22, h: 165 }, // bright green — fast
-];
-
+// m/s -> color along slow→mid→fast palette
 export function speedToColor(speedMs: number | null): string {
-  const s = Math.max(0, speedMs ?? 0);
-  if (s <= SPEED_STOPS[0].s) {
-    const a = SPEED_STOPS[0];
-    return `oklch(${a.l} ${a.c} ${a.h})`;
-  }
-  const last = SPEED_STOPS[SPEED_STOPS.length - 1];
-  if (s >= last.s) return `oklch(${last.l} ${last.c} ${last.h})`;
-  for (let i = 1; i < SPEED_STOPS.length; i++) {
-    const b = SPEED_STOPS[i];
-    const a = SPEED_STOPS[i - 1];
-    if (s <= b.s) {
-      const t = (s - a.s) / (b.s - a.s);
-      const l = a.l + (b.l - a.l) * t;
-      const c = a.c + (b.c - a.c) * t;
-      const h = a.h + (b.h - a.h) * t;
-      return `oklch(${l.toFixed(3)} ${c.toFixed(3)} ${h.toFixed(1)})`;
-    }
-  }
-  return `oklch(${last.l} ${last.c} ${last.h})`;
+  // Running ranges: 1.5 m/s (~11min/km slow walk-jog), 3 m/s (~5:30/km), 4.5 m/s+ (~3:40/km sprint)
+  const s = speedMs ?? 0;
+  const slow = "oklch(0.65 0.22 22)"; // red
+  const mid = "oklch(0.85 0.18 90)"; // amber
+  const fast = "oklch(0.92 0.21 140)"; // lime
+  if (s < 2) return slow;
+  if (s < 3.3) return mid;
+  return fast;
 }
 
 export function genId(): string {
