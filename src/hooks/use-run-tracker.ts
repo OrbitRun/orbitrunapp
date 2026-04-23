@@ -37,12 +37,20 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string) {
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string, intervalM: AudioCueMeters) {
   const paceWords = paceToWords(paceSecPerKm, lang);
+  const distLabel =
+    intervalM === 500
+      ? lang === "da"
+        ? `${(km * 0.5).toFixed(1).replace(".", ",")} kilometer`
+        : `${(km * 0.5).toFixed(1)} kilometers`
+      : lang === "da"
+        ? `Kilometer ${km}`
+        : `Kilometer ${km}`;
   const txt =
     lang === "da"
-      ? `Godt kæmpet ${name}! Kilometer ${km} fuldført. Split-tempo ${paceWords}.`
-      : `Great work ${name}! Kilometer ${km} completed. Split pace ${paceWords}.`;
+      ? `Godt kæmpet ${name}! ${distLabel} fuldført. Split-tempo ${paceWords}.`
+      : `Great work ${name}! ${distLabel} completed. Split pace ${paceWords}.`;
   speakLocalized(txt, lang);
 }
 
