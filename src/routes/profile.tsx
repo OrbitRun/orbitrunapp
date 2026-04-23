@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useEffect, useState } from "react";
 import { Bell, Headphones, Languages, MapPin, Target, Volume2, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
@@ -173,31 +174,6 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Language selector */}
-      <section className="mt-4 glass rounded-2xl p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Languages className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.language")}</div>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {langs.map((l) => (
-            <button
-              key={l.code}
-              onClick={() => setLang(l.code)}
-              className={`py-2.5 rounded-xl text-sm font-bold uppercase tracking-[0.18em] transition active:scale-95 ${
-                lang === l.code
-                  ? "bg-neon text-primary-foreground shadow-neon"
-                  : "bg-white/5 text-foreground/80 hover:bg-white/10"
-              }`}
-            >
-              {l.label}
-            </button>
-          ))}
-        </div>
-      </section>
-
       <ShoesSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
@@ -215,6 +191,36 @@ function ProfilePage() {
             <div className="text-xs text-muted-foreground">{value}</div>
           </div>
         ))}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left">
+              <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+                <Languages className="h-4 w-4" />
+              </div>
+              <div className="flex-1 text-sm font-semibold">{t("profile.language")}</div>
+              <div className="text-xs text-muted-foreground">
+                {langs.find((l) => l.code === lang)?.label}
+              </div>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-44 p-1.5">
+            <div className="grid gap-1">
+              {langs.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => setLang(l.code)}
+                  className={`px-3 py-2 rounded-lg text-sm font-bold uppercase tracking-[0.14em] text-left transition active:scale-95 ${
+                    lang === l.code
+                      ? "bg-neon text-primary-foreground"
+                      : "hover:bg-white/5 text-foreground/80"
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       </section>
 
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
