@@ -68,8 +68,10 @@ export function useRunTracker() {
   const nameRef = useRef<string>("Runner");
   const cueIntervalRef = useRef<AudioCueMeters>(500);
   const lastCueIndexRef = useRef(0);
+  const hapticEnabledRef = useRef<boolean>(true);
 
-  const haptic = useCallback((ms = 30) => {
+  const haptic = useCallback((ms: number | number[] = 30) => {
+    if (!hapticEnabledRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(ms);
