@@ -68,8 +68,10 @@ export function useRunTracker() {
   const nameRef = useRef<string>("Runner");
   const cueIntervalRef = useRef<AudioCueMeters>(500);
   const lastCueIndexRef = useRef(0);
+  const hapticEnabledRef = useRef<boolean>(true);
 
-  const haptic = useCallback((ms = 30) => {
+  const haptic = useCallback((ms: number | number[] = 30) => {
+    if (!hapticEnabledRef.current) return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(ms);
@@ -93,8 +95,10 @@ export function useRunTracker() {
 
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
+      let didUpdate = false;
       setState((prev) => {
         if (prev.status !== "running") return prev;
+        didUpdate = true;
         const np: GeoPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
@@ -179,6 +183,7 @@ export function useRunTracker() {
           splits: newSplits,
         };
       });
+      if (didUpdate) haptic(15);
     },
     [haptic],
   );
@@ -207,6 +212,7 @@ export function useRunTracker() {
     const profile = loadProfile();
     nameRef.current = displayName(profile, langRef.current);
     cueIntervalRef.current = profile.audioCueMeters ?? 500;
+    hapticEnabledRef.current = profile.hapticEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
     pauseAccumRef.current = 0;
