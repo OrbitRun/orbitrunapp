@@ -209,6 +209,7 @@ export function useRunTracker() {
     const profile = loadProfile();
     nameRef.current = displayName(profile, langRef.current);
     cueIntervalRef.current = profile.audioCueMeters ?? 500;
+    hapticEnabledRef.current = profile.hapticEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
     pauseAccumRef.current = 0;
