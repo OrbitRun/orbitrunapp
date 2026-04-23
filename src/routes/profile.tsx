@@ -115,19 +115,6 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Slim status row */}
-      <section className="mt-3 glass rounded-2xl px-3 py-2 flex items-center justify-between text-[11px]">
-        <div className="flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 text-neon" />
-          <span className="font-semibold">{t("profile.gps")}</span>
-          <span className="text-muted-foreground">· {t("profile.gps.value")}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Headphones className="h-3.5 w-3.5 text-neon" />
-          <span className="font-semibold">{t("profile.music")}</span>
-          <span className="text-muted-foreground">· {t("profile.music.value")}</span>
-        </div>
-      </section>
 
       {/* Goal */}
       <section className="mt-4 glass rounded-2xl p-4">
@@ -217,6 +204,8 @@ function ProfilePage() {
         {[
           { Icon: Volume2, label: t("profile.audio"), value: t("profile.audio.value") },
           { Icon: Bell, label: t("profile.haptic"), value: t("profile.haptic.value") },
+          { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
+          { Icon: Headphones, label: t("profile.music"), value: t("profile.music.value") },
         ].map(({ Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3 px-4 py-3">
             <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
