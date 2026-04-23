@@ -22,7 +22,7 @@ import {
 } from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
 import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE } from "@/lib/user-profile";
-import logo from "@/assets/orbit-lab-logo.png";
+import logo from "@/assets/5ceb6f47-d99d-4cc8-8db5-fe46db27659c.png";
 
 export const Route = createFileRoute("/")({
   component: RunPage,
