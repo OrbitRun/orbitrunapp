@@ -225,6 +225,10 @@ const da: Dict = {
   "summary.discardConfirmTitle": "Er du sikker?",
   "summary.cancel": "Annullér",
   "summary.confirmDelete": "Ja, slet",
+  "summary.finalConfirmTitle": "Sidste advarsel",
+  "summary.finalConfirm": "Dette sletter løbeturen og al dens data permanent. Det kan ikke fortrydes.",
+  "summary.finalDelete": "Slet permanent",
+  "summary.keep": "Behold løbetur",
 
   "edit.pickMetric": "Vælg måling",
   "edit.pickHint": "Tryk på en måling for at tildele den til feltet.",
