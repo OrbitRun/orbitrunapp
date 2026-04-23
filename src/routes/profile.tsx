@@ -11,6 +11,7 @@ import {
   goalLabel,
   loadProfile,
   saveProfile,
+  type AudioCueMeters,
   type ExperienceLevel,
   type RunningGoal,
   type UserProfile,
@@ -37,8 +38,17 @@ function ProfilePage() {
 
   const update = (patch: Partial<UserProfile>) => {
     const next = { ...profile, ...patch, onboarded: true };
+    // Sync audio cue interval with experience level when level changes
+    if (patch.level && patch.audioCueMeters === undefined) {
+      next.audioCueMeters = patch.level === "beginner" ? 500 : 1000;
+    }
     setProfile(next);
     saveProfile(next);
+  };
+
+  const toggleAudioCue = () => {
+    const next: AudioCueMeters = profile.audioCueMeters === 500 ? 1000 : 500;
+    update({ audioCueMeters: next });
   };
 
   const langs: { code: Lang; label: string }[] = [
@@ -178,8 +188,19 @@ function ProfilePage() {
       <ShoesSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <button
+          onClick={toggleAudioCue}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Volume2 className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.audio")}</div>
+          <div className="text-xs text-neon font-bold tabular">
+            {t(`profile.audio.value.${profile.audioCueMeters}`)}
+          </div>
+        </button>
         {[
-          { Icon: Volume2, label: t("profile.audio"), value: t("profile.audio.value") },
           { Icon: Bell, label: t("profile.haptic"), value: t("profile.haptic.value") },
           { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
           { Icon: Headphones, label: t("profile.music"), value: t("profile.music.value") },

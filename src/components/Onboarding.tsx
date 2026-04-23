@@ -19,13 +19,19 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const goals: RunningGoal[] = ["run5k", "runFaster", "weightLoss", "marathon"];
 
   const finish = () => {
-    const profile: UserProfile = { name: name.trim(), goal, level, onboarded: true };
+    const profile: UserProfile = {
+      name: name.trim(),
+      goal,
+      level,
+      audioCueMeters: level === "beginner" ? 500 : 1000,
+      onboarded: true,
+    };
     saveProfile(profile);
     onDone();
   };
 
   const skip = () => {
-    saveProfile({ name: "", goal: "run5k", level: "beginner", onboarded: true });
+    saveProfile({ name: "", goal: "run5k", level: "beginner", audioCueMeters: 500, onboarded: true });
     onDone();
   };
 

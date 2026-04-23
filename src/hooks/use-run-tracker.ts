@@ -4,7 +4,7 @@ import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
-import { displayName, loadProfile } from "@/lib/user-profile";
+import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -37,12 +37,20 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string) {
+function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string, intervalM: AudioCueMeters) {
   const paceWords = paceToWords(paceSecPerKm, lang);
+  const distLabel =
+    intervalM === 500
+      ? lang === "da"
+        ? `${(km * 0.5).toFixed(1).replace(".", ",")} kilometer`
+        : `${(km * 0.5).toFixed(1)} kilometers`
+      : lang === "da"
+        ? `Kilometer ${km}`
+        : `Kilometer ${km}`;
   const txt =
     lang === "da"
-      ? `Godt kæmpet ${name}! Kilometer ${km} fuldført. Split-tempo ${paceWords}.`
-      : `Great work ${name}! Kilometer ${km} completed. Split pace ${paceWords}.`;
+      ? `Godt kæmpet ${name}! ${distLabel} fuldført. Split-tempo ${paceWords}.`
+      : `Great work ${name}! ${distLabel} completed. Split pace ${paceWords}.`;
   speakLocalized(txt, lang);
 }
 
@@ -58,6 +66,8 @@ export function useRunTracker() {
   const pausedAtRef = useRef<number | null>(null);
   const langRef = useRef<Lang>("en");
   const nameRef = useRef<string>("Runner");
+  const cueIntervalRef = useRef<AudioCueMeters>(500);
+  const lastCueIndexRef = useRef(0);
 
   const haptic = useCallback((ms = 30) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
@@ -137,10 +147,21 @@ export function useRunTracker() {
               totalDurationMs: totalDuration,
             };
             newSplits.push(split);
-            haptic(80);
-            speakSplit(k, splitPace, langRef.current, nameRef.current);
           }
           lastSplitKmRef.current = kmCount;
+        }
+
+        // Voice cues at configured interval (500m or 1000m)
+        const interval = cueIntervalRef.current;
+        const cueIndex = Math.floor(newDist / interval);
+        if (cueIndex > lastCueIndexRef.current) {
+          for (let i = lastCueIndexRef.current + 1; i <= cueIndex; i++) {
+            // Pace for the cue: use rolling currentPace as best estimate
+            const paceForCue = currentPace || prev.avgPaceSecPerKm || 0;
+            haptic(80);
+            speakSplit(i, paceForCue, langRef.current, nameRef.current, interval);
+          }
+          lastCueIndexRef.current = cueIndex;
         }
 
         const avgPace =
@@ -183,8 +204,11 @@ export function useRunTracker() {
   const start = useCallback(() => {
     haptic(40);
     langRef.current = getStoredLang();
-    nameRef.current = displayName(loadProfile(), langRef.current);
+    const profile = loadProfile();
+    nameRef.current = displayName(profile, langRef.current);
+    cueIntervalRef.current = profile.audioCueMeters ?? 500;
     lastSplitKmRef.current = 0;
+    lastCueIndexRef.current = 0;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
