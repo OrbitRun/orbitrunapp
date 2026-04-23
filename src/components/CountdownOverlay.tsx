@@ -26,10 +26,14 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
   useEffect(() => {
     if (count <= 0) {
       speakGo(lang);
+      vibrate([80, 60, 200]);
       const id = setTimeout(onComplete, 250);
       return () => clearTimeout(id);
     }
-    if (count <= 3) beep(880, 140, 0.3);
+    if (count <= 3) {
+      beep(880, 140, 0.3);
+      vibrate(120);
+    }
     const id = setTimeout(() => setCount((c) => c - 1), 1000);
     return () => clearTimeout(id);
   }, [count, onComplete, lang]);
