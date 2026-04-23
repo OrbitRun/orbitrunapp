@@ -115,19 +115,6 @@ function ProfilePage() {
         </div>
       </section>
 
-      {/* Slim status row */}
-      <section className="mt-3 glass rounded-2xl px-3 py-2 flex items-center justify-between text-[11px]">
-        <div className="flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 text-neon" />
-          <span className="font-semibold">{t("profile.gps")}</span>
-          <span className="text-muted-foreground">· {t("profile.gps.value")}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Headphones className="h-3.5 w-3.5 text-neon" />
-          <span className="font-semibold">{t("profile.music")}</span>
-          <span className="text-muted-foreground">· {t("profile.music.value")}</span>
-        </div>
-      </section>
 
       {/* Goal */}
       <section className="mt-4 glass rounded-2xl p-4">
