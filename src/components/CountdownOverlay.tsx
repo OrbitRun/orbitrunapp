@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { beep, speakGo } from "@/lib/audio-cues";
 import { useI18n } from "@/lib/i18n";
+import { loadProfile } from "@/lib/user-profile";
+
+function vibrate(pattern: number | number[]) {
+  if (typeof navigator === "undefined" || !("vibrate" in navigator)) return;
+  if (loadProfile().hapticEnabled === false) return;
+  try {
+    navigator.vibrate(pattern);
+  } catch {
+    /* noop */
+  }
+}
 
 type Props = {
   seconds?: number;
