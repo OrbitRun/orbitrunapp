@@ -11,6 +11,7 @@ import {
   goalLabel,
   loadProfile,
   saveProfile,
+  type AudioCueMeters,
   type ExperienceLevel,
   type RunningGoal,
   type UserProfile,
@@ -37,8 +38,17 @@ function ProfilePage() {
 
   const update = (patch: Partial<UserProfile>) => {
     const next = { ...profile, ...patch, onboarded: true };
+    // Sync audio cue interval with experience level when level changes
+    if (patch.level && patch.audioCueMeters === undefined) {
+      next.audioCueMeters = patch.level === "beginner" ? 500 : 1000;
+    }
     setProfile(next);
     saveProfile(next);
+  };
+
+  const toggleAudioCue = () => {
+    const next: AudioCueMeters = profile.audioCueMeters === 500 ? 1000 : 500;
+    update({ audioCueMeters: next });
   };
 
   const langs: { code: Lang; label: string }[] = [
