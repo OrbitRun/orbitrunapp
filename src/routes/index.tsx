@@ -30,11 +30,22 @@ export const Route = createFileRoute("/")({
 
 function RunPage() {
   const t = useRunTracker();
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const wakeLock = useWakeLock();
+
+  useEffect(() => {
+    const p = loadProfile();
+    setProfile(p);
+    if (!p.onboarded) setShowOnboarding(true);
+    const onUpdate = () => setProfile(loadProfile());
+    window.addEventListener("orbit:profile-update", onUpdate);
+    return () => window.removeEventListener("orbit:profile-update", onUpdate);
+  }, []);
 
   useEffect(() => {
     if (!pressed) return;
