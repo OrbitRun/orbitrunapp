@@ -109,8 +109,19 @@ function RunPage() {
     void wakeLock.release();
   }, [t, wakeLock]);
 
+  const userName = displayName(profile, lang);
+  const greeting =
+    t.status === "idle" || t.status === "finished"
+      ? tr("greet.ready", { name: userName })
+      : t.status === "running"
+        ? tr("status.running")
+        : t.status === "paused"
+          ? tr("status.paused")
+          : tr("status.finished");
+
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+      {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
       <header className="flex items-center justify-between py-3">
@@ -124,15 +135,12 @@ function RunPage() {
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
               {tr("app.brand")}
             </div>
-            <h1 className="font-display font-black text-xl tracking-tight truncate">
-              {t.status === "running"
-                ? tr("status.running")
-                : t.status === "paused"
-                  ? tr("status.paused")
-                  : t.status === "finished"
-                    ? tr("status.finished")
-                    : tr("status.ready")}
-            </h1>
+            <h1 className="font-display font-black text-xl tracking-tight truncate">{greeting}</h1>
+            {(t.status === "idle" || t.status === "finished") && (
+              <div className="text-[10px] text-muted-foreground font-semibold truncate mt-0.5">
+                {tr("greet.goal", { goal: goalLabel(profile.goal, lang) })}
+              </div>
+            )}
           </div>
         </div>
         <div className="h-10 w-10 rounded-full glass grid place-items-center">
