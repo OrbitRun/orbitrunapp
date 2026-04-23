@@ -81,7 +81,7 @@ function ProfilePage() {
               placeholder={t("profile.namePlaceholder")}
               maxLength={24}
               aria-label={t("profile.name")}
-              className="w-full bg-transparent border-0 border-b border-transparent hover:border-white/10 focus:border-neon focus:outline-none font-display font-bold text-base leading-tight truncate px-0 py-0 transition-colors placeholder:text-muted-foreground/60"
+              className="w-full bg-transparent border-0 border-b border-transparent hover:border-white/10 focus:border-neon focus:outline-none font-display font-black text-xl tabular leading-none truncate px-0 py-0 transition-colors placeholder:text-muted-foreground/60"
             />
             <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5 uppercase tracking-[0.14em] font-semibold">
               <Target className="h-2.5 w-2.5 text-neon" />
