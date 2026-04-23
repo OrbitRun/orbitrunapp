@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Mountain, Pause, Pencil, Play, Square, Timer, Zap } from "lucide-react";
+import { Check, Pause, Pencil, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
@@ -348,17 +348,6 @@ function RunPage() {
         )}
       </section>
 
-      <section className="grid grid-cols-3 gap-2 mb-4 text-[10px] text-muted-foreground">
-        <div className="flex items-center gap-1.5 justify-center">
-          <Timer className="h-3 w-3 text-neon" /> {tr("hint.autoSplits")}
-        </div>
-        <div className="flex items-center gap-1.5 justify-center">
-          <Zap className="h-3 w-3 text-neon" /> {tr("hint.voice")}
-        </div>
-        <div className="flex items-center gap-1.5 justify-center">
-          <Mountain className="h-3 w-3 text-neon" /> {tr("hint.elevation")}
-        </div>
-      </section>
     </main>
   );
 }
