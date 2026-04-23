@@ -5,6 +5,7 @@ import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import { useI18n } from "@/lib/i18n";
+import { useSwipeNav } from "@/hooks/use-swipe-nav";
 
 export const Route = createFileRoute("/history")({
   component: HistoryPage,
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/history")({
 function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
   const { t } = useI18n();
+  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/", next: "/profile" });
 
   useEffect(() => {
     setRuns(loadRuns());
@@ -23,7 +25,7 @@ function HistoryPage() {
   const totalTime = runs.reduce((a, r) => a + r.durationMs, 0);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main ref={swipeRef} className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("history.eyebrow")}
