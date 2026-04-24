@@ -23,7 +23,7 @@ export function weatherCodeToMeta(code: number): WeatherMeta {
 
 export async function fetchWeather(lat: number, lng: number): Promise<RunWeather | null> {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&current=temperature_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&temperature_unit=celsius`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&current=temperature_2m,wind_speed_10m,weather_code&wind_speed_unit=ms&temperature_unit=celsius`;
     const res = await fetch(url, { method: "GET" });
     if (!res.ok) return null;
     const json = (await res.json()) as {
@@ -38,7 +38,7 @@ export async function fetchWeather(lat: number, lng: number): Promise<RunWeather
     const meta = weatherCodeToMeta(c.weather_code);
     return {
       tempC: Math.round(c.temperature_2m),
-      windKph: Math.round(c.wind_speed_10m ?? 0),
+      windMs: Math.round((c.wind_speed_10m ?? 0) * 10) / 10,
       code: c.weather_code,
       condition: meta.conditionKey,
       icon: meta.icon,
