@@ -82,7 +82,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                     onClick={() => setGoal(g)}
                     className={`h-14 px-3 rounded-2xl text-sm font-bold uppercase tracking-[0.12em] transition active:scale-95 flex items-center justify-center text-center leading-tight ${
                       goal === g
-                        ? "bg-neon text-primary-foreground shadow-neon"
+                        ? "bg-neon text-primary-foreground"
                         : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
                     }`}
                   >
@@ -103,14 +103,14 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                     onClick={() => setLevel(lv)}
                     className={`p-4 rounded-2xl text-left transition active:scale-95 ${
                       level === lv
-                        ? "bg-neon/15 border-2 border-neon shadow-neon"
+                        ? "bg-neon text-primary-foreground"
                         : "bg-white/5 border-2 border-white/10 hover:bg-white/10"
                     }`}
                   >
-                    <div className={`text-sm font-black uppercase tracking-[0.12em] ${level === lv ? "text-neon" : ""}`}>
+                    <div className={`text-sm font-black uppercase tracking-[0.12em] ${level === lv ? "text-primary-foreground" : ""}`}>
                       {t(`profile.level.${lv}`)}
                     </div>
-                    <div className="mt-1 text-[10px] text-muted-foreground leading-tight">
+                    <div className={`mt-1 text-[10px] leading-tight ${level === lv ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                       {t(`profile.level.${lv}Hint`)}
                     </div>
                   </button>
