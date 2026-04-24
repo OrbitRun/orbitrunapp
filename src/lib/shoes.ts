@@ -100,6 +100,45 @@ export function addDistanceToPrimary(distanceM: number) {
   saveShoes(shoes);
 }
 
+export function getPrimaryShoe(): Shoe | null {
+  return loadShoes().find((s) => s.isPrimary && s.status === "active") ?? null;
+}
+
+export function getShoeById(id: string | undefined | null): Shoe | null {
+  if (!id) return null;
+  return loadShoes().find((s) => s.id === id) ?? null;
+}
+
+export function addDistanceToShoe(id: string, distanceM: number) {
+  if (!id || distanceM <= 0) return;
+  const shoes = loadShoes();
+  const shoe = shoes.find((s) => s.id === id);
+  if (!shoe) return;
+  shoe.totalDistanceM = Math.max(0, shoe.totalDistanceM + distanceM);
+  saveShoes(shoes);
+}
+
+export function subtractDistanceFromShoe(id: string, distanceM: number) {
+  if (!id || distanceM <= 0) return;
+  const shoes = loadShoes();
+  const shoe = shoes.find((s) => s.id === id);
+  if (!shoe) return;
+  shoe.totalDistanceM = Math.max(0, shoe.totalDistanceM - distanceM);
+  saveShoes(shoes);
+}
+
+/** Move `distanceM` from one shoe to another. Either side may be null/undefined (no-op for that side). */
+export function reassignRunDistance(
+  fromId: string | undefined | null,
+  toId: string | undefined | null,
+  distanceM: number,
+) {
+  if (distanceM <= 0) return;
+  if (fromId && toId && fromId === toId) return;
+  if (fromId) subtractDistanceFromShoe(fromId, distanceM);
+  if (toId) addDistanceToShoe(toId, distanceM);
+}
+
 export function shoeProgress(shoe: Shoe): number {
   if (shoe.maxDistanceM <= 0) return 0;
   return Math.min(1, shoe.totalDistanceM / shoe.maxDistanceM);

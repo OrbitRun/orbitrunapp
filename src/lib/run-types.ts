@@ -35,6 +35,7 @@ export type Run = {
   points: GeoPoint[];
   splits: Split[];
   weather?: RunWeather;
+  shoeId?: string;
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";
