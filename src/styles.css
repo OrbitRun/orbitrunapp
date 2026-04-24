@@ -163,6 +163,21 @@
   .shadow-neon {
     box-shadow: var(--shadow-neon);
   }
+  /* Flat selectable chip — solid neon when selected, no glow */
+  .chip-selectable {
+    background-color: var(--surface);
+    color: oklch(from var(--foreground) l c h / 0.8);
+    border: 1px solid var(--surface-border);
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .chip-selectable:hover {
+    background-color: var(--surface-hover);
+  }
+  .chip-selected {
+    background-color: var(--selected);
+    color: var(--selected-foreground);
+    border: 1px solid var(--selected);
+  }
   .font-display {
     font-family: var(--font-sans);
     letter-spacing: -0.03em;
