@@ -60,3 +60,12 @@ export const WEATHER_PRESETS: Array<{ code: number; conditionKey: string; icon: 
   { code: 73, conditionKey: "weather.snow", icon: "CloudSnow" },
   { code: 95, conditionKey: "weather.thunderstorm", icon: "CloudLightning" },
 ];
+
+import type { WindUnit } from "./user-profile";
+
+export function formatWind(windMs: number, unit: WindUnit): { value: number; label: string } {
+  if (unit === "kmh") {
+    return { value: Math.round(windMs * 3.6), label: "km/h" };
+  }
+  return { value: Math.round(windMs * 10) / 10, label: "m/s" };
+}

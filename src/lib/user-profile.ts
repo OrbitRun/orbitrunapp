@@ -3,6 +3,7 @@
 export type ExperienceLevel = "beginner" | "expert";
 export type RunningGoal = "run5k" | "runFaster" | "weightLoss" | "marathon";
 export type AudioCueMeters = 500 | 1000;
+export type WindUnit = "ms" | "kmh";
 
 export type UserProfile = {
   name: string;
@@ -10,6 +11,7 @@ export type UserProfile = {
   level: ExperienceLevel;
   audioCueMeters: AudioCueMeters;
   hapticEnabled: boolean;
+  windUnit: WindUnit;
   onboarded: boolean;
 };
 
@@ -21,6 +23,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   level: "beginner",
   audioCueMeters: 500,
   hapticEnabled: true,
+  windUnit: "ms",
   onboarded: false,
 };
 
