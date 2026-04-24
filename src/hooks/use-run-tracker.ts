@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GeoPoint, Run, Split } from "@/lib/run-types";
+import type { GeoPoint, Run, RunWeather, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
+import { fetchWeather } from "@/lib/weather";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -76,6 +77,9 @@ export function useRunTracker() {
   const lastSplitTimeMsRef = useRef(0);
   // Smoothed elevation (EMA) to reject noisy single-sample altitude spikes.
   const smoothedAltRef = useRef<number | null>(null);
+  // Weather snapshot captured once at the start of the run from the first GPS fix.
+  const weatherRef = useRef<RunWeather | null>(null);
+  const weatherFetchedRef = useRef(false);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
