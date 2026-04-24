@@ -44,6 +44,11 @@
   --color-neon-soft: var(--neon-soft);
   --color-glass: var(--glass);
   --color-glass-strong: var(--glass-strong);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-border: var(--surface-border);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--selected-foreground);
   --color-speed-slow: var(--speed-slow);
   --color-speed-mid: var(--speed-mid);
   --color-speed-fast: var(--speed-fast);
