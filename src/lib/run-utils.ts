@@ -66,14 +66,58 @@ export function speedToColor(speedMs: number | null): string {
   return `oklch(${c[0].toFixed(3)} ${c[1].toFixed(3)} ${c[2].toFixed(1)})`;
 }
 
+// Maximum plausible running speed (m/s). ~7 m/s ≈ 2:23 min/km — faster than
+// elite sprint pace, so anything above is almost certainly a GPS glitch.
+const MAX_PLAUSIBLE_SPEED_MS = 7;
+
+// Median of a small numeric window.
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+}
+
+// Filter GPS speed outliers using a rolling median + clamp. Brief spikes
+// (one or two bad samples) are replaced by the local median so they don't
+// cause sudden color jumps in the heatmap.
+export function filterSpeedOutliers(
+  speeds: (number | null)[],
+  windowSize = 5,
+  maxSpeed = MAX_PLAUSIBLE_SPEED_MS,
+): number[] {
+  const clamped = speeds.map((s) => {
+    const v = Math.max(0, s ?? 0);
+    return v > maxSpeed ? maxSpeed : v;
+  });
+  const half = Math.floor(windowSize / 2);
+  const out: number[] = [];
+  for (let i = 0; i < clamped.length; i++) {
+    const start = Math.max(0, i - half);
+    const end = Math.min(clamped.length, i + half + 1);
+    const window = clamped.slice(start, end);
+    const med = median(window);
+    const v = clamped[i];
+    // If the sample deviates strongly from the local median, replace with median.
+    // Threshold: >2 m/s absolute or >75% relative jump.
+    const dev = Math.abs(v - med);
+    const rel = med > 0.1 ? dev / med : dev;
+    out.push(dev > 2 && rel > 0.75 ? med : v);
+  }
+  return out;
+}
+
 // Exponential moving average smoothing for a sequence of speeds.
 // alpha closer to 1 = more responsive, closer to 0 = smoother.
 export function smoothSpeeds(speeds: (number | null)[], alpha = 0.25): number[] {
+  // Run outlier filtering first so EMA isn't dragged by transient GPS glitches.
+  const cleaned = filterSpeedOutliers(speeds);
   const out: number[] = [];
   let ema = 0;
   let seeded = false;
-  for (const raw of speeds) {
-    const v = raw ?? 0;
+  for (const v of cleaned) {
     if (!seeded) {
       ema = v;
       seeded = true;
