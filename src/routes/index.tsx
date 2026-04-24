@@ -154,7 +154,7 @@ function RunPage() {
 
       <section className="relative">
         <div className="rounded-3xl overflow-hidden border border-border shadow-card">
-          <RunMap points={t.points} className="h-[260px] w-full" interactive={!isActive} />
+          <RunMap points={t.points} className="h-[221px] w-full" interactive={!isActive} />
         </div>
         {t.points.length === 0 && (
           <div className="absolute inset-0 grid place-items-center pointer-events-none">
