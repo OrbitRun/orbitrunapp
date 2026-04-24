@@ -44,6 +44,11 @@
   --color-neon-soft: var(--neon-soft);
   --color-glass: var(--glass);
   --color-glass-strong: var(--glass-strong);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-border: var(--surface-border);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--selected-foreground);
   --color-speed-slow: var(--speed-slow);
   --color-speed-mid: var(--speed-mid);
   --color-speed-fast: var(--speed-fast);
@@ -88,6 +93,13 @@
   --neon-soft: oklch(0.92 0.21 130 / 0.18);
   --glass: oklch(1 0 0 / 0.05);
   --glass-strong: oklch(1 0 0 / 0.09);
+
+  /* Reusable surface + selected-state tokens (flat, no glow) */
+  --surface: oklch(1 0 0 / 0.05);
+  --surface-hover: oklch(1 0 0 / 0.10);
+  --surface-border: oklch(1 0 0 / 0.10);
+  --selected: var(--neon);
+  --selected-foreground: var(--primary-foreground);
 
   /* Speed gradient */
   --speed-slow: oklch(0.65 0.22 22);
@@ -150,6 +162,21 @@
   }
   .shadow-neon {
     box-shadow: var(--shadow-neon);
+  }
+  /* Flat selectable chip — solid neon when selected, no glow */
+  .chip-selectable {
+    background-color: var(--surface);
+    color: oklch(from var(--foreground) l c h / 0.8);
+    border: 1px solid var(--surface-border);
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .chip-selectable:hover {
+    background-color: var(--surface-hover);
+  }
+  .chip-selected {
+    background-color: var(--selected);
+    color: var(--selected-foreground);
+    border: 1px solid var(--selected);
   }
   .font-display {
     font-family: var(--font-sans);
