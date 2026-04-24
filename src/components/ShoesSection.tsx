@@ -290,9 +290,9 @@ function ShoeCard({
 
   return (
     <div
-      className={`glass-strong rounded-2xl p-4 border ${
+      className={`glass-strong rounded-2xl p-4 border-2 ${
         shoe.isPrimary && !isRetired
-          ? "border-neon/60 shadow-neon"
+          ? "border-neon"
           : "border-border"
       } ${isRetired ? "opacity-60" : ""}`}
     >
