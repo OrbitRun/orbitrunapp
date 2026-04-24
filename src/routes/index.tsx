@@ -137,7 +137,7 @@ function RunPage() {
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
               {tr("app.brand")}
             </div>
-            <h1 className="font-display font-black text-xl tracking-tight truncate">{greeting}</h1>
+            <h1 className="font-display font-black tracking-tight truncate text-base">{greeting}</h1>
             {(t.status === "idle" || t.status === "finished") && (
               <div className="text-[10px] text-muted-foreground font-semibold truncate mt-0.5">
                 {tr("greet.goal", { goal: goalLabel(profile.goal, lang) })}
