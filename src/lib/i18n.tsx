@@ -337,6 +337,17 @@ const da: Dict = {
   "shoes.reactivate": "Genaktivér",
   "shoes.warn": "Tid til at overveje nye sko",
   "shoes.deleteTitle": "Slet disse sko?",
+
+  // Vejr
+  "weather.sunny": "Sol",
+  "weather.partlyCloudy": "Delvist skyet",
+  "weather.cloudy": "Skyet",
+  "weather.fog": "Tåge",
+  "weather.drizzle": "Støvregn",
+  "weather.rain": "Regn",
+  "weather.snow": "Sne",
+  "weather.thunderstorm": "Tordenvejr",
+  "weather.windUnit": "km/t",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
