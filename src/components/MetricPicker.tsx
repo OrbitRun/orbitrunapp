@@ -39,7 +39,7 @@ export default function MetricPicker({ open, current, used, onSelect, onOpenChan
                 key={id}
                 onClick={() => onSelect(id)}
                 disabled={isUsed}
-                className={`relative py-3 px-3 rounded-xl text-sm font-bold uppercase tracking-[0.12em] transition active:scale-95 ${
+                className={`relative px-3 rounded-xl font-bold uppercase tracking-[0.12em] transition active:scale-95 text-xs py-[10px] ${
                   isCurrent
                     ? "bg-neon text-primary-foreground shadow-neon"
                     : isUsed
