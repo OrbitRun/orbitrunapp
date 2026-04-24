@@ -107,6 +107,16 @@ export function useRunTracker() {
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
       let didUpdate = false;
+      // Fire-and-forget weather snapshot once we have any GPS fix during a run.
+      if (!weatherFetchedRef.current && stateRef.current.status === "running") {
+        const acc = pos.coords.accuracy ?? 999;
+        if (acc <= 100) {
+          weatherFetchedRef.current = true;
+          void fetchWeather(pos.coords.latitude, pos.coords.longitude).then((w) => {
+            if (w) weatherRef.current = w;
+          });
+        }
+      }
       setState((prev) => {
         if (prev.status !== "running") return prev;
 
