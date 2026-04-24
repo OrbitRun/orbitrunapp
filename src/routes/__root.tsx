@@ -89,7 +89,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <I18nProvider>
-      <div className="min-h-screen pb-24">
+      <div className="min-h-screen pb-24 mb-[30px]">
         <Outlet />
         <BottomNav />
       </div>
