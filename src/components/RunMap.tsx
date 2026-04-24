@@ -108,13 +108,16 @@ function RunMapInner({
       return;
     }
 
+    const smoothed = smoothSpeeds(points.map((p) => p.speed ?? 0), 0.25);
     const features = [];
     for (let i = 1; i < points.length; i++) {
       const a = points[i - 1];
       const b = points[i];
+      // Average smoothed speed across the segment for a gradual blend between neighbors.
+      const segSpeed = (smoothed[i - 1] + smoothed[i]) / 2;
       features.push({
         type: "Feature" as const,
-        properties: { color: speedToColor(b.speed) },
+        properties: { color: speedToColor(segSpeed) },
         geometry: {
           type: "LineString" as const,
           coordinates: [
