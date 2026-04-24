@@ -60,3 +60,13 @@ export function deleteRun(id: string) {
   const all = loadRuns().filter((r) => r.id !== id);
   window.localStorage.setItem(RUNS_KEY, JSON.stringify(all));
 }
+
+export function updateRun(id: string, patch: Partial<Run>): Run | null {
+  const all = loadRuns();
+  const idx = all.findIndex((r) => r.id === id);
+  if (idx === -1) return null;
+  const next = { ...all[idx], ...patch, id: all[idx].id };
+  all[idx] = next;
+  window.localStorage.setItem(RUNS_KEY, JSON.stringify(all));
+  return next;
+}

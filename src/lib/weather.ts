@@ -48,3 +48,15 @@ export async function fetchWeather(lat: number, lng: number): Promise<RunWeather
     return null;
   }
 }
+
+// Canonical preset list for manual editing — one entry per condition we render.
+export const WEATHER_PRESETS: Array<{ code: number; conditionKey: string; icon: string }> = [
+  { code: 0, conditionKey: "weather.sunny", icon: "Sun" },
+  { code: 2, conditionKey: "weather.partlyCloudy", icon: "CloudSun" },
+  { code: 3, conditionKey: "weather.cloudy", icon: "Cloud" },
+  { code: 45, conditionKey: "weather.fog", icon: "CloudFog" },
+  { code: 53, conditionKey: "weather.drizzle", icon: "CloudDrizzle" },
+  { code: 63, conditionKey: "weather.rain", icon: "CloudRain" },
+  { code: 73, conditionKey: "weather.snow", icon: "CloudSnow" },
+  { code: 95, conditionKey: "weather.thunderstorm", icon: "CloudLightning" },
+];
