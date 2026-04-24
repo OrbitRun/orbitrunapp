@@ -39,6 +39,7 @@ function RunPage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const wakeLock = useWakeLock();
   const swipeRef = useSwipeNav<HTMLElement>({ next: "/history" });
+  void swipeRef;
 
   useEffect(() => {
     const p = loadProfile();
