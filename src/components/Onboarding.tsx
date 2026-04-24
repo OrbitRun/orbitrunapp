@@ -82,7 +82,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                     onClick={() => setGoal(g)}
                     className={`h-14 px-3 rounded-2xl text-sm font-bold uppercase tracking-[0.12em] transition active:scale-95 flex items-center justify-center text-center leading-tight ${
                       goal === g
-                        ? "bg-neon text-primary-foreground shadow-neon"
+                        ? "bg-neon text-primary-foreground"
                         : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
                     }`}
                   >
