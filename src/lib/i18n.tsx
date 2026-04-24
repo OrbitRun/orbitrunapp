@@ -222,7 +222,7 @@ const da: Dict = {
   "stat.duration": "Varighed",
   "stat.pace": "Tempo",
   "stat.cadence": "Kadence",
-  "stat.elev": "Stign.",
+  "stat.elev": "Stigning",
   "stat.elevation": "Stigning",
   "stat.avgPace": "Snit-tempo",
   "stat.calories": "Kalorier",
