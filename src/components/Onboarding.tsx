@@ -103,14 +103,14 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                     onClick={() => setLevel(lv)}
                     className={`p-4 rounded-2xl text-left transition active:scale-95 ${
                       level === lv
-                        ? "bg-neon/15 border-2 border-neon shadow-neon"
+                        ? "bg-neon text-primary-foreground"
                         : "bg-white/5 border-2 border-white/10 hover:bg-white/10"
                     }`}
                   >
-                    <div className={`text-sm font-black uppercase tracking-[0.12em] ${level === lv ? "text-neon" : ""}`}>
+                    <div className={`text-sm font-black uppercase tracking-[0.12em] ${level === lv ? "text-primary-foreground" : ""}`}>
                       {t(`profile.level.${lv}`)}
                     </div>
-                    <div className="mt-1 text-[10px] text-muted-foreground leading-tight">
+                    <div className={`mt-1 text-[10px] leading-tight ${level === lv ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                       {t(`profile.level.${lv}Hint`)}
                     </div>
                   </button>
