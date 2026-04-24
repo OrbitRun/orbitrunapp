@@ -16,7 +16,7 @@ export type Split = {
 
 export type RunWeather = {
   tempC: number;
-  windKph: number;
+  windMs: number;
   code: number; // Open-Meteo WMO weather_code
   condition: string; // i18n key, e.g. "weather.sunny"
   icon: string; // lucide icon name, e.g. "Sun"
