@@ -41,12 +41,12 @@ export default function WeatherBadge({ weather, variant = "default", className }
         <>
           <span className="text-muted-foreground">·</span>
           <span className="text-muted-foreground font-semibold">{t(weather.condition)}</span>
-          {weather.windKph > 0 && (
+          {weather.windMs > 0 && (
             <>
               <span className="text-muted-foreground">·</span>
               <span className="inline-flex items-center gap-1 text-muted-foreground font-semibold">
                 <Wind className="h-3 w-3" />
-                {weather.windKph} {t("weather.windUnit")}
+                {weather.windMs} {t("weather.windUnit")}
               </span>
             </>
           )}
