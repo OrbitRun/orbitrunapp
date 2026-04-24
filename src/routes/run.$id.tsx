@@ -1,12 +1,14 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, ChevronRight, Footprints, Pencil } from "lucide-react";
 import { loadRuns, updateRun, type Run, type RunWeather } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
 import WeatherBadge from "@/components/WeatherBadge";
 import WeatherEditor from "@/components/WeatherEditor";
+import ShoePicker from "@/components/ShoePicker";
+import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/run/$id")({
@@ -28,6 +30,7 @@ function RunDetailPage() {
   const [run, setRun] = useState<Run | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [editingWeather, setEditingWeather] = useState(false);
+  const [pickingShoe, setPickingShoe] = useState(false);
   const { t } = useI18n();
 
   const handleWeatherSave = (w: RunWeather) => {
@@ -35,6 +38,25 @@ function RunDetailPage() {
     const updated = updateRun(run.id, { weather: w });
     if (updated) setRun(updated);
     setEditingWeather(false);
+  };
+
+  const handleShoeSelect = (newShoeId: string | null) => {
+    if (!run) return;
+    const oldId = run.shoeId;
+    const nextId = newShoeId ?? undefined;
+    if (oldId === nextId) {
+      setPickingShoe(false);
+      return;
+    }
+    reassignRunDistance(oldId, nextId, run.distanceM);
+    const updated = updateRun(run.id, { shoeId: nextId });
+    if (updated) setRun(updated);
+    try {
+      window.dispatchEvent(new Event("orbit:shoes-updated"));
+    } catch {
+      /* noop */
+    }
+    setPickingShoe(false);
   };
 
   useEffect(() => {
