@@ -40,7 +40,7 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center backdrop-blur-2xl bg-background/70 animate-fade-in"
+      className="fixed inset-0 z-50 grid place-items-center bg-background animate-fade-in"
       role="dialog"
       aria-label="Run starting countdown"
     >
@@ -50,7 +50,7 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
         </div>
         <div
           key={count}
-          className="font-display font-black text-neon tabular leading-none text-[180px] drop-shadow-[0_0_40px_oklch(0.92_0.21_130/0.55)] animate-scale-in"
+          className="font-display font-black text-neon tabular leading-none text-[180px] animate-scale-in"
           aria-live="assertive"
         >
           {count > 0 ? count : t("cd.go")}
@@ -58,7 +58,7 @@ export default function CountdownOverlay({ seconds = 10, onComplete, onCancel }:
         <div className="flex flex-col items-center gap-3">
           <button
             onClick={onComplete}
-            className="px-8 py-3 rounded-full bg-neon text-primary-foreground font-bold uppercase tracking-[0.2em] text-sm shadow-neon active:scale-95 transition"
+            className="px-8 py-3 rounded-full bg-neon text-primary-foreground font-bold uppercase tracking-[0.2em] text-sm active:scale-95 transition"
           >
             {t("cd.startNow")}
           </button>
