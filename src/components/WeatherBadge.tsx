@@ -1,6 +1,8 @@
 import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, Sun, Wind } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { RunWeather } from "@/lib/run-types";
+import { formatWind } from "@/lib/weather";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -23,8 +25,10 @@ type Props = {
 
 export default function WeatherBadge({ weather, variant = "default", className }: Props) {
   const { t } = useI18n();
+  const profile = useUserProfile();
   const Icon = ICONS[weather.icon] ?? Cloud;
   const compact = variant === "compact";
+  const wind = formatWind(weather.windMs, profile.windUnit);
 
   return (
     <div
@@ -46,7 +50,7 @@ export default function WeatherBadge({ weather, variant = "default", className }
               <span className="text-muted-foreground">·</span>
               <span className="inline-flex items-center gap-1 text-muted-foreground font-semibold">
                 <Wind className="h-3 w-3" />
-                {weather.windMs} {t("weather.windUnit")}
+                {wind.value} {wind.label}
               </span>
             </>
           )}
