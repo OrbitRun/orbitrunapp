@@ -173,6 +173,17 @@ const en: Dict = {
   "shoes.reactivate": "Reactivate",
   "shoes.warn": "Time to consider new shoes",
   "shoes.deleteTitle": "Delete this shoe?",
+
+  // Weather
+  "weather.sunny": "Sunny",
+  "weather.partlyCloudy": "Partly cloudy",
+  "weather.cloudy": "Cloudy",
+  "weather.fog": "Fog",
+  "weather.drizzle": "Drizzle",
+  "weather.rain": "Rain",
+  "weather.snow": "Snow",
+  "weather.thunderstorm": "Thunderstorm",
+  "weather.windUnit": "km/h",
 };
 
 const da: Dict = {
