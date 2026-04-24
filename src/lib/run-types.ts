@@ -44,7 +44,15 @@ export function loadRuns(): Run[] {
   try {
     const raw = window.localStorage.getItem(RUNS_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as Run[];
+    const parsed = JSON.parse(raw) as Array<Run & { weather?: RunWeather & { windKph?: number } }>;
+    // Migrate legacy windKph (km/h) → windMs (m/s) on read.
+    return parsed.map((r) => {
+      if (r.weather && r.weather.windMs == null && typeof r.weather.windKph === "number") {
+        const { windKph, ...rest } = r.weather;
+        return { ...r, weather: { ...rest, windMs: Math.round((windKph / 3.6) * 10) / 10 } };
+      }
+      return r;
+    });
   } catch {
     return [];
   }
