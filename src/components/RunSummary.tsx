@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
+import WeatherBadge from "@/components/WeatherBadge";
 import StatTile from "@/components/StatTile";
 import {
   AlertDialog,
@@ -44,6 +45,11 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold mt-1">
             {formatDate(run.startedAt)}
           </div>
+          {run.weather && (
+            <div className="mt-2 flex justify-center">
+              <WeatherBadge weather={run.weather} />
+            </div>
+          )}
         </header>
 
         <section className="rounded-3xl overflow-hidden border border-border shadow-card mt-2">

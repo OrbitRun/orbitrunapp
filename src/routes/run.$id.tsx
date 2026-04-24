@@ -5,6 +5,7 @@ import { loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
+import WeatherBadge from "@/components/WeatherBadge";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/run/$id")({
