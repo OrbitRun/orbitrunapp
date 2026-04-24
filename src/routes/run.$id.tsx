@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronRight, Pencil } from "lucide-react";
-import { RunningShoeIcon } from "@/components/icons/RunningShoeIcon";
+import { ArrowLeft, ChevronRight, Footprints, Pencil } from "lucide-react";
 import { loadRuns, updateRun, type Run, type RunWeather } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
@@ -129,7 +128,7 @@ function RunDetailPage() {
         className="mt-3 w-full flex items-center gap-3 p-3 rounded-2xl glass active:scale-[0.99] transition text-left"
         aria-label={t("run.shoe.change")}
       >
-        <RunningShoeIcon className="h-4 w-4 text-neon flex-shrink-0" />
+        <Footprints className="h-4 w-4 text-neon flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
             {t("run.shoe.label")}
