@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { z } from "zod";
 import type { RunWeather } from "@/lib/run-types";
 import { WEATHER_PRESETS } from "@/lib/weather";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -18,12 +19,6 @@ const ICONS: Record<string, LucideIcon> = {
   CloudLightning,
 };
 
-const schema = z.object({
-  tempC: z.number().int().min(-60).max(60),
-  windMs: z.number().min(0).max(80),
-  code: z.number().int().min(0).max(99),
-});
-
 type Props = {
   initial: RunWeather | null | undefined;
   onSave: (w: RunWeather) => void;
@@ -32,16 +27,31 @@ type Props = {
 
 export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
   const { t } = useI18n();
+  const profile = useUserProfile();
+  const isKmh = profile.windUnit === "kmh";
+  const windLabel = isKmh ? "km/h" : "m/s";
+  const windMax = isKmh ? 300 : 80;
+
+  // Validation schema is unit-aware so we can give a clear error.
+  const schema = z.object({
+    tempC: z.number().int().min(-60).max(60),
+    windDisplay: z.number().min(0).max(windMax),
+    code: z.number().int().min(0).max(99),
+  });
+
   const seed = initial ?? WEATHER_PRESETS[0];
+  const initialWindDisplay = isKmh
+    ? Math.round((initial?.windMs ?? 0) * 3.6)
+    : (initial?.windMs ?? 0);
   const [code, setCode] = useState<number>(seed.code);
   const [tempC, setTempC] = useState<string>(String(initial?.tempC ?? 15));
-  const [windMs, setWindMs] = useState<string>(String(initial?.windMs ?? 0));
+  const [windDisplay, setWindDisplay] = useState<string>(String(initialWindDisplay));
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = () => {
     const parsed = schema.safeParse({
       tempC: Number(tempC),
-      windMs: Number(windMs),
+      windDisplay: Number(windDisplay),
       code,
     });
     if (!parsed.success) {
@@ -49,9 +59,13 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
       return;
     }
     const preset = WEATHER_PRESETS.find((p) => p.code === parsed.data.code) ?? WEATHER_PRESETS[0];
+    // Always store wind as m/s (canonical).
+    const windMs = isKmh
+      ? Math.round((parsed.data.windDisplay / 3.6) * 10) / 10
+      : Math.round(parsed.data.windDisplay * 10) / 10;
     onSave({
       tempC: parsed.data.tempC,
-      windMs: Math.round(parsed.data.windMs * 10) / 10,
+      windMs,
       code: parsed.data.code,
       condition: preset.conditionKey,
       icon: preset.icon,
@@ -115,16 +129,16 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
         </label>
         <label className="block">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-            {t("weather.edit.wind")} (m/s)
+            {t("weather.edit.wind")} ({windLabel})
           </span>
           <input
             type="number"
             inputMode="decimal"
-            step="0.1"
-            value={windMs}
-            onChange={(e) => setWindMs(e.target.value)}
+            step={isKmh ? "1" : "0.1"}
+            value={windDisplay}
+            onChange={(e) => setWindDisplay(e.target.value)}
             min={0}
-            max={80}
+            max={windMax}
             className="mt-1 w-full rounded-xl bg-white/5 border border-border px-3 py-2 font-mono text-base tabular focus:outline-none focus:border-neon"
           />
         </label>
