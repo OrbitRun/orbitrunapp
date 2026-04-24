@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, History, User } from "lucide-react";
+import { Activity, History, Trophy, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
 export default function BottomNav() {
@@ -8,6 +8,7 @@ export default function BottomNav() {
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },
     { to: "/history", label: t("nav.history"), Icon: History },
+    { to: "/records", label: t("nav.records"), Icon: Trophy },
     { to: "/profile", label: t("nav.profile"), Icon: User },
   ] as const;
   return (

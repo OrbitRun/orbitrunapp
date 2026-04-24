@@ -70,7 +70,23 @@ const en: Dict = {
   // Nav
   "nav.run": "Run",
   "nav.history": "History",
+  "nav.records": "Records",
   "nav.profile": "Profile",
+
+  // Personal records
+  "pr.eyebrow": "Milestones",
+  "pr.title": "Personal Records",
+  "pr.notDone": "Not completed yet",
+  "pr.newPr": "New Personal Record!",
+  "pr.tapContinue": "Tap to continue",
+  "pr.dateSet": "Set {date}",
+  "pr.cat.1k": "1 km",
+  "pr.cat.5k": "5 km",
+  "pr.cat.10k": "10 km",
+  "pr.cat.half": "Half marathon",
+  "pr.cat.marathon": "Marathon",
+  "pr.cat.longest": "Longest run",
+  "pr.cat.fastestKm": "Fastest km",
 
   // History
   "history.eyebrow": "Archive",
@@ -398,6 +414,21 @@ const da: Dict = {
   "weather.edit.cancel": "Annullér",
   "weather.edit.invalid": "Ugyldig værdi",
   "profile.windUnit": "Vindenhed",
+
+  "nav.records": "Rekorder",
+  "pr.eyebrow": "Milepæle",
+  "pr.title": "Personlige rekorder",
+  "pr.notDone": "Endnu ikke gennemført",
+  "pr.newPr": "Ny personlig rekord!",
+  "pr.tapContinue": "Tryk for at fortsætte",
+  "pr.dateSet": "Sat {date}",
+  "pr.cat.1k": "1 km",
+  "pr.cat.5k": "5 km",
+  "pr.cat.10k": "10 km",
+  "pr.cat.half": "Halvmarathon",
+  "pr.cat.marathon": "Marathon",
+  "pr.cat.longest": "Længste løbetur",
+  "pr.cat.fastestKm": "Hurtigste km",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };

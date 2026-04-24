@@ -27,7 +27,7 @@ function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
-  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/history" });
+  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/records" });
 
   useEffect(() => {
     const runs = loadRuns();

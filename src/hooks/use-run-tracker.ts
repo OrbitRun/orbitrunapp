@@ -7,6 +7,7 @@ import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
+import { checkAndUpdatePrs } from "@/lib/personal-records";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -366,6 +367,18 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    try {
+      const newPrs = checkAndUpdatePrs(run);
+      if (newPrs.length > 0) {
+        window.dispatchEvent(
+          new CustomEvent("orbit:new-pr", {
+            detail: { runId: run.id, categories: newPrs },
+          }),
+        );
+      }
+    } catch {
+      /* PR check is non-critical */
+    }
     const lang = langRef.current;
     const name = nameRef.current;
     const km = (run.distanceM / 1000).toFixed(2);

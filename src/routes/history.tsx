@@ -16,7 +16,7 @@ export const Route = createFileRoute("/history")({
 function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
   const { t } = useI18n();
-  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/", next: "/profile" });
+  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/", next: "/records" });
 
   useEffect(() => {
     setRuns(loadRuns());
