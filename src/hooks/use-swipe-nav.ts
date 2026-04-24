@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
-type SwipePath = "/" | "/history" | "/profile";
+type SwipePath = "/" | "/history" | "/records" | "/profile";
 
 interface Options {
   prev?: SwipePath;
