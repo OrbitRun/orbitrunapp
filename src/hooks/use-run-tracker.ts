@@ -295,6 +295,8 @@ export function useRunTracker() {
     lastSplitDistanceMRef.current = 0;
     lastSplitTimeMsRef.current = 0;
     smoothedAltRef.current = null;
+    weatherRef.current = null;
+    weatherFetchedRef.current = false;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
@@ -353,6 +355,7 @@ export function useRunTracker() {
       avgCadenceSpm: s.cadenceSpm,
       points: s.points,
       splits: s.splits,
+      weather: weatherRef.current ?? undefined,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
