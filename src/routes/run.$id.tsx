@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
-import { loadRuns, type Run } from "@/lib/run-types";
+import { ArrowLeft, Pencil } from "lucide-react";
+import { loadRuns, updateRun, type Run, type RunWeather } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
 import WeatherBadge from "@/components/WeatherBadge";
+import WeatherEditor from "@/components/WeatherEditor";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/run/$id")({
