@@ -43,16 +43,46 @@ export function formatDate(ts: number): string {
   });
 }
 
-// m/s -> color along slow→mid→fast palette
+// m/s -> color along slow→mid→fast palette (continuous interpolation in OKLCH)
 export function speedToColor(speedMs: number | null): string {
-  // Running ranges: 1.5 m/s (~11min/km slow walk-jog), 3 m/s (~5:30/km), 4.5 m/s+ (~3:40/km sprint)
-  const s = speedMs ?? 0;
-  const slow = "oklch(0.65 0.22 22)"; // red
-  const mid = "oklch(0.85 0.18 90)"; // amber
-  const fast = "oklch(0.92 0.21 140)"; // lime
-  if (s < 2) return slow;
-  if (s < 3.3) return mid;
-  return fast;
+  // Stops: slow=1.5 m/s (red), mid=3 m/s (amber), fast=4.5 m/s (lime)
+  const s = Math.max(0, speedMs ?? 0);
+  // OKLCH stops: [L, C, H]
+  const slow = [0.65, 0.22, 22];
+  const mid = [0.85, 0.18, 90];
+  const fast = [0.92, 0.21, 140];
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+  const mix = (a: number[], b: number[], t: number) => [
+    lerp(a[0], b[0], t),
+    lerp(a[1], b[1], t),
+    // Hue is monotonic across our stops (22→90→140), straight lerp is fine.
+    lerp(a[2], b[2], t),
+  ];
+  let c: number[];
+  if (s <= 1.5) c = slow;
+  else if (s <= 3) c = mix(slow, mid, (s - 1.5) / 1.5);
+  else if (s <= 4.5) c = mix(mid, fast, (s - 3) / 1.5);
+  else c = fast;
+  return `oklch(${c[0].toFixed(3)} ${c[1].toFixed(3)} ${c[2].toFixed(1)})`;
+}
+
+// Exponential moving average smoothing for a sequence of speeds.
+// alpha closer to 1 = more responsive, closer to 0 = smoother.
+export function smoothSpeeds(speeds: (number | null)[], alpha = 0.25): number[] {
+  const out: number[] = [];
+  let ema = 0;
+  let seeded = false;
+  for (const raw of speeds) {
+    const v = raw ?? 0;
+    if (!seeded) {
+      ema = v;
+      seeded = true;
+    } else {
+      ema = alpha * v + (1 - alpha) * ema;
+    }
+    out.push(ema);
+  }
+  return out;
 }
 
 export function genId(): string {
