@@ -184,6 +184,14 @@ const en: Dict = {
   "weather.snow": "Snow",
   "weather.thunderstorm": "Thunderstorm",
   "weather.windUnit": "km/h",
+  "weather.edit.toggle": "Edit weather",
+  "weather.edit.add": "Add weather",
+  "weather.edit.title": "Edit weather",
+  "weather.edit.temp": "Temperature",
+  "weather.edit.wind": "Wind",
+  "weather.edit.save": "Save",
+  "weather.edit.cancel": "Cancel",
+  "weather.edit.invalid": "Invalid value",
 };
 
 const da: Dict = {
@@ -348,6 +356,14 @@ const da: Dict = {
   "weather.snow": "Sne",
   "weather.thunderstorm": "Tordenvejr",
   "weather.windUnit": "km/t",
+  "weather.edit.toggle": "Rediger vejr",
+  "weather.edit.add": "Tilføj vejr",
+  "weather.edit.title": "Rediger vejr",
+  "weather.edit.temp": "Temperatur",
+  "weather.edit.wind": "Vind",
+  "weather.edit.save": "Gem",
+  "weather.edit.cancel": "Annullér",
+  "weather.edit.invalid": "Ugyldig værdi",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
