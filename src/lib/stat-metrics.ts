@@ -3,7 +3,18 @@
 
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 
-export type MetricId = "distance" | "duration" | "pace" | "avgPace" | "cadence" | "elevation";
+export type MetricId =
+  | "distance"
+  | "duration"
+  | "pace"
+  | "avgPace"
+  | "cadence"
+  | "elevation"
+  | "calories"
+  | "stride"
+  | "vertOsc"
+  | "groundContact"
+  | "sweatLoss";
 
 export type LiveStats = {
   distanceM: number;
@@ -20,6 +31,63 @@ export type MetricDef = {
   unitKey?: string;
   format: (s: LiveStats) => string;
 };
+
+// Default body weight (kg) used for calorie / sweat estimates when the user
+// profile doesn't capture weight. Keeps formulas simple and stable.
+const DEFAULT_WEIGHT_KG = 70;
+
+// Speed (m/s) derived from current pace, falling back to average pace.
+function speedMs(s: LiveStats): number {
+  const pace = s.currentPaceSecPerKm || s.avgPaceSecPerKm;
+  if (!pace || pace <= 0) return 0;
+  return 1000 / pace;
+}
+
+// kcal estimate: MET-based. Running MET ≈ 1.035 × speed(km/h).
+// kcal = MET × weight(kg) × hours.
+function estimateCalories(s: LiveStats): number {
+  const hours = s.elapsedMs / 3_600_000;
+  if (hours <= 0) return 0;
+  const avgSpeedKmh = s.avgPaceSecPerKm > 0 ? 3600 / s.avgPaceSecPerKm : 0;
+  if (avgSpeedKmh <= 0) {
+    const km = s.distanceM / 1000;
+    if (km <= 0) return 0;
+    const met = 1.035 * (km / hours);
+    return Math.round(met * DEFAULT_WEIGHT_KG * hours);
+  }
+  const met = 1.035 * avgSpeedKmh;
+  return Math.round(met * DEFAULT_WEIGHT_KG * hours);
+}
+
+// Stride length (m) = (speed × 120) / cadence — two steps per stride.
+function estimateStrideM(s: LiveStats): number {
+  const v = speedMs(s);
+  if (v <= 0 || s.cadenceSpm <= 0) return 0;
+  return (v * 120) / s.cadenceSpm;
+}
+
+// Vertical oscillation (cm) — rough model, capped at 14 cm.
+function estimateVerticalOscCm(s: LiveStats): number {
+  const v = speedMs(s);
+  if (v <= 0) return 0;
+  return Math.min(14, 6 + 1.4 * v);
+}
+
+// Ground contact time (ms): step time × 35% contact phase.
+function estimateGroundContactMs(s: LiveStats): number {
+  if (s.cadenceSpm <= 0) return 0;
+  const stepMs = 60000 / s.cadenceSpm;
+  return Math.round(stepMs * 0.35);
+}
+
+// Sweat loss (L) — baseline 1.2 L/h scaled by intensity.
+function estimateSweatLossL(s: LiveStats): number {
+  const hours = s.elapsedMs / 3_600_000;
+  if (hours <= 0) return 0;
+  const avgSpeedKmh = s.avgPaceSecPerKm > 0 ? 3600 / s.avgPaceSecPerKm : 0;
+  const intensity = Math.max(0.6, Math.min(1.6, avgSpeedKmh / 10));
+  return 1.2 * hours * intensity;
+}
 
 export const METRICS: Record<MetricId, MetricDef> = {
   distance: {
@@ -57,6 +125,48 @@ export const METRICS: Record<MetricId, MetricDef> = {
     unitKey: "unit.m",
     format: (s) => Math.round(s.elevationGainM).toString(),
   },
+  calories: {
+    id: "calories",
+    labelKey: "stat.calories",
+    unitKey: "unit.kcal",
+    format: (s) => estimateCalories(s).toString(),
+  },
+  stride: {
+    id: "stride",
+    labelKey: "stat.stride",
+    unitKey: "unit.m",
+    format: (s) => {
+      const v = estimateStrideM(s);
+      return v > 0 ? v.toFixed(2) : "—";
+    },
+  },
+  vertOsc: {
+    id: "vertOsc",
+    labelKey: "stat.vertOsc",
+    unitKey: "unit.cm",
+    format: (s) => {
+      const v = estimateVerticalOscCm(s);
+      return v > 0 ? v.toFixed(1) : "—";
+    },
+  },
+  groundContact: {
+    id: "groundContact",
+    labelKey: "stat.groundContact",
+    unitKey: "unit.ms",
+    format: (s) => {
+      const v = estimateGroundContactMs(s);
+      return v > 0 ? v.toString() : "—";
+    },
+  },
+  sweatLoss: {
+    id: "sweatLoss",
+    labelKey: "stat.sweatLoss",
+    unitKey: "unit.l",
+    format: (s) => {
+      const v = estimateSweatLossL(s);
+      return v > 0 ? v.toFixed(2) : "—";
+    },
+  },
 };
 
 export const ALL_METRIC_IDS: MetricId[] = [
@@ -66,6 +176,11 @@ export const ALL_METRIC_IDS: MetricId[] = [
   "avgPace",
   "cadence",
   "elevation",
+  "calories",
+  "stride",
+  "vertOsc",
+  "groundContact",
+  "sweatLoss",
 ];
 
 export type StatLayout = {
