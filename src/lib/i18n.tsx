@@ -174,6 +174,13 @@ const en: Dict = {
   "shoes.warn": "Time to consider new shoes",
   "shoes.deleteTitle": "Delete this shoe?",
 
+  // Run shoe
+  "run.shoe.label": "Shoe",
+  "run.shoe.none": "No shoe",
+  "run.shoe.change": "Change shoe",
+  "run.shoe.unassign": "Unassign",
+  "run.shoe.pickerTitle": "Select shoe",
+
   // Weather
   "weather.sunny": "Sunny",
   "weather.partlyCloudy": "Partly cloudy",
@@ -346,6 +353,13 @@ const da: Dict = {
   "shoes.reactivate": "Genaktivér",
   "shoes.warn": "Tid til at overveje nye sko",
   "shoes.deleteTitle": "Slet disse sko?",
+
+  // Sko på løb
+  "run.shoe.label": "Sko",
+  "run.shoe.none": "Ingen sko",
+  "run.shoe.change": "Skift sko",
+  "run.shoe.unassign": "Fjern tilknytning",
+  "run.shoe.pickerTitle": "Vælg sko",
 
   // Vejr
   "weather.sunny": "Sol",

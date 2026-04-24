@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Trash2 } from "lucide-react";
+import { ChevronRight, Footprints, Trash2 } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
+import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 
@@ -128,6 +129,18 @@ function HistoryPage() {
                         {t("unit.perKm")}
                       </span>
                     </div>
+                    {(() => {
+                      const shoe = getShoeById(r.shoeId);
+                      if (!shoe) return null;
+                      return (
+                        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold">
+                          <Footprints className="h-3 w-3 text-neon" />
+                          <span className="truncate">
+                            {shoe.brand} {shoe.model}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                 </div>

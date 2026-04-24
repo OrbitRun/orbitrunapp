@@ -1,81 +1,53 @@
-## Weather integration for runs
+## Automated shoe tracking + history integration
 
-Capture weather conditions at the moment a run starts (temperature, wind, condition + icon), show them on the post-run summary, persist them with the run, and surface them in the history list and run detail page.
+Tag each saved run with the active primary shoe and let users see/change the shoe in the run history. Mileage on shoes stays in sync when a run is reassigned or deleted.
 
-### API choice
+### 1. Data model (`src/lib/run-types.ts`)
+- Add optional `shoeId?: string` to the `Run` type. Existing runs without a `shoeId` keep working (treated as "unknown shoe").
 
-Use **Open-Meteo** (`https://api.open-meteo.com/v1/forecast`) — free, no API key, no signup, supports CORS, returns current weather including a `weather_code` we can map to icons + labels. This avoids requiring the user to obtain and store an OpenWeather key.
+### 2. Auto-tagging on save (`src/components/RunSummary.tsx`)
+- Look up the active primary shoe via `loadShoes()` at save time.
+- Pass `shoeId` to the parent so the saved `Run` includes it. (Do this by changing `onSave` to `onSave(shoeId?: string)` and having the run-tracker hook write `shoeId` onto the run before `saveRun`.)
+- Keep the existing `addDistanceToPrimary(run.distanceM)` call — unchanged behavior for the common case.
 
-If the user later prefers OpenWeather, we can swap the fetcher; the rest of the pipeline stays the same.
+### 3. Shoe helpers (`src/lib/shoes.ts`)
+- Add `getPrimaryShoe(): Shoe | null`.
+- Add `getShoeById(id: string): Shoe | null`.
+- Add `addDistanceToShoe(id: string, distanceM: number)` and `subtractDistanceFromShoe(id: string, distanceM: number)` (clamped to 0). Used when reassigning a run between shoes.
+- Add `reassignRunDistance(fromId: string | undefined, toId: string, distanceM: number)` convenience helper that subtracts from the old shoe and adds to the new one.
 
-### Data model
+### 4. Run tracker hook (`src/hooks/use-run-tracker.ts`)
+- Update the save flow so the run object persisted via `saveRun` includes `shoeId` (passed in from `RunSummary` or read directly from `getPrimaryShoe()` here — preferred: read here so summary stays presentational).
 
-Extend `Run` (in `src/lib/run-types.ts`) with an optional `weather` field so existing saved runs remain valid:
+### 5. History detail view (`src/routes/run.$id.tsx`)
+- Below the weather edit row, render a small shoe row:
+  - Minimalist shoe icon (`Footprints` from lucide-react — already in the lucide set).
+  - Shoe brand + model (or "No shoe" placeholder when none).
+  - Tappable: opens a bottom sheet / dialog listing all `active` shoes from `loadShoes()`. Selecting one calls `reassignRunDistance(oldShoeId, newShoeId, run.distanceM)` then `updateRun(run.id, { shoeId: newId })`, dispatches `orbit:shoes-updated`, and closes the sheet.
+  - Include an "Unassign" option that subtracts from the previous shoe and clears `shoeId`.
 
-```ts
-export type RunWeather = {
-  tempC: number;
-  windKph: number;
-  code: number;          // Open-Meteo weather_code
-  condition: string;     // i18n key: "weather.sunny" | "weather.rain" | ...
-  icon: string;          // lucide icon name: "Sun" | "CloudRain" | ...
-  capturedAt: number;    // ms
-};
+### 6. New component `src/components/ShoePicker.tsx`
+- Reusable Radix `Dialog` (or existing `Sheet` from shadcn) that lists active shoes with brand/model and a check for the currently selected one.
+- Props: `currentShoeId?: string`, `onSelect(shoeId: string | null): void`, `open`, `onOpenChange`.
 
-export type Run = {
-  // ...existing fields
-  weather?: RunWeather;
-};
-```
+### 7. History list (`src/routes/history.tsx`)
+- In the per-run row, add a tiny `Footprints` icon + shoe model name when `run.shoeId` resolves to a known shoe. Non-tappable here — editing happens in the detail view to keep the list clean.
+
+### 8. i18n (`src/lib/i18n.tsx`)
+- Add keys (en + da):
+  - `run.shoe.label` ("Shoe" / "Sko")
+  - `run.shoe.none` ("No shoe" / "Ingen sko")
+  - `run.shoe.change` ("Change shoe" / "Skift sko")
+  - `run.shoe.unassign` ("Unassign" / "Fjern tilknytning")
+  - `run.shoe.pickerTitle` ("Select shoe" / "Vælg sko")
+
+### Edge cases handled
+- No primary shoe at save time → `shoeId` left undefined, no mileage change.
+- Reassigning a run whose original shoe was deleted → only adds distance to the new shoe.
+- Switching to the same shoe → no-op.
+- Distance values clamped at 0 to avoid negative mileage on corrupt data.
 
 ### Files
-
-**New**
-- `src/lib/weather.ts` — `fetchWeather(lat, lng)` calling Open-Meteo, plus `weatherCodeToMeta(code)` mapping WMO codes → `{ condition, icon }` (Sunny/Cloudy/Rain/Snow/Thunderstorm/Fog).
-- `src/components/WeatherBadge.tsx` — small pill: lucide icon + temp + optional wind, used on summary, history cards, and detail page.
-
-**Edited**
-- `src/lib/run-types.ts` — add `RunWeather` type and optional `weather` on `Run`.
-- `src/hooks/use-run-tracker.ts`:
-  - Add `weatherRef` (RunWeather | null).
-  - When the first GPS point arrives after `start()`, call `fetchWeather(lat, lng)` once and store result in `weatherRef` (silent failure → leave undefined).
-  - In `stop()`, attach `weather: weatherRef.current ?? undefined` to the returned `Run`.
-- `src/components/RunSummary.tsx` — render `<WeatherBadge>` under the date when `run.weather` exists.
-- `src/routes/run.$id.tsx` — render `<WeatherBadge>` in the header row.
-- `src/routes/history.tsx` — render a compact `<WeatherBadge variant="compact">` overlaid on each run map card (top-left).
-- `src/lib/i18n.tsx` — add weather strings: `weather.sunny`, `weather.cloudy`, `weather.rain`, `weather.snow`, `weather.thunderstorm`, `weather.fog`, `weather.wind`, plus `°C` units (DA + EN).
-
-### Flow
-
-```text
-start() → armGps() → first GPS fix (lat,lng)
-                     │
-                     ▼
-              fetchWeather(lat,lng) → Open-Meteo
-                     │
-                     ▼
-              weatherRef = { tempC, windKph, code, ... }
-                     │
-              (run continues)
-                     │
-                     ▼
-                  stop() → Run { ..., weather }
-                     │
-                     ▼
-        RunSummary shows WeatherBadge → save → persisted
-                     │
-                     ▼
-        History list + run detail show WeatherBadge
-```
-
-### UX
-
-- Badge: small glass pill with a lucide icon (`Sun`/`Cloud`/`CloudRain`/`CloudSnow`/`CloudLightning`/`CloudFog`), temperature (e.g. `12°C`), and wind speed (e.g. `8 km/h`) when relevant.
-- Failure mode: if the weather fetch fails or the user blocks location, the badge is simply omitted — no error UI, no blocking of the save flow.
-- Old runs without weather data continue to render normally (badge hidden).
-
-### Notes
-
-- Single fetch per run (not polling) — captured "at the start" as requested.
-- Open-Meteo is called from the client; no secrets, no edge function needed.
-- Backward compatible: `weather` is optional, existing localStorage runs keep working.
+- Edit: `src/lib/run-types.ts`, `src/lib/shoes.ts`, `src/lib/i18n.tsx`, `src/hooks/use-run-tracker.ts`, `src/routes/run.$id.tsx`, `src/routes/history.tsx`
+- New: `src/components/ShoePicker.tsx`
+- `src/components/RunSummary.tsx` left as-is (mileage call already there); shoeId is attached in the run-tracker hook so summary stays presentational.
