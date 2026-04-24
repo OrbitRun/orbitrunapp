@@ -115,15 +115,16 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
         </label>
         <label className="block">
           <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-            {t("weather.edit.wind")} (km/h)
+            {t("weather.edit.wind")} (m/s)
           </span>
           <input
             type="number"
-            inputMode="numeric"
-            value={windKph}
-            onChange={(e) => setWindKph(e.target.value)}
+            inputMode="decimal"
+            step="0.1"
+            value={windMs}
+            onChange={(e) => setWindMs(e.target.value)}
             min={0}
-            max={300}
+            max={80}
             className="mt-1 w-full rounded-xl bg-white/5 border border-border px-3 py-2 font-mono text-base tabular focus:outline-none focus:border-neon"
           />
         </label>
