@@ -1,18 +1,81 @@
+## Weather integration for runs
 
+Capture weather conditions at the moment a run starts (temperature, wind, condition + icon), show them on the post-run summary, persist them with the run, and surface them in the history list and run detail page.
 
-## Reduce bottom navigation height by 30%
+### API choice
 
-The nav-pillen er for høj. Vi reducerer den vertikale padding på de to hovedled (pillen og linkene) med ca. 30% for at gøre nav-baren lavere uden at ændre layout, ikon-størrelse eller safe-area-clearance.
+Use **Open-Meteo** (`https://api.open-meteo.com/v1/forecast`) — free, no API key, no signup, supports CORS, returns current weather including a `weather_code` we can map to icons + labels. This avoids requiring the user to obtain and store an OpenWeather key.
 
-### Ændring
+If the user later prefers OpenWeather, we can swap the fetcher; the rest of the pipeline stays the same.
 
-**`src/components/BottomNav.tsx`**
-- Pillens padding: `py-3.5` (14px) → `py-2` (8px) — ~43% lavere container-padding.
-- Link-padding: `py-3` (12px) → `py-2` (8px) — ~33% lavere link-højde.
-- Resultat: samlet pille-højde reduceres fra ~76px til ~54px (~29% lavere), tæt på de ønskede 30%.
-- Ikon (`h-5 w-5`), label (`text-[10px]`), gap (`gap-1`) og safe-area `pb-[max(env(safe-area-inset-bottom),12px)]` forbliver uændrede, så iOS-clearance bevares.
+### Data model
 
-### Filer
+Extend `Run` (in `src/lib/run-types.ts`) with an optional `weather` field so existing saved runs remain valid:
 
-- Redigeret: `src/components/BottomNav.tsx`
+```ts
+export type RunWeather = {
+  tempC: number;
+  windKph: number;
+  code: number;          // Open-Meteo weather_code
+  condition: string;     // i18n key: "weather.sunny" | "weather.rain" | ...
+  icon: string;          // lucide icon name: "Sun" | "CloudRain" | ...
+  capturedAt: number;    // ms
+};
 
+export type Run = {
+  // ...existing fields
+  weather?: RunWeather;
+};
+```
+
+### Files
+
+**New**
+- `src/lib/weather.ts` — `fetchWeather(lat, lng)` calling Open-Meteo, plus `weatherCodeToMeta(code)` mapping WMO codes → `{ condition, icon }` (Sunny/Cloudy/Rain/Snow/Thunderstorm/Fog).
+- `src/components/WeatherBadge.tsx` — small pill: lucide icon + temp + optional wind, used on summary, history cards, and detail page.
+
+**Edited**
+- `src/lib/run-types.ts` — add `RunWeather` type and optional `weather` on `Run`.
+- `src/hooks/use-run-tracker.ts`:
+  - Add `weatherRef` (RunWeather | null).
+  - When the first GPS point arrives after `start()`, call `fetchWeather(lat, lng)` once and store result in `weatherRef` (silent failure → leave undefined).
+  - In `stop()`, attach `weather: weatherRef.current ?? undefined` to the returned `Run`.
+- `src/components/RunSummary.tsx` — render `<WeatherBadge>` under the date when `run.weather` exists.
+- `src/routes/run.$id.tsx` — render `<WeatherBadge>` in the header row.
+- `src/routes/history.tsx` — render a compact `<WeatherBadge variant="compact">` overlaid on each run map card (top-left).
+- `src/lib/i18n.tsx` — add weather strings: `weather.sunny`, `weather.cloudy`, `weather.rain`, `weather.snow`, `weather.thunderstorm`, `weather.fog`, `weather.wind`, plus `°C` units (DA + EN).
+
+### Flow
+
+```text
+start() → armGps() → first GPS fix (lat,lng)
+                     │
+                     ▼
+              fetchWeather(lat,lng) → Open-Meteo
+                     │
+                     ▼
+              weatherRef = { tempC, windKph, code, ... }
+                     │
+              (run continues)
+                     │
+                     ▼
+                  stop() → Run { ..., weather }
+                     │
+                     ▼
+        RunSummary shows WeatherBadge → save → persisted
+                     │
+                     ▼
+        History list + run detail show WeatherBadge
+```
+
+### UX
+
+- Badge: small glass pill with a lucide icon (`Sun`/`Cloud`/`CloudRain`/`CloudSnow`/`CloudLightning`/`CloudFog`), temperature (e.g. `12°C`), and wind speed (e.g. `8 km/h`) when relevant.
+- Failure mode: if the weather fetch fails or the user blocks location, the badge is simply omitted — no error UI, no blocking of the save flow.
+- Old runs without weather data continue to render normally (badge hidden).
+
+### Notes
+
+- Single fetch per run (not polling) — captured "at the start" as requested.
+- Open-Meteo is called from the client; no secrets, no edge function needed.
+- Backward compatible: `weather` is optional, existing localStorage runs keep working.

@@ -14,6 +14,15 @@ export type Split = {
   totalDurationMs: number;
 };
 
+export type RunWeather = {
+  tempC: number;
+  windKph: number;
+  code: number; // Open-Meteo WMO weather_code
+  condition: string; // i18n key, e.g. "weather.sunny"
+  icon: string; // lucide icon name, e.g. "Sun"
+  capturedAt: number;
+};
+
 export type Run = {
   id: string;
   startedAt: number;
@@ -25,6 +34,7 @@ export type Run = {
   avgCadenceSpm: number;
   points: GeoPoint[];
   splits: Split[];
+  weather?: RunWeather;
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";

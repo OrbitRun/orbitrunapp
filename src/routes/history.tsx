@@ -4,6 +4,7 @@ import { ChevronRight, Trash2 } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
+import WeatherBadge from "@/components/WeatherBadge";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 
@@ -101,6 +102,11 @@ function HistoryPage() {
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
+                  {r.weather && (
+                    <div className="absolute top-2 left-2">
+                      <WeatherBadge weather={r.weather} variant="compact" />
+                    </div>
+                  )}
                 </div>
                 <div className="p-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">

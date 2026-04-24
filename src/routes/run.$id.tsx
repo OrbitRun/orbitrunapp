@@ -5,6 +5,7 @@ import { loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
 import StatTile from "@/components/StatTile";
+import WeatherBadge from "@/components/WeatherBadge";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/run/$id")({
@@ -62,8 +63,13 @@ function RunDetailPage() {
         <div className="w-9" />
       </header>
 
-      <section className="rounded-3xl overflow-hidden border border-border shadow-card">
+      <section className="rounded-3xl overflow-hidden border border-border shadow-card relative">
         <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} />
+        {run.weather && (
+          <div className="absolute top-3 left-3">
+            <WeatherBadge weather={run.weather} />
+          </div>
+        )}
       </section>
 
       <section className="mt-4 glass-strong rounded-3xl p-5 text-center">

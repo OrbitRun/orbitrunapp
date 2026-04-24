@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GeoPoint, Run, Split } from "@/lib/run-types";
+import type { GeoPoint, Run, RunWeather, Split } from "@/lib/run-types";
 import { saveRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
+import { fetchWeather } from "@/lib/weather";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -76,6 +77,9 @@ export function useRunTracker() {
   const lastSplitTimeMsRef = useRef(0);
   // Smoothed elevation (EMA) to reject noisy single-sample altitude spikes.
   const smoothedAltRef = useRef<number | null>(null);
+  // Weather snapshot captured once at the start of the run from the first GPS fix.
+  const weatherRef = useRef<RunWeather | null>(null);
+  const weatherFetchedRef = useRef(false);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
@@ -103,6 +107,16 @@ export function useRunTracker() {
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
       let didUpdate = false;
+      // Fire-and-forget weather snapshot once we have any GPS fix during a run.
+      if (!weatherFetchedRef.current && stateRef.current.status === "running") {
+        const acc = pos.coords.accuracy ?? 999;
+        if (acc <= 100) {
+          weatherFetchedRef.current = true;
+          void fetchWeather(pos.coords.latitude, pos.coords.longitude).then((w) => {
+            if (w) weatherRef.current = w;
+          });
+        }
+      }
       setState((prev) => {
         if (prev.status !== "running") return prev;
 
@@ -281,6 +295,8 @@ export function useRunTracker() {
     lastSplitDistanceMRef.current = 0;
     lastSplitTimeMsRef.current = 0;
     smoothedAltRef.current = null;
+    weatherRef.current = null;
+    weatherFetchedRef.current = false;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
     const startedAt = Date.now();
@@ -339,6 +355,7 @@ export function useRunTracker() {
       avgCadenceSpm: s.cadenceSpm,
       points: s.points,
       splits: s.splits,
+      weather: weatherRef.current ?? undefined,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
