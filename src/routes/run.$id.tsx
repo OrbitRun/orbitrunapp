@@ -27,7 +27,15 @@ function RunDetailPage() {
   const { id } = useParams({ from: "/run/$id" });
   const [run, setRun] = useState<Run | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [editingWeather, setEditingWeather] = useState(false);
   const { t } = useI18n();
+
+  const handleWeatherSave = (w: RunWeather) => {
+    if (!run) return;
+    const updated = updateRun(run.id, { weather: w });
+    if (updated) setRun(updated);
+    setEditingWeather(false);
+  };
 
   useEffect(() => {
     setRun(loadRuns().find((r) => r.id === id) ?? null);
@@ -72,6 +80,24 @@ function RunDetailPage() {
           </div>
         )}
       </section>
+
+      <div className="mt-2 flex justify-end px-1">
+        <button
+          onClick={() => setEditingWeather((v) => !v)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground active:scale-95 transition"
+        >
+          <Pencil className="h-3 w-3" />
+          {run.weather ? t("weather.edit.toggle") : t("weather.edit.add")}
+        </button>
+      </div>
+
+      {editingWeather && (
+        <WeatherEditor
+          initial={run.weather}
+          onSave={handleWeatherSave}
+          onCancel={() => setEditingWeather(false)}
+        />
+      )}
 
       <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
