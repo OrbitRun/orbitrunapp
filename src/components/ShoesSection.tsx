@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Footprints, Plus, Star, Trash2, AlertTriangle, Archive, RotateCcw } from "lucide-react";
+import { Plus, Star, Trash2, AlertTriangle, Archive, RotateCcw } from "lucide-react";
+import { RunningShoeIcon } from "@/components/icons/RunningShoeIcon";
 import {
   Dialog,
   DialogContent,
@@ -83,7 +84,7 @@ export default function ShoesSection() {
     <section className="mt-4">
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
-          <Footprints className="h-4 w-4 text-neon" />
+          <RunningShoeIcon className="h-4 w-4 text-neon" />
           <h2 className="font-display font-black text-sm uppercase tracking-[0.2em]">
             {t("shoes.title")}
           </h2>
@@ -99,7 +100,7 @@ export default function ShoesSection() {
 
       {shoes.length === 0 ? (
         <div className="glass rounded-2xl p-6 text-center">
-          <Footprints className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
+          <RunningShoeIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
           <p className="text-xs text-muted-foreground">{t("shoes.empty")}</p>
         </div>
       ) : (
