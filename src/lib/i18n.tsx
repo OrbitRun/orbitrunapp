@@ -192,6 +192,7 @@ const en: Dict = {
   "weather.edit.save": "Save",
   "weather.edit.cancel": "Cancel",
   "weather.edit.invalid": "Invalid value",
+  "profile.windUnit": "Wind unit",
 };
 
 const da: Dict = {
@@ -364,6 +365,7 @@ const da: Dict = {
   "weather.edit.save": "Gem",
   "weather.edit.cancel": "Annullér",
   "weather.edit.invalid": "Ugyldig værdi",
+  "profile.windUnit": "Vindenhed",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
