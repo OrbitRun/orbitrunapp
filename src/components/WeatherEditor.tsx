@@ -20,7 +20,7 @@ const ICONS: Record<string, LucideIcon> = {
 
 const schema = z.object({
   tempC: z.number().int().min(-60).max(60),
-  windKph: z.number().int().min(0).max(300),
+  windMs: z.number().min(0).max(80),
   code: z.number().int().min(0).max(99),
 });
 
@@ -35,13 +35,13 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
   const seed = initial ?? WEATHER_PRESETS[0];
   const [code, setCode] = useState<number>(seed.code);
   const [tempC, setTempC] = useState<string>(String(initial?.tempC ?? 15));
-  const [windKph, setWindKph] = useState<string>(String(initial?.windKph ?? 0));
+  const [windMs, setWindMs] = useState<string>(String(initial?.windMs ?? 0));
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = () => {
     const parsed = schema.safeParse({
       tempC: Number(tempC),
-      windKph: Number(windKph),
+      windMs: Number(windMs),
       code,
     });
     if (!parsed.success) {
@@ -51,7 +51,7 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
     const preset = WEATHER_PRESETS.find((p) => p.code === parsed.data.code) ?? WEATHER_PRESETS[0];
     onSave({
       tempC: parsed.data.tempC,
-      windKph: parsed.data.windKph,
+      windMs: Math.round(parsed.data.windMs * 10) / 10,
       code: parsed.data.code,
       condition: preset.conditionKey,
       icon: preset.icon,
