@@ -94,6 +94,13 @@
   --glass: oklch(1 0 0 / 0.05);
   --glass-strong: oklch(1 0 0 / 0.09);
 
+  /* Reusable surface + selected-state tokens (flat, no glow) */
+  --surface: oklch(1 0 0 / 0.05);
+  --surface-hover: oklch(1 0 0 / 0.10);
+  --surface-border: oklch(1 0 0 / 0.10);
+  --selected: var(--neon);
+  --selected-foreground: var(--primary-foreground);
+
   /* Speed gradient */
   --speed-slow: oklch(0.65 0.22 22);
   --speed-mid: oklch(0.85 0.18 90);
