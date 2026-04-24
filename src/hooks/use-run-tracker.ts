@@ -6,6 +6,7 @@ import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cue
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
+import { getPrimaryShoe } from "@/lib/shoes";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -344,6 +345,7 @@ export function useRunTracker() {
       setState({ ...initial });
       return null;
     }
+    const primaryShoe = getPrimaryShoe();
     const run: Run = {
       id: genId(),
       startedAt: s.startedAt,
@@ -356,6 +358,7 @@ export function useRunTracker() {
       points: s.points,
       splits: s.splits,
       weather: weatherRef.current ?? undefined,
+      shoeId: primaryShoe?.id,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
