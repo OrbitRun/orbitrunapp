@@ -177,7 +177,7 @@ function ProfilePage() {
               onClick={() => update({ goal: g })}
               className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
                 profile.goal === g
-                  ? "bg-neon text-primary-foreground shadow-neon"
+                  ? "bg-neon text-primary-foreground"
                   : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
               }`}
             >
