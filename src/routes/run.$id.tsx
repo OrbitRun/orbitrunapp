@@ -121,6 +121,37 @@ function RunDetailPage() {
         />
       )}
 
+      {/* Shoe row — tap to change */}
+      <button
+        type="button"
+        onClick={() => setPickingShoe(true)}
+        className="mt-3 w-full flex items-center gap-3 p-3 rounded-2xl glass active:scale-[0.99] transition text-left"
+        aria-label={t("run.shoe.change")}
+      >
+        <Footprints className="h-4 w-4 text-neon flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
+            {t("run.shoe.label")}
+          </div>
+          {(() => {
+            const shoe = getShoeById(run.shoeId);
+            return (
+              <div className="text-sm font-bold truncate mt-0.5">
+                {shoe ? `${shoe.brand} ${shoe.model}` : t("run.shoe.none")}
+              </div>
+            );
+          })()}
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+      </button>
+
+      <ShoePicker
+        open={pickingShoe}
+        onOpenChange={setPickingShoe}
+        currentShoeId={run.shoeId}
+        onSelect={handleShoeSelect}
+      />
+
       <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
           {t("stat.distance")}
