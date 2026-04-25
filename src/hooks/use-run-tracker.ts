@@ -145,6 +145,11 @@ export function useRunTracker() {
   // Weather snapshot captured once at the start of the run from the first GPS fix.
   const weatherRef = useRef<RunWeather | null>(null);
   const weatherFetchedRef = useRef(false);
+  // Ghost runner snapshot for this run.
+  const ghostRef = useRef<GhostRef | null>(null);
+  const ghostPassedRef = useRef(false);
+  const lastGhostBehindCueAtRef = useRef(0);
+  const lastGhostDeltaRef = useRef<number | null>(null);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
