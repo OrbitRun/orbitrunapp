@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Footprints, Ghost, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run, type Split } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -11,6 +11,7 @@ import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
+import { selectGhost } from "@/lib/ghost-runner";
 
 export const Route = createFileRoute("/history")({
   component: HistoryPage,
@@ -124,6 +125,7 @@ type ExpandableRunCardProps = {
 
 function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardProps) {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   return (
