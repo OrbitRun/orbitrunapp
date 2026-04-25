@@ -91,6 +91,7 @@ export function useRunTracker() {
   const cueIntervalRef = useRef<AudioCueMeters>(500);
   const lastCueIndexRef = useRef(0);
   const hapticEnabledRef = useRef<boolean>(true);
+  const prVoiceEnabledRef = useRef<boolean>(true);
   // Distance at the exact moment the previous split (or run start) was crossed,
   // so each split duration is computed against the true km boundary — not the
   // total accumulated distance, which drifts past 1000m between GPS samples.
