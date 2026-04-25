@@ -15,17 +15,22 @@ import { bestTimeForPoints } from "@/lib/personal-records";
 
 export const Route = createFileRoute("/run/$id")({
   component: RunDetailPage,
-  notFoundComponent: () => (
+  notFoundComponent: NotFound,
+});
+
+function NotFound() {
+  const { t } = useI18n();
+  return (
     <div className="min-h-screen grid place-items-center px-4">
       <div className="text-center">
-        <p className="text-muted-foreground">Run not found.</p>
+        <p className="text-muted-foreground">{t("run.notFound")}</p>
         <Link to="/history" className="text-neon font-semibold mt-3 inline-block">
-          Back to history
+          {t("history.back")}
         </Link>
       </div>
     </div>
-  ),
-});
+  );
+}
 
 function RunDetailPage() {
   const { id } = useParams({ from: "/run/$id" });
@@ -73,7 +78,7 @@ function RunDetailPage() {
           <ArrowLeft className="h-4 w-4" /> {t("history.back")}
         </Link>
         <div className="mt-10 glass rounded-2xl p-6 text-center text-muted-foreground">
-          Run not found.
+          {t("run.notFound")}
         </div>
       </main>
     );
