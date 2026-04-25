@@ -159,12 +159,19 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
       </Link>
 
       {/* Header row with expand toggle */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
         aria-expanded={open}
         aria-label={open ? t("history.collapse") : t("history.expand")}
-        className="w-full p-3 flex items-center justify-between gap-3 text-left active:bg-white/5 transition"
+        className="w-full p-3 flex items-center justify-between gap-3 text-left active:bg-white/5 transition cursor-pointer"
       >
         <div className="min-w-0 flex-1">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
