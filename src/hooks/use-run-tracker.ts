@@ -163,13 +163,23 @@ export function useRunTracker() {
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
       let didUpdate = false;
-      // Fire-and-forget weather snapshot once we have any GPS fix during a run.
-      if (!weatherFetchedRef.current && stateRef.current.status === "running") {
+      // Fire-and-forget weather snapshot once we have a usable GPS fix during a run.
+      // Tolerate paused state (user may pause briefly right after start) and a looser
+      // accuracy budget so short runs still capture conditions before stop().
+      if (
+        !weatherFetchedRef.current &&
+        (stateRef.current.status === "running" || stateRef.current.status === "paused")
+      ) {
         const acc = pos.coords.accuracy ?? 999;
-        if (acc <= 100) {
+        if (acc <= 150) {
           weatherFetchedRef.current = true;
           void fetchWeather(pos.coords.latitude, pos.coords.longitude).then((w) => {
-            if (w) weatherRef.current = w;
+            if (w) {
+              weatherRef.current = w;
+            } else {
+              // Allow a retry on the next fix if the network call failed.
+              weatherFetchedRef.current = false;
+            }
           });
         }
       }
