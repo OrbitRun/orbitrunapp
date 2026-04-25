@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { GeoPoint, Run, RunWeather, Split } from "@/lib/run-types";
-import { saveRun } from "@/lib/run-types";
+import { saveRun, updateRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
 import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
@@ -163,13 +163,23 @@ export function useRunTracker() {
   const handlePosition = useCallback(
     (pos: GeolocationPosition) => {
       let didUpdate = false;
-      // Fire-and-forget weather snapshot once we have any GPS fix during a run.
-      if (!weatherFetchedRef.current && stateRef.current.status === "running") {
+      // Fire-and-forget weather snapshot once we have a usable GPS fix during a run.
+      // Tolerate paused state (user may pause briefly right after start) and a looser
+      // accuracy budget so short runs still capture conditions before stop().
+      if (
+        !weatherFetchedRef.current &&
+        (stateRef.current.status === "running" || stateRef.current.status === "paused")
+      ) {
         const acc = pos.coords.accuracy ?? 999;
-        if (acc <= 100) {
+        if (acc <= 150) {
           weatherFetchedRef.current = true;
           void fetchWeather(pos.coords.latitude, pos.coords.longitude).then((w) => {
-            if (w) weatherRef.current = w;
+            if (w) {
+              weatherRef.current = w;
+            } else {
+              // Allow a retry on the next fix if the network call failed.
+              weatherFetchedRef.current = false;
+            }
           });
         }
       }
@@ -454,6 +464,19 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    // Backfill weather if the in-flight fetch never completed before stop().
+    if (!run.weather && run.points.length > 0) {
+      const seed = run.points[0];
+      void fetchWeather(seed.lat, seed.lng).then((w) => {
+        if (!w) return;
+        updateRun(run.id, { weather: w });
+        try {
+          window.dispatchEvent(new CustomEvent("orbit:run-updated", { detail: { runId: run.id } }));
+        } catch {
+          /* noop */
+        }
+      });
+    }
     try {
       const newPrs = checkAndUpdatePrs(run);
       if (newPrs.length > 0) {
