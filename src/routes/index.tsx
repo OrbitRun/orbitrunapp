@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Pause, Pencil, Play, Square } from "lucide-react";
+import { Check, Ghost, Pause, Pencil, Play, Square, X } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
 import CountdownOverlay from "@/components/CountdownOverlay";
@@ -26,6 +26,12 @@ import {
 } from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
 import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE } from "@/lib/user-profile";
+import {
+  clearGhost,
+  GHOST_CHANGED_EVENT,
+  loadGhost,
+  type GhostRef,
+} from "@/lib/ghost-runner";
 import logo from "@/assets/5ceb6f47-d99d-4cc8-8db5-fe46db27659c.png";
 
 export const Route = createFileRoute("/")({
