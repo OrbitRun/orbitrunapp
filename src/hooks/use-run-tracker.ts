@@ -40,7 +40,14 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string, intervalM: AudioCueMeters) {
+function speakSplit(
+  km: number,
+  paceSecPerKm: number,
+  lang: Lang,
+  name: string,
+  intervalM: AudioCueMeters,
+  prFlags?: { fastestKm?: boolean; longestDistance?: boolean },
+) {
   const paceWords = paceToWords(paceSecPerKm, lang);
   const distLabel =
     intervalM === 500
@@ -50,10 +57,22 @@ function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string, 
       : lang === "da"
         ? `Kilometer ${km}`
         : `Kilometer ${km}`;
-  const txt =
+  let txt =
     lang === "da"
       ? `Godt kæmpet ${name}! ${distLabel} fuldført. Split-tempo ${paceWords}.`
       : `Great work ${name}! ${distLabel} completed. Split pace ${paceWords}.`;
+  if (prFlags?.fastestKm) {
+    txt +=
+      lang === "da"
+        ? " Ny rekord! Hurtigste kilometer nogensinde."
+        : " New personal record! Your fastest kilometer ever.";
+  }
+  if (prFlags?.longestDistance) {
+    txt +=
+      lang === "da"
+        ? " Ny rekord! Længste løbetur nogensinde."
+        : " New personal record! Your longest run ever.";
+  }
   speakLocalized(txt, lang);
 }
 
