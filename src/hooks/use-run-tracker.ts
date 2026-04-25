@@ -7,7 +7,7 @@ import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
-import { checkAndUpdatePrs } from "@/lib/personal-records";
+import { checkAndUpdatePrs, loadPrs } from "@/lib/personal-records";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -40,7 +40,14 @@ const initial: State = {
   permissionError: null,
 };
 
-function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string, intervalM: AudioCueMeters) {
+function speakSplit(
+  km: number,
+  paceSecPerKm: number,
+  lang: Lang,
+  name: string,
+  intervalM: AudioCueMeters,
+  prFlags?: { fastestKm?: boolean; longestDistance?: boolean },
+) {
   const paceWords = paceToWords(paceSecPerKm, lang);
   const distLabel =
     intervalM === 500
@@ -50,10 +57,22 @@ function speakSplit(km: number, paceSecPerKm: number, lang: Lang, name: string, 
       : lang === "da"
         ? `Kilometer ${km}`
         : `Kilometer ${km}`;
-  const txt =
+  let txt =
     lang === "da"
       ? `Godt kæmpet ${name}! ${distLabel} fuldført. Split-tempo ${paceWords}.`
       : `Great work ${name}! ${distLabel} completed. Split pace ${paceWords}.`;
+  if (prFlags?.fastestKm) {
+    txt +=
+      lang === "da"
+        ? " Ny rekord! Hurtigste kilometer nogensinde."
+        : " New personal record! Your fastest kilometer ever.";
+  }
+  if (prFlags?.longestDistance) {
+    txt +=
+      lang === "da"
+        ? " Ny rekord! Længste løbetur nogensinde."
+        : " New personal record! Your longest run ever.";
+  }
   speakLocalized(txt, lang);
 }
 
@@ -232,17 +251,31 @@ export function useRunTracker() {
         const interval = cueIntervalRef.current;
         const cueIndex = Math.floor(newDist / interval);
         if (cueIndex > lastCueIndexRef.current) {
+          const prMap = loadPrs();
           for (let i = lastCueIndexRef.current + 1; i <= cueIndex; i++) {
             // Prefer the just-recorded split's pace when this cue lands on a km mark.
             const cueDistance = i * interval;
-            const matchingSplit =
-              cueDistance % 1000 === 0
-                ? newSplits.find((s) => s.totalDistanceM === cueDistance)
-                : undefined;
+            const isKmBoundary = cueDistance % 1000 === 0;
+            const matchingSplit = isKmBoundary
+              ? newSplits.find((s) => s.totalDistanceM === cueDistance)
+              : undefined;
             const paceForCue =
               matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
+            // Live PR detection — only on true km boundaries.
+            let prFlags: { fastestKm?: boolean; longestDistance?: boolean } | undefined;
+            if (isKmBoundary) {
+              const fastestKmPr = prMap.fastestKm?.value; // ms
+              const longestPr = prMap.longest?.value; // meters
+              const splitPaceMs = matchingSplit ? matchingSplit.paceSecPerKm * 1000 : 0;
+              const beatFastestKm =
+                splitPaceMs > 0 && (fastestKmPr == null || splitPaceMs < fastestKmPr);
+              const beatLongest = longestPr == null ? false : cueDistance > longestPr;
+              if (beatFastestKm || beatLongest) {
+                prFlags = { fastestKm: beatFastestKm, longestDistance: beatLongest };
+              }
+            }
             haptic([120, 80, 120, 80, 220]);
-            speakSplit(i, paceForCue, langRef.current, nameRef.current, interval);
+            speakSplit(i, paceForCue, langRef.current, nameRef.current, interval, prFlags);
           }
           lastCueIndexRef.current = cueIndex;
         }
