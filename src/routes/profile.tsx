@@ -190,6 +190,8 @@ function ProfilePage() {
         </div>
       </section>
 
+      <GoalProgress goal={profile.goal} runs={runs} />
+
       <ShoesSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
