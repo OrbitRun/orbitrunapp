@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Ghost } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import {
@@ -10,6 +11,8 @@ import {
   type PrMap,
 } from "@/lib/personal-records";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
+import { loadRuns } from "@/lib/run-types";
+import { selectGhost } from "@/lib/ghost-runner";
 
 export const Route = createFileRoute("/records")({
   component: RecordsPage,
