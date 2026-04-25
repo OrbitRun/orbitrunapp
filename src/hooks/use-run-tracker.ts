@@ -14,6 +14,11 @@ import {
   loadPrs,
   type PrCategory,
 } from "@/lib/personal-records";
+import {
+  ghostTimeAtDistance,
+  loadGhost,
+  type GhostRef,
+} from "@/lib/ghost-runner";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -30,6 +35,8 @@ type State = {
   points: GeoPoint[];
   splits: Split[];
   permissionError: string | null;
+  ghostDeltaMs: number | null;
+  ghost: GhostRef | null;
 };
 
 const initial: State = {
@@ -44,6 +51,8 @@ const initial: State = {
   points: [],
   splits: [],
   permissionError: null,
+  ghostDeltaMs: null,
+  ghost: null,
 };
 
 type PrFlags = {
