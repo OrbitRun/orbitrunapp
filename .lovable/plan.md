@@ -1,32 +1,45 @@
 ## Goal
 
-The two hero tiles on the run screen (e.g. Distance + Duration/Pace) currently render at different font sizes because each tile auto-shrinks based on its own value length. Distance ("1.24") shows at 44px while Duration ("0:00:00") shrinks to 26px, making the row look unbalanced. They also don't share label/value alignment.
-
-## Approach
-
-Compute a **shared** hero font size in the parent (`src/routes/index.tsx`) based on the longest of the two hero values, then pass it into `EditableStat` so both tiles render at the same size. Tighten internal layout so labels and values align consistently and never overflow at 339px viewport width.
+Apply the same shared font-size approach used for hero tiles to the secondary stats row (e.g. cadence, steps-per-minute, elevation), so all three tiles render their value+unit at the same size and never wrap.
 
 ## Changes
 
-**1. `src/lib/stat-metrics.ts`** — export a small helper:
+**1. `src/lib/stat-metrics.ts`** — add a sibling helper to `heroFontSizeFor`:
 ```ts
-export function heroFontSizeFor(values: string[]): string {
-  const len = Math.max(...values.map(v => v.length));
-  if (len >= 8) return "text-[26px]";
-  if (len >= 7) return "text-[30px]";
-  if (len >= 5) return "text-[34px]";
-  return "text-[40px]";
+export function secondaryFontSizeFor(
+  entries: Array<{ value: string; unit?: string }>,
+): { valueClass: string; unitClass: string } {
+  const len = entries.reduce(
+    (m, e) => Math.max(m, e.value.length + (e.unit ? e.unit.length + 1 : 0)),
+    0,
+  );
+  const valueClass =
+    len >= 12 ? "text-xs"
+    : len >= 10 ? "text-sm"
+    : len >= 9  ? "text-base"
+    : "text-lg";
+  const unitClass = len >= 11 ? "text-[9px]" : "text-[10px]";
+  return { valueClass, unitClass };
 }
 ```
-(Slightly lower top end so both tiles fit comfortably side-by-side in a 339px viewport.)
+(Note: a partial first attempt already appended this helper to the file; on implementation it will be deduplicated/kept once.)
 
-**2. `src/routes/index.tsx`** — compute shared size from both hero metric values and pass via a new optional prop `heroValueSizeClass` to each `EditableStat`.
+**2. `src/components/EditableStat.tsx`**
+- Add two optional props: `secondaryValueSizeClass`, `secondaryUnitSizeClass`.
+- When provided, use them instead of the per-tile `secondaryValueSize` / `secondaryUnitSize` calculation.
+- Internal per-tile fallback stays as a safety net.
 
-**3. `src/components/EditableStat.tsx`**
-- Accept optional `heroValueSizeClass` prop; when provided, use it instead of the internal per-value `heroValueSize` calculation.
-- Align hero content consistently: label centered (already), value row centered with shared baseline, unit at fixed `text-xs` (already). Keep `whitespace-nowrap`, `overflow-hidden`, `min-w-0`, `px-1` safety net.
-- Keep secondary tile logic unchanged.
+**3. `src/routes/index.tsx`** — for the secondary section, compute once from all three metric values+units and pass to each tile, mirroring the hero pattern:
+```tsx
+const secondarySize = secondaryFontSizeFor(
+  layout.secondary.map((id) => {
+    const def = METRICS[id];
+    return { value: def.format(t), unit: def.unitKey ? tr(def.unitKey) : undefined };
+  }),
+);
+```
+Pass `secondaryValueSizeClass={secondarySize.valueClass}` and `secondaryUnitSizeClass={secondarySize.unitClass}` to each `EditableStat` in the row.
 
 ## Result
 
-Both hero tiles render their numbers at the same font size, labels and values align across the row, and content stays on one line within each tile at the current viewport.
+All secondary tiles in the row share the same value/unit font size, dictated by the longest entry, so cadence/steps/elevation stay aligned and on a single line within their tiles.
