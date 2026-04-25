@@ -18,6 +18,8 @@ import {
   DEFAULT_LAYOUT,
   loadLayout,
   saveLayout,
+  METRICS,
+  heroFontSizeFor,
   type MetricId,
   type StatLayout,
 } from "@/lib/stat-metrics";
