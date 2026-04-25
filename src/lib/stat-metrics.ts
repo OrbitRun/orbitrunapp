@@ -2,6 +2,7 @@
 // Each metric knows how to render its current value from the live tracker state.
 
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import type { Run } from "@/lib/run-types";
 
 export type MetricId =
   | "distance"
