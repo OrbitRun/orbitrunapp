@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Loader2, Share2, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import StatTile from "@/components/StatTile";
@@ -17,6 +17,8 @@ import type { Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import { addDistanceToPrimary } from "@/lib/shoes";
+import { shareRun } from "@/lib/share-card";
+import { toast } from "sonner";
 
 type Props = {
   run: Run;
