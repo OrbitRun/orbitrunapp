@@ -251,17 +251,31 @@ export function useRunTracker() {
         const interval = cueIntervalRef.current;
         const cueIndex = Math.floor(newDist / interval);
         if (cueIndex > lastCueIndexRef.current) {
+          const prMap = loadPrs();
           for (let i = lastCueIndexRef.current + 1; i <= cueIndex; i++) {
             // Prefer the just-recorded split's pace when this cue lands on a km mark.
             const cueDistance = i * interval;
-            const matchingSplit =
-              cueDistance % 1000 === 0
-                ? newSplits.find((s) => s.totalDistanceM === cueDistance)
-                : undefined;
+            const isKmBoundary = cueDistance % 1000 === 0;
+            const matchingSplit = isKmBoundary
+              ? newSplits.find((s) => s.totalDistanceM === cueDistance)
+              : undefined;
             const paceForCue =
               matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
+            // Live PR detection — only on true km boundaries.
+            let prFlags: { fastestKm?: boolean; longestDistance?: boolean } | undefined;
+            if (isKmBoundary) {
+              const fastestKmPr = prMap.fastestKm?.value; // ms
+              const longestPr = prMap.longest?.value; // meters
+              const splitPaceMs = matchingSplit ? matchingSplit.paceSecPerKm * 1000 : 0;
+              const beatFastestKm =
+                splitPaceMs > 0 && (fastestKmPr == null || splitPaceMs < fastestKmPr);
+              const beatLongest = longestPr == null ? false : cueDistance > longestPr;
+              if (beatFastestKm || beatLongest) {
+                prFlags = { fastestKm: beatFastestKm, longestDistance: beatLongest };
+              }
+            }
             haptic([120, 80, 120, 80, 220]);
-            speakSplit(i, paceForCue, langRef.current, nameRef.current, interval);
+            speakSplit(i, paceForCue, langRef.current, nameRef.current, interval, prFlags);
           }
           lastCueIndexRef.current = cueIndex;
         }
