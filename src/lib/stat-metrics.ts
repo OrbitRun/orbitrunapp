@@ -248,3 +248,13 @@ export function computeRunMetrics(run: Run): LiveStats {
     elevationGainM: run.elevationGainM,
   };
 }
+
+// Choose a single hero font-size class that fits the longest of the given values.
+// Used so paired hero tiles render at the same size for visual balance.
+export function heroFontSizeFor(values: string[]): string {
+  const len = values.reduce((m, v) => Math.max(m, v.length), 0);
+  if (len >= 8) return "text-[26px]";
+  if (len >= 7) return "text-[30px]";
+  if (len >= 5) return "text-[34px]";
+  return "text-[40px]";
+}

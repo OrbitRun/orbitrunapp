@@ -14,6 +14,7 @@ type Props = {
   onTap: () => void;
   glow?: boolean;
   accent?: boolean;
+  heroValueSizeClass?: string;
 };
 
 const LONG_PRESS_MS = 1000;
@@ -27,6 +28,7 @@ export default function EditableStat({
   onTap,
   glow,
   accent,
+  heroValueSizeClass,
 }: Props) {
   const { t } = useI18n();
   const def = METRICS[metricId];
@@ -67,15 +69,17 @@ export default function EditableStat({
   const isHero = variant === "hero";
 
   // Auto-shrink hero value so it always fits on one line within the tile.
+  // If a shared size class is provided (to align paired hero tiles), use it.
   const valueLen = value.length;
   const heroValueSize =
-    valueLen >= 8
+    heroValueSizeClass ??
+    (valueLen >= 8
       ? "text-[26px]"
       : valueLen >= 7
         ? "text-[30px]"
         : valueLen >= 5
-          ? "text-[36px]"
-          : "text-[44px]";
+          ? "text-[34px]"
+          : "text-[40px]");
 
   // Auto-shrink secondary value+unit if combined string is long, to keep on one line.
   const combinedLen = value.length + (unit ? unit.length + 1 : 0);
