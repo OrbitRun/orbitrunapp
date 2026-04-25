@@ -18,7 +18,7 @@ import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/ru
 import { useI18n } from "@/lib/i18n";
 import { addDistanceToPrimary } from "@/lib/shoes";
 import { shareRun } from "@/lib/share-card";
-import { toast } from "sonner";
+
 
 type Props = {
   run: Run;
