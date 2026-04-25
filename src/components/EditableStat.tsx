@@ -86,16 +86,19 @@ export default function EditableStat({
           : "text-[40px]");
 
   // Auto-shrink secondary value+unit if combined string is long, to keep on one line.
+  // If shared size classes are provided (to align a row of secondary tiles), use them.
   const combinedLen = value.length + (unit ? unit.length + 1 : 0);
   const secondaryValueSize =
-    combinedLen >= 12
+    secondaryValueSizeClass ??
+    (combinedLen >= 12
       ? "text-xs"
       : combinedLen >= 10
         ? "text-sm"
         : combinedLen >= 9
           ? "text-base"
-          : "text-lg";
-  const secondaryUnitSize = combinedLen >= 11 ? "text-[9px]" : "text-[10px]";
+          : "text-lg");
+  const secondaryUnitSize =
+    secondaryUnitSizeClass ?? (combinedLen >= 11 ? "text-[9px]" : "text-[10px]");
 
   return (
     <button
