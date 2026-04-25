@@ -297,16 +297,33 @@ export function useRunTracker() {
             const paceForCue =
               matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
             // Live PR detection — only on true km boundaries.
-            let prFlags: { fastestKm?: boolean; longestDistance?: boolean } | undefined;
+            let prFlags: PrFlags | undefined;
             if (isKmBoundary && prVoiceEnabledRef.current) {
+              const distancePrs: PrCategory[] = [];
+              // Fixed-distance PRs (1k, 5k, 10k, half, marathon) — fire once per run each.
+              for (const { category, meters } of FIXED_DISTANCES) {
+                if (cueDistance < meters) continue;
+                if (announcedDistancePrsRef.current.has(category)) continue;
+                const liveBest = bestTimeForPoints(newPoints, meters);
+                if (liveBest == null) continue;
+                const existing = prMap[category]?.value;
+                if (existing == null || liveBest < existing) {
+                  distancePrs.push(category);
+                  announcedDistancePrsRef.current.add(category);
+                }
+              }
               const fastestKmPr = prMap.fastestKm?.value; // ms
               const longestPr = prMap.longest?.value; // meters
               const splitPaceMs = matchingSplit ? matchingSplit.paceSecPerKm * 1000 : 0;
               const beatFastestKm =
                 splitPaceMs > 0 && (fastestKmPr == null || splitPaceMs < fastestKmPr);
               const beatLongest = longestPr == null ? false : cueDistance > longestPr;
-              if (beatFastestKm || beatLongest) {
-                prFlags = { fastestKm: beatFastestKm, longestDistance: beatLongest };
+              if (distancePrs.length || beatFastestKm || beatLongest) {
+                prFlags = {
+                  distances: distancePrs.length ? distancePrs : undefined,
+                  fastestKm: beatFastestKm,
+                  longestDistance: beatLongest,
+                };
               }
             }
             haptic([120, 80, 120, 80, 220]);
