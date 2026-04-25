@@ -15,6 +15,8 @@ type Props = {
   glow?: boolean;
   accent?: boolean;
   heroValueSizeClass?: string;
+  secondaryValueSizeClass?: string;
+  secondaryUnitSizeClass?: string;
 };
 
 const LONG_PRESS_MS = 1000;
