@@ -16,12 +16,28 @@ export const Route = createFileRoute("/history")({
 
 function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
+  const [prs, setPrs] = useState<PrMap>({});
   const { t } = useI18n();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/", next: "/records" });
 
   useEffect(() => {
     setRuns(loadRuns());
+    setPrs(loadPrs());
   }, []);
+
+  // Map runId -> ordered list of PR categories that this run currently holds.
+  const prsByRun = useMemo(() => {
+    const map = new Map<string, PrCategory[]>();
+    const order: PrCategory[] = ["1k", "5k", "10k", "half", "marathon", "fastestKm", "longest"];
+    for (const cat of order) {
+      const entry = prs[cat];
+      if (!entry) continue;
+      const list = map.get(entry.runId) ?? [];
+      list.push(cat);
+      map.set(entry.runId, list);
+    }
+    return map;
+  }, [prs]);
 
   const totalDistance = runs.reduce((a, r) => a + r.distanceM, 0);
   const totalRuns = runs.length;
