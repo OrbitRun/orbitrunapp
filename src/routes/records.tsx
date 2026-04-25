@@ -34,6 +34,7 @@ function formatDateShort(ts: number, lang: string): string {
 
 function RecordsPage() {
   const { t, lang } = useI18n();
+  const navigate = useNavigate();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/history", next: "/profile" });
   const [prs, setPrs] = useState<PrMap>({});
 
@@ -73,10 +74,28 @@ function RecordsPage() {
                   )}
                 </div>
               </div>
-              <div className="mt-1 text-[11px] text-muted-foreground/80">
-                {entry
-                  ? t("pr.dateSet", { date: formatDateShort(entry.achievedAt, lang) })
-                  : t("pr.notDone")}
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <div className="text-[11px] text-muted-foreground/80">
+                  {entry
+                    ? t("pr.dateSet", { date: formatDateShort(entry.achievedAt, lang) })
+                    : t("pr.notDone")}
+                </div>
+                {entry && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const run = loadRuns().find((r) => r.id === entry.runId);
+                      if (!run) return;
+                      selectGhost(run, t(`pr.cat.${cat}`));
+                      navigate({ to: "/" });
+                    }}
+                    className="flex items-center gap-1 rounded-full px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/80"
+                    aria-label={t("ghost.race")}
+                  >
+                    <Ghost className="h-3 w-3" />
+                    {t("ghost.race")}
+                  </button>
+                )}
               </div>
             </div>
           );
