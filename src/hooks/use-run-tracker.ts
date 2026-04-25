@@ -360,6 +360,48 @@ export function useRunTracker() {
           newDist > 50 && prev.elapsedMs > 0 ? prev.elapsedMs / 1000 / (newDist / 1000) : 0;
         const cad = avgPace > 0 ? Math.round(180 - Math.min(20, (avgPace - 240) / 12)) : 168;
 
+        // ---- Ghost delta -----------------------------------------------------
+        let ghostDelta: number | null = null;
+        const g = ghostRef.current;
+        if (g) {
+          const ghostT = ghostTimeAtDistance(g, newDist);
+          if (ghostT != null) {
+            // Positive => user is AHEAD of ghost (ghost would have needed more time to cover this distance).
+            ghostDelta = ghostT - prev.elapsedMs;
+            const lang = langRef.current;
+            const prevDelta = lastGhostDeltaRef.current;
+            // Just-overtook detection: previous tick we were behind (<0), now ahead (>=0).
+            if (
+              !ghostPassedRef.current &&
+              prevDelta != null &&
+              prevDelta < 0 &&
+              ghostDelta >= 0
+            ) {
+              ghostPassedRef.current = true;
+              speakLocalized(
+                lang === "da"
+                  ? "Du er lige gået forbi din ghost!"
+                  : "You just passed your ghost!",
+                lang,
+              );
+            }
+            // If we slip back behind, allow the cue to fire again next overtake.
+            if (ghostDelta < -2000) ghostPassedRef.current = false;
+            // Periodic "behind by X seconds" cue (every 60s while >10s behind).
+            if (ghostDelta < -10000 && prev.elapsedMs - lastGhostBehindCueAtRef.current > 60000) {
+              lastGhostBehindCueAtRef.current = prev.elapsedMs;
+              const sec = Math.round(-ghostDelta / 1000);
+              speakLocalized(
+                lang === "da"
+                  ? `Du er ${sec} sekunder bagud din ghost.`
+                  : `You are ${sec} seconds behind your ghost.`,
+                lang,
+              );
+            }
+          }
+          lastGhostDeltaRef.current = ghostDelta;
+        }
+
         return {
           ...prev,
           points: newPoints,
@@ -369,6 +411,7 @@ export function useRunTracker() {
           avgPaceSecPerKm: avgPace,
           cadenceSpm: cad,
           splits: newSplits,
+          ghostDeltaMs: ghostDelta,
         };
       });
       if (didUpdate) haptic(15);
