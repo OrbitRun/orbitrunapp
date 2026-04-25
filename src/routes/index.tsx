@@ -75,6 +75,14 @@ function RunPage() {
     setLayout(loadLayout(profile.level));
   }, [profile.level]);
 
+  const [armedGhost, setArmedGhost] = useState<GhostRef | null>(null);
+  useEffect(() => {
+    setArmedGhost(loadGhost());
+    const onChange = () => setArmedGhost(loadGhost());
+    window.addEventListener(GHOST_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(GHOST_CHANGED_EVENT, onChange);
+  }, []);
+
   const isActive = t.status === "running" || t.status === "paused";
 
   const beginCountdown = useCallback(() => {
