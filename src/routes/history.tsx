@@ -399,3 +399,88 @@ function PrBadge({ category }: { category: PrCategory }) {
   );
 }
 
+function SplitsMiniChart({ splits, fastestKm }: { splits: Split[]; fastestKm: number | null }) {
+  const { t } = useI18n();
+  const [selectedKm, setSelectedKm] = useState<number | null>(fastestKm);
+
+  // Keep selection valid if the run changes.
+  useEffect(() => {
+    if (selectedKm == null || !splits.some((s) => s.km === selectedKm)) {
+      setSelectedKm(fastestKm ?? splits[0]?.km ?? null);
+    }
+  }, [splits, fastestKm, selectedKm]);
+
+  const max = Math.max(...splits.map((s) => s.paceSecPerKm));
+  const min = Math.min(...splits.map((s) => s.paceSecPerKm));
+  const range = Math.max(1, max - min);
+  const selected = splits.find((s) => s.km === selectedKm) ?? null;
+
+  return (
+    <div>
+      <div className="flex items-end justify-between pb-1.5 px-0.5">
+        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
+          {t("splits.title")}
+        </div>
+        {selected && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="rounded-full bg-neon/15 border border-neon/30 px-2 py-0.5 text-[10px] font-bold tracking-wider text-neon"
+          >
+            {t("splits.km")} {selected.km} · {formatPace(selected.paceSecPerKm)} {t("unit.perKm")}
+          </div>
+        )}
+      </div>
+
+      {/* Vertical bars — tap to select */}
+      <div className="flex items-end gap-1.5 h-20 px-0.5">
+        {splits.map((s) => {
+          // Lower pace (faster) → taller bar. Floor at 18% so all bars are tappable.
+          const heightPct = 100 - ((s.paceSecPerKm - min) / range) * 70;
+          const isSelected = selectedKm === s.km;
+          const isBest = fastestKm === s.km;
+          return (
+            <button
+              key={s.km}
+              type="button"
+              onClick={() => setSelectedKm(s.km)}
+              aria-label={`${t("splits.km")} ${s.km}, ${formatPace(s.paceSecPerKm)} ${t("unit.perKm")}`}
+              aria-pressed={isSelected}
+              className="group flex-1 h-full flex flex-col justify-end items-stretch min-w-0 active:scale-95 transition"
+            >
+              <div
+                className={[
+                  "w-full rounded-t-md transition-all",
+                  isSelected
+                    ? "bg-neon shadow-[0_0_10px_oklch(0.92_0.21_130/0.7)]"
+                    : isBest
+                      ? "bg-neon/60"
+                      : "bg-foreground/30 group-hover:bg-foreground/50",
+                ].join(" ")}
+                style={{ height: `${Math.max(18, heightPct)}%` }}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Km axis labels */}
+      <div className="flex gap-1.5 px-0.5 pt-1">
+        {splits.map((s) => {
+          const isSelected = selectedKm === s.km;
+          return (
+            <div
+              key={s.km}
+              className={`flex-1 text-center text-[9px] font-bold tabular tracking-wider ${
+                isSelected ? "text-neon" : "text-muted-foreground"
+              }`}
+            >
+              {s.km}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
