@@ -169,9 +169,43 @@ function RunPage() {
         </div>
       </header>
 
+      {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
+        <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Ghost className="h-4 w-4 text-foreground/80 flex-shrink-0" />
+            <div className="min-w-0">
+              <div className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold leading-none">
+                {tr("ghost.active")}
+              </div>
+              <div className="text-xs font-bold truncate text-foreground/90 mt-0.5">
+                {(armedGhost ?? t.ghost)?.label}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => clearGhost()}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground"
+            aria-label={tr("ghost.clear")}
+          >
+            <X className="h-3 w-3" />
+            {tr("ghost.clear")}
+          </button>
+        </div>
+      )}
+
       <section className="relative">
         <div className="rounded-3xl overflow-hidden border border-border shadow-card">
-          <RunMap points={t.points} className="h-[221px] w-full" interactive={!isActive} />
+          <RunMap
+            points={t.points}
+            className="h-[221px] w-full"
+            interactive={!isActive}
+            ghost={
+              t.ghost
+                ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
+                : null
+            }
+          />
         </div>
         {t.points.length === 0 && (
           <div className="absolute inset-0 grid place-items-center pointer-events-none">
