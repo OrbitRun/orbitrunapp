@@ -134,6 +134,8 @@ function ProfilePage() {
 
       <GoalProgress goal={profile.goal} runs={runs} />
 
+      <ShoesSection />
+
       {/* Experience level */}
       <section className="mt-4 glass rounded-2xl p-4">
         <div className="flex items-center gap-3 mb-3">
@@ -190,8 +192,6 @@ function ProfilePage() {
           ))}
         </div>
       </section>
-
-      <ShoesSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <button
