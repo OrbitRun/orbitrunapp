@@ -91,6 +91,7 @@ export function useRunTracker() {
   const cueIntervalRef = useRef<AudioCueMeters>(500);
   const lastCueIndexRef = useRef(0);
   const hapticEnabledRef = useRef<boolean>(true);
+  const prVoiceEnabledRef = useRef<boolean>(true);
   // Distance at the exact moment the previous split (or run start) was crossed,
   // so each split duration is computed against the true km boundary — not the
   // total accumulated distance, which drifts past 1000m between GPS samples.
@@ -263,7 +264,7 @@ export function useRunTracker() {
               matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
             // Live PR detection — only on true km boundaries.
             let prFlags: { fastestKm?: boolean; longestDistance?: boolean } | undefined;
-            if (isKmBoundary) {
+            if (isKmBoundary && prVoiceEnabledRef.current) {
               const fastestKmPr = prMap.fastestKm?.value; // ms
               const longestPr = prMap.longest?.value; // meters
               const splitPaceMs = matchingSplit ? matchingSplit.paceSecPerKm * 1000 : 0;
@@ -325,6 +326,7 @@ export function useRunTracker() {
     nameRef.current = displayName(profile, langRef.current);
     cueIntervalRef.current = profile.audioCueMeters ?? 500;
     hapticEnabledRef.current = profile.hapticEnabled !== false;
+    prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
     lastSplitDistanceMRef.current = 0;

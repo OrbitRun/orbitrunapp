@@ -25,6 +25,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
       level,
       audioCueMeters: level === "beginner" ? 500 : 1000,
       hapticEnabled: true,
+      prVoiceEnabled: true,
       windUnit: "ms",
       onboarded: true,
     };
@@ -33,7 +34,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   };
 
   const skip = () => {
-    saveProfile({ name: "", goal: "run5k", level: "beginner", audioCueMeters: 500, hapticEnabled: true, windUnit: "ms", onboarded: true });
+    saveProfile({ name: "", goal: "run5k", level: "beginner", audioCueMeters: 500, hapticEnabled: true, prVoiceEnabled: true, windUnit: "ms", onboarded: true });
     onDone();
   };
 

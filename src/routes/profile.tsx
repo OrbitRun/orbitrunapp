@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Bell, Headphones, Languages, MapPin, Target, Volume2, Wind, Zap } from "lucide-react";
+import { Bell, Headphones, Languages, MapPin, Target, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -218,6 +218,18 @@ function ProfilePage() {
           <div className="flex-1 text-sm font-semibold">{t("profile.haptic")}</div>
           <div className="text-xs text-muted-foreground">
             {profile.hapticEnabled ? t("profile.haptic.value.on") : t("profile.haptic.value.off")}
+          </div>
+        </button>
+        <button
+          onClick={() => update({ prVoiceEnabled: !profile.prVoiceEnabled })}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Trophy className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.prVoice")}</div>
+          <div className="text-xs text-muted-foreground">
+            {profile.prVoiceEnabled ? t("profile.prVoice.value.on") : t("profile.prVoice.value.off")}
           </div>
         </button>
         <button
