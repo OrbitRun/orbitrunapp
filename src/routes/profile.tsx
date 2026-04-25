@@ -2,10 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
 import { Bell, Headphones, Languages, MapPin, Target, Trophy, Volume2, Wind, Zap } from "lucide-react";
-import { loadRuns } from "@/lib/run-types";
+import { loadRuns, type Run } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
+import GoalProgress from "@/components/GoalProgress";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import {
   DEFAULT_PROFILE,
@@ -25,16 +26,18 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
+  const [runs, setRuns] = useState<Run[]>([]);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/records" });
 
   useEffect(() => {
-    const runs = loadRuns();
+    const all = loadRuns();
+    setRuns(all);
     setStats({
-      count: runs.length,
-      distance: runs.reduce((a, r) => a + r.distanceM, 0),
-      time: runs.reduce((a, r) => a + r.durationMs, 0),
+      count: all.length,
+      distance: all.reduce((a, r) => a + r.distanceM, 0),
+      time: all.reduce((a, r) => a + r.durationMs, 0),
     });
     setProfile(loadProfile());
   }, []);
