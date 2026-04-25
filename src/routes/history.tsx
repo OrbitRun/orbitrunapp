@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ChevronRight, Footprints, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronRight, Footprints, Mountain, Timer, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
@@ -8,6 +8,7 @@ import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
+import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
 
 export const Route = createFileRoute("/history")({
   component: HistoryPage,
