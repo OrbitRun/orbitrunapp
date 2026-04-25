@@ -201,7 +201,7 @@ const en: Dict = {
   "voice.perKm": "per kilometer",
 
   // Shoes
-  "shoes.title": "Selected",
+  "shoes.title": "My shoes",
   "shoes.add": "Add",
   "shoes.empty": "No shoes yet. Add your first pair to track mileage.",
   "shoes.addTitle": "Add a shoe",
@@ -447,7 +447,7 @@ const da: Dict = {
   "voice.perKm": "per kilometer",
 
   // Shoes
-  "shoes.title": "Valgt",
+  "shoes.title": "Mine sko",
   "shoes.add": "Tilføj",
   "shoes.empty": "Ingen sko endnu. Tilføj dit første par for at spore kilometer.",
   "shoes.addTitle": "Tilføj et par sko",
