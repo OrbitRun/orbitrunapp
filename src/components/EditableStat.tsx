@@ -31,6 +31,8 @@ export default function EditableStat({
   glow,
   accent,
   heroValueSizeClass,
+  secondaryValueSizeClass,
+  secondaryUnitSizeClass,
 }: Props) {
   const { t } = useI18n();
   const def = METRICS[metricId];
