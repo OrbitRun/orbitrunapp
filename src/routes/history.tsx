@@ -230,7 +230,7 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
             className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
           />
         </div>
-      </button>
+      </div>
 
       {open && <RunDetailPanel run={run} />}
     </div>
