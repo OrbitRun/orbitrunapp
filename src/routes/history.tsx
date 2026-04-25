@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
+import { bestTimeForPoints } from "@/lib/personal-records";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
