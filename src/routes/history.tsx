@@ -325,41 +325,10 @@ function RunDetailPanel({ run }: { run: Run }) {
         </div>
       </div>
 
-      {/* Mini splits chart */}
-      {splits.length > 0 && (() => {
-        const max = Math.max(...splits.map((s) => s.paceSecPerKm));
-        const min = Math.min(...splits.map((s) => s.paceSecPerKm));
-        const range = Math.max(1, max - min);
-        return (
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-1.5 px-0.5">
-              {t("splits.title")}
-            </div>
-            <ul className="space-y-1.5">
-              {splits.map((s) => {
-                const pct = 100 - ((s.paceSecPerKm - min) / range) * 70;
-                const isBest = fastestSplit?.km === s.km;
-                return (
-                  <li key={s.km} className="flex items-center gap-2">
-                    <span className="w-8 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {t("splits.km")} {s.km}
-                    </span>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${isBest ? "bg-neon shadow-[0_0_8px_oklch(0.92_0.21_130/0.6)]" : "bg-foreground/40"}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className={`font-mono text-xs font-bold w-12 text-right ${isBest ? "text-neon" : ""}`}>
-                      {formatPace(s.paceSecPerKm)}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        );
-      })()}
+      {/* Mini splits chart — tap a bar to inspect that km */}
+      {splits.length > 0 && (
+        <SplitsMiniChart splits={splits} fastestKm={fastestSplit?.km ?? null} />
+      )}
 
       <Link
         to="/run/$id"
