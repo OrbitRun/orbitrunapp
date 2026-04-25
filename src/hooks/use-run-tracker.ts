@@ -464,6 +464,19 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    // Backfill weather if the in-flight fetch never completed before stop().
+    if (!run.weather && run.points.length > 0) {
+      const seed = run.points[0];
+      void fetchWeather(seed.lat, seed.lng).then((w) => {
+        if (!w) return;
+        updateRun(run.id, { weather: w });
+        try {
+          window.dispatchEvent(new CustomEvent("orbit:run-updated", { detail: { runId: run.id } }));
+        } catch {
+          /* noop */
+        }
+      });
+    }
     try {
       const newPrs = checkAndUpdatePrs(run);
       if (newPrs.length > 0) {
