@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ChevronRight, Footprints, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
@@ -8,6 +8,7 @@ import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
+import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
 
 export const Route = createFileRoute("/history")({
   component: HistoryPage,
@@ -15,12 +16,28 @@ export const Route = createFileRoute("/history")({
 
 function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
+  const [prs, setPrs] = useState<PrMap>({});
   const { t } = useI18n();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/", next: "/records" });
 
   useEffect(() => {
     setRuns(loadRuns());
+    setPrs(loadPrs());
   }, []);
+
+  // Map runId -> ordered list of PR categories that this run currently holds.
+  const prsByRun = useMemo(() => {
+    const map = new Map<string, PrCategory[]>();
+    const order: PrCategory[] = ["1k", "5k", "10k", "half", "marathon", "fastestKm", "longest"];
+    for (const cat of order) {
+      const entry = prs[cat];
+      if (!entry) continue;
+      const list = map.get(entry.runId) ?? [];
+      list.push(cat);
+      map.set(entry.runId, list);
+    }
+    return map;
+  }, [prs]);
 
   const totalDistance = runs.reduce((a, r) => a + r.distanceM, 0);
   const totalRuns = runs.length;
@@ -130,6 +147,17 @@ function HistoryPage() {
                       </span>
                     </div>
                     {(() => {
+                      const cats = prsByRun.get(r.id);
+                      if (!cats?.length) return null;
+                      return (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                          {cats.map((cat) => (
+                            <PrBadge key={cat} category={cat} />
+                          ))}
+                        </div>
+                      );
+                    })()}
+                    {(() => {
                       const shoe = getShoeById(r.shoeId);
                       if (!shoe) return null;
                       return (
@@ -152,3 +180,30 @@ function HistoryPage() {
     </main>
   );
 }
+
+const PR_BADGE_META: Record<
+  PrCategory,
+  { label: string; Icon: typeof Trophy }
+> = {
+  "1k": { label: "1K", Icon: Trophy },
+  "5k": { label: "5K", Icon: Trophy },
+  "10k": { label: "10K", Icon: Trophy },
+  half: { label: "HM", Icon: Trophy },
+  marathon: { label: "FM", Icon: Trophy },
+  fastestKm: { label: "KM", Icon: Zap },
+  longest: { label: "LR", Icon: Mountain },
+};
+
+function PrBadge({ category }: { category: PrCategory }) {
+  const { label, Icon } = PR_BADGE_META[category];
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-neon/15 text-neon border border-neon/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+      title={`PR · ${label}`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
+  );
+}
+
