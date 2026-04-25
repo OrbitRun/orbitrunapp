@@ -19,7 +19,7 @@ const en: Dict = {
   "stat.duration": "Duration",
   "stat.pace": "Pace",
   "stat.cadence": "Cadence",
-  "stat.elev": "Elev",
+  "stat.elev": "Elevation",
   "stat.elevation": "Elevation",
   "stat.avgPace": "Avg pace",
   "stat.calories": "Calories",
