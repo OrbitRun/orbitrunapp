@@ -1,24 +1,38 @@
-## Add 10K and Half marathon goals
+## Next workout suggestion button
 
-Extend the `RunningGoal` type with two new values and surface them in the onboarding and profile goal pickers.
+Add a "Next workout" CTA at the bottom of the Goal Progress card. Tapping it expands a recommended workout card (type, distance, target pace, reason, on-track badge) plus a "Start this run" button that navigates to the run screen.
 
-### Changes
+### Suggestion logic
 
-1. **`src/lib/user-profile.ts`**
-   - Extend `RunningGoal` union: `"run5k" | "run10k" | "runFaster" | "weightLoss" | "halfMarathon" | "marathon"`.
-   - Add labels to both `en` and `da` maps in `goalLabel`:
-     - `run10k` → "Run 10K" / "Løb 10km"
-     - `halfMarathon` → "Half marathon" / "Halvmarathon"
+A pure function `buildSuggestion(goal, runs, progress)` returns `{ type, distanceKm, paceSecPerKm, reason, onTrack }`. "On track" = progress ≥ 70%.
 
-2. **`src/components/Onboarding.tsx`**
-   - Update the `goals` array to include the new options in a sensible order: `["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"]`.
-   - The existing 2-column grid already handles 6 options cleanly (3 rows).
+| Goal | On track (≥70%) | Behind (<70%) |
+|---|---|---|
+| Run 5K / 10K / Half / Marathon | **Tempo** ~50% of goal distance @ (recent best 1k pace + 20s) | **Long run** = last longest +15% (min +0.5km), capped at goal target |
+| Run faster | **Easy** 4 km @ recent best 1k + 60s | **Intervals** 5 × 1 km @ recent best 1k pace |
+| Weight loss | **Recovery** ~80% of last run distance | **Easy** last run distance +1 km (4–10 km) |
+| Any goal, no runs yet | **First run** 2 km, comfortable | — |
 
-3. **`src/routes/profile.tsx`**
-   - Mirror the same updated `goals` array so the profile editor exposes the new choices.
+### UI changes (`src/components/GoalProgress.tsx`)
+
+- Add `useState` toggle `showSuggestion`.
+- New button below the existing hint row: neon outline pill with `Sparkles` icon, label `goal.suggest.cta` / `goal.suggest.hide`.
+- When expanded, render an inset card with:
+  - Workout type label + on-track/behind chip
+  - Distance + optional `@ pace /km`
+  - Short reason sentence
+  - `<Link to="/">` "Start this run" CTA (neon filled)
+  - Small `X` to dismiss
+- Reuses existing `formatPace`, `unit.km`, `unit.perKm` keys.
+
+### i18n keys (en + da) to add in `src/lib/i18n.tsx`
+
+- `goal.suggest.cta`, `goal.suggest.hide`, `goal.suggest.start`
+- `goal.suggest.onTrack`, `goal.suggest.behind`
+- `goal.suggest.type.easy|long|tempo|intervals|recovery|first`
+- `goal.suggest.reason.first|distanceOnTrack|distanceBehind|fasterOnTrack|fasterBehind|weightOnTrack|weightBehind|default`
 
 ### Notes
 
-- No migration needed — existing stored profiles keep their current goal value; the union just widens.
-- `goalLabel` is the single source of truth for display strings, so `index.tsx` greeting and any other consumer pick up the new labels automatically.
-- No i18n.tsx changes required (goal labels live in `user-profile.ts`, not the i18n dictionary).
+- No new files or deps. Suggestion is computed from existing `runs` already passed to `GoalProgress`.
+- The "Start this run" button just navigates to `/` for now; hooking the suggested distance/pace into the run tracker UI as a banner can be a follow-up if you want.
