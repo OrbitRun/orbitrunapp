@@ -78,7 +78,15 @@ function haversineM(
 
 // Sliding window: best (smallest) duration in ms to cover at least `target` meters.
 function bestTimeForDistance(run: Run, target: number): number | null {
-  const pts = run.points;
+  return bestTimeForPoints(run.points, target);
+}
+
+// Same as bestTimeForDistance but operates directly on a points array, so the
+// live tracker can evaluate PRs mid-run without constructing a Run object.
+export function bestTimeForPoints(
+  pts: { lat: number; lng: number; t: number }[],
+  target: number,
+): number | null {
   if (pts.length < 2) return null;
   // Cumulative distance per point, starting at 0.
   const cum: number[] = new Array(pts.length);
