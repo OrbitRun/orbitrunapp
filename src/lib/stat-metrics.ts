@@ -16,7 +16,8 @@ export type MetricId =
   | "stride"
   | "vertOsc"
   | "groundContact"
-  | "sweatLoss";
+  | "sweatLoss"
+  | "ghost";
 
 export type LiveStats = {
   distanceM: number;
@@ -25,6 +26,7 @@ export type LiveStats = {
   avgPaceSecPerKm: number;
   cadenceSpm: number;
   elevationGainM: number;
+  ghostDeltaMs?: number | null;
 };
 
 export type MetricDef = {
@@ -169,6 +171,20 @@ export const METRICS: Record<MetricId, MetricDef> = {
       return v > 0 ? v.toFixed(2) : "—";
     },
   },
+  ghost: {
+    id: "ghost",
+    labelKey: "stat.ghost",
+    format: (s) => {
+      if (s.ghostDeltaMs == null) return "—";
+      const sign = s.ghostDeltaMs >= 0 ? "+" : "−";
+      const abs = Math.abs(s.ghostDeltaMs);
+      const m = Math.floor(abs / 60000);
+      const sec = Math.floor((abs % 60000) / 1000)
+        .toString()
+        .padStart(2, "0");
+      return `${sign}${m}:${sec}`;
+    },
+  },
 };
 
 export const ALL_METRIC_IDS: MetricId[] = [
@@ -183,6 +199,7 @@ export const ALL_METRIC_IDS: MetricId[] = [
   "vertOsc",
   "groundContact",
   "sweatLoss",
+  "ghost",
 ];
 
 export type StatLayout = {
@@ -246,6 +263,7 @@ export function computeRunMetrics(run: Run): LiveStats {
     avgPaceSecPerKm: run.avgPaceSecPerKm,
     cadenceSpm: run.avgCadenceSpm,
     elevationGainM: run.elevationGainM,
+    ghostDeltaMs: null,
   };
 }
 
