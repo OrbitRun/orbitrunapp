@@ -455,11 +455,18 @@ export function useRunTracker() {
     weatherFetchedRef.current = false;
     pauseAccumRef.current = 0;
     pausedAtRef.current = null;
+    // Snapshot ghost (if armed) for the duration of this run.
+    ghostRef.current = loadGhost();
+    ghostPassedRef.current = false;
+    lastGhostBehindCueAtRef.current = 0;
+    lastGhostDeltaRef.current = null;
     const startedAt = Date.now();
     setState({
       ...initial,
       status: "running",
       startedAt,
+      ghost: ghostRef.current,
+      ghostDeltaMs: ghostRef.current ? 0 : null,
     });
     armGps();
     startSilentLoop(); // keep iOS from suspending JS when screen locks
