@@ -230,26 +230,39 @@ function RunPage() {
       </section>
 
       <section className="mt-3 grid grid-cols-3 gap-3">
-        {layout.secondary.map((id, i) => (
-          <EditableStat
-            key={`sec-${i}`}
-            metricId={id}
-            stats={t}
-            variant="secondary"
-            editMode={editMode}
-            onLongPress={() => {
-              setEditMode(true);
-              setPickerSlot({ kind: "secondary", index: i });
-            }}
-            onTap={() => setPickerSlot({ kind: "secondary", index: i })}
-            glow={
-              id === "pace" &&
-              t.currentPaceSecPerKm > 0 &&
-              t.avgPaceSecPerKm > 0 &&
-              t.currentPaceSecPerKm < t.avgPaceSecPerKm - 3
-            }
-          />
-        ))}
+        {(() => {
+          const secondarySize = secondaryFontSizeFor(
+            layout.secondary.map((id) => {
+              const def = METRICS[id];
+              return {
+                value: def.format(t),
+                unit: def.unitKey ? tr(def.unitKey) : undefined,
+              };
+            }),
+          );
+          return layout.secondary.map((id, i) => (
+            <EditableStat
+              key={`sec-${i}`}
+              metricId={id}
+              stats={t}
+              variant="secondary"
+              editMode={editMode}
+              secondaryValueSizeClass={secondarySize.valueClass}
+              secondaryUnitSizeClass={secondarySize.unitClass}
+              onLongPress={() => {
+                setEditMode(true);
+                setPickerSlot({ kind: "secondary", index: i });
+              }}
+              onTap={() => setPickerSlot({ kind: "secondary", index: i })}
+              glow={
+                id === "pace" &&
+                t.currentPaceSecPerKm > 0 &&
+                t.avgPaceSecPerKm > 0 &&
+                t.currentPaceSecPerKm < t.avgPaceSecPerKm - 3
+              }
+            />
+          ));
+        })()}
       </section>
 
       <MetricPicker
