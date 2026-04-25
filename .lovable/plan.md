@@ -1,29 +1,29 @@
-## Goal
+# Fit run-screen stat numbers to one line
 
-Make the run screen's stat tiles adapt to the user's experience level:
+## Problem
+On narrow viewports (≈339px), hero tile values (44px font) like `0:00:00` or `5:30/km` can wrap or visually overflow the rounded box. Secondary tiles already have a basic auto-shrink but can still feel tight.
 
-- **Beginner**: hero = Distance, Duration · secondary = Pace, Avg. pace, Calories
-- **Expert**: hero = Pace, Distance · secondary = Duration, Cadence, Elevation
+## Approach
+Update `src/components/EditableStat.tsx` so each tile guarantees its value+unit stays on a single line and inside the box, regardless of the metric or viewport width.
 
-The user can still customize the layout via the edit/picker UI; their custom layout is preserved per level.
+### Hero tiles
+- Add a length-based auto-shrink ladder for the value (similar to the secondary one):
+  - ≤4 chars → `text-[44px]`
+  - 5–6 chars → `text-[36px]`
+  - 7 chars → `text-[30px]`
+  - ≥8 chars → `text-[26px]`
+- Wrap the value+unit row in `whitespace-nowrap` so it never breaks across two lines.
+- Keep `min-w-0` on the inner flex row so it can shrink within the tile.
 
-## Changes
+### Secondary tiles
+- Keep the existing ladder but extend it for very long combined strings (e.g. `7:30/km` + unit) and ensure `whitespace-nowrap` + `overflow-hidden` on the row.
+- Tighten the smallest size to `text-xs` when combined length ≥ 12 to avoid edge clipping at 339px width.
 
-### 1. `src/lib/stat-metrics.ts`
-- Add level-based default layouts:
-  ```ts
-  export const LEVEL_LAYOUTS: Record<ExperienceLevel, StatLayout> = {
-    beginner: { hero: ["distance", "duration"], secondary: ["pace", "avgPace", "calories"] },
-    expert:   { hero: ["pace", "distance"],     secondary: ["duration", "cadence", "elevation"] },
-  };
-  ```
-- Namespace storage per level: key becomes `orbit:stat-layout:v2:<level>`.
-- Update `loadLayout(level)` and `saveLayout(layout, level)` to take the level and fall back to `LEVEL_LAYOUTS[level]` (instead of one global `DEFAULT_LAYOUT`). Keep `DEFAULT_LAYOUT` as the beginner preset for backward compatibility.
+### Safety net
+- Add `overflow-hidden` to the tile container so even an unexpectedly long value cannot visually escape the rounded box.
 
-### 2. `src/routes/index.tsx`
-- Pass `profile.level` to `loadLayout` and `saveLayout`.
-- Re-load layout when `profile.level` changes (via the existing `orbit:profile-update` listener / a `useEffect` keyed on `profile.level`), so switching level in the profile screen instantly updates the run screen tiles to that level's preset (or that level's previously-saved custom layout).
+## Files
+- `src/components/EditableStat.tsx` — only file touched.
 
-### Notes
-- No i18n changes needed — all metrics already exist with translations.
-- Customizations stay sticky per level: a beginner who tweaks their layout keeps it; switching to expert shows the expert preset (or expert's own customizations).
+## Out of scope
+- No layout/grid changes, no metric registry changes, no localization changes.

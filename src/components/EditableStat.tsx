@@ -65,14 +65,28 @@ export default function EditableStat({
   };
 
   const isHero = variant === "hero";
-  const valueClass = isHero
-    ? "font-display font-black tabular text-[44px] leading-none"
-    : "font-display font-black tabular text-lg leading-none";
+
+  // Auto-shrink hero value so it always fits on one line within the tile.
+  const valueLen = value.length;
+  const heroValueSize =
+    valueLen >= 8
+      ? "text-[26px]"
+      : valueLen >= 7
+        ? "text-[30px]"
+        : valueLen >= 5
+          ? "text-[36px]"
+          : "text-[44px]";
 
   // Auto-shrink secondary value+unit if combined string is long, to keep on one line.
   const combinedLen = value.length + (unit ? unit.length + 1 : 0);
   const secondaryValueSize =
-    combinedLen >= 11 ? "text-sm" : combinedLen >= 9 ? "text-base" : "text-lg";
+    combinedLen >= 12
+      ? "text-xs"
+      : combinedLen >= 10
+        ? "text-sm"
+        : combinedLen >= 9
+          ? "text-base"
+          : "text-lg";
   const secondaryUnitSize = combinedLen >= 11 ? "text-[9px]" : "text-[10px]";
 
   return (
@@ -83,7 +97,7 @@ export default function EditableStat({
       onPointerLeave={cancel}
       onPointerCancel={cancel}
       onContextMenu={(e) => e.preventDefault()}
-      className={`relative w-full text-left ${
+      className={`relative w-full text-left overflow-hidden ${
         isHero
           ? "glass-strong rounded-[28px] p-5"
           : "glass-strong rounded-[28px] px-2 py-2 h-[58px] flex flex-col items-center justify-center gap-0.5"
@@ -103,9 +117,9 @@ export default function EditableStat({
           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold text-center">
             {t(def.labelKey)}
           </div>
-          <div className="mt-1 flex items-baseline gap-1.5 justify-center">
+          <div className="mt-1 flex items-baseline gap-1.5 justify-center whitespace-nowrap min-w-0 px-1">
             <span
-              className={`${valueClass} ${
+              className={`font-display font-black tabular leading-none ${heroValueSize} ${
                 accent || glow || metricId === "distance" ? "text-neon" : "text-foreground"
               } ${glow ? "glow-neon" : ""}`}
             >
@@ -119,7 +133,7 @@ export default function EditableStat({
           <div className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold text-center leading-none mb-0.5">
             {t(def.labelKey)}
           </div>
-          <div className="flex items-baseline justify-center gap-1 whitespace-nowrap w-full px-1">
+          <div className="flex items-baseline justify-center gap-1 whitespace-nowrap w-full px-1 overflow-hidden">
             <span
               className={`font-display font-black tabular ${secondaryValueSize} leading-none ${
                 accent || glow ? "text-neon" : "text-foreground"
