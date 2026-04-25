@@ -363,6 +363,7 @@ export function useRunTracker() {
     prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
+    announcedDistancePrsRef.current = new Set();
     lastSplitDistanceMRef.current = 0;
     lastSplitTimeMsRef.current = 0;
     smoothedAltRef.current = null;
