@@ -14,6 +14,7 @@ type Props = {
   onTap: () => void;
   glow?: boolean;
   accent?: boolean;
+  heroValueSizeClass?: string;
 };
 
 const LONG_PRESS_MS = 1000;
