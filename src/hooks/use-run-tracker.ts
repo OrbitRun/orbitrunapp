@@ -264,7 +264,7 @@ export function useRunTracker() {
               matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
             // Live PR detection — only on true km boundaries.
             let prFlags: { fastestKm?: boolean; longestDistance?: boolean } | undefined;
-            if (isKmBoundary) {
+            if (isKmBoundary && prVoiceEnabledRef.current) {
               const fastestKmPr = prMap.fastestKm?.value; // ms
               const longestPr = prMap.longest?.value; // meters
               const splitPaceMs = matchingSplit ? matchingSplit.paceSecPerKm * 1000 : 0;
