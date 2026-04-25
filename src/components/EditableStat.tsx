@@ -28,6 +28,7 @@ export default function EditableStat({
   onTap,
   glow,
   accent,
+  heroValueSizeClass,
 }: Props) {
   const { t } = useI18n();
   const def = METRICS[metricId];
