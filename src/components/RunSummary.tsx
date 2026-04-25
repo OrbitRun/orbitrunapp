@@ -122,8 +122,29 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           </section>
         )}
 
+        {/* Share button — single tap, generates a story-format PNG. */}
+        <section className="mt-4">
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="w-full h-14 rounded-2xl border border-neon/40 bg-neon/10 text-neon flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition disabled:opacity-60"
+          >
+            {sharing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Share2 className="h-4 w-4" />
+            )}
+            {sharing ? t("summary.shareGenerating") : t("summary.share")}
+          </button>
+          {shareNote && (
+            <div className="mt-2 text-center text-xs text-muted-foreground font-semibold">
+              {shareNote}
+            </div>
+          )}
+        </section>
+
         {/* Action buttons fixed directly under stats */}
-        <section className="mt-4 grid grid-cols-2 gap-3">
+        <section className="mt-3 grid grid-cols-2 gap-3">
           <button
             onClick={() => setConfirmOpen(true)}
             className="h-14 rounded-2xl border border-destructive/60 bg-destructive/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-destructive active:scale-95 transition"
