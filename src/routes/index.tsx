@@ -63,8 +63,8 @@ function RunPage() {
   >(null);
 
   useEffect(() => {
-    setLayout(loadLayout());
-  }, []);
+    setLayout(loadLayout(profile.level));
+  }, [profile.level]);
 
   const isActive = t.status === "running" || t.status === "paused";
 
@@ -272,7 +272,7 @@ function RunPage() {
             if (secIdx >= 0) next.secondary[secIdx] = currentMetric;
             if (pickerSlot.kind === "hero") next.hero[pickerSlot.index] = metric;
             else next.secondary[pickerSlot.index] = metric;
-            saveLayout(next);
+            saveLayout(next, profile.level);
             return next;
           });
           setPickerSlot(null);

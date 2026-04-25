@@ -3,6 +3,7 @@
 
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import type { Run } from "@/lib/run-types";
+import type { ExperienceLevel } from "@/lib/user-profile";
 
 export type MetricId =
   | "distance"
@@ -189,18 +190,29 @@ export type StatLayout = {
   secondary: [MetricId, MetricId, MetricId];
 };
 
-export const DEFAULT_LAYOUT: StatLayout = {
-  hero: ["distance", "duration"],
-  secondary: ["pace", "cadence", "elevation"],
+export const LEVEL_LAYOUTS: Record<ExperienceLevel, StatLayout> = {
+  beginner: {
+    hero: ["distance", "duration"],
+    secondary: ["pace", "avgPace", "calories"],
+  },
+  expert: {
+    hero: ["pace", "distance"],
+    secondary: ["duration", "cadence", "elevation"],
+  },
 };
 
-const STORAGE_KEY = "orbit:stat-layout:v1";
+// Backwards-compat: beginner preset.
+export const DEFAULT_LAYOUT: StatLayout = LEVEL_LAYOUTS.beginner;
 
-export function loadLayout(): StatLayout {
-  if (typeof window === "undefined") return DEFAULT_LAYOUT;
+const STORAGE_PREFIX = "orbit:stat-layout:v2";
+const storageKey = (level: ExperienceLevel) => `${STORAGE_PREFIX}:${level}`;
+
+export function loadLayout(level: ExperienceLevel = "beginner"): StatLayout {
+  const fallback = LEVEL_LAYOUTS[level];
+  if (typeof window === "undefined") return fallback;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_LAYOUT;
+    const raw = window.localStorage.getItem(storageKey(level));
+    if (!raw) return fallback;
     const parsed = JSON.parse(raw) as StatLayout;
     if (
       parsed?.hero?.length === 2 &&
@@ -212,13 +224,13 @@ export function loadLayout(): StatLayout {
   } catch {
     /* noop */
   }
-  return DEFAULT_LAYOUT;
+  return fallback;
 }
 
-export function saveLayout(layout: StatLayout) {
+export function saveLayout(layout: StatLayout, level: ExperienceLevel = "beginner") {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
+    window.localStorage.setItem(storageKey(level), JSON.stringify(layout));
   } catch {
     /* noop */
   }
