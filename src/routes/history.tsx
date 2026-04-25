@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Footprints, Mountain, Timer, Trash2, Trophy, Zap } from "lucide-react";
+import { ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
