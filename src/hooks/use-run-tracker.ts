@@ -124,6 +124,8 @@ export function useRunTracker() {
   const lastCueIndexRef = useRef(0);
   const hapticEnabledRef = useRef<boolean>(true);
   const prVoiceEnabledRef = useRef<boolean>(true);
+  // Each fixed-distance PR (1k…marathon) is announced at most once per run.
+  const announcedDistancePrsRef = useRef<Set<PrCategory>>(new Set());
   // Distance at the exact moment the previous split (or run start) was crossed,
   // so each split duration is computed against the true km boundary — not the
   // total accumulated distance, which drifts past 1000m between GPS samples.
