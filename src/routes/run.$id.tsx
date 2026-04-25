@@ -10,6 +10,8 @@ import WeatherEditor from "@/components/WeatherEditor";
 import ShoePicker from "@/components/ShoePicker";
 import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
+import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
+import { bestTimeForPoints } from "@/lib/personal-records";
 
 export const Route = createFileRoute("/run/$id")({
   component: RunDetailPage,
@@ -170,6 +172,40 @@ function RunDetailPage() {
         <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
         <StatTile label={t("stat.elevation")} value={Math.round(run.elevationGainM).toString()} unit={t("unit.m")} />
       </section>
+
+      {(() => {
+        const snapshot = computeRunMetrics(run);
+        // Skip metrics already shown above (hero + 2x2 primary grid).
+        const primary = new Set(["distance", "duration", "avgPace", "cadence", "elevation", "pace"]);
+        const extras = ALL_METRIC_IDS.filter((id) => !primary.has(id));
+        const fastestKmMs = bestTimeForPoints(run.points, 1000);
+        return (
+          <section className="mt-4">
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-2 px-1">
+              {t("run.allMetrics")}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <StatTile
+                label={t("stat.fastestKm")}
+                value={fastestKmMs ? formatPace(Math.round(fastestKmMs / 1000)) : "—"}
+                unit={fastestKmMs ? t("unit.perKm") : undefined}
+                accent
+              />
+              {extras.map((id) => {
+                const def = METRICS[id];
+                return (
+                  <StatTile
+                    key={id}
+                    label={t(def.labelKey)}
+                    value={def.format(snapshot)}
+                    unit={def.unitKey ? t(def.unitKey) : undefined}
+                  />
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
 
       {run.splits.length > 0 && (
         <section className="mt-4 glass rounded-2xl p-4">
