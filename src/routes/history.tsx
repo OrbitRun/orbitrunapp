@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Footprints, Ghost, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run, type Split } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -11,6 +11,7 @@ import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
+import { selectGhost } from "@/lib/ghost-runner";
 
 export const Route = createFileRoute("/history")({
   component: HistoryPage,
@@ -124,6 +125,7 @@ type ExpandableRunCardProps = {
 
 function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardProps) {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
   return (
@@ -157,12 +159,19 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
       </Link>
 
       {/* Header row with expand toggle */}
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
         aria-expanded={open}
         aria-label={open ? t("history.collapse") : t("history.expand")}
-        className="w-full p-3 flex items-center justify-between gap-3 text-left active:bg-white/5 transition"
+        className="w-full p-3 flex items-center justify-between gap-3 text-left active:bg-white/5 transition cursor-pointer"
       >
         <div className="min-w-0 flex-1">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
@@ -203,10 +212,25 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
             );
           })()}
         </div>
-        <ChevronDown
-          className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              selectGhost(run, formatDate(run.startedAt));
+              navigate({ to: "/" });
+            }}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/80"
+            aria-label={t("ghost.race")}
+          >
+            <Ghost className="h-3 w-3" />
+            {t("ghost.race")}
+          </button>
+          <ChevronDown
+            className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </div>
+      </div>
 
       {open && <RunDetailPanel run={run} />}
     </div>
