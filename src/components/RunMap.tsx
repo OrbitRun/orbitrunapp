@@ -10,6 +10,7 @@ type Props = {
   className?: string;
   follow?: boolean;
   interactive?: boolean;
+  ghost?: { path: { lat: number; lng: number; t: number }[]; elapsedMs: number } | null;
 };
 
 export default function RunMap(props: Props) {
@@ -25,11 +26,13 @@ function RunMapInner({
   className,
   follow = true,
   interactive = true,
+  ghost = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
   const MRef = useRef<typeof MapboxNS | null>(null);
   const headRef = useRef<MapboxNS.Marker | null>(null);
+  const ghostMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
 
