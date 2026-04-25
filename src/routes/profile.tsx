@@ -132,6 +132,7 @@ function ProfilePage() {
         </div>
       </section>
 
+      <GoalProgress goal={profile.goal} runs={runs} />
 
       {/* Experience level */}
       <section className="mt-4 glass rounded-2xl p-4">
@@ -189,8 +190,6 @@ function ProfilePage() {
           ))}
         </div>
       </section>
-
-      <GoalProgress goal={profile.goal} runs={runs} />
 
       <ShoesSection />
 
