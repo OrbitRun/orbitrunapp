@@ -1,7 +1,7 @@
 // User profile: name, goal, experience level. Persisted in localStorage.
 
 export type ExperienceLevel = "beginner" | "expert";
-export type RunningGoal = "run5k" | "runFaster" | "weightLoss" | "marathon";
+export type RunningGoal = "run5k" | "run10k" | "runFaster" | "weightLoss" | "halfMarathon" | "marathon";
 export type AudioCueMeters = 500 | 1000;
 export type WindUnit = "ms" | "kmh";
 
@@ -60,14 +60,18 @@ export function displayName(p: UserProfile, lang: "en" | "da"): string {
 export function goalLabel(goal: RunningGoal, lang: "en" | "da"): string {
   const en: Record<RunningGoal, string> = {
     run5k: "Run 5K",
+    run10k: "Run 10K",
     runFaster: "Run faster",
     weightLoss: "Weight loss",
+    halfMarathon: "Half marathon",
     marathon: "Marathon",
   };
   const da: Record<RunningGoal, string> = {
     run5k: "Løb 5km",
+    run10k: "Løb 10km",
     runFaster: "Løb hurtigere",
     weightLoss: "Vægttab",
+    halfMarathon: "Halvmarathon",
     marathon: "Marathon",
   };
   return (lang === "da" ? da : en)[goal];
