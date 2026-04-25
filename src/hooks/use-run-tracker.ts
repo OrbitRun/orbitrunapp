@@ -7,7 +7,13 @@ import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
-import { checkAndUpdatePrs, loadPrs } from "@/lib/personal-records";
+import {
+  bestTimeForPoints,
+  checkAndUpdatePrs,
+  FIXED_DISTANCES,
+  loadPrs,
+  type PrCategory,
+} from "@/lib/personal-records";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -40,13 +46,29 @@ const initial: State = {
   permissionError: null,
 };
 
+type PrFlags = {
+  distances?: PrCategory[];
+  fastestKm?: boolean;
+  longestDistance?: boolean;
+};
+
+const DISTANCE_LABELS: Record<PrCategory, { en: string; da: string } | undefined> = {
+  "1k": { en: "1 kilometer", da: "1 kilometer" },
+  "5k": { en: "5 kilometers", da: "5 kilometer" },
+  "10k": { en: "10 kilometers", da: "10 kilometer" },
+  half: { en: "half marathon", da: "halvmarathon" },
+  marathon: { en: "marathon", da: "maraton" },
+  longest: undefined,
+  fastestKm: undefined,
+};
+
 function speakSplit(
   km: number,
   paceSecPerKm: number,
   lang: Lang,
   name: string,
   intervalM: AudioCueMeters,
-  prFlags?: { fastestKm?: boolean; longestDistance?: boolean },
+  prFlags?: PrFlags,
 ) {
   const paceWords = paceToWords(paceSecPerKm, lang);
   const distLabel =
@@ -61,6 +83,16 @@ function speakSplit(
     lang === "da"
       ? `Godt kæmpet ${name}! ${distLabel} fuldført. Split-tempo ${paceWords}.`
       : `Great work ${name}! ${distLabel} completed. Split pace ${paceWords}.`;
+  if (prFlags?.distances?.length) {
+    for (const cat of prFlags.distances) {
+      const label = DISTANCE_LABELS[cat];
+      if (!label) continue;
+      txt +=
+        lang === "da"
+          ? ` Ny rekord! Hurtigste ${label.da} nogensinde.`
+          : ` New personal record! Your fastest ${label.en} ever.`;
+    }
+  }
   if (prFlags?.fastestKm) {
     txt +=
       lang === "da"
@@ -92,6 +124,8 @@ export function useRunTracker() {
   const lastCueIndexRef = useRef(0);
   const hapticEnabledRef = useRef<boolean>(true);
   const prVoiceEnabledRef = useRef<boolean>(true);
+  // Each fixed-distance PR (1k…marathon) is announced at most once per run.
+  const announcedDistancePrsRef = useRef<Set<PrCategory>>(new Set());
   // Distance at the exact moment the previous split (or run start) was crossed,
   // so each split duration is computed against the true km boundary — not the
   // total accumulated distance, which drifts past 1000m between GPS samples.
@@ -263,16 +297,33 @@ export function useRunTracker() {
             const paceForCue =
               matchingSplit?.paceSecPerKm || currentPace || prev.avgPaceSecPerKm || 0;
             // Live PR detection — only on true km boundaries.
-            let prFlags: { fastestKm?: boolean; longestDistance?: boolean } | undefined;
+            let prFlags: PrFlags | undefined;
             if (isKmBoundary && prVoiceEnabledRef.current) {
+              const distancePrs: PrCategory[] = [];
+              // Fixed-distance PRs (1k, 5k, 10k, half, marathon) — fire once per run each.
+              for (const { category, meters } of FIXED_DISTANCES) {
+                if (cueDistance < meters) continue;
+                if (announcedDistancePrsRef.current.has(category)) continue;
+                const liveBest = bestTimeForPoints(newPoints, meters);
+                if (liveBest == null) continue;
+                const existing = prMap[category]?.value;
+                if (existing == null || liveBest < existing) {
+                  distancePrs.push(category);
+                  announcedDistancePrsRef.current.add(category);
+                }
+              }
               const fastestKmPr = prMap.fastestKm?.value; // ms
               const longestPr = prMap.longest?.value; // meters
               const splitPaceMs = matchingSplit ? matchingSplit.paceSecPerKm * 1000 : 0;
               const beatFastestKm =
                 splitPaceMs > 0 && (fastestKmPr == null || splitPaceMs < fastestKmPr);
               const beatLongest = longestPr == null ? false : cueDistance > longestPr;
-              if (beatFastestKm || beatLongest) {
-                prFlags = { fastestKm: beatFastestKm, longestDistance: beatLongest };
+              if (distancePrs.length || beatFastestKm || beatLongest) {
+                prFlags = {
+                  distances: distancePrs.length ? distancePrs : undefined,
+                  fastestKm: beatFastestKm,
+                  longestDistance: beatLongest,
+                };
               }
             }
             haptic([120, 80, 120, 80, 220]);
@@ -329,6 +380,7 @@ export function useRunTracker() {
     prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
+    announcedDistancePrsRef.current = new Set();
     lastSplitDistanceMRef.current = 0;
     lastSplitTimeMsRef.current = 0;
     smoothedAltRef.current = null;
