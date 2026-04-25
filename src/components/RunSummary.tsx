@@ -27,9 +27,28 @@ type Props = {
 };
 
 export default function RunSummary({ run, onSave, onDiscard }: Props) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareNote, setShareNote] = useState<string | null>(null);
+
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    setShareNote(null);
+    try {
+      const result = await shareRun(run, lang);
+      if (result === "downloaded") {
+        setShareNote(t("summary.shareDownloaded"));
+        setTimeout(() => setShareNote(null), 2400);
+      }
+    } catch (err) {
+      console.error("[share-card] failed", err);
+    } finally {
+      setSharing(false);
+    }
+  };
   const max = run.splits.length ? Math.max(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const min = run.splits.length ? Math.min(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const range = Math.max(1, max - min);
