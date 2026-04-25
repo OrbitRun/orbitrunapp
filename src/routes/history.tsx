@@ -180,3 +180,30 @@ function HistoryPage() {
     </main>
   );
 }
+
+const PR_BADGE_META: Record<
+  PrCategory,
+  { label: string; Icon: typeof Trophy }
+> = {
+  "1k": { label: "1K", Icon: Trophy },
+  "5k": { label: "5K", Icon: Trophy },
+  "10k": { label: "10K", Icon: Trophy },
+  half: { label: "HM", Icon: Trophy },
+  marathon: { label: "FM", Icon: Trophy },
+  fastestKm: { label: "KM", Icon: Zap },
+  longest: { label: "LR", Icon: Mountain },
+};
+
+function PrBadge({ category }: { category: PrCategory }) {
+  const { label, Icon } = PR_BADGE_META[category];
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full bg-neon/15 text-neon border border-neon/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+      title={`PR · ${label}`}
+    >
+      <Icon className="h-3 w-3" />
+      {label}
+    </span>
+  );
+}
+
