@@ -46,13 +46,29 @@ const initial: State = {
   permissionError: null,
 };
 
+type PrFlags = {
+  distances?: PrCategory[];
+  fastestKm?: boolean;
+  longestDistance?: boolean;
+};
+
+const DISTANCE_LABELS: Record<PrCategory, { en: string; da: string } | undefined> = {
+  "1k": { en: "1 kilometer", da: "1 kilometer" },
+  "5k": { en: "5 kilometers", da: "5 kilometer" },
+  "10k": { en: "10 kilometers", da: "10 kilometer" },
+  half: { en: "half marathon", da: "halvmarathon" },
+  marathon: { en: "marathon", da: "maraton" },
+  longest: undefined,
+  fastestKm: undefined,
+};
+
 function speakSplit(
   km: number,
   paceSecPerKm: number,
   lang: Lang,
   name: string,
   intervalM: AudioCueMeters,
-  prFlags?: { fastestKm?: boolean; longestDistance?: boolean },
+  prFlags?: PrFlags,
 ) {
   const paceWords = paceToWords(paceSecPerKm, lang);
   const distLabel =
@@ -67,6 +83,16 @@ function speakSplit(
     lang === "da"
       ? `Godt kæmpet ${name}! ${distLabel} fuldført. Split-tempo ${paceWords}.`
       : `Great work ${name}! ${distLabel} completed. Split pace ${paceWords}.`;
+  if (prFlags?.distances?.length) {
+    for (const cat of prFlags.distances) {
+      const label = DISTANCE_LABELS[cat];
+      if (!label) continue;
+      txt +=
+        lang === "da"
+          ? ` Ny rekord! Hurtigste ${label.da} nogensinde.`
+          : ` New personal record! Your fastest ${label.en} ever.`;
+    }
+  }
   if (prFlags?.fastestKm) {
     txt +=
       lang === "da"
