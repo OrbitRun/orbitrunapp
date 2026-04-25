@@ -223,3 +223,16 @@ export function saveLayout(layout: StatLayout) {
     /* noop */
   }
 }
+
+// Build a `LiveStats` snapshot from a saved Run so post-run views can reuse the
+// same metric formatters as the live tracker.
+export function computeRunMetrics(run: Run): LiveStats {
+  return {
+    distanceM: run.distanceM,
+    elapsedMs: run.durationMs,
+    currentPaceSecPerKm: run.avgPaceSecPerKm,
+    avgPaceSecPerKm: run.avgPaceSecPerKm,
+    cadenceSpm: run.avgCadenceSpm,
+    elevationGainM: run.elevationGainM,
+  };
+}
