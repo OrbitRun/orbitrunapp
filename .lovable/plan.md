@@ -1,55 +1,57 @@
-# Live PR voice callouts for every category
+## Goal
 
-Today, the per-km voice cue only announces new records for **Fastest km** and **Longest run**. This plan extends live detection to every PR category in the engine: **1 km, 5 km, 10 km, Half marathon, Marathon**, in addition to the existing two.
+The run screen lets the user pick from 11 metrics (distance, duration, pace, avg pace, cadence, elevation, calories, stride, vertical oscillation, ground contact, sweat loss). After a run, only 5 of them survive on `/run/$id`. Make every metric visible and analyzable on the post-run history detail page.
 
-The existing "PR voice callouts" toggle in Profile continues to mute all of them.
+## Scope
 
-## What changes
+Edit only `src/routes/run.$id.tsx` (plus a couple of i18n keys if missing). No data-model changes are needed — every metric is either already stored on `Run` or can be derived from `run.points` / aggregates.
 
-When a runner crosses a fixed-distance threshold (e.g. their 5 km point) during the run, the tracker checks if the time it took beats the stored PR for that distance. If yes, the next 1 km voice cue appends a phrase such as:
+The history *list* (`/history`) stays as-is (compact cards). All-metrics view lives on the run detail page where there's room to analyze.
 
-- EN: "New personal record! Your fastest 5 km ever."
-- DA: "Ny rekord! Hurtigste 5 km nogensinde."
+## What gets added to `/run/$id`
 
-If a single voice cue happens to land on multiple new PRs at once (rare — e.g. the runner just hit both a new 5 km and a new longest run), all relevant phrases are appended in order: distance PRs (1k → marathon) → fastest km → longest run.
+Below the existing 2×2 stat grid, add a new "All metrics" section rendered as a 2-column grid of `StatTile`s. It shows every metric in the same order as `ALL_METRIC_IDS`, with values computed from the saved run:
 
-Live detection uses the same logic as the post-run PR engine (sliding-window best time over the actual GPS trace), so what's announced live matches what gets saved.
+| Metric | Source |
+|---|---|
+| Distance, Duration, Avg pace, Cadence, Elevation | already on `Run` (keep current hero + 2×2) |
+| Pace (current) | omitted — meaningless after the run; replaced with **Best pace (fastest km)** derived via `bestTimeForPoints(run.points, 1000)` |
+| Calories | reuse `estimate*` from `stat-metrics.ts` by feeding a synthetic `LiveStats` snapshot built from the run aggregates |
+| Stride length | same approach (uses avg pace + avg cadence) |
+| Vertical oscillation | same |
+| Ground contact | same |
+| Sweat loss | same |
 
-## How it sounds
+To keep the formulas in one place, export a small helper `computeRunMetrics(run)` from `src/lib/stat-metrics.ts` that returns a `LiveStats`-shaped object built from a saved `Run` (`distanceM`, `durationMs`, avg pace as both `currentPaceSecPerKm` and `avgPaceSecPerKm`, `avgCadenceSpm`, `elevationGainM`). The detail page then loops `ALL_METRIC_IDS` and calls `METRICS[id].format(snapshot)` for each — no formula duplication.
+
+The existing 2×2 `StatTile` block stays as the "primary" view; the new section is titled "All metrics" / "Alle målinger" and includes a small "Fastest km" tile alongside.
+
+## Layout sketch
 
 ```text
-"Great work Casper! Kilometer 5 completed. Split pace 5 minutes 12 seconds per kilometer.
- New personal record! Your fastest 5 km ever.
- New personal record! Your fastest kilometer ever."
+[ Map ]
+[ Weather row ]
+[ Shoe row ]
+[ Hero distance ]
+[ Duration | Avg pace ]      ← existing
+[ Cadence  | Elevation ]     ← existing
+[ All metrics ── 2-col grid ]
+  Calories | Fastest km
+  Stride   | Vert. osc.
+  Ground contact | Sweat loss
+[ Splits chart ]             ← unchanged
 ```
 
-Cues at non-km boundaries (e.g. the 500 m half-cue) stay unchanged.
+## i18n
 
-## Technical details
-
-1. **`src/lib/personal-records.ts`** — export a small helper `bestTimeForDistanceLive(points, target)` that reuses the existing `bestTimeForDistance` sliding-window logic so the tracker can call it on the live point buffer without duplicating code.
-
-2. **`src/hooks/use-run-tracker.ts`**
-   - Replace the `prFlags` shape with a richer one:
-     ```ts
-     { distances?: PrCategory[]; fastestKm?: boolean; longestDistance?: boolean }
-     ```
-   - Track which fixed-distance categories have already been announced this run in a new ref `announcedDistancePrsRef = useRef<Set<PrCategory>>(new Set())` (reset in `start()`), so each PR fires at most once per run.
-   - In the km-boundary cue block, for every entry in `FIXED_DISTANCES` where `cueDistance >= meters` and not yet announced:
-     - Compute `bestTimeForDistanceLive(newPoints, meters)`.
-     - Compare against `prMap[category]?.value`. If better (or no record exists), add to `prFlags.distances` and mark announced.
-   - Pass the flags to `speakSplit`.
-
-3. **`speakSplit` in `use-run-tracker.ts`** — extend to render the new phrases. Use a small label map for distance names per language:
-   - EN: `1k → "1 kilometer"`, `5k → "5 km"`, `10k → "10 km"`, `half → "half marathon"`, `marathon → "marathon"`
-   - DA: same but Danish (`"halvmarathon"`, `"maraton"`).
-   - Append in fixed order: distances → fastestKm → longestDistance.
-
-4. **No new i18n keys required** — phrases are built inline in `speakSplit` to mirror the existing `fastestKm`/`longestDistance` style.
-
-5. **Settings unchanged** — the existing `prVoiceEnabled` toggle already gates the entire `prFlags` block.
+Reuse existing keys (`stat.calories`, `stat.stride`, `stat.vertOsc`, `stat.groundContact`, `stat.sweatLoss`, `unit.kcal`, `unit.cm`, `unit.ms`, `unit.l`). Add two new keys if missing:
+- `run.allMetrics` → "All metrics" / "Alle målinger"
+- `stat.fastestKm` → "Fastest km" / "Hurtigste km" (verify; if absent, add to both `en` and `da`)
 
 ## Files touched
 
-- `src/lib/personal-records.ts` (export live helper)
-- `src/hooks/use-run-tracker.ts` (detection + speakSplit phrasing + new ref)
+- `src/lib/stat-metrics.ts` — add and export `computeRunMetrics(run: Run): LiveStats`.
+- `src/routes/run.$id.tsx` — add the "All metrics" section + fastest-km tile.
+- `src/lib/i18n.tsx` — add any missing label keys listed above.
+
+No changes to storage, routing, or the live tracker.
