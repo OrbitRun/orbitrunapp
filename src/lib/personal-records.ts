@@ -136,6 +136,22 @@ export function computeRunPrs(run: Run): PrCandidate[] {
   return out;
 }
 
+// Returns the categories this run would improve relative to currently stored
+// PRs, WITHOUT mutating storage. Used for the share card so we can render
+// pending records before the user taps Save.
+export function previewRunPrs(run: Run): PrCategory[] {
+  if (typeof window === "undefined") return [];
+  const map = loadPrs();
+  const improved: PrCategory[] = [];
+  for (const c of computeRunPrs(run)) {
+    const existing = map[c.category];
+    if (!existing || isBetter(c.category, c.value, existing.value)) {
+      improved.push(c.category);
+    }
+  }
+  return improved;
+}
+
 export function checkAndUpdatePrs(run: Run): PrCategory[] {
   if (typeof window === "undefined") return [];
   ensureBuilt();
