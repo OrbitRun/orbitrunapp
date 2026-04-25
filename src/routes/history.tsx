@@ -147,6 +147,17 @@ function HistoryPage() {
                       </span>
                     </div>
                     {(() => {
+                      const cats = prsByRun.get(r.id);
+                      if (!cats?.length) return null;
+                      return (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                          {cats.map((cat) => (
+                            <PrBadge key={cat} category={cat} />
+                          ))}
+                        </div>
+                      );
+                    })()}
+                    {(() => {
                       const shoe = getShoeById(r.shoeId);
                       if (!shoe) return null;
                       return (
