@@ -258,3 +258,21 @@ export function heroFontSizeFor(values: string[]): string {
   if (len >= 5) return "text-[34px]";
   return "text-[40px]";
 }
+
+// Choose a single secondary font-size class that fits the longest value+unit
+// across a row of secondary tiles, keeping all tiles visually aligned.
+export function secondaryFontSizeFor(
+  entries: Array<{ value: string; unit?: string }>,
+): { valueClass: string; unitClass: string } {
+  const len = entries.reduce(
+    (m, e) => Math.max(m, e.value.length + (e.unit ? e.unit.length + 1 : 0)),
+    0,
+  );
+  const valueClass =
+    len >= 12 ? "text-xs"
+    : len >= 10 ? "text-sm"
+    : len >= 9 ? "text-base"
+    : "text-lg";
+  const unitClass = len >= 11 ? "text-[9px]" : "text-[10px]";
+  return { valueClass, unitClass };
+}
