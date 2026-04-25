@@ -63,8 +63,8 @@ function RunPage() {
   >(null);
 
   useEffect(() => {
-    setLayout(loadLayout());
-  }, []);
+    setLayout(loadLayout(profile.level));
+  }, [profile.level]);
 
   const isActive = t.status === "running" || t.status === "paused";
 
