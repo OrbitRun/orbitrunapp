@@ -20,6 +20,7 @@ import {
   saveLayout,
   METRICS,
   heroFontSizeFor,
+  secondaryFontSizeFor,
   type MetricId,
   type StatLayout,
 } from "@/lib/stat-metrics";
