@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Footprints, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
+import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
+import { bestTimeForPoints } from "@/lib/personal-records";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
@@ -93,91 +95,309 @@ function HistoryPage() {
         <ul className="space-y-3 pb-4">
           {runs.map((r) => (
             <li key={r.id}>
-              <Link
-                to="/run/$id"
-                params={{ id: r.id }}
-                className="block glass rounded-2xl overflow-hidden active:scale-[0.99] transition"
-              >
-                <div className="h-32 relative">
-                  <RunMap
-                    points={r.points}
-                    className="h-full w-full"
-                    interactive={false}
-                    follow={false}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (confirm(t("history.deleteConfirm"))) {
-                        deleteRun(r.id);
-                        setRuns(loadRuns());
-                      }
-                    }}
-                    className="absolute top-2 right-2 h-8 w-8 grid place-items-center rounded-full bg-black/50 backdrop-blur text-foreground/80 hover:text-destructive"
-                    aria-label="Delete run"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                  {r.weather && (
-                    <div className="absolute top-2 left-2">
-                      <WeatherBadge weather={r.weather} variant="compact" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                      {formatDate(r.startedAt)}
-                    </div>
-                    <div className="flex items-baseline gap-3 mt-0.5">
-                      <span className="font-display font-black text-2xl text-neon tabular">
-                        {formatDistance(r.distanceM)}
-                        <span className="text-xs text-muted-foreground ml-1 font-semibold">
-                          {t("unit.km")}
-                        </span>
-                      </span>
-                      <span className="font-mono text-sm text-foreground/80">
-                        {formatDuration(r.durationMs)}
-                      </span>
-                      <span className="font-mono text-sm text-foreground/60">
-                        {formatPace(r.avgPaceSecPerKm)}
-                        {t("unit.perKm")}
-                      </span>
-                    </div>
-                    {(() => {
-                      const cats = prsByRun.get(r.id);
-                      if (!cats?.length) return null;
-                      return (
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                          {cats.map((cat) => (
-                            <PrBadge key={cat} category={cat} />
-                          ))}
-                        </div>
-                      );
-                    })()}
-                    {(() => {
-                      const shoe = getShoeById(r.shoeId);
-                      if (!shoe) return null;
-                      return (
-                        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold">
-                          <Footprints className="h-3 w-3 text-neon" />
-                          <span className="truncate">
-                            {shoe.brand} {shoe.model}
-                          </span>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                </div>
-              </Link>
+              <ExpandableRunCard
+                run={r}
+                prCategories={prsByRun.get(r.id)}
+                onDelete={() => {
+                  if (confirm(t("history.deleteConfirm"))) {
+                    deleteRun(r.id);
+                    setRuns(loadRuns());
+                  }
+                }}
+              />
             </li>
           ))}
         </ul>
       )}
     </main>
+  );
+}
+
+type ExpandableRunCardProps = {
+  run: Run;
+  prCategories: PrCategory[] | undefined;
+  onDelete: () => void;
+};
+
+function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardProps) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="glass rounded-2xl overflow-hidden">
+      {/* Map area still navigates to the full detail page */}
+      <Link
+        to="/run/$id"
+        params={{ id: run.id }}
+        className="block active:scale-[0.99] transition"
+      >
+        <div className="h-32 relative">
+          <RunMap points={run.points} className="h-full w-full" interactive={false} follow={false} />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="absolute top-2 right-2 h-8 w-8 grid place-items-center rounded-full bg-black/50 backdrop-blur text-foreground/80 hover:text-destructive"
+            aria-label="Delete run"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          {run.weather && (
+            <div className="absolute top-2 left-2">
+              <WeatherBadge weather={run.weather} variant="compact" />
+            </div>
+          )}
+        </div>
+      </Link>
+
+      {/* Header row with expand toggle */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label={open ? t("history.collapse") : t("history.expand")}
+        className="w-full p-3 flex items-center justify-between gap-3 text-left active:bg-white/5 transition"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            {formatDate(run.startedAt)}
+          </div>
+          <div className="flex items-baseline gap-3 mt-0.5">
+            <span className="font-display font-black text-2xl text-neon tabular">
+              {formatDistance(run.distanceM)}
+              <span className="text-xs text-muted-foreground ml-1 font-semibold">
+                {t("unit.km")}
+              </span>
+            </span>
+            <span className="font-mono text-sm text-foreground/80">
+              {formatDuration(run.durationMs)}
+            </span>
+            <span className="font-mono text-sm text-foreground/60">
+              {formatPace(run.avgPaceSecPerKm)}
+              {t("unit.perKm")}
+            </span>
+          </div>
+          {prCategories?.length ? (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              {prCategories.map((cat) => (
+                <PrBadge key={cat} category={cat} />
+              ))}
+            </div>
+          ) : null}
+          {(() => {
+            const shoe = getShoeById(run.shoeId);
+            if (!shoe) return null;
+            return (
+              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground font-semibold">
+                <Footprints className="h-3 w-3 text-neon" />
+                <span className="truncate">
+                  {shoe.brand} {shoe.model}
+                </span>
+              </div>
+            );
+          })()}
+        </div>
+        <ChevronDown
+          className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && <RunDetailPanel run={run} />}
+    </div>
+  );
+}
+
+function RunDetailPanel({ run }: { run: Run }) {
+  const { t } = useI18n();
+
+  // Insights derived from the saved run.
+  const fastestKmMs = useMemo(() => bestTimeForPoints(run.points, 1000), [run.points]);
+  const fastestKmPaceSec = fastestKmMs ? Math.round(fastestKmMs / 1000) : null;
+
+  const splits = run.splits ?? [];
+  const fastestSplit = splits.length
+    ? splits.reduce((a, b) => (b.paceSecPerKm < a.paceSecPerKm ? b : a))
+    : null;
+  const slowestSplit = splits.length
+    ? splits.reduce((a, b) => (b.paceSecPerKm > a.paceSecPerKm ? b : a))
+    : null;
+
+  const paceDeltaSec =
+    fastestKmPaceSec && run.avgPaceSecPerKm > 0
+      ? run.avgPaceSecPerKm - fastestKmPaceSec
+      : null;
+
+  const snapshot = computeRunMetrics(run);
+  const basicIds = ["distance", "duration", "avgPace", "cadence", "elevation"] as const;
+  const advancedIds = ALL_METRIC_IDS.filter(
+    (id) => !basicIds.includes(id as (typeof basicIds)[number]) && id !== "pace",
+  );
+
+  return (
+    <div className="border-t border-white/5 px-3 pt-3 pb-3 space-y-4">
+      {/* Insights */}
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-1.5 px-0.5">
+          {t("history.insights")}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <InsightTile
+            label={t("history.fastestSplit")}
+            value={fastestSplit ? formatPace(fastestSplit.paceSecPerKm) : "—"}
+            sub={fastestSplit ? `${t("history.km")} ${fastestSplit.km}` : undefined}
+            unit={fastestSplit ? t("unit.perKm") : undefined}
+            accent
+          />
+          <InsightTile
+            label={t("history.slowestSplit")}
+            value={slowestSplit ? formatPace(slowestSplit.paceSecPerKm) : "—"}
+            sub={slowestSplit ? `${t("history.km")} ${slowestSplit.km}` : undefined}
+            unit={slowestSplit ? t("unit.perKm") : undefined}
+          />
+          <InsightTile
+            label={t("stat.fastestKm")}
+            value={fastestKmPaceSec ? formatPace(fastestKmPaceSec) : "—"}
+            unit={fastestKmPaceSec ? t("unit.perKm") : undefined}
+            accent
+          />
+          <InsightTile
+            label={t("history.paceDelta")}
+            value={
+              paceDeltaSec === null
+                ? "—"
+                : `${paceDeltaSec >= 0 ? "−" : "+"}${formatPace(Math.abs(paceDeltaSec))}`
+            }
+            sub={
+              paceDeltaSec === null
+                ? undefined
+                : paceDeltaSec >= 0
+                  ? t("history.faster")
+                  : t("history.slower")
+            }
+            unit={paceDeltaSec === null ? undefined : t("unit.perKm")}
+          />
+        </div>
+      </div>
+
+      {/* Basic metrics */}
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-1.5 px-0.5">
+          {t("history.basicMetrics")}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {basicIds.map((id) => {
+            const def = METRICS[id];
+            return (
+              <InsightTile
+                key={id}
+                label={t(def.labelKey)}
+                value={def.format(snapshot)}
+                unit={def.unitKey ? t(def.unitKey) : undefined}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Advanced metrics */}
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-1.5 px-0.5">
+          {t("history.advancedMetrics")}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {advancedIds.map((id) => {
+            const def = METRICS[id];
+            return (
+              <InsightTile
+                key={id}
+                label={t(def.labelKey)}
+                value={def.format(snapshot)}
+                unit={def.unitKey ? t(def.unitKey) : undefined}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Mini splits chart */}
+      {splits.length > 0 && (() => {
+        const max = Math.max(...splits.map((s) => s.paceSecPerKm));
+        const min = Math.min(...splits.map((s) => s.paceSecPerKm));
+        const range = Math.max(1, max - min);
+        return (
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-1.5 px-0.5">
+              {t("splits.title")}
+            </div>
+            <ul className="space-y-1.5">
+              {splits.map((s) => {
+                const pct = 100 - ((s.paceSecPerKm - min) / range) * 70;
+                const isBest = fastestSplit?.km === s.km;
+                return (
+                  <li key={s.km} className="flex items-center gap-2">
+                    <span className="w-8 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      {t("splits.km")} {s.km}
+                    </span>
+                    <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${isBest ? "bg-neon shadow-[0_0_8px_oklch(0.92_0.21_130/0.6)]" : "bg-foreground/40"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className={`font-mono text-xs font-bold w-12 text-right ${isBest ? "text-neon" : ""}`}>
+                      {formatPace(s.paceSecPerKm)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })()}
+
+      <Link
+        to="/run/$id"
+        params={{ id: run.id }}
+        className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/80 transition"
+      >
+        {t("history.viewFull")}
+        <ChevronRight className="h-3.5 w-3.5" />
+      </Link>
+    </div>
+  );
+}
+
+function InsightTile({
+  label,
+  value,
+  unit,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  sub?: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="rounded-xl bg-white/5 px-3 py-2">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold truncate">
+        {label}
+      </div>
+      <div className="mt-0.5 flex items-baseline gap-1">
+        <span className={`font-display font-black tabular text-base leading-none ${accent ? "text-neon" : "text-foreground"}`}>
+          {value}
+        </span>
+        {unit && <span className="text-[10px] text-muted-foreground font-bold">{unit}</span>}
+      </div>
+      {sub && (
+        <div className="text-[9px] text-muted-foreground font-semibold mt-0.5 truncate">{sub}</div>
+      )}
+    </div>
   );
 }
 
