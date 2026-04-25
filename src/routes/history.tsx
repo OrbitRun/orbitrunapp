@@ -25,6 +25,9 @@ function HistoryPage() {
   useEffect(() => {
     setRuns(loadRuns());
     setPrs(loadPrs());
+    const refresh = () => setRuns(loadRuns());
+    window.addEventListener("orbit:run-updated", refresh);
+    return () => window.removeEventListener("orbit:run-updated", refresh);
   }, []);
 
   // Map runId -> ordered list of PR categories that this run currently holds.
