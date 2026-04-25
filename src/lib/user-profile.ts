@@ -11,6 +11,7 @@ export type UserProfile = {
   level: ExperienceLevel;
   audioCueMeters: AudioCueMeters;
   hapticEnabled: boolean;
+  prVoiceEnabled: boolean;
   windUnit: WindUnit;
   onboarded: boolean;
 };
@@ -23,6 +24,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   level: "beginner",
   audioCueMeters: 500,
   hapticEnabled: true,
+  prVoiceEnabled: true,
   windUnit: "ms",
   onboarded: false,
 };
