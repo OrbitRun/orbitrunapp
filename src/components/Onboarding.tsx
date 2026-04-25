@@ -25,6 +25,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
       level,
       audioCueMeters: level === "beginner" ? 500 : 1000,
       hapticEnabled: true,
+      prVoiceEnabled: true,
       windUnit: "ms",
       onboarded: true,
     };
