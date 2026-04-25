@@ -7,7 +7,13 @@ import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
-import { checkAndUpdatePrs, loadPrs } from "@/lib/personal-records";
+import {
+  bestTimeForPoints,
+  checkAndUpdatePrs,
+  FIXED_DISTANCES,
+  loadPrs,
+  type PrCategory,
+} from "@/lib/personal-records";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
