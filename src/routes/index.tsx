@@ -206,20 +206,26 @@ function RunPage() {
       </section>
 
       <section className="mt-2 grid grid-cols-2 gap-3">
-        {layout.hero.map((id, i) => (
-          <EditableStat
-            key={`hero-${i}`}
-            metricId={id}
-            stats={t}
-            variant="hero"
-            editMode={editMode}
-            onLongPress={() => {
-              setEditMode(true);
-              setPickerSlot({ kind: "hero", index: i });
-            }}
-            onTap={() => setPickerSlot({ kind: "hero", index: i })}
-          />
-        ))}
+        {(() => {
+          const heroSizeClass = heroFontSizeFor(
+            layout.hero.map((id) => METRICS[id].format(t)),
+          );
+          return layout.hero.map((id, i) => (
+            <EditableStat
+              key={`hero-${i}`}
+              metricId={id}
+              stats={t}
+              variant="hero"
+              editMode={editMode}
+              heroValueSizeClass={heroSizeClass}
+              onLongPress={() => {
+                setEditMode(true);
+                setPickerSlot({ kind: "hero", index: i });
+              }}
+              onTap={() => setPickerSlot({ kind: "hero", index: i })}
+            />
+          ));
+        })()}
       </section>
 
       <section className="mt-3 grid grid-cols-3 gap-3">
