@@ -205,9 +205,24 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
             );
           })()}
         </div>
-        <ChevronDown
-          className={`h-5 w-5 text-muted-foreground flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
-        />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              selectGhost(run, formatDate(run.startedAt));
+              navigate({ to: "/" });
+            }}
+            className="flex items-center gap-1 rounded-full px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/80"
+            aria-label={t("ghost.race")}
+          >
+            <Ghost className="h-3 w-3" />
+            {t("ghost.race")}
+          </button>
+          <ChevronDown
+            className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </div>
       </button>
 
       {open && <RunDetailPanel run={run} />}
