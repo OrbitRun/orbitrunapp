@@ -246,6 +246,23 @@ const en: Dict = {
   "weather.edit.cancel": "Cancel",
   "weather.edit.invalid": "Invalid value",
   "profile.windUnit": "Wind unit",
+
+  // Goal progress
+  "goal.progress.title": "Goal progress",
+  "goal.caption.faster": "best 1 km",
+  "goal.caption.fasterBaseline": "baseline pace",
+  "goal.caption.fasterDelta": "vs last month",
+  "goal.caption.slowerDelta": "vs last month",
+  "goal.caption.perWeek": "per week (4w avg)",
+  "goal.hint.distanceDone": "Goal reached — keep stacking long runs.",
+  "goal.hint.distanceMore": "Stretch your long run to close the gap.",
+  "goal.hint.fasterNoData": "Run at least 1 km to start tracking pace.",
+  "goal.hint.fasterBaseline": "First month — baseline locked in.",
+  "goal.hint.fasterImproved": "Faster than last month — keep pushing.",
+  "goal.hint.fasterRegressed": "A bit slower lately — try a tempo run.",
+  "goal.hint.weightOnTrack": "Weekly volume on target.",
+  "goal.hint.weightMore": "Add more km/week to boost your burn.",
+  "goal.hint.empty": "Log your first run to start tracking progress.",
 };
 
 const da: Dict = {
@@ -471,6 +488,23 @@ const da: Dict = {
   "pr.cat.marathon": "Marathon",
   "pr.cat.longest": "Længste løbetur",
   "pr.cat.fastestKm": "Hurtigste km",
+
+  // Goal progress
+  "goal.progress.title": "Målfremgang",
+  "goal.caption.faster": "bedste 1 km",
+  "goal.caption.fasterBaseline": "udgangstempo",
+  "goal.caption.fasterDelta": "ift. sidste måned",
+  "goal.caption.slowerDelta": "ift. sidste måned",
+  "goal.caption.perWeek": "pr. uge (4u snit)",
+  "goal.hint.distanceDone": "Mål nået — fortsæt med lange løb.",
+  "goal.hint.distanceMore": "Forlæng dit lange løb for at lukke afstanden.",
+  "goal.hint.fasterNoData": "Løb mindst 1 km for at spore tempo.",
+  "goal.hint.fasterBaseline": "Første måned — udgangspunkt sat.",
+  "goal.hint.fasterImproved": "Hurtigere end sidste måned — bliv ved.",
+  "goal.hint.fasterRegressed": "Lidt langsommere — prøv et tempoløb.",
+  "goal.hint.weightOnTrack": "Ugentlig volumen på sporet.",
+  "goal.hint.weightMore": "Læg flere km/uge til for mere forbrænding.",
+  "goal.hint.empty": "Gem dit første løb for at spore fremgang.",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
