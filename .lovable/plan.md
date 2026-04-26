@@ -1,82 +1,84 @@
 ## Goal
 
-Add an **Orbit Coach** intelligence layer: extended profile data (running level, weekly frequency, primary goal) collected through a dedicated coach onboarding flow, a coach card on the home screen showing the next task, and a post-run **RPE (perceived exertion)** prompt that saves a 1–10 score with each run.
+Make Orbit Coach feel like the Målfremgang (GoalProgress) card: same neon visual language, with a tap-to-expand detail panel that explains today's session. Add a toggle in the profile so the coach can be disabled entirely.
 
-All UI stays minimalist: dark background, white text, large thumb-friendly buttons, no glow effects.
+## Changes
 
-## What the user will see
+### 1. `src/components/CoachCard.tsx` — full redesign
 
-1. **Home screen** gets a new **"Orbit Coach"** card under the header.
-   - Not configured yet → "Klik her for at lade Orbit planlægge din træning". Tapping opens the Coach Setup flow.
-   - Configured → "Næste opgave: <dynamic suggestion>" (e.g. "30 min rolig tur" or "Intervaller: 5×800m"). Tapping opens the Coach Setup flow to re-edit answers.
+Rewrite to mirror the GoalProgress visual structure (`glass rounded-2xl p-4`, neon icon tile, eyebrow + title row, neon CTA button, expandable detail block).
 
-2. **Coach Setup flow** (`CoachOnboarding` modal, same visual style as existing `Onboarding.tsx`, 3 steps + finish):
-   - Step 1 — *Niveau*: 0–2 km / 3–5 km / 5–10 km / 10+ km
-   - Step 2 — *Frekvens*: 1–2 / 3–4 / 5+ dage pr uge
-   - Step 3 — *Mål*: Vægttab / 5 km / Hurtigere 10 km / Halvmarathon / Marathon
-   - Also reachable from Profile via a new "Konfigurer Coach" row.
+Layout:
+- Header row: 9×9 neon icon tile (`Sparkles`), title `t("coach.cardTitle")`, eyebrow `t("coach.next")` (or "Setup needed" when unconfigured).
+- Right side: small chip showing the level (e.g. `5–10 km`) styled like the `%` in GoalProgress but smaller.
+- Big line: `nextCoachTask(profile, lang)` in `font-display font-black text-base tabular`.
+- Hint row: `TargetIcon` + short context line (frequency + goal labels).
+- Primary action button: `Sparkles` + `t("coach.detail.cta")` ("Show session" / "Vis pas") using the same neon style as GoalProgress' suggestion CTA. Toggles open/close.
+- Expanded panel (when open): same `rounded-2xl border border-white/10 bg-white/5 p-4` block as GoalProgress' suggestion panel, containing:
+  - Workout type badge (easy/long/tempo/intervals/walkRun) + on-track/intro chip.
+  - Big line with the session (distance/intervals).
+  - Description paragraph: a 2–3 sentence explanation of *why* this session and *how to run it* (warm-up, target effort, cool-down).
+  - "Start session" button styled like GoalProgress' `Link to="/"`. Since CoachCard is already on `/`, this just closes the panel and scrolls to the start button (or simply closes — final behavior: close panel).
 
-3. **Post-run RPE prompt**: when a run is saved (after the `RunSummary` "Save" tap), a small overlay asks **"Hvor hårdt føltes turen?"** with a horizontal 1–10 scale (10 large square buttons, label "Meget let" under 1 and "Maksimal indsats" under 10, plus a Skip option). The selected score is persisted on the run.
+Unconfigured state: show the same card layout but the body says `t("coach.cta.unset")` and the action button label becomes `t("coach.setup")`. Tapping it opens `CoachOnboarding` (current behavior preserved only for unconfigured users).
 
-4. **History / run detail**: RPE shows as a subtle "RPE 7/10" chip when present (no layout overhaul).
+Disabled state: when `profile.coachEnabled === false`, render nothing.
 
-## Technical implementation
+### 2. `src/lib/user-profile.ts` — extend coach data + helpers
 
-### Data model
+- Add `coachEnabled?: boolean` to `UserProfile` (default `true` if a `coach` exists).
+- Add `nextCoachSession(profile, lang)` returning a structured object:
+  ```ts
+  { type: "easy"|"long"|"tempo"|"intervals"|"walkRun"|"setup",
+    title: string,        // e.g. "5 km roligt løb"
+    summary: string,      // 1 short line
+    description: string,  // 2–3 sentences explaining purpose + execution
+    paceHint?: string }   // optional pace/effort guidance
+  ```
+  The existing `nextCoachTask` keeps working (compose it from the new helper's `title`).
+- Localized descriptions for each workout type in both `en` and `da`, derived from level + goal so the text adapts (e.g. tempo run gets a different description than intervals).
 
-`src/lib/user-profile.ts` — extend `UserProfile`:
-```ts
-export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
-export type CoachFrequency = "1-2" | "3-4" | "5+";
-export type CoachGoal = "weightLoss" | "finish5k" | "faster10k" | "halfMarathon" | "marathon";
+### 3. `src/lib/i18n.tsx` — new strings
 
-coach?: {
-  level: CoachLevel;
-  frequency: CoachFrequency;
-  goal: CoachGoal;
-  configuredAt: number;
-};
+Add for `en` and `da`:
+- `coach.detail.cta` ("Show session" / "Vis dagens pas")
+- `coach.detail.hide` ("Hide" / "Skjul")
+- `coach.setup` ("Set up coach" / "Konfigurer coach")
+- `coach.enable` ("Orbit Coach" / "Orbit Coach") — row label
+- `coach.enable.on` / `coach.enable.off` ("On" / "Off", "Til" / "Fra")
+- `coach.session.purpose` headers and per-type descriptions:
+  - `coach.desc.easy`, `coach.desc.long`, `coach.desc.tempo`, `coach.desc.intervals`, `coach.desc.walkRun`
+- `coach.howTo.warmup`, `coach.howTo.cooldown` snippets used in descriptions.
+
+### 4. `src/routes/profile.tsx` — add enable toggle
+
+Just above the existing "Konfigurer Coach" row, add a new row in the same `divide-y` settings section:
+- Icon: `Sparkles` (matching the configure row's style — outlined tile, not neon).
+- Label: `t("coach.enable")`.
+- Right: `t(profile.coachEnabled === false ? "coach.enable.off" : "coach.enable.on")`.
+- onClick toggles `coachEnabled` via `update({ coachEnabled: !(profile.coachEnabled !== false) })`.
+
+When the coach is disabled, the existing "Configure coach" row stays visible but is rendered with reduced opacity and is non-interactive (so users discover the toggle is what re-enables it).
+
+### 5. `src/routes/index.tsx` — respect the toggle
+
+Change the render guard so the card hides when disabled:
+```tsx
+{(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && (
+  <CoachCard profile={profile} />
+)}
 ```
-- Defaults: `coach: undefined`. Add to `DEFAULT_PROFILE`.
-- Add helper `nextCoachTask(profile, lang): string` that maps `(level, frequency, goal)` → a short Danish/English task string (deterministic switch, no AI call).
 
-`src/lib/run-types.ts` — extend `Run`:
-```ts
-rpe?: number; // 1..10
-```
-- `loadRuns` migration: untouched runs simply have `rpe` undefined.
+## Visual reference
 
-### New files
+The card will share these tokens with GoalProgress: `glass rounded-2xl p-4`, neon icon (`text-neon` on `bg-white/5`), `font-display font-black` headings, neon CTA (`bg-neon/10 border-neon/30 text-neon`), expanded detail block (`border border-white/10 bg-white/5`), workout-type chip in `bg-neon/15 text-neon`.
 
-- `src/components/CoachOnboarding.tsx` — modal mirroring `Onboarding.tsx` styling (3 stepper dots, large pill buttons, Tilbage/Næste/Færdig). Saves via `saveProfile({ ...profile, coach: {...} })`.
-- `src/components/RpePrompt.tsx` — full-screen overlay with title, 10 large numeric buttons in a 5×2 grid (wraps nicely at 339px viewport), end-labels, and Spring over button. Calls `onSubmit(score)` / `onSkip()`.
-- `src/components/CoachCard.tsx` — the Orbit Coach card for the home screen; reads profile, renders the two states, opens `CoachOnboarding` on tap.
+## Files touched
 
-### Wiring
+- `src/components/CoachCard.tsx` (rewrite)
+- `src/lib/user-profile.ts` (add `coachEnabled`, add `nextCoachSession`)
+- `src/lib/i18n.tsx` (new strings, en + da)
+- `src/routes/profile.tsx` (new toggle row)
+- `src/routes/index.tsx` (respect toggle)
 
-- `src/routes/index.tsx`:
-  - Render `<CoachCard />` directly under the header (above the ghost-active banner) and only when `t.status === "idle" || "finished"` so it does not crowd active-run UI.
-  - In `handleSave`, after `t.commitRun(pendingRun)`, set local state `awaitingRpeRunId = pendingRun.id` and render `<RpePrompt>`. On submit/skip, call `updateRun(id, { rpe })` (skip just clears the prompt).
-
-- `src/routes/profile.tsx`: add a "Konfigurer Coach" row (icon + label + chevron) opening `CoachOnboarding`. Show current answers as subtitle when configured.
-
-- `src/routes/history.tsx` and `src/routes/run.$id.tsx`: if `run.rpe` is set, render a small `RPE 7/10` chip in the existing stat row (no layout rework).
-
-### i18n
-
-Add Danish + English keys to `src/lib/i18n.tsx`:
-- `coach.title`, `coach.cta.unset`, `coach.cta.next`, `coach.configure`
-- `coach.q.level`, `coach.q.frequency`, `coach.q.goal` and option labels
-- `rpe.title`, `rpe.veryEasy`, `rpe.maxEffort`, `rpe.skip`
-
-### Design rules followed
-
-- Dark `bg-background`, white text, `border border-white/10`, no `shadow-neon` / glow on the new components.
-- Buttons use existing pill / rounded-2xl patterns from `Onboarding.tsx` for consistency.
-- All tap targets ≥ 44px.
-
-## Out of scope
-
-- No backend / Lovable Cloud — everything stays in `localStorage` like the rest of the profile and runs.
-- No AI Coach voice line changes (existing ghost coach lines remain).
-- No history-card layout overhaul; RPE chip is additive only.
+No data migration needed — `coachEnabled` defaults to enabled when absent.
