@@ -9,7 +9,7 @@ import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
-import GoalProgress from "@/components/GoalProgress";
+
 import RpePrompt from "@/components/RpePrompt";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
