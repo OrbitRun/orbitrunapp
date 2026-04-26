@@ -138,6 +138,7 @@ export function getPlanProgress(
   const weekLabel = `${weekWord} ${weekIndex}: ${phaseLabel(phase, lang)}`;
   return {
     weekIndex,
+    totalWeeks: plan.totalWeeks,
     weekLabel,
     phase,
     sessionsDone,
