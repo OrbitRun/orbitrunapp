@@ -103,6 +103,34 @@ export function coachFrequencyLabel(f: CoachFrequency, lang: "en" | "da"): strin
   return (lang === "da" ? da : en)[f];
 }
 
+export function coachToRunningGoal(c: CoachConfig): RunningGoal {
+  switch (c.goal) {
+    case "finish5k":
+      return "run5k";
+    case "finish10k":
+      return "run10k";
+    case "halfMarathon":
+      return "halfMarathon";
+    case "marathon":
+      return "marathon";
+    case "weightLoss":
+      return "weightLoss";
+    case "runFaster":
+      switch (c.fasterDistance) {
+        case "5k":
+          return "run5k";
+        case "10k":
+          return "run10k";
+        case "halfMarathon":
+          return "halfMarathon";
+        case "marathon":
+          return "marathon";
+        default:
+          return "runFaster";
+      }
+  }
+}
+
 export function coachGoalLabel(g: CoachGoal, lang: "en" | "da"): string {
   const en: Record<CoachGoal, string> = {
     weightLoss: "Weight loss",
