@@ -47,6 +47,7 @@ function RunPage() {
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
+  const [awaitingRpeRunId, setAwaitingRpeRunId] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const wakeLock = useWakeLock();
@@ -120,10 +121,23 @@ function RunPage() {
   }, [t, wakeLock]);
 
   const handleSave = useCallback(() => {
-    if (pendingRun) t.commitRun(pendingRun);
+    if (pendingRun) {
+      t.commitRun(pendingRun);
+      setAwaitingRpeRunId(pendingRun.id);
+    }
     setPendingRun(null);
     void wakeLock.release();
   }, [pendingRun, t, wakeLock]);
+
+  const handleRpeSubmit = useCallback((score: number) => {
+    if (awaitingRpeRunId) {
+      updateRun(awaitingRpeRunId, { rpe: score });
+      window.dispatchEvent(new CustomEvent("orbit:run-updated"));
+    }
+    setAwaitingRpeRunId(null);
+  }, [awaitingRpeRunId]);
+
+  const handleRpeSkip = useCallback(() => setAwaitingRpeRunId(null), []);
 
   const handleDiscard = useCallback(() => {
     t.discardRun();
@@ -146,6 +160,7 @@ function RunPage() {
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
+      {awaitingRpeRunId && <RpePrompt onSubmit={handleRpeSubmit} onSkip={handleRpeSkip} />}
       <header className="flex items-center justify-between py-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
