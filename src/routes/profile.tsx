@@ -63,7 +63,6 @@ function ProfilePage() {
     { code: "da", label: "Dansk" },
   ];
 
-  const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
   const initial = (profile.name?.trim()?.charAt(0) || "R").toUpperCase();
 
   return (
