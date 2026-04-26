@@ -297,6 +297,7 @@ const en: Dict = {
   "coach.q.level": "How far do you run on a good day right now?",
   "coach.q.frequency": "How many days a week will you run?",
   "coach.q.goal": "What do you dream of achieving?",
+  "coach.q.fasterDistance": "Which distance do you want to get faster at?",
   "coach.profileRow": "Configure coach",
   "coach.profileRow.unset": "Not configured",
   "coach.detail.cta": "Show session",
