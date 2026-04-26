@@ -121,7 +121,7 @@ export default function GoalProgress({ profile }: Props) {
             ? t("goal.plan.complete")
             : t("goal.plan.weekOf", {
                 current: String(progress.weekIndex),
-                total: String(Math.ceil(progress.totalSessions / Math.max(1, progress.sessionsPlanned / progress.weekIndex))),
+                total: String(progress.totalWeeks),
               })}
         </span>
       </div>
