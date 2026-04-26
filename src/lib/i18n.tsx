@@ -319,6 +319,8 @@ const en: Dict = {
   "goal.plan.sessions": "sessions",
   "goal.plan.weekOf": "Week {current} of {total}",
   "goal.plan.complete": "Plan complete — set a new goal!",
+  "coach.empty.body": "Set up your coach to start your plan",
+  "coach.empty.cta": "Set up coach",
 
   // RPE
   "rpe.eyebrow": "Effort score",
