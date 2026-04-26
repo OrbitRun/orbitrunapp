@@ -233,15 +233,15 @@ function RunMapInner({
     setUserMoved(false);
   }, [points]);
 
+  const showRecenter = interactive && userMoved && points.length > 0;
   return (
-    <div className={`relative ${className ?? ""}`}>
-      <div ref={containerRef} className="absolute inset-0" />
-      {interactive && userMoved && points.length > 0 && (
+    <div ref={containerRef} className={`relative ${className ?? ""}`}>
+      {showRecenter && (
         <button
           type="button"
           onClick={recenter}
           aria-label="Recenter on location"
-          className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background"
+          className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
         >
           <Crosshair className="h-4 w-4" />
         </button>
