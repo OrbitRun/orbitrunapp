@@ -7,12 +7,14 @@ export type WindUnit = "ms" | "kmh";
 
 export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
 export type CoachFrequency = "1-2" | "3-4" | "5+";
-export type CoachGoal = "weightLoss" | "finish5k" | "faster10k" | "halfMarathon" | "marathon";
+export type CoachGoal = "weightLoss" | "finish5k" | "finish10k" | "halfMarathon" | "marathon" | "runFaster";
+export type FasterDistance = "5k" | "10k" | "halfMarathon" | "marathon";
 
 export type CoachConfig = {
   level: CoachLevel;
   frequency: CoachFrequency;
   goal: CoachGoal;
+  fasterDistance?: FasterDistance;
   configuredAt: number;
 };
 
@@ -105,16 +107,18 @@ export function coachGoalLabel(g: CoachGoal, lang: "en" | "da"): string {
   const en: Record<CoachGoal, string> = {
     weightLoss: "Weight loss",
     finish5k: "Finish 5 km",
-    faster10k: "Faster 10 km",
+    finish10k: "Finish 10 km",
     halfMarathon: "Half marathon",
     marathon: "Marathon",
+    runFaster: "Run faster",
   };
   const da: Record<CoachGoal, string> = {
     weightLoss: "Vægttab",
     finish5k: "Gennemfør 5 km",
-    faster10k: "Hurtigere 10 km",
+    finish10k: "Gennemfør 10 km",
     halfMarathon: "Halvmarathon",
     marathon: "Marathon",
+    runFaster: "Løb hurtigere",
   };
   return (lang === "da" ? da : en)[g];
 }
@@ -142,8 +146,22 @@ export function nextCoachTask(p: UserProfile, lang: "en" | "da"): string {
     case "finish5k":
       if (c.level === "0-2") return walkRun(25);
       return c.frequency === "5+" ? intervals(5, 400) : easy(base);
-    case "faster10k":
-      return c.frequency === "1-2" ? tempo(Math.max(3, base - 1)) : intervals(5, 800);
+    case "finish10k":
+      if (c.level === "0-2") return walkRun(30);
+      return c.frequency === "5+" ? intervals(5, 600) : easy(Math.max(6, base));
+    case "runFaster":
+      switch (c.fasterDistance) {
+        case "5k":
+          return intervals(6, 400);
+        case "10k":
+          return intervals(5, 800);
+        case "halfMarathon":
+          return tempo(Math.max(6, base));
+        case "marathon":
+          return tempo(10);
+        default:
+          return tempo(Math.max(3, base - 1));
+      }
     case "halfMarathon":
       return long(longK);
     case "marathon":
@@ -212,8 +230,22 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
     case "finish5k":
       if (c.level === "0-2") return walkRun(25);
       return c.frequency === "5+" ? intervals(5, 400) : easy(base);
-    case "faster10k":
-      return c.frequency === "1-2" ? tempo(Math.max(3, base - 1)) : intervals(5, 800);
+    case "finish10k":
+      if (c.level === "0-2") return walkRun(30);
+      return c.frequency === "5+" ? intervals(5, 600) : easy(Math.max(6, base));
+    case "runFaster":
+      switch (c.fasterDistance) {
+        case "5k":
+          return intervals(6, 400);
+        case "10k":
+          return intervals(5, 800);
+        case "halfMarathon":
+          return tempo(Math.max(6, base));
+        case "marathon":
+          return tempo(10);
+        default:
+          return tempo(Math.max(3, base - 1));
+      }
     case "halfMarathon":
       return long(longK);
     case "marathon":
