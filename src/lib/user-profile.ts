@@ -230,8 +230,22 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
     case "finish5k":
       if (c.level === "0-2") return walkRun(25);
       return c.frequency === "5+" ? intervals(5, 400) : easy(base);
-    case "faster10k":
-      return c.frequency === "1-2" ? tempo(Math.max(3, base - 1)) : intervals(5, 800);
+    case "finish10k":
+      if (c.level === "0-2") return walkRun(30);
+      return c.frequency === "5+" ? intervals(5, 600) : easy(Math.max(6, base));
+    case "runFaster":
+      switch (c.fasterDistance) {
+        case "5k":
+          return intervals(6, 400);
+        case "10k":
+          return intervals(5, 800);
+        case "halfMarathon":
+          return tempo(Math.max(6, base));
+        case "marathon":
+          return tempo(10);
+        default:
+          return tempo(Math.max(3, base - 1));
+      }
     case "halfMarathon":
       return long(longK);
     case "marathon":
