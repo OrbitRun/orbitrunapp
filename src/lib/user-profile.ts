@@ -150,3 +150,73 @@ export function nextCoachTask(p: UserProfile, lang: "en" | "da"): string {
       return long(Math.max(longK, 14));
   }
 }
+
+export type CoachSessionType = "easy" | "long" | "tempo" | "intervals" | "walkRun" | "setup";
+
+export type CoachSession = {
+  type: CoachSessionType;
+  title: string;
+  summary: string;
+  descriptionKey: string;
+};
+
+export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSession {
+  const da = lang === "da";
+  const c = p.coach;
+  if (!c) {
+    return {
+      type: "setup",
+      title: da ? "Konfigurer din coach" : "Configure your coach",
+      summary: da ? "Få et tilpasset pas hver dag" : "Get a tailored session each day",
+      descriptionKey: "coach.cta.unset",
+    };
+  }
+
+  const base = c.level === "0-2" ? 2 : c.level === "3-5" ? 4 : c.level === "5-10" ? 7 : 12;
+  const longK = Math.max(base + 2, Math.round(base * 1.4));
+
+  const easy = (km: number): CoachSession => ({
+    type: "easy",
+    title: da ? `${km} km roligt løb` : `${km} km easy run`,
+    summary: da ? "Aerob base · samtaletempo" : "Aerobic base · conversational pace",
+    descriptionKey: "coach.desc.easy",
+  });
+  const long = (km: number): CoachSession => ({
+    type: "long",
+    title: da ? `${km} km langt løb` : `${km} km long run`,
+    summary: da ? "Udholdenhed · komfortabelt tempo" : "Endurance · comfortable pace",
+    descriptionKey: "coach.desc.long",
+  });
+  const tempo = (km: number): CoachSession => ({
+    type: "tempo",
+    title: da ? `${km} km tempoløb` : `${km} km tempo run`,
+    summary: da ? "Tærskel · behageligt hårdt" : "Threshold · comfortably hard",
+    descriptionKey: "coach.desc.tempo",
+  });
+  const intervals = (n: number, m: number): CoachSession => ({
+    type: "intervals",
+    title: da ? `Intervaller: ${n}×${m}m` : `Intervals: ${n}×${m}m`,
+    summary: da ? "Fart · hård men jævn" : "Speed · hard but even",
+    descriptionKey: "coach.desc.intervals",
+  });
+  const walkRun = (min: number): CoachSession => ({
+    type: "walkRun",
+    title: da ? `Gå/løb i ${min} min` : `Walk/run for ${min} min`,
+    summary: da ? "Vaneopbygning · lav belastning" : "Habit building · low impact",
+    descriptionKey: "coach.desc.walkRun",
+  });
+
+  switch (c.goal) {
+    case "weightLoss":
+      return c.frequency === "1-2" ? walkRun(30) : easy(base);
+    case "finish5k":
+      if (c.level === "0-2") return walkRun(25);
+      return c.frequency === "5+" ? intervals(5, 400) : easy(base);
+    case "faster10k":
+      return c.frequency === "1-2" ? tempo(Math.max(3, base - 1)) : intervals(5, 800);
+    case "halfMarathon":
+      return long(longK);
+    case "marathon":
+      return long(Math.max(longK, 14));
+  }
+}
