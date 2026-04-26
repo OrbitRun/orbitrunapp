@@ -119,7 +119,10 @@ export default function GoalProgress({ profile }: Props) {
         <span className="leading-snug">
           {progress.complete
             ? t("goal.plan.complete")
-            : t("goal.plan.weekOf", { current: String(progress.weekIndex), total: String(progress.totalSessions / Math.max(1, progress.sessionsPlanned / progress.weekIndex)) })}
+            : t("goal.plan.weekOf", {
+                current: String(progress.weekIndex),
+                total: String(Math.ceil(progress.totalSessions / Math.max(1, progress.sessionsPlanned / progress.weekIndex))),
+              })}
         </span>
       </div>
 
