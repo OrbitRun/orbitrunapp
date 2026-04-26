@@ -103,6 +103,7 @@ export function phaseLabel(phase: MilestonePhase, lang: "en" | "da"): string {
 
 export type PlanProgress = {
   weekIndex: number; // 1-indexed current week
+  totalWeeks: number;
   weekLabel: string; // e.g. "Uge 2: Opbygning"
   phase: MilestonePhase;
   sessionsDone: number;
