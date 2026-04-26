@@ -620,6 +620,11 @@ const da: Dict = {
   "coach.desc.intervals": "Intervaller skærper fart og løbeøkonomi. Efter 10 min opvarmning løber du hver gentagelse hårdt men jævnt, og jogger eller går lige så længe for at restituere. Cool down med 5 min roligt.",
   "coach.desc.walkRun": "Gå/løb-intervaller bygger vanen sikkert. Skift mellem 1 min rolig jog og 2 min rask gang i hele varigheden. Fokusér på afslappede skuldre og rolig vejrtrækning.",
   "coach.session.startCta": "Forstået",
+  "coach.settings": "Orbit Coach indstillinger",
+  "coach.settings.cta": "Konfigurer",
+  "goal.plan.sessions": "pas",
+  "goal.plan.weekOf": "Uge {current} af {total}",
+  "goal.plan.complete": "Plan færdig — sæt et nyt mål!",
 
   // RPE
   "rpe.eyebrow": "Anstrengelses-score",
