@@ -598,6 +598,7 @@ const da: Dict = {
   "coach.q.level": "Hvor langt løber du på en god dag lige nu?",
   "coach.q.frequency": "Hvor mange dage om ugen vil du løbe?",
   "coach.q.goal": "Hvad drømmer du om at opnå?",
+  "coach.q.fasterDistance": "Hvilken distance vil du blive hurtigere på?",
   "coach.profileRow": "Konfigurer Coach",
   "coach.profileRow.unset": "Ikke konfigureret",
   "coach.detail.cta": "Vis dagens pas",
