@@ -148,8 +148,8 @@ const en: Dict = {
   "profile.level": "Experience level",
   "profile.level.beginner": "Recreational",
   "profile.level.expert": "Pro",
-  "profile.level.beginnerHint": "Simpler stats · more voice cues",
-  "profile.level.expertHint": "Advanced metrics · fewer cues",
+  "profile.level.beginnerHint": "Essential stats · frequent voice cues",
+  "profile.level.expertHint": "Advanced metrics · minimal voice cues",
   "profile.memberCard": "Member Card",
 
   // Greeting
@@ -446,8 +446,8 @@ const da: Dict = {
   "profile.level": "Erfaringsniveau",
   "profile.level.beginner": "Motionist",
   "profile.level.expert": "Pro",
-  "profile.level.beginnerHint": "Simple stats · flere stemmesignaler",
-  "profile.level.expertHint": "Avancerede mål · færre signaler",
+  "profile.level.beginnerHint": "Grundlæggende stats · hyppige stemmesignaler",
+  "profile.level.expertHint": "Avancerede mål · minimale stemmesignaler",
   "profile.memberCard": "Medlemskort",
 
   "greet.ready": "Klar til din tur, {name}?",
