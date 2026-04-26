@@ -249,23 +249,22 @@ function ProfilePage() {
             {t(profile.coachEnabled === false ? "coach.enable.off" : "coach.enable.on")}
           </div>
         </button>
-        <button
-          onClick={() => profile.coachEnabled !== false && setCoachOpen(true)}
-          disabled={profile.coachEnabled === false}
-          className={`w-full flex items-center gap-3 px-4 py-3 transition text-left ${
-            profile.coachEnabled === false ? "opacity-40 cursor-not-allowed" : "hover:bg-white/5"
-          }`}
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-foreground/80 border border-white/10">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("coach.profileRow")}</div>
-          <div className="text-xs text-muted-foreground truncate max-w-[55%] text-right">
-            {profile.coach
-              ? `${coachLevelLabel(profile.coach.level, lang)} · ${coachFrequencyLabel(profile.coach.frequency, lang)} · ${coachGoalLabel(profile.coach.goal, lang)}`
-              : t("coach.profileRow.unset")}
-          </div>
-        </button>
+        {profile.coachEnabled !== false && (
+          <button
+            onClick={() => setCoachOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+          >
+            <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div className="flex-1 text-sm font-semibold">{t("coach.profileRow")}</div>
+            <div className="text-xs text-muted-foreground truncate max-w-[55%] text-right">
+              {profile.coach
+                ? `${coachLevelLabel(profile.coach.level, lang)} · ${coachFrequencyLabel(profile.coach.frequency, lang)} · ${coachGoalLabel(profile.coach.goal, lang)}`
+                : t("coach.profileRow.unset")}
+            </div>
+          </button>
+        )}
         <button
           onClick={() => setLang(lang === "da" ? "en" : "da")}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
