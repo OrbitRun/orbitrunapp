@@ -7,6 +7,7 @@ import {
   coachLevelLabel,
   coachFrequencyLabel,
   coachGoalLabel,
+  coachToRunningGoal,
   type CoachLevel,
   type CoachFrequency,
   type CoachGoal,
