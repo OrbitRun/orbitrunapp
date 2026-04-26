@@ -131,12 +131,12 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
   return (
     <div className="glass rounded-2xl overflow-hidden">
       {/* Map area still navigates to the full detail page */}
-      <Link
-        to="/run/$id"
-        params={{ id: run.id }}
-        className="block active:scale-[0.99] transition"
-      >
-        <div className="h-32 relative">
+      <div className="h-32 relative">
+        <Link
+          to="/run/$id"
+          params={{ id: run.id }}
+          className="block h-full active:scale-[0.99] transition"
+        >
           <RunMap points={run.points} className="h-full w-full" interactive={false} follow={false} />
           <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
           <button
@@ -155,8 +155,22 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
               <WeatherBadge weather={run.weather} variant="compact" />
             </div>
           )}
-        </div>
-      </Link>
+        </Link>
+        {/* Ghost race button — bottom-right of map */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            selectGhost(run, formatDate(run.startedAt));
+            navigate({ to: "/" });
+          }}
+          className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2 py-1 bg-black/60 backdrop-blur border border-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/90"
+          aria-label={t("ghost.race")}
+        >
+          <Ghost className="h-3 w-3" />
+          {t("ghost.race")}
+        </button>
+      </div>
 
       {/* Header row with expand toggle */}
       <div
@@ -212,24 +226,10 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
             );
           })()}
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              selectGhost(run, formatDate(run.startedAt));
-              navigate({ to: "/" });
-            }}
-            className="flex items-center gap-1 rounded-full px-2.5 py-1 bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/80"
-            aria-label={t("ghost.race")}
-          >
-            <Ghost className="h-3 w-3" />
-            {t("ghost.race")}
-          </button>
-          <ChevronDown
-            className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
-          />
-        </div>
+        <ChevronDown
+          className={`h-5 w-5 text-muted-foreground transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`}
+        />
+
       </div>
 
       {open && <RunDetailPanel run={run} />}
