@@ -156,15 +156,16 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
             </div>
           )}
         </Link>
-        {/* Ghost race button — bottom-right of map */}
+        {/* Ghost race button — top-right, left of delete */}
         <button
           type="button"
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             selectGhost(run, formatDate(run.startedAt));
             navigate({ to: "/" });
           }}
-          className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full px-2 py-1 bg-black/60 backdrop-blur border border-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/90"
+          className="absolute top-2 right-12 h-8 inline-flex items-center gap-1 rounded-full px-2.5 bg-black/50 backdrop-blur border border-white/10 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/90"
           aria-label={t("ghost.race")}
         >
           <Ghost className="h-3 w-3" />
