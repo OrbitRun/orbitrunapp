@@ -1,39 +1,116 @@
 import { useState } from "react";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { Sparkles, Target as TargetIcon, X, Zap } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { nextCoachTask, type UserProfile } from "@/lib/user-profile";
+import {
+  nextCoachSession,
+  coachFrequencyLabel,
+  coachGoalLabel,
+  coachLevelLabel,
+  type UserProfile,
+} from "@/lib/user-profile";
 import CoachOnboarding from "@/components/CoachOnboarding";
 
 type Props = { profile: UserProfile };
 
 export default function CoachCard({ profile }: Props) {
   const { t, lang } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
+  const [onboarding, setOnboarding] = useState(false);
   const configured = !!profile.coach;
+  const session = nextCoachSession(profile, lang);
+
+  const contextLine = configured
+    ? `${coachFrequencyLabel(profile.coach!.frequency, lang)} · ${coachGoalLabel(profile.coach!.goal, lang)}`
+    : t("coach.cta.unset");
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="w-full mb-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 flex items-center gap-3 text-left active:scale-[0.99] transition"
-      >
-        <div className="h-10 w-10 rounded-xl bg-white/5 grid place-items-center text-foreground/80 border border-white/10 flex-shrink-0">
-          <Sparkles className="h-4 w-4" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold leading-none">
-            {t("coach.cardTitle")}
+      <section className="mt-1 mb-3 glass rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Sparkles className="h-4 w-4" />
           </div>
-          <div className="mt-1 text-sm font-bold text-foreground truncate">
-            {configured
-              ? `${t("coach.next")}: ${nextCoachTask(profile, lang)}`
-              : t("coach.cta.unset")}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold leading-tight">{t("coach.cardTitle")}</div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mt-0.5">
+              {configured ? t("coach.next") : t("coach.profileRow.unset")}
+            </div>
           </div>
+          {configured && (
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-neon font-black tabular leading-none">
+                {coachLevelLabel(profile.coach!.level, lang)}
+              </div>
+            </div>
+          )}
         </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      </button>
-      {open && <CoachOnboarding onClose={() => setOpen(false)} />}
+
+        <div className="font-display font-black text-base tabular truncate">
+          {session.title}
+        </div>
+
+        <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <TargetIcon className="h-3 w-3 text-neon/70 shrink-0" />
+          <span className="leading-snug truncate">{contextLine}</span>
+        </div>
+
+        <button
+          onClick={() => {
+            if (!configured) {
+              setOnboarding(true);
+              return;
+            }
+            setShowDetail((v) => !v);
+          }}
+          aria-expanded={showDetail}
+          className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-neon/10 border border-neon/30 text-neon text-xs font-black uppercase tracking-[0.15em] hover:bg-neon/15 active:scale-[0.98] transition"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          {!configured
+            ? t("coach.setup")
+            : showDetail
+              ? t("coach.detail.hide")
+              : t("coach.detail.cta")}
+        </button>
+
+        {configured && showDetail && (
+          <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 rounded-xl bg-neon/15 grid place-items-center text-neon shrink-0">
+                <Zap className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-neon">
+                  {session.summary}
+                </div>
+                <div className="mt-1 font-display font-black text-lg leading-tight">
+                  {session.title}
+                </div>
+                <div className="mt-3 text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
+                  {t("coach.session.howto")}
+                </div>
+                <p className="mt-1.5 text-[11px] text-muted-foreground leading-snug">
+                  {t(session.descriptionKey)}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDetail(false)}
+                aria-label={t("coach.detail.hide")}
+                className="h-7 w-7 -mr-1 -mt-1 grid place-items-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <button
+              onClick={() => setShowDetail(false)}
+              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-[0.98] transition"
+            >
+              {t("coach.session.startCta")}
+            </button>
+          </div>
+        )}
+      </section>
+      {onboarding && <CoachOnboarding onClose={() => setOnboarding(false)} />}
     </>
   );
 }
