@@ -36,6 +36,7 @@ function RunMapInner({
   const ghostMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
+  const [userMoved, setUserMoved] = useState(false);
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
