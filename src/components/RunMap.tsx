@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
+import { Crosshair } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { speedToColor, smoothSpeeds } from "@/lib/run-utils";
@@ -35,6 +36,7 @@ function RunMapInner({
   const ghostMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
+  const [userMoved, setUserMoved] = useState(false);
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
@@ -59,7 +61,22 @@ function RunMapInner({
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
+        // Require ctrl/cmd for scroll-zoom and two fingers for touch-pan.
+        // Lets users scroll the page over the map without it stealing gestures.
+        cooperativeGestures: interactive,
+        scrollZoom: false,
+        boxZoom: false,
+        doubleClickZoom: interactive,
+        touchPitch: false,
       });
+
+      // Detect manual interaction (drag/zoom by user) so we can show a
+      // "recenter to GPS" affordance and pause auto-follow.
+      const markUserMoved = (e: unknown) => {
+        if ((e as { originalEvent?: Event }).originalEvent) setUserMoved(true);
+      };
+      map.on("dragstart", markUserMoved);
+      map.on("zoomstart", markUserMoved);
 
       map.on("load", () => {
         if (cancelled) return;
@@ -191,10 +208,10 @@ function RunMapInner({
       points.forEach((p) => bounds.extend([p.lng, p.lat]));
       map.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 0 });
       fittedOnceRef.current = true;
-    } else if (follow) {
+    } else if (follow && !userMoved) {
       map.easeTo({ center: [last.lng, last.lat], duration: 600 });
     }
-  }, [points, follow, ready]);
+  }, [points, follow, ready, userMoved]);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -202,5 +219,33 @@ function RunMapInner({
     }
   }, [points.length]);
 
-  return <div ref={containerRef} className={className} />;
+  const recenter = useCallback(() => {
+    const map = mapRef.current;
+    const M = MRef.current;
+    if (!map || !M) return;
+    if (points.length >= 2) {
+      const bounds = new M.LngLatBounds();
+      points.forEach((p) => bounds.extend([p.lng, p.lat]));
+      map.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 400 });
+    } else if (points.length === 1) {
+      map.easeTo({ center: [points[0].lng, points[0].lat], duration: 400, zoom: 16 });
+    }
+    setUserMoved(false);
+  }, [points]);
+
+  return (
+    <div className={`relative ${className ?? ""}`}>
+      <div ref={containerRef} className="absolute inset-0" />
+      {interactive && userMoved && points.length > 0 && (
+        <button
+          type="button"
+          onClick={recenter}
+          aria-label="Recenter on location"
+          className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background"
+        >
+          <Crosshair className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
 }
