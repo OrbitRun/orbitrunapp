@@ -5,6 +5,17 @@ export type RunningGoal = "run5k" | "run10k" | "runFaster" | "weightLoss" | "hal
 export type AudioCueMeters = 500 | 1000;
 export type WindUnit = "ms" | "kmh";
 
+export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
+export type CoachFrequency = "1-2" | "3-4" | "5+";
+export type CoachGoal = "weightLoss" | "finish5k" | "faster10k" | "halfMarathon" | "marathon";
+
+export type CoachConfig = {
+  level: CoachLevel;
+  frequency: CoachFrequency;
+  goal: CoachGoal;
+  configuredAt: number;
+};
+
 export type UserProfile = {
   name: string;
   goal: RunningGoal;
@@ -14,6 +25,7 @@ export type UserProfile = {
   prVoiceEnabled: boolean;
   windUnit: WindUnit;
   onboarded: boolean;
+  coach?: CoachConfig;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -75,4 +87,65 @@ export function goalLabel(goal: RunningGoal, lang: "en" | "da"): string {
     marathon: "Marathon",
   };
   return (lang === "da" ? da : en)[goal];
+}
+
+export function coachLevelLabel(l: CoachLevel, lang: "en" | "da"): string {
+  const en: Record<CoachLevel, string> = { "0-2": "0–2 km", "3-5": "3–5 km", "5-10": "5–10 km", "10+": "10+ km" };
+  return en[l]; // distances are language-neutral
+}
+
+export function coachFrequencyLabel(f: CoachFrequency, lang: "en" | "da"): string {
+  const en: Record<CoachFrequency, string> = { "1-2": "1–2 days", "3-4": "3–4 days", "5+": "5+ days" };
+  const da: Record<CoachFrequency, string> = { "1-2": "1–2 dage", "3-4": "3–4 dage", "5+": "5+ dage" };
+  return (lang === "da" ? da : en)[f];
+}
+
+export function coachGoalLabel(g: CoachGoal, lang: "en" | "da"): string {
+  const en: Record<CoachGoal, string> = {
+    weightLoss: "Weight loss",
+    finish5k: "Finish 5 km",
+    faster10k: "Faster 10 km",
+    halfMarathon: "Half marathon",
+    marathon: "Marathon",
+  };
+  const da: Record<CoachGoal, string> = {
+    weightLoss: "Vægttab",
+    finish5k: "Gennemfør 5 km",
+    faster10k: "Hurtigere 10 km",
+    halfMarathon: "Halvmarathon",
+    marathon: "Marathon",
+  };
+  return (lang === "da" ? da : en)[g];
+}
+
+// Deterministic "next task" suggestion based on coach answers.
+export function nextCoachTask(p: UserProfile, lang: "en" | "da"): string {
+  const c = p.coach;
+  if (!c) return lang === "da" ? "Konfigurer din coach for at få en plan." : "Configure your coach to get a plan.";
+
+  const da = lang === "da";
+  const easy = (km: number) => (da ? `${km} km roligt løb` : `${km} km easy run`);
+  const long = (km: number) => (da ? `${km} km langt løb` : `${km} km long run`);
+  const tempo = (km: number) => (da ? `${km} km tempoløb` : `${km} km tempo run`);
+  const intervals = (n: number, m: number) => (da ? `Intervaller: ${n}×${m}m` : `Intervals: ${n}×${m}m`);
+  const walkRun = (min: number) => (da ? `Gå/løb i ${min} min` : `Walk/run for ${min} min`);
+
+  // Pick base distance from level.
+  const base = c.level === "0-2" ? 2 : c.level === "3-5" ? 4 : c.level === "5-10" ? 7 : 12;
+  const longK = Math.max(base + 2, Math.round(base * 1.4));
+
+  // Choose workout type by goal.
+  switch (c.goal) {
+    case "weightLoss":
+      return c.frequency === "1-2" ? walkRun(30) : easy(base);
+    case "finish5k":
+      if (c.level === "0-2") return walkRun(25);
+      return c.frequency === "5+" ? intervals(5, 400) : easy(base);
+    case "faster10k":
+      return c.frequency === "1-2" ? tempo(Math.max(3, base - 1)) : intervals(5, 800);
+    case "halfMarathon":
+      return long(longK);
+    case "marathon":
+      return long(Math.max(longK, 14));
+  }
 }

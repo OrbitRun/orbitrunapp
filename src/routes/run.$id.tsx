@@ -176,6 +176,9 @@ function RunDetailPage() {
         <StatTile label={t("stat.avgPace")} value={formatPace(run.avgPaceSecPerKm)} unit={t("unit.perKm")} />
         <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
         <StatTile label={t("stat.elevation")} value={Math.round(run.elevationGainM).toString()} unit={t("unit.m")} />
+        {typeof run.rpe === "number" && (
+          <StatTile label={t("rpe.eyebrow")} value={`${run.rpe}/10`} />
+        )}
       </section>
 
       {(() => {

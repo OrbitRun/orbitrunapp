@@ -206,6 +206,11 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
               {formatPace(run.avgPaceSecPerKm)}
               {t("unit.perKm")}
             </span>
+            {typeof run.rpe === "number" && (
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 border border-white/10 rounded-full px-2 py-0.5">
+                {t("rpe.short")} {run.rpe}/10
+              </span>
+            )}
           </div>
           {prCategories?.length ? (
             <div className="mt-1.5 flex flex-wrap items-center gap-1">

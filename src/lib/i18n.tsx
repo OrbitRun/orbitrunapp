@@ -286,6 +286,27 @@ const en: Dict = {
   "goal.suggest.reason.weightOnTrack": "Volume looks good — keep it steady with a relaxed run.",
   "goal.suggest.reason.weightBehind": "Add a slightly longer easy run to push weekly km up.",
   "goal.suggest.reason.default": "A relaxed 3 km keeps consistency rolling.",
+
+  // Orbit Coach
+  "coach.cardTitle": "Orbit Coach",
+  "coach.title": "Configure your coach",
+  "coach.subtitle": "Tell Orbit how you train",
+  "coach.cta.unset": "Tap here to let Orbit plan your training",
+  "coach.next": "Next session",
+  "coach.save": "Save",
+  "coach.q.level": "How far do you run on a good day right now?",
+  "coach.q.frequency": "How many days a week will you run?",
+  "coach.q.goal": "What do you dream of achieving?",
+  "coach.profileRow": "Configure coach",
+  "coach.profileRow.unset": "Not configured",
+
+  // RPE
+  "rpe.eyebrow": "Effort score",
+  "rpe.title": "How hard did it feel?",
+  "rpe.veryEasy": "Very easy",
+  "rpe.maxEffort": "Max effort",
+  "rpe.skip": "Skip",
+  "rpe.short": "RPE",
 };
 
 const da: Dict = {
@@ -551,6 +572,27 @@ const da: Dict = {
   "goal.suggest.reason.weightOnTrack": "Volumen ser god ud — hold den med et afslappet løb.",
   "goal.suggest.reason.weightBehind": "Læg et lidt længere roligt løb til for at hæve ugekilometerne.",
   "goal.suggest.reason.default": "3 rolige km holder kontinuiteten i gang.",
+
+  // Orbit Coach
+  "coach.cardTitle": "Orbit Coach",
+  "coach.title": "Konfigurer din coach",
+  "coach.subtitle": "Fortæl Orbit hvordan du træner",
+  "coach.cta.unset": "Klik her for at lade Orbit planlægge din træning",
+  "coach.next": "Næste opgave",
+  "coach.save": "Gem",
+  "coach.q.level": "Hvor langt løber du på en god dag lige nu?",
+  "coach.q.frequency": "Hvor mange dage om ugen vil du løbe?",
+  "coach.q.goal": "Hvad drømmer du om at opnå?",
+  "coach.profileRow": "Konfigurer Coach",
+  "coach.profileRow.unset": "Ikke konfigureret",
+
+  // RPE
+  "rpe.eyebrow": "Anstrengelses-score",
+  "rpe.title": "Hvor hårdt føltes turen?",
+  "rpe.veryEasy": "Meget let",
+  "rpe.maxEffort": "Maksimal indsats",
+  "rpe.skip": "Spring over",
+  "rpe.short": "RPE",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };

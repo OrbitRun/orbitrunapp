@@ -36,6 +36,7 @@ export type Run = {
   splits: Split[];
   weather?: RunWeather;
   shoeId?: string;
+  rpe?: number; // 1..10 perceived exertion
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";
