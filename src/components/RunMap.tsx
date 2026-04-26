@@ -208,10 +208,10 @@ function RunMapInner({
       points.forEach((p) => bounds.extend([p.lng, p.lat]));
       map.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 0 });
       fittedOnceRef.current = true;
-    } else if (follow) {
+    } else if (follow && !userMoved) {
       map.easeTo({ center: [last.lng, last.lat], duration: 600 });
     }
-  }, [points, follow, ready]);
+  }, [points, follow, ready, userMoved]);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -219,5 +219,33 @@ function RunMapInner({
     }
   }, [points.length]);
 
-  return <div ref={containerRef} className={className} />;
+  const recenter = useCallback(() => {
+    const map = mapRef.current;
+    const M = MRef.current;
+    if (!map || !M) return;
+    if (points.length >= 2) {
+      const bounds = new M.LngLatBounds();
+      points.forEach((p) => bounds.extend([p.lng, p.lat]));
+      map.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 400 });
+    } else if (points.length === 1) {
+      map.easeTo({ center: [points[0].lng, points[0].lat], duration: 400, zoom: 16 });
+    }
+    setUserMoved(false);
+  }, [points]);
+
+  return (
+    <div className={`relative ${className ?? ""}`}>
+      <div ref={containerRef} className="absolute inset-0" />
+      {interactive && userMoved && points.length > 0 && (
+        <button
+          type="button"
+          onClick={recenter}
+          aria-label="Recenter on location"
+          className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background"
+        >
+          <Crosshair className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  );
 }
