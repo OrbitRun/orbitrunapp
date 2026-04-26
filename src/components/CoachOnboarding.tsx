@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -36,16 +36,57 @@ function fasterDistanceLabel(d: FasterDistance, lang: "en" | "da"): string {
   return (lang === "da" ? da : en)[d];
 }
 
+const RESUME_KEY = "orbit:coach-onboarding-progress";
+
+type ResumeState = {
+  step: number;
+  level: CoachLevel;
+  frequency: CoachFrequency;
+  goal: CoachGoal;
+  fasterDistance: FasterDistance;
+};
+
+function loadResume(): Partial<ResumeState> | null {
+  try {
+    const raw = localStorage.getItem(RESUME_KEY);
+    return raw ? (JSON.parse(raw) as Partial<ResumeState>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearResume() {
+  try {
+    localStorage.removeItem(RESUME_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
 export default function CoachOnboarding({ onClose }: Props) {
   const { t, lang } = useI18n();
   const existing = loadProfile().coach;
-  const [step, setStep] = useState(0);
-  const [level, setLevel] = useState<CoachLevel>(existing?.level ?? "3-5");
-  const [frequency, setFrequency] = useState<CoachFrequency>(existing?.frequency ?? "3-4");
-  const [goal, setGoal] = useState<CoachGoal>(existing?.goal ?? "finish5k");
-  const [fasterDistance, setFasterDistance] = useState<FasterDistance>(
-    existing?.fasterDistance ?? "5k"
+  const resume = loadResume();
+  const [step, setStep] = useState<number>(resume?.step ?? 0);
+  const [level, setLevel] = useState<CoachLevel>(resume?.level ?? existing?.level ?? "3-5");
+  const [frequency, setFrequency] = useState<CoachFrequency>(
+    resume?.frequency ?? existing?.frequency ?? "3-4"
   );
+  const [goal, setGoal] = useState<CoachGoal>(resume?.goal ?? existing?.goal ?? "finish5k");
+  const [fasterDistance, setFasterDistance] = useState<FasterDistance>(
+    resume?.fasterDistance ?? existing?.fasterDistance ?? "5k"
+  );
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        RESUME_KEY,
+        JSON.stringify({ step, level, frequency, goal, fasterDistance } satisfies ResumeState)
+      );
+    } catch {
+      /* noop */
+    }
+  }, [step, level, frequency, goal, fasterDistance]);
 
   // Dynamic flow: insert "fasterDistance" step after goal step when needed.
   const steps: Array<"level" | "frequency" | "goal" | "fasterDistance"> =
@@ -69,6 +110,12 @@ export default function CoachOnboarding({ onClose }: Props) {
         configuredAt: Date.now(),
       },
     });
+    clearResume();
+    onClose();
+  };
+
+  const handleSkip = () => {
+    clearResume();
     onClose();
   };
 
@@ -180,7 +227,7 @@ export default function CoachOnboarding({ onClose }: Props) {
 
         <div className="mt-6 flex items-center justify-between gap-2">
           <button
-            onClick={safeStep === 0 ? onClose : () => setStep(safeStep - 1)}
+            onClick={safeStep === 0 ? handleSkip : () => setStep(safeStep - 1)}
             className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
           >
             {safeStep === 0 ? (
