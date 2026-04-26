@@ -61,6 +61,22 @@ function RunMapInner({
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
+        // Require ctrl/cmd for scroll-zoom and two fingers for touch-pan.
+        // Lets users scroll the page over the map without it stealing gestures.
+        cooperativeGestures: interactive,
+        scrollZoom: false,
+        boxZoom: false,
+        doubleClickZoom: interactive,
+        touchPitch: false,
+      });
+
+      // Detect manual interaction (drag/zoom by user) so we can show a
+      // "recenter to GPS" affordance and pause auto-follow.
+      map.on("dragstart", (e: { originalEvent?: Event }) => {
+        if (e.originalEvent) setUserMoved(true);
+      });
+      map.on("zoomstart", (e: { originalEvent?: Event }) => {
+        if (e.originalEvent) setUserMoved(true);
       });
 
       map.on("load", () => {
