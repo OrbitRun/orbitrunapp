@@ -1,18 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Bell, Headphones, Languages, MapPin, Target, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Bell, Headphones, Languages, MapPin, Sparkles, Target, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
 import GoalProgress from "@/components/GoalProgress";
+import CoachOnboarding from "@/components/CoachOnboarding";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import {
   DEFAULT_PROFILE,
   goalLabel,
   loadProfile,
   saveProfile,
+  coachLevelLabel,
+  coachFrequencyLabel,
+  coachGoalLabel,
   type AudioCueMeters,
   type ExperienceLevel,
   type RunningGoal,
@@ -30,6 +34,7 @@ function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/records" });
+  const [coachOpen, setCoachOpen] = useState(false);
 
   useEffect(() => {
     const all = loadRuns();
