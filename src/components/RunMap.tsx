@@ -72,12 +72,11 @@ function RunMapInner({
 
       // Detect manual interaction (drag/zoom by user) so we can show a
       // "recenter to GPS" affordance and pause auto-follow.
-      map.on("dragstart", (e: { originalEvent?: Event }) => {
-        if (e.originalEvent) setUserMoved(true);
-      });
-      map.on("zoomstart", (e: { originalEvent?: Event }) => {
-        if (e.originalEvent) setUserMoved(true);
-      });
+      const markUserMoved = (e: unknown) => {
+        if ((e as { originalEvent?: Event }).originalEvent) setUserMoved(true);
+      };
+      map.on("dragstart", markUserMoved);
+      map.on("zoomstart", markUserMoved);
 
       map.on("load", () => {
         if (cancelled) return;
