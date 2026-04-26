@@ -187,6 +187,8 @@ function RunPage() {
         </div>
       </header>
 
+      {(t.status === "idle" || t.status === "finished") && <CoachCard profile={profile} />}
+
       {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
         <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
           <div className="flex items-center gap-2 min-w-0">
