@@ -7,6 +7,7 @@ import {
   coachLevelLabel,
   coachFrequencyLabel,
   coachGoalLabel,
+  coachToRunningGoal,
   type CoachLevel,
   type CoachFrequency,
   type CoachGoal,
@@ -100,15 +101,25 @@ export default function CoachOnboarding({ onClose }: Props) {
 
   const finish = () => {
     const p = loadProfile();
+    // Reset baseline if any coach setting changed (so progress restarts).
+    const changed =
+      !p.coach ||
+      p.coach.level !== level ||
+      p.coach.frequency !== frequency ||
+      p.coach.goal !== goal ||
+      p.coach.fasterDistance !== (goal === "runFaster" ? fasterDistance : undefined);
+    const nextCoach = {
+      level,
+      frequency,
+      goal,
+      fasterDistance: goal === "runFaster" ? fasterDistance : undefined,
+      configuredAt: changed ? Date.now() : p.coach!.configuredAt,
+    };
     saveProfile({
       ...p,
-      coach: {
-        level,
-        frequency,
-        goal,
-        fasterDistance: goal === "runFaster" ? fasterDistance : undefined,
-        configuredAt: Date.now(),
-      },
+      coach: nextCoach,
+      goal: coachToRunningGoal(nextCoach),
+      coachEnabled: p.coachEnabled === false ? false : true,
     });
     clearResume();
     onClose();

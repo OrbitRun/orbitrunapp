@@ -1,12 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Bell, Headphones, Languages, MapPin, Sparkles, Target, Trophy, Volume2, Wind, Zap } from "lucide-react";
-import { loadRuns, type Run } from "@/lib/run-types";
+import { Bell, Headphones, Languages, MapPin, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
-import GoalProgress from "@/components/GoalProgress";
 import CoachOnboarding from "@/components/CoachOnboarding";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import {
@@ -19,7 +18,6 @@ import {
   coachGoalLabel,
   type AudioCueMeters,
   type ExperienceLevel,
-  type RunningGoal,
   type UserProfile,
   type WindUnit,
 } from "@/lib/user-profile";
@@ -30,7 +28,6 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
-  const [runs, setRuns] = useState<Run[]>([]);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/records" });
@@ -38,7 +35,6 @@ function ProfilePage() {
 
   useEffect(() => {
     const all = loadRuns();
-    setRuns(all);
     setStats({
       count: all.length,
       distance: all.reduce((a, r) => a + r.distanceM, 0),
@@ -67,7 +63,6 @@ function ProfilePage() {
     { code: "da", label: "Dansk" },
   ];
 
-  const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
   const initial = (profile.name?.trim()?.charAt(0) || "R").toUpperCase();
 
   return (
@@ -105,7 +100,8 @@ function ProfilePage() {
               className="w-full bg-transparent border-0 border-b border-transparent hover:border-white/10 focus:border-neon focus:outline-none font-display font-black text-xl tabular leading-none truncate px-0 py-0 transition-colors placeholder:text-muted-foreground/60"
             />
             <div className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-[0.14em] font-semibold">
-              {t(`profile.level.${profile.level}`)} · {goalLabel(profile.goal, lang)}
+              {t(`profile.level.${profile.level}`)}
+              {profile.coach ? ` · ${coachGoalLabel(profile.coach.goal, lang)}` : ` · ${goalLabel(profile.goal, lang)}`}
             </div>
           </div>
         </div>
@@ -137,8 +133,6 @@ function ProfilePage() {
         </div>
       </section>
 
-      <GoalProgress goal={profile.goal} runs={runs} />
-
       <ShoesSection />
 
       {/* Experience level */}
@@ -168,31 +162,6 @@ function ProfilePage() {
               <div className={`mt-1 text-[10px] leading-tight ${profile.level === lv ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                 {t(`profile.level.${lv}Hint`)}
               </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Goal */}
-      <section className="mt-4 glass rounded-2xl p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Target className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.goal")}</div>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {goals.map((g) => (
-            <button
-              key={g}
-              onClick={() => update({ goal: g })}
-              className={`py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
-                profile.goal === g
-                  ? "bg-neon text-primary-foreground"
-                  : "bg-white/5 text-foreground/80 hover:bg-white/10 border border-white/10"
-              }`}
-            >
-              {goalLabel(g, lang)}
             </button>
           ))}
         </div>
