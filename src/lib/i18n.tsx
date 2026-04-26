@@ -314,6 +314,11 @@ const en: Dict = {
   "coach.desc.intervals": "Intervals sharpen speed and running economy. After a 10 min warm-up, run each rep hard but even, then jog or walk an equal duration to recover. Cool down with 5 min easy.",
   "coach.desc.walkRun": "Walk-run intervals build the habit safely. Alternate 1 min easy jog with 2 min brisk walk for the full duration. Focus on relaxed shoulders and steady breathing.",
   "coach.session.startCta": "Got it",
+  "coach.settings": "Orbit Coach settings",
+  "coach.settings.cta": "Configure",
+  "goal.plan.sessions": "sessions",
+  "goal.plan.weekOf": "Week {current} of {total}",
+  "goal.plan.complete": "Plan complete — set a new goal!",
 
   // RPE
   "rpe.eyebrow": "Effort score",
