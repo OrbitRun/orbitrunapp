@@ -26,6 +26,7 @@ export type UserProfile = {
   windUnit: WindUnit;
   onboarded: boolean;
   coach?: CoachConfig;
+  coachEnabled?: boolean;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
