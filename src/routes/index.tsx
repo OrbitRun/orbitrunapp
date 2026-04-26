@@ -29,7 +29,7 @@ import {
 } from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
 import { updateRun } from "@/lib/run-types";
-import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE } from "@/lib/user-profile";
+import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE, coachGoalLabel } from "@/lib/user-profile";
 import {
   clearGhost,
   GHOST_CHANGED_EVENT,
