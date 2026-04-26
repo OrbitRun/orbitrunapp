@@ -319,6 +319,8 @@ const en: Dict = {
   "goal.plan.sessions": "sessions",
   "goal.plan.weekOf": "Week {current} of {total}",
   "goal.plan.complete": "Plan complete — set a new goal!",
+  "coach.empty.body": "Set up your coach to start your plan",
+  "coach.empty.cta": "Set up coach",
 
   // RPE
   "rpe.eyebrow": "Effort score",
@@ -625,6 +627,8 @@ const da: Dict = {
   "goal.plan.sessions": "pas",
   "goal.plan.weekOf": "Uge {current} af {total}",
   "goal.plan.complete": "Plan færdig — sæt et nyt mål!",
+  "coach.empty.body": "Konfigurer din coach for at starte din plan",
+  "coach.empty.cta": "Konfigurer Coach",
 
   // RPE
   "rpe.eyebrow": "Anstrengelses-score",

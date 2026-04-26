@@ -9,7 +9,7 @@ import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
-import GoalProgress from "@/components/GoalProgress";
+
 import RpePrompt from "@/components/RpePrompt";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -176,7 +176,7 @@ function RunPage() {
             <h1 className="font-display font-black tracking-tight truncate text-base">{greeting}</h1>
             {(t.status === "idle" || t.status === "finished") && (
               <div className="text-[10px] text-muted-foreground font-semibold truncate mt-0.5">
-                {tr("greet.goal", { goal: profile.coach ? coachGoalLabel(profile.coach.goal, lang) : goalLabel(profile.goal, lang) })}
+                {tr("greet.goal", { goal: profile.coach ? coachGoalLabel(profile.coach.goal, lang, profile.coach.fasterDistance) : goalLabel(profile.goal, lang) })}
               </div>
             )}
           </div>
@@ -189,7 +189,6 @@ function RunPage() {
       </header>
 
       {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <CoachCard profile={profile} />}
-      {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <GoalProgress profile={profile} />}
 
       {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
         <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">

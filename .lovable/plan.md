@@ -1,68 +1,45 @@
-## Coach-First Architecture
+## Unified Coach & Progress UI
 
-Make the Orbit Coach the single source of truth for the user's goal. The dashboard's "Målfremgang" (GoalProgress) becomes a coach-driven plan tracker, redundant goal pickers are removed, and the visuals follow the existing minimalist dark style (no extra glow).
+Merge `GoalProgress` into `CoachCard` so the dashboard shows one card for the Orbit Coach, with progress integrated. Clean up duplicate CTAs and ensure the header goal text matches the coach.
 
-### 1. Goal override (Coach → Profile)
+### 1. `src/routes/index.tsx`
+- Remove `<GoalProgress profile={profile} />` (line 192) and its import.
+- Tighten spacing: change `mt-1 mb-3` on the coach card section to `mt-2 mb-3` (already minimal — verify gap between header greeting and coach card is tight; remove `py-3` extra padding only if needed, keep header as is).
+- Header goal sync (line 179): already uses `coachGoalLabel(profile.coach.goal, lang)` when coach exists — keep, but make sure `runFaster` resolves to the `fasterDistance` label (e.g. "Løb 10km hurtigere") rather than generic "Løb hurtigere". Update `coachGoalLabel` to accept the full `CoachConfig` (or pass `fasterDistance`) and return a distance-aware label.
 
-In `src/lib/user-profile.ts`:
-- After `saveProfile`, when `coach` is set/updated, derive and overwrite `profile.goal` from `coach.goal` (and `coach.fasterDistance` when goal is "runFaster"). Mapping:
-  - `finish5k` → `run5k`
-  - `finish10k` → `run10k`
-  - `halfMarathon` → `halfMarathon`
-  - `marathon` → `marathon`
-  - `weightLoss` → `weightLoss`
-  - `runFaster` → distance from `fasterDistance` (`5k`→`run5k`, `10k`→`run10k`, `halfMarathon`, `marathon`); progress card still shows "Run faster" framing via a new flag.
-- Add a small helper `coachToRunningGoal(coach)` and call it from `CoachOnboarding.finish()` so saving the coach automatically syncs `profile.goal`.
+### 2. `src/components/CoachCard.tsx`
+**Configured state** — add a discrete progress strip at the bottom of the card:
+- Import `getPlanProgress` from `@/lib/coach-plan`, `loadRuns` from `@/lib/run-types`, and listen to `orbit:run-updated` / `orbit:run-stop` to recompute.
+- Below the existing "Detail" CTA button, render a thin progress section:
+  - Small label row: `Uge {weekIndex} af {totalWeeks}` on the left, `{pct}%` on the right (text-[10px] uppercase tracking, muted/neon).
+  - 1.5px tall progress bar: `bg-white/5` track, `bg-neon` fill (no glow).
+  - Below the bar: `{sessionsDone} / {sessionsPlanned} pas` muted-foreground text.
+- Keep the expandable session detail panel as-is.
 
-### 2. Plan-based progress tracking
+**Unconfigured state** — single unified empty card:
+- Replace the current header + "Konfigurer" button with one clean card:
+  - Title: `Orbit Coach`
+  - Body: `Konfigurer din coach for at starte din plan` (single i18n string — replace both existing "unset"/CTA copies with this one).
+  - Single primary button: `Konfigurer Coach` opening `CoachOnboarding`.
+- Remove the secondary "Klik her for at lade Orbit planlægge din træning" copy.
 
-Replace distance/pace heuristics in `GoalProgress` with a coach plan model:
+### 3. `src/lib/i18n.tsx`
+- Add/update keys:
+  - `coach.empty.body` → `Konfigurer din coach for at starte din plan` / English equivalent.
+  - `coach.empty.cta` → `Konfigurer Coach` / `Set up coach`.
+  - `coach.plan.weekOf` → `Uge {current} af {total}` / `Week {current} of {total}`.
+  - `coach.plan.sessions` → `pas` / `sessions` (reuse existing `goal.plan.sessions` if present).
+- Remove or stop using the redundant longer "Klik her for at lade Orbit planlægge…" string from coach card paths (leave it in i18n if used elsewhere).
 
-- New module `src/lib/coach-plan.ts`:
-  - `getCoachPlan(coach)` returns `{ totalWeeks, weeklySessions, milestones[] }` derived from `level`, `frequency`, `goal`, `fasterDistance`. Example: 8-week 5k beginner plan, 12-week half plan, etc.
-  - `getPlanProgress(coach, runs)` returns `{ weekIndex, weekLabel (e.g. "Uge 2: Opbygning"), sessionsDone, sessionsPlanned, pct }`. `pct` = completed sessions since `coach.configuredAt` ÷ total planned sessions through the current week.
-  - `currentMilestone(coach, runs)` returns the milestone label for the current week.
+### 4. `src/lib/user-profile.ts`
+- Update `coachGoalLabel` signature to optionally accept `fasterDistance` (or change call sites to pass the whole `CoachConfig`) so `runFaster` renders as `Løb 10km hurtigere` etc., matching the goal selected in onboarding.
 
-- `GoalProgress.tsx` (renamed conceptually to "Plan progress"):
-  - Accept `coach` (optional) instead of just `goal`. If no coach, render a compact "Configure Orbit Coach" CTA that opens onboarding (no manual goal logic anymore).
-  - Header eyebrow: current milestone (e.g. "Uge 2: Opbygning").
-  - Progress bar fills based on completed plan sessions.
-  - Body line: `sessionsDone / sessionsPlanned · weekLabel`.
-  - "Suggest workout" button is replaced by "Dagens opgave" reusing `nextCoachSession` output.
+### 5. Cleanup
+- Delete `src/components/GoalProgress.tsx` (no longer referenced).
+- Verify `profile.tsx` still uses only the single "Orbit Coach indstillinger" entry (no changes expected).
 
-### 3. Instant sync
-
-- Already broadcast via `orbit:profile-update` on `saveProfile`. Add a `orbit:run-updated` listener (already dispatched after RPE submit and run save) inside `GoalProgress` so completing "Dagens Opgave" instantly recomputes plan progress.
-- When `CoachOnboarding` saves a new `level` (or any field change), reset progress baseline by setting `coach.configuredAt = Date.now()`. `getPlanProgress` only counts runs with `endedAt >= configuredAt`.
-
-### 4. UI cleanup
-
-`src/routes/profile.tsx`:
-- Remove the "Goal" section (lines 176–199) and the local `goals` array.
-- Remove the `<GoalProgress goal={profile.goal} runs={runs} />` invocation here — it now lives only on the dashboard, fed by the coach.
-- Replace with a single "Orbit Coach Indstillinger" button (using the existing coach row pattern) that opens `CoachOnboarding`. Keep the on/off toggle for `coachEnabled`.
-- The header card subtitle stops showing `goalLabel(profile.goal)` and shows the coach's goal + level instead (or just experience level when no coach).
-
-`src/routes/index.tsx`:
-- Mount `<GoalProgress coach={profile.coach} runs={runs} />` (load runs via `loadRuns`) above or below `<CoachCard>` when `coachEnabled !== false`. Remove the greeting line that shows `goalLabel(profile.goal)`; show `coachGoalLabel(coach.goal)` when configured, otherwise prompt to set up the coach.
-
-### 5. Visuals
-
-- Keep current `glass` cards. Remove the `shadow-neon` and gradient fill on the progress bar; use a flat `bg-neon` fill on `bg-white/5` track for a high-contrast, no-glow look.
-- Use the same row treatment as the rest of the profile settings list for the new "Orbit Coach Indstillinger" button (icon tile + label + chevron-style value).
-- No new colors; reuse `text-neon`, `text-foreground`, `text-muted-foreground`.
-
-### Files touched
-
-- `src/lib/user-profile.ts` — add `coachToRunningGoal`, auto-sync goal in save flow.
-- `src/lib/coach-plan.ts` — NEW: plan + milestone + progress derivation.
-- `src/lib/i18n.tsx` — strings: `goal.plan.milestone`, `goal.plan.weekLabel`, `goal.plan.sessions`, `coach.settings`, `coach.settings.cta`, week names ("Uge X: Opbygning/Tempo/Peak/Taper").
-- `src/components/GoalProgress.tsx` — rewrite around coach plan; drop manual heuristics; flat progress bar.
-- `src/components/CoachOnboarding.tsx` — on save, also sync `profile.goal` and reset `configuredAt` when `level` changes.
-- `src/routes/profile.tsx` — remove Goal section + GoalProgress; add "Orbit Coach Indstillinger" row; update card subtitle.
-- `src/routes/index.tsx` — add GoalProgress under CoachCard, drop legacy goal greeting line.
-
-### Out of scope
-
-- No backend / Lovable Cloud changes — everything stays in `localStorage`.
-- Old `RunningGoal` type stays (still used for `DISTANCE_TARGETS` mapping internally), but the user can no longer set it directly.
+### Outcome
+- One Orbit Coach card on the homepage, in both configured and unconfigured states.
+- Configured: today's task + thin "Uge X af Y" progress bar inside the same card.
+- Unconfigured: single message + single "Konfigurer Coach" button.
+- Header greeting goal always matches the coach goal (including faster-distance variant).

@@ -131,7 +131,11 @@ export function coachToRunningGoal(c: CoachConfig): RunningGoal {
   }
 }
 
-export function coachGoalLabel(g: CoachGoal, lang: "en" | "da"): string {
+export function coachGoalLabel(
+  g: CoachGoal,
+  lang: "en" | "da",
+  fasterDistance?: FasterDistance,
+): string {
   const en: Record<CoachGoal, string> = {
     weightLoss: "Weight loss",
     finish5k: "Finish 5 km",
@@ -148,6 +152,23 @@ export function coachGoalLabel(g: CoachGoal, lang: "en" | "da"): string {
     marathon: "Marathon",
     runFaster: "Løb hurtigere",
   };
+  if (g === "runFaster" && fasterDistance) {
+    const distEn: Record<FasterDistance, string> = {
+      "5k": "5 km",
+      "10k": "10 km",
+      halfMarathon: "half marathon",
+      marathon: "marathon",
+    };
+    const distDa: Record<FasterDistance, string> = {
+      "5k": "5 km",
+      "10k": "10 km",
+      halfMarathon: "halvmarathon",
+      marathon: "marathon",
+    };
+    return lang === "da"
+      ? `Hurtigere ${distDa[fasterDistance]}`
+      : `Faster ${distEn[fasterDistance]}`;
+  }
   return (lang === "da" ? da : en)[g];
 }
 
