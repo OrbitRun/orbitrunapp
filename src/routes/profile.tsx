@@ -269,6 +269,20 @@ function ProfilePage() {
           </div>
         ))}
         <button
+          onClick={() => setCoachOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-foreground/80 border border-white/10">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("coach.profileRow")}</div>
+          <div className="text-xs text-muted-foreground truncate max-w-[55%] text-right">
+            {profile.coach
+              ? `${coachLevelLabel(profile.coach.level, lang)} · ${coachFrequencyLabel(profile.coach.frequency, lang)} · ${coachGoalLabel(profile.coach.goal, lang)}`
+              : t("coach.profileRow.unset")}
+          </div>
+        </button>
+        <button
           onClick={() => setLang(lang === "da" ? "en" : "da")}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
         >
@@ -285,6 +299,7 @@ function ProfilePage() {
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Orbit Lab · v1.0
       </p>
+      {coachOpen && <CoachOnboarding onClose={() => { setCoachOpen(false); setProfile(loadProfile()); }} />}
     </main>
   );
 }
