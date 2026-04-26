@@ -133,8 +133,6 @@ function ProfilePage() {
         </div>
       </section>
 
-      <GoalProgress goal={profile.goal} runs={runs} />
-
       <ShoesSection />
 
       {/* Experience level */}
