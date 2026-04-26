@@ -8,6 +8,8 @@ import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
+import CoachCard from "@/components/CoachCard";
+import RpePrompt from "@/components/RpePrompt";
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
@@ -25,6 +27,7 @@ import {
   type StatLayout,
 } from "@/lib/stat-metrics";
 import type { Run } from "@/lib/run-types";
+import { updateRun } from "@/lib/run-types";
 import { displayName, goalLabel, loadProfile, type UserProfile, DEFAULT_PROFILE } from "@/lib/user-profile";
 import {
   clearGhost,
