@@ -28,7 +28,6 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
-  const [runs, setRuns] = useState<Run[]>([]);
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
   const swipeRef = useSwipeNav<HTMLElement>({ prev: "/records" });
@@ -36,7 +35,6 @@ function ProfilePage() {
 
   useEffect(() => {
     const all = loadRuns();
-    setRuns(all);
     setStats({
       count: all.length,
       distance: all.reduce((a, r) => a + r.distanceM, 0),
