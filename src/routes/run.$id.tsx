@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronRight, Footprints, Pencil } from "lucide-react";
+import { ArrowLeft, ChevronRight, Footprints, Pencil, Share2 } from "lucide-react";
 import { loadRuns, updateRun, type Run, type RunWeather } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import RunMap from "@/components/RunMap";
@@ -8,6 +8,7 @@ import StatTile from "@/components/StatTile";
 import WeatherBadge from "@/components/WeatherBadge";
 import WeatherEditor from "@/components/WeatherEditor";
 import ShoePicker from "@/components/ShoePicker";
+import ShareSheet from "@/components/ShareSheet";
 import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -38,6 +39,7 @@ function RunDetailPage() {
   const [loaded, setLoaded] = useState(false);
   const [editingWeather, setEditingWeather] = useState(false);
   const [pickingShoe, setPickingShoe] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const { t } = useI18n();
 
   const handleWeatherSave = (w: RunWeather) => {
@@ -170,6 +172,17 @@ function RunDetailPage() {
           <span className="text-sm text-muted-foreground font-semibold">{t("unit.km")}</span>
         </div>
       </section>
+
+      {/* Share button — opens the share sheet */}
+      <button
+        onClick={() => setShareOpen(true)}
+        className="mt-3 w-full h-12 rounded-2xl border border-neon/40 bg-neon/10 text-neon flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.18em] active:scale-95 transition"
+      >
+        <Share2 className="h-4 w-4" />
+        {t("share.button")}
+      </button>
+
+      <ShareSheet open={shareOpen} onOpenChange={setShareOpen} run={run} />
 
       <section className="mt-3 grid grid-cols-2 gap-3">
         <StatTile label={t("stat.duration")} value={formatDuration(run.durationMs)} />
