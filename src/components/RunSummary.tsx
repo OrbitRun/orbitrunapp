@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Loader2, Share2, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import StatTile from "@/components/StatTile";
+import RecoveryInsight from "@/components/RecoveryInsight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +15,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Run } from "@/lib/run-types";
+import { loadRuns } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import { addDistanceToPrimary } from "@/lib/shoes";
 import { shareRun } from "@/lib/share-card";
+import { analyzeRun } from "@/lib/recovery-engine";
 
 
 type Props = {
   run: Run;
-  onSave: () => void;
+  onSave: (rpe?: number) => void;
   onDiscard: () => void;
 };
 
@@ -32,6 +35,14 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareNote, setShareNote] = useState<string | null>(null);
+  const [rpe, setRpe] = useState<number | null>(null);
+
+  const history = useMemo(() => loadRuns(), []);
+  const analysis = useMemo(
+    () => analyzeRun({ ...run, rpe: rpe ?? undefined }, history.filter((r) => r.id !== run.id)),
+    [run, rpe, history],
+  );
+  const readyAt = run.endedAt + analysis.recommendedHours * 60 * 60 * 1000;
 
   const handleShare = async () => {
     if (sharing) return;
@@ -95,6 +106,35 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
           <StatTile label={t("stat.elevation")} value={Math.round(run.elevationGainM).toString()} unit={t("unit.m")} />
         </section>
+
+        {/* Inline RPE picker — feeds the recovery engine */}
+        <section className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+            {t("rpe.inlineLabel")}
+          </div>
+          <div className="mt-2 grid grid-cols-10 gap-1">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setRpe(n)}
+                className={`aspect-square rounded-md border text-xs font-bold tabular transition ${
+                  rpe === n
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-white/10 bg-transparent text-foreground hover:bg-white/5"
+                }`}
+                aria-label={`RPE ${n}`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
+            <span>1 · {t("rpe.veryEasy")}</span>
+            <span>{t("rpe.maxEffort")} · 10</span>
+          </div>
+        </section>
+
+        <RecoveryInsight analysis={analysis} readyAt={readyAt} />
 
         {run.splits.length > 0 && (
           <section className="mt-4 glass rounded-2xl p-4">
@@ -160,7 +200,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               } catch {
                 /* noop */
               }
-              onSave();
+              onSave(rpe ?? undefined);
             }}
             className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
           >
