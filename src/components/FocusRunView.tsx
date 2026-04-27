@@ -229,7 +229,7 @@ export default function FocusRunView({
         })}
       </div>
 
-      {/* Swipeable carousel */}
+      {/* Swipeable carousel — 3 stats per page */}
       <div className="px-4 pt-3">
         <div
           ref={carouselRef}
@@ -237,34 +237,44 @@ export default function FocusRunView({
           className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory rounded-2xl bg-white/5 border border-white/10"
           style={{ scrollSnapType: "x mandatory", touchAction: "pan-x" }}
         >
-          {carouselMetrics.map((id) => {
-            const def = METRICS[id];
-            const value = def.format(tracker);
-            const unit = def.unitKey ? tr(def.unitKey) : "";
-            return (
+          {(() => {
+            const pages: MetricId[][] = [];
+            for (let i = 0; i < carouselMetrics.length; i += 3) {
+              pages.push(carouselMetrics.slice(i, i + 3));
+            }
+            return pages.map((pageMetrics, pi) => (
               <div
-                key={id}
-                className="snap-center shrink-0 w-full flex flex-col items-center justify-center py-3 px-4"
+                key={pi}
+                className="snap-center shrink-0 w-full grid grid-cols-3 gap-2 py-3 px-3"
               >
-                <div className="text-[9px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-                  {tr(def.labelKey)}
-                </div>
-                <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="font-display font-black tabular-nums text-[28px] text-foreground leading-none">
-                    {value}
-                  </span>
-                  {unit && (
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-                      {unit}
-                    </span>
-                  )}
-                </div>
+                {pageMetrics.map((id) => {
+                  const def = METRICS[id];
+                  const value = def.format(tracker);
+                  const unit = def.unitKey ? tr(def.unitKey) : "";
+                  return (
+                    <div key={id} className="flex flex-col items-center text-center">
+                      <div className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold truncate max-w-full">
+                        {tr(def.labelKey)}
+                      </div>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <span className="font-display font-black tabular-nums text-lg text-foreground leading-none">
+                          {value}
+                        </span>
+                        {unit && (
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+                            {unit}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            ));
+          })()}
         </div>
         <div className="flex items-center justify-center gap-1 mt-2">
-          {carouselMetrics.map((_, i) => (
+          {Array.from({ length: Math.ceil(carouselMetrics.length / 3) }).map((_, i) => (
             <span
               key={i}
               className={`h-1 rounded-full transition-all ${
