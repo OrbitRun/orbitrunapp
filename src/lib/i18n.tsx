@@ -435,6 +435,16 @@ const da: Dict = {
 
   "music.demo": "demo",
   "music.spotifySoon": "Spotify-integration kommer snart",
+  "music.connect": "Forbind Spotify",
+  "music.connecting": "Forbinder…",
+  "music.notConfigured": "Spotify er ikke konfigureret",
+  "music.notConfiguredHint": "Tilføj et Spotify Client ID for at aktivere afspilning",
+  "music.noDevice": "Ingen aktiv Spotify-enhed",
+  "music.useThisDevice": "Brug tilgængelig enhed",
+  "music.disconnect": "Afbryd",
+  "music.premiumRequired": "Spotify Premium kræves for afspilningskontrol",
+  "music.nothingPlaying": "Intet afspilles",
+  "music.live": "live",
 
   "nav.run": "Løb",
   "nav.history": "Historik",
