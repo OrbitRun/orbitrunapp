@@ -205,6 +205,29 @@ export async function getNowPlaying(): Promise<NowPlaying | null> {
 export async function play() {
   await api("/me/player/play", { method: "PUT" });
 }
+export async function playContext(uri: string) {
+  await api("/me/player/play", {
+    method: "PUT",
+    body: JSON.stringify({ context_uri: uri }),
+  });
+}
+export type SpotifyPlaylistSummary = {
+  id: string;
+  name: string;
+  uri: string;
+  imageUrl: string | null;
+};
+export async function getMyPlaylists(limit = 20): Promise<SpotifyPlaylistSummary[]> {
+  const res = await api(`/me/playlists?limit=${limit}`);
+  if (!res.ok) throw new Error(`Spotify error ${res.status}`);
+  const data = await res.json();
+  return (data.items ?? []).map((p: { id: string; name: string; uri: string; images?: { url: string }[] }) => ({
+    id: p.id,
+    name: p.name,
+    uri: p.uri,
+    imageUrl: p.images?.[0]?.url ?? null,
+  }));
+}
 export async function pause() {
   await api("/me/player/pause", { method: "PUT" });
 }
