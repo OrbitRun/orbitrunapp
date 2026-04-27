@@ -232,10 +232,8 @@ export function useRunTracker() {
           // GPS gap is almost certainly a jump from a re-acquired fix, not a
           // real sprint. Drop those samples entirely.
           const speedOk = dt > 0 && rawDist / dt <= 10;
-
-          if (rawDist >= noiseFloor && speedOk) {
-            addDist = rawDist;
-          }
+          if (!speedOk) return prev;
+          addDist = rawDist;
 
           // Elevation: use a per-sample EMA + minimum delta to suppress the
           // ±3-5m altitude jitter typical of consumer GPS. Only count
