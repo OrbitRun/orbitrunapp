@@ -76,6 +76,16 @@ const en: Dict = {
   // Music
   "music.demo": "demo",
   "music.spotifySoon": "Spotify integration coming soon",
+  "music.connect": "Connect Spotify",
+  "music.connecting": "Connecting…",
+  "music.notConfigured": "Spotify not configured",
+  "music.notConfiguredHint": "Add a Spotify Client ID to enable playback",
+  "music.noDevice": "No active Spotify device",
+  "music.useThisDevice": "Use available device",
+  "music.disconnect": "Disconnect",
+  "music.premiumRequired": "Spotify Premium is required for playback control",
+  "music.nothingPlaying": "Nothing playing",
+  "music.live": "live",
 
   // Nav
   "nav.run": "Run",
