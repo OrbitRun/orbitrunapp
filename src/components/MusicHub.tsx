@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, SkipBack, SkipForward, Music2, LogOut } from "lucide-react";
+import OrbitSpinner from "@/components/OrbitSpinner";
 import { toast } from "sonner";
 import Marquee from "@/components/Marquee";
 import { useI18n } from "@/lib/i18n";
@@ -260,7 +261,13 @@ export default function MusicHub() {
             disabled={busy}
             className="h-10 w-10 rounded-full grid place-items-center bg-neon text-primary-foreground hover:opacity-90 transition active:scale-95 disabled:opacity-50"
           >
-            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+            {busy ? (
+              <OrbitSpinner size={16} />
+            ) : playing ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4 ml-0.5" />
+            )}
           </button>
           <button
             aria-label="Next"

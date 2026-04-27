@@ -31,18 +31,15 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      {
-        name: "viewport",
-        content:
-          "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1",
-      },
-      { name: "theme-color", content: "#0a0d12" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" },
+      { name: "theme-color", content: "#000000" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "ORBIT" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "format-detection", content: "telephone=no" },
       { title: "ORBIT LAB" },
-      {
-        name: "description",
-        content:
-          "Premium GPS running tracker with live splits, speed-heatmap routes, music hub and audio cues.",
-      },
+      { name: "description", content: "Premium GPS running tracker with live splits, speed-heatmap routes, music hub and audio cues." },
       { property: "og:title", content: "ORBIT LAB" },
       {
         property: "og:description",
