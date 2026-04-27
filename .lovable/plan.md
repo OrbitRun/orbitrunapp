@@ -1,16 +1,16 @@
-## Past run page — shoe + record badges row, RPE below
+## Goal
+Remove the RPE chip from the always-visible run header on the History page, and only show RPE when the user expands the card (or navigates to the full run view, which already shows it).
 
-Single file: `src/routes/run.$id.tsx`.
+## Changes — `src/routes/history.tsx`
 
-### What changes
+1. **Collapsed header (lines 209-213)** — remove the RPE chip currently rendered next to distance/duration/pace:
+   ```tsx
+   {typeof run.rpe === "number" && (
+     <span className="...">{t("rpe.short")} {run.rpe}/10</span>
+   )}
+   ```
 
-1. **Shoe + record badges share one row.** Wrap the existing shoe button in a flex container and add a compact "New PR" badge group on the right. The badge group lists every PR category whose `runId` matches this run (looked up from `loadPrs()`) — e.g. `5K`, `FASTEST KM`. Uses neon styling (`bg-neon/10 border-neon/40` container, neon pill chips), Trophy icon, and `pr.newPr` + `pr.cat.*` i18n keys.
-2. **RPE moves below.** Remove the RPE `StatTile` from the 2x2 stats grid. Add a dedicated full-width row directly under the shoe/badges row showing the RPE label, value (e.g. "7 / 10"), and a 10-dot intensity meter.
+2. **Expanded `RunDetailPanel`** — add an RPE row so the data is still reachable when the card is folded out. Place it at the top of the panel (above "Insights"), styled consistently with the rest of the panel: small eyebrow label, `run.rpe / 10` value, and a 10-dot intensity meter (matching the pattern already used on the full run detail page). Only render when `typeof run.rpe === "number"`.
 
-If the run owns no PRs, the right side simply doesn't render and the shoe button takes the full row width — same as today. If RPE wasn't logged, that row is omitted.
-
-### Imports added
-- `Trophy` from lucide-react
-- `loadPrs`, `PR_ORDER`, `PrCategory` from `@/lib/personal-records`
-
-No other layout, color, or behavior changes.
+## Out of scope
+- Full run detail page (`src/routes/run.$id.tsx`) — already displays RPE correctly with the dot meter; no changes.
