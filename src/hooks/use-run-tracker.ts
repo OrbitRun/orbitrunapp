@@ -201,11 +201,11 @@ export function useRunTracker() {
         if (prev.status !== "running") return prev;
 
         // ---- GPS quality gate -------------------------------------------------
-        // Reject samples with poor accuracy outright. ≤25m is generous enough
-        // for urban canyons but rejects the 100m+ readings iOS emits when it
-        // first locks on. The first valid sample is always accepted to seed.
+        // Strict accuracy gate: reject any sample with reported accuracy
+        // worse than 20m to prevent zig-zagging on the map. The first valid
+        // sample is always accepted to seed the trace.
         const acc = pos.coords.accuracy ?? 999;
-        if (acc > 35 && prev.points.length > 0) return prev;
+        if (acc > 20 && prev.points.length > 0) return prev;
 
         didUpdate = true;
         const np: GeoPoint = {
@@ -222,19 +222,18 @@ export function useRunTracker() {
           const rawDist = haversine(last, np);
           const dt = (np.t - last.t) / 1000;
 
-          // Drift filter: ignore tiny movements that are within GPS noise.
-          // Threshold scales with reported accuracy (worse fix → larger floor)
-          // to avoid accumulating phantom distance while standing still.
-          const noiseFloor = Math.max(2.5, acc * 0.4);
+          // Movement threshold: only record a new coordinate when the runner
+          // has moved more than 3m since the last fix. Prevents cluster points
+          // when standing still. Scales up with poor accuracy.
+          const noiseFloor = Math.max(3, acc * 0.4);
+          if (rawDist < noiseFloor) return prev;
 
           // Speed sanity: anything faster than ~10 m/s (~36 km/h) over a short
           // GPS gap is almost certainly a jump from a re-acquired fix, not a
           // real sprint. Drop those samples entirely.
           const speedOk = dt > 0 && rawDist / dt <= 10;
-
-          if (rawDist >= noiseFloor && speedOk) {
-            addDist = rawDist;
-          }
+          if (!speedOk) return prev;
+          addDist = rawDist;
 
           // Elevation: use a per-sample EMA + minimum delta to suppress the
           // ±3-5m altitude jitter typical of consumer GPS. Only count
@@ -430,10 +429,15 @@ export function useRunTracker() {
       return;
     }
     if (watchIdRef.current != null) return;
+    // High-precision tracking — request fresh fixes (maximumAge: 0) and a
+    // tight 5s timeout so we never paint a stale position on the map.
+    // Tracking continues while the tab is backgrounded thanks to the silent
+    // audio loop (iOS) and the dedicated timer Web Worker keeping the JS
+    // event loop alive while status === "running".
     watchIdRef.current = navigator.geolocation.watchPosition(handlePosition, handleError, {
       enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 15000,
+      maximumAge: 0,
+      timeout: 5000,
     });
   }, [handlePosition, handleError]);
 

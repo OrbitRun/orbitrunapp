@@ -3,7 +3,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Crosshair } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
-import { speedToColor, smoothSpeeds } from "@/lib/run-utils";
+import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
 
 type Props = {
@@ -22,6 +22,14 @@ export default function RunMap(props: Props) {
   );
 }
 
+// Resolve the neon green primary token at runtime so the path matches the
+// rest of the Orbit Lab aesthetic without hard-coding hex values.
+function readNeonColor(): string {
+  if (typeof window === "undefined") return "#9aff1f";
+  const v = getComputedStyle(document.documentElement).getPropertyValue("--neon").trim();
+  return v || "oklch(0.92 0.21 130)";
+}
+
 function RunMapInner({
   points,
   className,
@@ -32,6 +40,7 @@ function RunMapInner({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
   const MRef = useRef<typeof MapboxNS | null>(null);
+  const startRef = useRef<MapboxNS.Marker | null>(null);
   const headRef = useRef<MapboxNS.Marker | null>(null);
   const ghostMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
@@ -61,8 +70,6 @@ function RunMapInner({
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
-        // Require ctrl/cmd for scroll-zoom and two fingers for touch-pan.
-        // Lets users scroll the page over the map without it stealing gestures.
         cooperativeGestures: interactive,
         scrollZoom: false,
         boxZoom: false,
@@ -70,8 +77,6 @@ function RunMapInner({
         touchPitch: false,
       });
 
-      // Detect manual interaction (drag/zoom by user) so we can show a
-      // "recenter to GPS" affordance and pause auto-follow.
       const markUserMoved = (e: unknown) => {
         if ((e as { originalEvent?: Event }).originalEvent) setUserMoved(true);
       };
@@ -80,21 +85,33 @@ function RunMapInner({
 
       map.on("load", () => {
         if (cancelled) return;
-        // Empty source for run line segments (FeatureCollection of LineStrings,
-        // each with a `color` property used by data-driven styling).
-        map.addSource("run-segments", {
+        const neon = readNeonColor();
+        map.addSource("run-line", {
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
         });
+        // Subtle 1px dark border underneath the neon line for high contrast
+        // against the dark map background. Strictly no glow.
         map.addLayer({
-          id: "run-segments-line",
+          id: "run-line-border",
           type: "line",
-          source: "run-segments",
+          source: "run-line",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
-            "line-width": 5,
-            "line-opacity": 0.95,
-            "line-color": ["get", "color"],
+            "line-width": 6,
+            "line-color": "#000",
+            "line-opacity": 0.55,
+          },
+        });
+        map.addLayer({
+          id: "run-line-main",
+          type: "line",
+          source: "run-line",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-width": 4,
+            "line-color": neon,
+            "line-opacity": 1,
           },
         });
         setReady(true);
@@ -105,6 +122,8 @@ function RunMapInner({
 
     return () => {
       cancelled = true;
+      startRef.current?.remove();
+      startRef.current = null;
       headRef.current?.remove();
       headRef.current = null;
       ghostMarkerRef.current?.remove();
@@ -130,7 +149,6 @@ function RunMapInner({
       ghostMarkerRef.current = null;
       return;
     }
-    // Binary search for index with t <= elapsedMs
     let lo = 0;
     let hi = ghost.path.length - 1;
     while (lo < hi) {
@@ -154,48 +172,63 @@ function RunMapInner({
     }
   }, [ghost, ready]);
 
-  // Render segments + head marker
+  // Render smoothed path + start/head markers.
   useEffect(() => {
     const map = mapRef.current;
     const M = MRef.current;
     if (!map || !M || !ready) return;
 
-    const src = map.getSource("run-segments") as MapboxNS.GeoJSONSource | undefined;
+    const src = map.getSource("run-line") as MapboxNS.GeoJSONSource | undefined;
     if (!src) return;
 
     if (points.length === 0) {
       src.setData({ type: "FeatureCollection", features: [] });
+      startRef.current?.remove();
+      startRef.current = null;
       headRef.current?.remove();
       headRef.current = null;
       return;
     }
 
-    const smoothed = smoothSpeeds(points.map((p) => p.speed ?? 0), 0.25);
-    const features = [];
-    for (let i = 1; i < points.length; i++) {
-      const a = points[i - 1];
-      const b = points[i];
-      // Average smoothed speed across the segment for a gradual blend between neighbors.
-      const segSpeed = (smoothed[i - 1] + smoothed[i]) / 2;
-      features.push({
-        type: "Feature" as const,
-        properties: { color: speedToColor(segSpeed) },
-        geometry: {
-          type: "LineString" as const,
-          coordinates: [
-            [a.lng, a.lat],
-            [b.lng, b.lat],
-          ],
-        },
-      });
-    }
-    src.setData({ type: "FeatureCollection", features });
+    // Smooth the raw GPS trace, then interpolate with a Catmull-Rom spline so
+    // the rendered polyline reads as smooth curves rather than jagged lines.
+    const smoothed = smoothCoordinates(points, 0.45);
+    const curve = catmullRomSpline(smoothed, 10);
+    const coords = curve.map((p) => [p.lng, p.lat]);
 
+    src.setData({
+      type: "FeatureCollection",
+      features:
+        coords.length >= 2
+          ? [
+              {
+                type: "Feature",
+                properties: {},
+                geometry: { type: "LineString", coordinates: coords },
+              },
+            ]
+          : [],
+    });
+
+    // Clean white start dot
+    const first = points[0];
+    if (!startRef.current) {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "width:12px;height:12px;border-radius:9999px;background:#fff;border:2px solid rgba(0,0,0,0.5);box-shadow:none;";
+      startRef.current = new M.Marker({ element: el })
+        .setLngLat([first.lng, first.lat])
+        .addTo(map);
+    } else {
+      startRef.current.setLngLat([first.lng, first.lat]);
+    }
+
+    // Bold neon current-position marker (white core + neon ring, no glow)
     const last = points[points.length - 1];
     if (!headRef.current) {
       const el = document.createElement("div");
       el.style.cssText =
-        "width:14px;height:14px;border-radius:9999px;background:oklch(0.92 0.21 130);border:2px solid #fff;box-shadow:0 0 12px oklch(0.92 0.21 130 / 0.8);";
+        "width:16px;height:16px;border-radius:9999px;background:#fff;border:3px solid oklch(0.92 0.21 130);box-shadow:none;";
       headRef.current = new M.Marker({ element: el })
         .setLngLat([last.lng, last.lat])
         .addTo(map);
@@ -209,7 +242,8 @@ function RunMapInner({
       map.fitBounds(bounds, { padding: 40, maxZoom: 17, duration: 0 });
       fittedOnceRef.current = true;
     } else if (follow && !userMoved) {
-      map.easeTo({ center: [last.lng, last.lat], duration: 600 });
+      // Smoothly follow the runner's current position — no abrupt jumps.
+      map.easeTo({ center: [last.lng, last.lat], duration: 800 });
     }
   }, [points, follow, ready, userMoved]);
 
