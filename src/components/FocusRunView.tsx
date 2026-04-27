@@ -181,33 +181,37 @@ export default function FocusRunView({
               : null
           }
         />
-        {/* Mini music overlay */}
-        <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full glass-strong px-1.5 py-1 max-w-[80%]">
+      </div>
+
+      {/* Music controls — own row below map */}
+      <div className="px-3 pt-2">
+        <div className="flex items-center gap-2 rounded-2xl glass px-2 py-1.5">
           <button
             aria-label="Previous track"
             onClick={() =>
               setMusicIdx((i) => (i - 1 + MOCK_TRACKS.length) % MOCK_TRACKS.length)
             }
-            className="h-7 w-7 grid place-items-center rounded-full hover:bg-white/10"
+            className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80"
           >
-            <SkipBack className="h-3.5 w-3.5" />
+            <SkipBack className="h-4 w-4" />
           </button>
           <button
             aria-label={playing ? "Pause music" : "Play music"}
             onClick={() => setPlaying((p) => !p)}
-            className="h-8 w-8 grid place-items-center rounded-full bg-neon text-primary-foreground active:scale-95"
+            className="h-9 w-9 grid place-items-center rounded-full bg-neon text-primary-foreground active:scale-95"
           >
-            {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 ml-0.5" />}
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
           </button>
           <button
             aria-label="Next track"
             onClick={() => setMusicIdx((i) => (i + 1) % MOCK_TRACKS.length)}
-            className="h-7 w-7 grid place-items-center rounded-full hover:bg-white/10"
+            className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80"
           >
-            <SkipForward className="h-3.5 w-3.5" />
+            <SkipForward className="h-4 w-4" />
           </button>
-          <div className="hidden xs:block text-[10px] font-semibold truncate pl-1 pr-2 text-foreground/80 max-w-[120px]">
-            {track.title}
+          <div className="min-w-0 flex-1 px-1">
+            <div className="text-[11px] font-semibold truncate text-foreground/90">{track.title}</div>
+            <div className="text-[10px] text-muted-foreground truncate">{track.artist}</div>
           </div>
         </div>
       </div>
