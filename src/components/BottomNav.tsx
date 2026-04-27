@@ -1,10 +1,21 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Activity, History, Trophy, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 
 export default function BottomNav() {
   const { location } = useRouterState();
   const { t } = useI18n();
+  const [focusMode, setFocusMode] = useState(false);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const check = () => setFocusMode(document.body.classList.contains("focus-mode"));
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    return () => obs.disconnect();
+  }, []);
+  if (focusMode) return null;
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },
     { to: "/history", label: t("nav.history"), Icon: History },
