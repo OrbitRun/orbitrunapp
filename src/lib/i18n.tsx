@@ -189,6 +189,16 @@ const en: Dict = {
   "summary.finalDelete": "Delete permanently",
   "summary.keep": "Keep run",
 
+  // Share sheet
+  "share.button": "Share my run",
+  "share.title": "Share my run",
+  "share.tabMap": "Map",
+  "share.tabPhoto": "Photo",
+  "share.pickPhoto": "Choose photo",
+  "share.share": "Share",
+  "share.downloaded": "Saved to downloads",
+  "share.generating": "Generating…",
+
   "edit.pickMetric": "Choose metric",
   "edit.pickHint": "Tap a stat to assign it to this slot.",
   "edit.exit": "Done",
@@ -501,6 +511,16 @@ const da: Dict = {
   "summary.finalConfirm": "Dette sletter løbeturen og al dens data permanent. Det kan ikke fortrydes.",
   "summary.finalDelete": "Slet permanent",
   "summary.keep": "Behold løbetur",
+
+  // Share sheet
+  "share.button": "Del mit løb",
+  "share.title": "Del mit løb",
+  "share.tabMap": "Kort",
+  "share.tabPhoto": "Foto",
+  "share.pickPhoto": "Vælg foto",
+  "share.share": "Del",
+  "share.downloaded": "Gemt i downloads",
+  "share.generating": "Genererer…",
 
   "edit.pickMetric": "Vælg måling",
   "edit.pickHint": "Tryk på en måling for at tildele den til feltet.",

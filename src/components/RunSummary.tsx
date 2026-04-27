@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Check, Loader2, Share2, Trash2 } from "lucide-react";
+import { Check, Share2, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import StatTile from "@/components/StatTile";
 import RecoveryInsight from "@/components/RecoveryInsight";
+import ShareSheet from "@/components/ShareSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,6 @@ import { loadRuns } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import { addDistanceToPrimary } from "@/lib/shoes";
-import { shareRun } from "@/lib/share-card";
 import { analyzeRun } from "@/lib/recovery-engine";
 
 
@@ -30,11 +30,10 @@ type Props = {
 };
 
 export default function RunSummary({ run, onSave, onDiscard }: Props) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  const [shareNote, setShareNote] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const [rpe, setRpe] = useState<number | null>(null);
 
   const history = useMemo(() => loadRuns(), []);
@@ -43,23 +42,6 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
     [run, rpe, history],
   );
   const readyAt = run.endedAt + analysis.recommendedHours * 60 * 60 * 1000;
-
-  const handleShare = async () => {
-    if (sharing) return;
-    setSharing(true);
-    setShareNote(null);
-    try {
-      const result = await shareRun(run, lang);
-      if (result === "downloaded") {
-        setShareNote(t("summary.shareDownloaded"));
-        setTimeout(() => setShareNote(null), 2400);
-      }
-    } catch (err) {
-      console.error("[share-card] failed", err);
-    } finally {
-      setSharing(false);
-    }
-  };
   const max = run.splits.length ? Math.max(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const min = run.splits.length ? Math.min(...run.splits.map((x) => x.paceSecPerKm)) : 0;
   const range = Math.max(1, max - min);
@@ -162,26 +144,18 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           </section>
         )}
 
-        {/* Share button — single tap, generates a story-format PNG. */}
+        {/* Share button — opens the share sheet */}
         <section className="mt-4">
           <button
-            onClick={handleShare}
-            disabled={sharing}
-            className="w-full h-14 rounded-2xl border border-neon/40 bg-neon/10 text-neon flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition disabled:opacity-60"
+            onClick={() => setShareOpen(true)}
+            className="w-full h-14 rounded-2xl border border-neon/40 bg-neon/10 text-neon flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition"
           >
-            {sharing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Share2 className="h-4 w-4" />
-            )}
-            {sharing ? t("summary.shareGenerating") : t("summary.share")}
+            <Share2 className="h-4 w-4" />
+            {t("share.button")}
           </button>
-          {shareNote && (
-            <div className="mt-2 text-center text-xs text-muted-foreground font-semibold">
-              {shareNote}
-            </div>
-          )}
         </section>
+
+        <ShareSheet open={shareOpen} onOpenChange={setShareOpen} run={run} />
 
         {/* Action buttons fixed directly under stats */}
         <section className="mt-3 grid grid-cols-2 gap-3">
