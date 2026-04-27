@@ -134,6 +134,8 @@ function ProfilePage() {
         </div>
       </section>
 
+      <RecoveryStatus />
+
       <ShoesSection />
 
       {/* Experience level */}
