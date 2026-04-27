@@ -171,7 +171,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               } catch {
                 /* noop */
               }
-              onSave();
+              onSave(rpe ?? undefined);
             }}
             className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
           >
