@@ -121,24 +121,18 @@ function RunPage() {
     }
   }, [t, wakeLock]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback((rpe?: number) => {
     if (pendingRun) {
-      t.commitRun(pendingRun);
-      setAwaitingRpeRunId(pendingRun.id);
+      const finalRun = typeof rpe === "number" ? { ...pendingRun, rpe } : pendingRun;
+      t.commitRun(finalRun);
+      if (typeof rpe === "number") {
+        updateRun(finalRun.id, { rpe });
+      }
+      window.dispatchEvent(new CustomEvent("orbit:run-updated"));
     }
     setPendingRun(null);
     void wakeLock.release();
   }, [pendingRun, t, wakeLock]);
-
-  const handleRpeSubmit = useCallback((score: number) => {
-    if (awaitingRpeRunId) {
-      updateRun(awaitingRpeRunId, { rpe: score });
-      window.dispatchEvent(new CustomEvent("orbit:run-updated"));
-    }
-    setAwaitingRpeRunId(null);
-  }, [awaitingRpeRunId]);
-
-  const handleRpeSkip = useCallback(() => setAwaitingRpeRunId(null), []);
 
   const handleDiscard = useCallback(() => {
     t.discardRun();
