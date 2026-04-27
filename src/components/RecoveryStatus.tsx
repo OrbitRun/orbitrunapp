@@ -59,13 +59,13 @@ export default function RecoveryStatus() {
     : t("recovery.readyAt", { time: formatReadyAt(status.readyAt, lang) });
 
   return (
-    <section className="mt-1 mb-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+    <section className="mt-4 glass rounded-2xl p-4">
       <div className="flex items-baseline justify-between">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+        <div className="text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
           {t("recovery.eyebrow")}
         </div>
         <div className="font-display font-black tabular text-foreground text-sm leading-none">
-          {status.hoursRemaining}
+          <span className="text-neon">{status.hoursRemaining}</span>
           <span className="text-muted-foreground"> / {status.totalHours}</span>
           <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold ml-1">
             {t("recovery.unit.h")}
@@ -80,14 +80,14 @@ export default function RecoveryStatus() {
         aria-valuemax={100}
       >
         <div
-          className="h-full bg-foreground/70 transition-all duration-500"
+          className="h-full bg-neon transition-all duration-500"
           style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
         />
       </div>
       <div className="mt-2 text-[11px] leading-snug text-foreground">
         {message}
       </div>
-      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold tabular">
+      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-neon/80 font-bold tabular">
         {trailing}
       </div>
     </section>
