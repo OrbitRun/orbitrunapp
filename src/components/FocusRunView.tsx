@@ -225,7 +225,7 @@ export default function FocusRunView({
               <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
                 {tr(def.labelKey)}
               </div>
-              <div className="font-display font-black tabular-nums leading-none mt-1 text-[44px] text-foreground">
+              <div className={`font-display font-black tabular-nums leading-none mt-1 text-[44px] ${id === "distance" ? "text-neon" : "text-foreground"}`}>
                 {def.format(tracker)}
               </div>
             </div>
