@@ -9,7 +9,7 @@ import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
-import RecoveryStatus from "@/components/RecoveryStatus";
+
 
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -183,8 +183,6 @@ function RunPage() {
       </header>
 
       {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <CoachCard profile={profile} />}
-
-      {(t.status === "idle" || t.status === "finished") && <RecoveryStatus />}
 
       {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
         <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">

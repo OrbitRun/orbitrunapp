@@ -7,6 +7,7 @@ import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
 import CoachOnboarding from "@/components/CoachOnboarding";
+import RecoveryStatus from "@/components/RecoveryStatus";
 import { useSwipeNav } from "@/hooks/use-swipe-nav";
 import {
   DEFAULT_PROFILE,
@@ -132,6 +133,8 @@ function ProfilePage() {
           </div>
         </div>
       </section>
+
+      <RecoveryStatus />
 
       <ShoesSection />
 
