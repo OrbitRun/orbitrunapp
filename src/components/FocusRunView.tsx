@@ -1,19 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Music2, Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
-import { toast } from "sonner";
+import { Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
-import {
-  beginAuth,
-  getNowPlaying,
-  isAuthed,
-  isConfigured,
-  next as spNext,
-  pause as spPause,
-  play as spPlay,
-  previous as spPrevious,
-  transferToFirstDevice,
-  type NowPlaying,
-} from "@/lib/spotify";
 import { useI18n } from "@/lib/i18n";
 import {
   ALL_METRIC_IDS,
@@ -34,7 +21,12 @@ type Props = {
 };
 
 const STOP_HOLD_MS = 1200;
-const POLL_MS = 5000;
+
+const MOCK_TRACKS = [
+  { title: "Midnight Pulse", artist: "Neon Drift" },
+  { title: "Orbit Run", artist: "Synth Capsule" },
+  { title: "Lime Horizon", artist: "After Hours" },
+];
 
 function formatGhostDelta(ms: number): string {
   const abs = Math.abs(ms);
@@ -139,93 +131,10 @@ export default function FocusRunView({
 
   useEffect(() => () => cancelHold(), [cancelHold]);
 
-  // ---------- Spotify ----------
-  const spotifyConfigured = isConfigured();
-  const [spAuthed, setSpAuthed] = useState(false);
-  const [now, setNow] = useState<NowPlaying | null>(null);
-  const [spBusy, setSpBusy] = useState(false);
-  const premiumWarned = useRef(false);
-
-  useEffect(() => {
-    setSpAuthed(isAuthed());
-  }, []);
-
-  const refreshNow = useCallback(async () => {
-    if (!isAuthed()) return;
-    try {
-      const np = await getNowPlaying();
-      setNow(np);
-    } catch {
-      setSpAuthed(isAuthed());
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!spAuthed) return;
-    let cancelled = false;
-    void refreshNow();
-    const timer = setInterval(() => {
-      if (!cancelled && document.visibilityState === "visible") void refreshNow();
-    }, POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [spAuthed, refreshNow]);
-
-  const handleSpotifyError = useCallback((err: unknown) => {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("403")) {
-      if (!premiumWarned.current) {
-        premiumWarned.current = true;
-        toast.error(tr("music.premiumRequired"));
-      }
-    } else if (msg.includes("404")) {
-      toast.error(tr("music.noDevice"));
-    } else if (msg.includes("401")) {
-      setSpAuthed(false);
-    }
-  }, [tr]);
-
-  const runSpotify = async (fn: () => Promise<void>) => {
-    setSpBusy(true);
-    try {
-      await fn();
-      setTimeout(() => void refreshNow(), 350);
-    } catch (err) {
-      handleSpotifyError(err);
-    } finally {
-      setSpBusy(false);
-    }
-  };
-
-  const handleConnect = async () => {
-    try {
-      setSpBusy(true);
-      await beginAuth();
-    } catch (err) {
-      setSpBusy(false);
-      toast.error(err instanceof Error ? err.message : "Connect failed");
-    }
-  };
-
-  const handleTransfer = async () => {
-    setSpBusy(true);
-    try {
-      const ok = await transferToFirstDevice();
-      if (!ok) toast.error(tr("music.noDevice"));
-      setTimeout(() => void refreshNow(), 400);
-    } catch (err) {
-      handleSpotifyError(err);
-    } finally {
-      setSpBusy(false);
-    }
-  };
-
-  const spPlaying = !!now?.isPlaying;
-  const noDevice = now ? !now.hasActiveDevice : false;
-  const trackTitle = now?.title || tr("music.nothingPlaying");
-  const trackArtist = now?.artist || "";
+  // ---------- Mini music ----------
+  const [musicIdx, setMusicIdx] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const track = MOCK_TRACKS[musicIdx];
 
   // ---------- Ghost ----------
   const ghostDelta = tracker.ghostDeltaMs;
@@ -274,79 +183,37 @@ export default function FocusRunView({
         />
       </div>
 
-      {/* Spotify controls — own row below map */}
+      {/* Music controls — own row below map */}
       <div className="px-3 pt-2">
-        {!spotifyConfigured || !spAuthed ? (
-          <div className="flex items-center gap-2 rounded-2xl glass px-2 py-1.5">
-            <div className="h-8 w-8 grid place-items-center rounded-xl bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] text-background">
-              <Music2 className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1 px-1">
-              <div className="text-[11px] font-semibold truncate text-foreground/90">Spotify</div>
-              <div className="text-[10px] text-muted-foreground truncate">
-                {spotifyConfigured ? tr("music.connect") : tr("music.notConfigured")}
-              </div>
-            </div>
-            {spotifyConfigured && (
-              <button
-                onClick={handleConnect}
-                disabled={spBusy}
-                className="px-3 h-8 rounded-full text-[11px] font-bold bg-neon text-primary-foreground active:scale-95 disabled:opacity-50"
-              >
-                {spBusy ? tr("music.connecting") : tr("music.connect")}
-              </button>
-            )}
+        <div className="flex items-center gap-2 rounded-2xl glass px-2 py-1.5">
+          <button
+            aria-label="Previous track"
+            onClick={() =>
+              setMusicIdx((i) => (i - 1 + MOCK_TRACKS.length) % MOCK_TRACKS.length)
+            }
+            className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80"
+          >
+            <SkipBack className="h-4 w-4" />
+          </button>
+          <button
+            aria-label={playing ? "Pause music" : "Play music"}
+            onClick={() => setPlaying((p) => !p)}
+            className="h-9 w-9 grid place-items-center rounded-full bg-neon text-primary-foreground active:scale-95"
+          >
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+          </button>
+          <button
+            aria-label="Next track"
+            onClick={() => setMusicIdx((i) => (i + 1) % MOCK_TRACKS.length)}
+            className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80"
+          >
+            <SkipForward className="h-4 w-4" />
+          </button>
+          <div className="min-w-0 flex-1 px-1">
+            <div className="text-[11px] font-semibold truncate text-foreground/90">{track.title}</div>
+            <div className="text-[10px] text-muted-foreground truncate">{track.artist}</div>
           </div>
-        ) : (
-          <div className="flex items-center gap-2 rounded-2xl glass px-2 py-1.5">
-            <div className="h-8 w-8 rounded-xl overflow-hidden bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-background flex-shrink-0 relative">
-              {now?.artworkUrl ? (
-                <img src={now.artworkUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              ) : (
-                <Music2 className="h-4 w-4" />
-              )}
-            </div>
-            <button
-              aria-label="Previous track"
-              onClick={() => runSpotify(spPrevious)}
-              disabled={spBusy}
-              className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80 disabled:opacity-50"
-            >
-              <SkipBack className="h-4 w-4" />
-            </button>
-            <button
-              aria-label={spPlaying ? "Pause music" : "Play music"}
-              onClick={() => runSpotify(spPlaying ? spPause : spPlay)}
-              disabled={spBusy}
-              className="h-9 w-9 grid place-items-center rounded-full bg-neon text-primary-foreground active:scale-95 disabled:opacity-50"
-            >
-              {spPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-            </button>
-            <button
-              aria-label="Next track"
-              onClick={() => runSpotify(spNext)}
-              disabled={spBusy}
-              className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80 disabled:opacity-50"
-            >
-              <SkipForward className="h-4 w-4" />
-            </button>
-            <div className="min-w-0 flex-1 px-1">
-              <div className="text-[11px] font-semibold truncate text-foreground/90">{trackTitle}</div>
-              <div className="text-[10px] text-muted-foreground truncate">
-                {noDevice ? tr("music.noDevice") : trackArtist}
-              </div>
-            </div>
-            {noDevice && (
-              <button
-                onClick={handleTransfer}
-                disabled={spBusy}
-                className="px-2 h-7 rounded-full bg-white/10 hover:bg-white/15 text-[10px] font-bold disabled:opacity-50"
-              >
-                {tr("music.useThisDevice")}
-              </button>
-            )}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Hero stats */}
