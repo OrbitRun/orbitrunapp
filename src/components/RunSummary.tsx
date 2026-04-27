@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, Loader2, Share2, Trash2 } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import StatTile from "@/components/StatTile";
+import RecoveryInsight from "@/components/RecoveryInsight";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +15,17 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Run } from "@/lib/run-types";
+import { loadRuns } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
 import { addDistanceToPrimary } from "@/lib/shoes";
 import { shareRun } from "@/lib/share-card";
+import { analyzeRun } from "@/lib/recovery-engine";
 
 
 type Props = {
   run: Run;
-  onSave: () => void;
+  onSave: (rpe?: number) => void;
   onDiscard: () => void;
 };
 
@@ -32,6 +35,14 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [shareNote, setShareNote] = useState<string | null>(null);
+  const [rpe, setRpe] = useState<number | null>(null);
+
+  const history = useMemo(() => loadRuns(), []);
+  const analysis = useMemo(
+    () => analyzeRun({ ...run, rpe: rpe ?? undefined }, history.filter((r) => r.id !== run.id)),
+    [run, rpe, history],
+  );
+  const readyAt = run.endedAt + analysis.recommendedHours * 60 * 60 * 1000;
 
   const handleShare = async () => {
     if (sharing) return;
