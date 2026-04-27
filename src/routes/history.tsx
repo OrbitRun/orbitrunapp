@@ -206,11 +206,6 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
               {formatPace(run.avgPaceSecPerKm)}
               {t("unit.perKm")}
             </span>
-            {typeof run.rpe === "number" && (
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/70 border border-white/10 rounded-full px-2 py-0.5">
-                {t("rpe.short")} {run.rpe}/10
-              </span>
-            )}
           </div>
           {prCategories?.length ? (
             <div className="mt-1.5 flex flex-wrap items-center gap-1">
@@ -271,6 +266,28 @@ function RunDetailPanel({ run }: { run: Run }) {
 
   return (
     <div className="border-t border-white/5 px-3 pt-3 pb-3 space-y-4">
+      {/* RPE */}
+      {typeof run.rpe === "number" && (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/5">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold">
+              {t("rpe.eyebrow")}
+            </div>
+            <div className="text-sm font-bold mt-0.5">{run.rpe} / 10</div>
+          </div>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 w-1.5 rounded-full ${
+                  i < (run.rpe ?? 0) ? "bg-neon" : "bg-white/15"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Insights */}
       <div>
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold pb-1.5 px-0.5">
