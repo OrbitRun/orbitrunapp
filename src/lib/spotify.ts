@@ -2,7 +2,11 @@
 // Replace SPOTIFY_CLIENT_ID with your own Client ID from
 // https://developer.spotify.com/dashboard
 
-export const SPOTIFY_CLIENT_ID = "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID";
+// Public Spotify Client ID. Read from Vite env when present, otherwise fall back
+// to the placeholder. The Client ID is publishable (PKCE flow, no client secret).
+export const SPOTIFY_CLIENT_ID: string =
+  (import.meta.env.VITE_SPOTIFY_CLIENT_ID as string | undefined) ??
+  "REPLACE_WITH_YOUR_SPOTIFY_CLIENT_ID";
 
 export const SPOTIFY_SCOPES = [
   "user-read-playback-state",
