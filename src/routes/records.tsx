@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Ghost } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { useSwipeNav } from "@/hooks/use-swipe-nav";
+
 import {
   loadPrs,
   recomputeAllPrs,
@@ -35,7 +35,7 @@ function formatDateShort(ts: number, lang: string): string {
 function RecordsPage() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
-  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/history", next: "/profile" });
+  
   const [prs, setPrs] = useState<PrMap>({});
 
   useEffect(() => {
@@ -48,7 +48,7 @@ function RecordsPage() {
   }, []);
 
   return (
-    <main ref={swipeRef} className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("pr.eyebrow")}
