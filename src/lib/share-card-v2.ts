@@ -72,8 +72,7 @@ async function fetchMapboxStatic(run: Run): Promise<HTMLImageElement | null> {
   const url = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${overlay}/auto/540x540@2x?padding=80&access_token=${MAPBOX_TOKEN}&logo=false&attribution=false`;
   try {
     return await loadImage(url);
-  } catch (err) {
-    console.error("[share-card] mapbox static failed", err);
+  } catch {
     return null;
   }
 }

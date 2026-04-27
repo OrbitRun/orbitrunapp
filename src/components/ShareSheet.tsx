@@ -47,8 +47,8 @@ export default function ShareSheet({ open, onOpenChange, run }: Props) {
           return url;
         });
       })
-      .catch((err) => {
-        console.error("[share-sheet] generate failed", err);
+      .catch(() => {
+        /* swallow — user will see no preview, can retry */
       })
       .finally(() => {
         if (!cancelled) setGenerating(false);
@@ -88,8 +88,8 @@ export default function ShareSheet({ open, onOpenChange, run }: Props) {
         setNote(t("share.downloaded"));
         setTimeout(() => setNote(null), 2400);
       }
-    } catch (err) {
-      console.error("[share-sheet] share failed", err);
+    } catch {
+      /* user cancelled or share unavailable — no-op */
     } finally {
       setSharing(false);
     }

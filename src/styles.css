@@ -129,6 +129,10 @@
     -webkit-font-smoothing: antialiased;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    /* Native app feel: kill rubber-band bounce + 300ms tap delay */
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
   }
   html::-webkit-scrollbar,
   body::-webkit-scrollbar {
@@ -137,7 +141,17 @@
 
   body {
     background-image: var(--gradient-dark);
-    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Remove tap-highlight + text-selection on interactive surfaces */
+  button,
+  a,
+  [role="button"],
+  [role="tab"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
   }
 }
 
@@ -191,6 +205,14 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+  /* Native press feedback for any interactive element */
+  .tap {
+    transition: transform 120ms ease, opacity 120ms ease;
+  }
+  .tap:active {
+    transform: scale(0.96);
+    opacity: 0.85;
   }
 }
 

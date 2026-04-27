@@ -133,7 +133,7 @@ export default function FocusRunView({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex flex-col bg-background"
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
       style={{
         height: "100dvh",
         touchAction: "none",
