@@ -155,6 +155,15 @@ function RunPage() {
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
+      {isActive && !pendingRun && (
+        <FocusRunView
+          tracker={t}
+          layout={layout}
+          onPause={() => { setPressed("pause"); t.pause(); }}
+          onResume={() => { setPressed("resume"); t.resume(); }}
+          onStop={finishRun}
+        />
+      )}
 
       <header className="flex items-center justify-between py-3">
         <div className="flex items-center gap-3 min-w-0">
