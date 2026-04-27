@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
+import { Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
+import MusicHub from "@/components/MusicHub";
 import { useI18n } from "@/lib/i18n";
 import {
   ALL_METRIC_IDS,
