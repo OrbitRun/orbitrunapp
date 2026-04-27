@@ -329,6 +329,25 @@ const en: Dict = {
   "rpe.maxEffort": "Max effort",
   "rpe.skip": "Skip",
   "rpe.short": "RPE",
+  "rpe.inlineLabel": "How hard? (1–10)",
+
+  // Recovery engine
+  "recovery.eyebrow": "Recovery",
+  "recovery.unit.h": "h",
+  "recovery.ready": "Ready to run.",
+  "recovery.goRun": "Go run.",
+  "recovery.readyAt": "Ready {time}",
+  "recovery.scenario.maintenance": "Body knows this load. Ready in 24h.",
+  "recovery.scenario.overreaching.distance": "{pct}% longer than your average. Take 48h.",
+  "recovery.scenario.overreaching.pace": "Faster than your easy pace. Take 48h.",
+  "recovery.scenario.overreaching.both": "Long and hard. Full 48h rest.",
+  "recovery.scenario.recovery": "Active recovery dialed in. Legs fresh tomorrow.",
+  "recovery.scenario.firstRun": "First run logged. Baseline starting.",
+  "recovery.headline.longestInWeeks": "Longest run in {weeks} weeks.",
+  "recovery.headline.fastestInWeeks": "Fastest pace in {weeks} weeks.",
+  "recovery.headline.normalLoad": "Normal load.",
+  "recovery.headline.recoveryRun": "Easy shake-out.",
+  "recovery.headline.firstRun": "First run logged.",
 };
 
 const da: Dict = {
@@ -637,6 +656,25 @@ const da: Dict = {
   "rpe.maxEffort": "Maksimal indsats",
   "rpe.skip": "Spring over",
   "rpe.short": "RPE",
+  "rpe.inlineLabel": "Hvor hårdt? (1–10)",
+
+  // Recovery engine
+  "recovery.eyebrow": "Restitution",
+  "recovery.unit.h": "t",
+  "recovery.ready": "Klar til løb.",
+  "recovery.goRun": "Snør skoene.",
+  "recovery.readyAt": "Klar {time}",
+  "recovery.scenario.maintenance": "Din krop kender denne belastning. Klar igen om 24 timer.",
+  "recovery.scenario.overreaching.distance": "{pct}% længere end dit snit. Hvil 48 timer.",
+  "recovery.scenario.overreaching.pace": "Hurtigere end dit roligt tempo. Hvil 48 timer.",
+  "recovery.scenario.overreaching.both": "Lang og hård tur. Fuld 48 timers hvile.",
+  "recovery.scenario.recovery": "Perfekt aktiv restitution. Friske ben i morgen.",
+  "recovery.scenario.firstRun": "Første tur logget. Baseline begynder.",
+  "recovery.headline.longestInWeeks": "Din længste tur i {weeks} uger.",
+  "recovery.headline.fastestInWeeks": "Hurtigste tempo i {weeks} uger.",
+  "recovery.headline.normalLoad": "Normal belastning.",
+  "recovery.headline.recoveryRun": "Rolig udløsning.",
+  "recovery.headline.firstRun": "Første tur logget.",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
