@@ -42,6 +42,7 @@
 
   --color-neon: var(--neon);
   --color-neon-soft: var(--neon-soft);
+  --color-spotify: var(--spotify);
   --color-glass: var(--glass);
   --color-glass-strong: var(--glass-strong);
   --color-surface: var(--surface);
@@ -91,6 +92,7 @@
   /* Custom luxury tokens */
   --neon: oklch(0.92 0.21 130);
   --neon-soft: oklch(0.92 0.21 130 / 0.18);
+  --spotify: oklch(0.74 0.18 145);
   --glass: oklch(1 0 0 / 0.05);
   --glass-strong: oklch(1 0 0 / 0.09);
 

@@ -299,7 +299,7 @@ export default function FocusRunView({
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-2xl glass px-2 py-1.5">
-            <div className="h-8 w-8 rounded-xl overflow-hidden bg-gradient-to-br from-neon to-[oklch(0.7_0.18_175)] grid place-items-center text-background flex-shrink-0 relative">
+            <div className="h-8 w-8 rounded-xl overflow-hidden bg-white/5 grid place-items-center text-foreground/70 flex-shrink-0 relative">
               {now?.artworkUrl ? (
                 <img src={now.artworkUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
               ) : (
@@ -318,7 +318,7 @@ export default function FocusRunView({
               aria-label={spPlaying ? "Pause music" : "Play music"}
               onClick={() => runSpotify(spPlaying ? spPause : spPlay)}
               disabled={spBusy}
-              className="h-9 w-9 grid place-items-center rounded-full bg-neon text-primary-foreground active:scale-95 disabled:opacity-50"
+              className="h-9 w-9 grid place-items-center rounded-full bg-white/10 hover:bg-white/15 text-foreground active:scale-95 disabled:opacity-50"
             >
               {spPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
             </button>
@@ -331,7 +331,16 @@ export default function FocusRunView({
               <SkipForward className="h-4 w-4" />
             </button>
             <div className="min-w-0 flex-1 px-1">
-              <div className="text-[11px] font-semibold truncate text-foreground/90">{trackTitle}</div>
+              <div className="flex items-center gap-1.5 min-w-0">
+                {spPlaying && (
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                    style={{ background: "var(--spotify)" }}
+                  />
+                )}
+                <div className="text-[11px] font-semibold truncate text-foreground/90">{trackTitle}</div>
+              </div>
               <div className="text-[10px] text-muted-foreground truncate">
                 {noDevice ? tr("music.noDevice") : trackArtist}
               </div>
