@@ -30,7 +30,7 @@ type Props = {
 };
 
 export default function RunSummary({ run, onSave, onDiscard }: Props) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [finalConfirmOpen, setFinalConfirmOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
