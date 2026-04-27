@@ -1,50 +1,93 @@
-## Orbit Share Image Generator
+## Focus Mode — Locked Running UI
 
-Build a refined 1:1 share card with two background modes (Map or Photo), minimalist data overlay, and native share — added to the run detail page in Historik.
+When the user taps "START LØB" (after the countdown completes), the home screen swaps into a **dedicated full-screen Focus view** — no bottom nav, no scroll, no bounce. When the run finishes/stops, we return to the normal idle screen.
 
-### Where it lives
+### 1. New component: `FocusRunView`
 
-- **Trigger button** on `src/routes/run.$id.tsx` — a single "Del mit løb" button placed below the hero distance card. The existing oversized share card on `RunSummary` (post-run) is replaced with the same new component for consistency.
-- The current `src/lib/share-card.ts` (story-format 1080×1920 with PR panel) stays in place but is no longer wired in. We can keep it for later or delete after approval; default plan: delete to avoid dead code.
+File: `src/components/FocusRunView.tsx`
 
-### Flow
+Receives the `useRunTracker()` instance + handlers (`onPause`, `onResume`, `onStop`) as props from `routes/index.tsx`. Layout is a **fixed full-viewport flex column** using `100dvh`, `overflow: hidden`, `overscroll-behavior: none`, `touch-action: none` on the root, with safe-area padding top/bottom.
 
-1. Tap "Del mit løb" → opens a bottom sheet with two background tabs:
-   - **Kort** — dark Mapbox snapshot with the route in neon-green (default).
-   - **Foto** — file picker (`<input type="file" accept="image/*">`) for a photo from the run.
-2. Live 1:1 preview at the top of the sheet, regenerated when the user switches tabs / picks a photo.
-3. Bottom action: "Del" → calls Web Share API with the generated PNG, falls back to download.
+```
+┌────────────────────────────────┐
+│ Ghost bar:  +12m  AHEAD        │  ← top overlay (only if ghost active)
+├────────────────────────────────┤
+│                                │
+│         MAP (flex: 1)          │  ← top half, follows runner
+│                                │
+│  [▶ ⏸ ⏭]  (mini music overlay) │  ← bottom-left of map
+├────────────────────────────────┤
+│   00:54:12       3.42 km       │  ← hero stats (huge)
+├────────────────────────────────┤
+│  ◀ [Pace · 5:10 /km]    ▶      │  ← swipeable carousel (1 at a time)
+│      • • ○ ○ ○                 │  ← page dots
+├────────────────────────────────┤
+│       [Pause]   [Hold Stop]    │
+└────────────────────────────────┘
+```
 
-### Card design (1080×1080)
+### 2. Locked layout & no-scroll behavior
 
-- **Top-left:** "ORBIT LAB" wordmark, small caps, tracked, white at 90%.
-- **Center:** distance — huge bold number (e.g. `10.5`) + small `km` label. White, no glow.
-- **Bottom-left:** time (mono, white).
-- **Bottom-right:** pace + `min/km` (mono, white).
-- **PR pill** (optional, top-right): tiny outlined "PR" if `previewRunPrs(run)` returns any.
-- Background:
-  - Map: rendered via Mapbox Static Images API (`/styles/v1/mapbox/dark-v11/static/path-...`) so we get the real basemap baked into the PNG. Path encoded with `@mapbox/polyline` (already trivial to inline).
-  - Photo: drawn into canvas with `object-fit: cover` math, then a bottom-anchored vertical gradient overlay (transparent → rgba(0,0,0,0.65)) for legibility. Top-left also gets a smaller gradient behind the wordmark.
-- Strictly no glow / no neon halo. Neon only used for the route polyline on the map background.
+- Root: `fixed inset-0 z-50 flex flex-col bg-background` with `touch-action: none` and `overscroll-behavior: contain` to kill bounce.
+- When Focus is active, hide `<BottomNav>` by adding a global flag (CSS class on `<body>`, set/cleared in `FocusRunView`'s `useEffect`). `BottomNav` reads it and returns `null`. This keeps `__root.tsx` untouched structurally.
+- Disable `useSwipeNav` while Focus is mounted so left/right swipes don't bounce to history.
 
-### Technical notes
+### 3. Hero stats (big, high contrast)
 
-- New file `src/lib/share-card-v2.ts` exports `generateShareCard(run, { mode, photoDataUrl }, lang)` returning a `Blob`, plus `shareBlob(blob, lang)` for Web Share + download fallback.
-- Map mode uses Mapbox Static Images:
-  - URL: `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/path-5+c8ff3d-1({encodedPolyline})/auto/1080x1080@2x?access_token=...&padding=80`
-  - Token already in `src/lib/mapbox.ts`.
-  - Fetched as blob, drawn to canvas, then text overlay drawn on top.
-  - Fallback: if fetch fails or the run has <2 points, render a flat dark background with the polyline projected by hand (reuse the `project()` helper pattern from existing `share-card.ts`).
-- Photo mode: read file via `URL.createObjectURL`, load into `Image`, draw cover-fit, apply gradients, draw text.
-- New component `src/components/ShareSheet.tsx` (uses existing `Sheet` UI primitive) hosts the tabs, preview, file input, and share button.
-- `src/components/RunSummary.tsx` and `src/routes/run.$id.tsx` both mount `ShareSheet` and pass the `run`.
-- i18n keys added in `src/lib/i18n.tsx`: `share.button`, `share.title`, `share.tabMap`, `share.tabPhoto`, `share.pickPhoto`, `share.share`, `share.downloaded`, `share.generating`.
+Reuse the user's existing `layout.hero` from `stat-metrics`. Render two metrics with `text-[56px]` font weight `font-display font-black`, value in foreground/neon-tinted, label tiny uppercase above. No glow, just bold contrast.
 
-### Files
+### 4. Swipeable secondary carousel
 
-- new: `src/lib/share-card-v2.ts`
-- new: `src/components/ShareSheet.tsx`
-- edit: `src/routes/run.$id.tsx` — add share button + sheet
-- edit: `src/components/RunSummary.tsx` — replace inline share button with `ShareSheet`
-- edit: `src/lib/i18n.tsx` — add share keys (da + en)
-- delete: `src/lib/share-card.ts` (replaced)
+- Source: `ALL_METRIC_IDS.filter(id => !layout.hero.includes(id))` → ~10 swipeable cards.
+- Implementation: a horizontally scrolling flex container with `scroll-snap-type: x mandatory`, each child `w-full snap-center shrink-0`. Uses native touch scroll (no extra dep) — perfectly smooth on mobile.
+- Show one large metric per page (label + huge value + unit). Page indicator dots underneath, computed from `scrollLeft / pageWidth`.
+- Pre-arrange so the user's existing `layout.secondary` metrics appear first.
+
+### 5. Ghost runner bar (top)
+
+A slim pill at the very top of the Focus view (inside safe area):
+- `+0:12 FORAN` (green) when `ghostDeltaMs >= 0`
+- `−0:05 BAGUD` (red/destructive) when behind
+- Hidden when `t.ghost` is null. Updates live from `t.ghostDeltaMs`.
+
+### 6. Map (top half)
+
+Reuse `<RunMap>` with `interactive={false}` so the map auto-follows. Constrain it to `flex: 1` of the upper region (roughly 45% of viewport). Ghost runner indicator already rendered by `RunMap` via `ghost` prop — keep it.
+
+### 7. Mini music overlay
+
+A compact pill anchored at `absolute bottom-2 left-2` over the map: three buttons (◀ / ▶‖ / ▶) wired to a new lightweight prop-driven version of MusicHub controls — extract the play/skip/state logic into a `useMusicControls()` hook (or a new `<MiniMusicControls>` component) that shares the same `MOCK_TRACKS` + `orbit:run-start/stop` events as `MusicHub`. Glass background, no track title (just controls) to stay minimal.
+
+### 8. Action buttons — Pause + Hold-to-Stop
+
+- **Pause/Resume**: regular tap, same behavior as today.
+- **Stop**: long-press required. Implementation:
+  - On `pointerdown`: start a 1200ms timer + animate a circular progress ring around the button (SVG `stroke-dashoffset` transition) + light haptic at 600ms.
+  - On `pointerup`/`pointerleave` before timer fires: cancel & reset.
+  - On timer fire: strong haptic, call `onStop`.
+- Add Danish + English strings: `focus.holdToStop` ("Hold for at stoppe" / "Hold to stop").
+
+### 9. Wiring in `routes/index.tsx`
+
+- `isActive = t.status === "running" || t.status === "paused"`.
+- If `isActive && !pendingRun`, render `<FocusRunView ... />` instead of the existing scroll layout. Onboarding/countdown/summary overlays still render above (they're already portals/fixed).
+- The existing pre-run home (header, coach card, map preview, edit-stats grid, MusicHub, big start button) continues to render in idle/finished states.
+
+### 10. i18n keys to add (`src/lib/i18n.tsx`)
+
+`focus.ghostAhead`, `focus.ghostBehind`, `focus.holdToStop`, `focus.swipeHint` (subtle "Swipe for more" on first run). EN + DA.
+
+### Files to create
+- `src/components/FocusRunView.tsx`
+- `src/components/MiniMusicControls.tsx`
+
+### Files to edit
+- `src/routes/index.tsx` — branch to FocusRunView when active.
+- `src/components/BottomNav.tsx` — return `null` when `body.focus-mode` class is present.
+- `src/lib/i18n.tsx` — new keys.
+- `src/lib/stat-metrics.ts` — small helper `secondaryCarouselOrder(layout)` returning `[...layout.secondary, ...rest]`.
+
+### Out of scope (not requested)
+- Real Spotify integration (still mock controls; share state with existing MusicHub).
+- Persisting carousel position across pause/resume.
+- Background-tab tracking already works via the existing wake lock + silent audio loop + timer worker — no changes needed.
