@@ -185,10 +185,10 @@ export default function FocusRunView({
           const def = METRICS[id];
           return (
             <div key={id} className="text-center">
-              <div className="text-[9px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+              <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
                 {tr(def.labelKey)}
               </div>
-              <div className={`font-display font-black tabular-nums leading-none mt-1 text-[44px] ${id === "distance" ? "text-neon" : "text-foreground"}`}>
+              <div className={`font-display font-black tabular-nums leading-none mt-1 text-[48px] ${id === "distance" ? "text-neon" : "text-foreground"}`}>
                 {def.format(tracker)}
               </div>
             </div>
@@ -220,15 +220,15 @@ export default function FocusRunView({
                   const unit = def.unitKey ? tr(def.unitKey) : "";
                   return (
                     <div key={id} className="flex flex-col items-center text-center">
-                      <div className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold truncate max-w-full">
+                      <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold truncate max-w-full">
                         {tr(def.labelKey)}
                       </div>
                       <div className="mt-1 flex items-baseline gap-1">
-                        <span className="font-display font-black tabular-nums text-lg text-foreground leading-none">
+                        <span className="font-display font-black tabular-nums text-xl text-foreground leading-none">
                           {value}
                         </span>
                         {unit && (
-                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
                             {unit}
                           </span>
                         )}
