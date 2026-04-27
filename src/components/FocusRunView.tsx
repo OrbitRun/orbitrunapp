@@ -1,6 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
+import { Music2, Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
+import { toast } from "sonner";
 import RunMap from "@/components/RunMap";
+import {
+  beginAuth,
+  getNowPlaying,
+  isAuthed,
+  isConfigured,
+  next as spNext,
+  pause as spPause,
+  play as spPlay,
+  previous as spPrevious,
+  transferToFirstDevice,
+  type NowPlaying,
+} from "@/lib/spotify";
 import { useI18n } from "@/lib/i18n";
 import {
   ALL_METRIC_IDS,
@@ -21,12 +34,7 @@ type Props = {
 };
 
 const STOP_HOLD_MS = 1200;
-
-const MOCK_TRACKS = [
-  { title: "Midnight Pulse", artist: "Neon Drift" },
-  { title: "Orbit Run", artist: "Synth Capsule" },
-  { title: "Lime Horizon", artist: "After Hours" },
-];
+const POLL_MS = 5000;
 
 function formatGhostDelta(ms: number): string {
   const abs = Math.abs(ms);
