@@ -84,11 +84,11 @@ export default function PlaylistPicker() {
 
   return (
     <section aria-label={t("music.pickTitle")}>
-      <div className="flex items-center justify-between px-1 pb-2">
-        <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+      <div className="flex items-center justify-between gap-2 px-1 pb-2">
+        <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
           {t("music.pickTitle")}
         </div>
-        <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+        <div className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground truncate min-w-0">
           {configured && !authed ? t("music.connectHint") : t("music.pickHint")}
         </div>
       </div>
@@ -129,10 +129,10 @@ export default function PlaylistPicker() {
                   />
                 )}
               </div>
-              <div className="mt-2 text-[11px] font-black uppercase tracking-[0.14em] truncate">
+              <div className="mt-2 text-[12px] font-black uppercase tracking-[0.14em] truncate">
                 {label}
               </div>
-              <div className="mt-0.5 text-[9px] text-muted-foreground truncate">
+              <div className="mt-0.5 text-[10px] text-muted-foreground truncate">
                 {isBusy ? t("music.starting") : hint}
               </div>
             </button>
