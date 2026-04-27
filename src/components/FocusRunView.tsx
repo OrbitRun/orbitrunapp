@@ -23,11 +23,6 @@ type Props = {
 
 const STOP_HOLD_MS = 1200;
 
-const MOCK_TRACKS = [
-  { title: "Midnight Pulse", artist: "Neon Drift" },
-  { title: "Orbit Run", artist: "Synth Capsule" },
-  { title: "Lime Horizon", artist: "After Hours" },
-];
 
 function formatGhostDelta(ms: number): string {
   const abs = Math.abs(ms);
@@ -132,11 +127,6 @@ export default function FocusRunView({
 
   useEffect(() => () => cancelHold(), [cancelHold]);
 
-  // ---------- Mini music ----------
-  const [musicIdx, setMusicIdx] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const track = MOCK_TRACKS[musicIdx];
-
   // ---------- Ghost ----------
   const ghostDelta = tracker.ghostDeltaMs;
   const ghostActive = tracker.ghost != null && ghostDelta != null;
@@ -184,37 +174,9 @@ export default function FocusRunView({
         />
       </div>
 
-      {/* Music controls — own row below map */}
+      {/* Spotify hub — own row below map */}
       <div className="px-3 pt-2">
-        <div className="flex items-center gap-2 rounded-2xl glass px-2 py-1.5">
-          <button
-            aria-label="Previous track"
-            onClick={() =>
-              setMusicIdx((i) => (i - 1 + MOCK_TRACKS.length) % MOCK_TRACKS.length)
-            }
-            className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80"
-          >
-            <SkipBack className="h-4 w-4" />
-          </button>
-          <button
-            aria-label={playing ? "Pause music" : "Play music"}
-            onClick={() => setPlaying((p) => !p)}
-            className="h-9 w-9 grid place-items-center rounded-full bg-neon text-primary-foreground active:scale-95"
-          >
-            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-          </button>
-          <button
-            aria-label="Next track"
-            onClick={() => setMusicIdx((i) => (i + 1) % MOCK_TRACKS.length)}
-            className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/10 text-foreground/80"
-          >
-            <SkipForward className="h-4 w-4" />
-          </button>
-          <div className="min-w-0 flex-1 px-1">
-            <div className="text-[11px] font-semibold truncate text-foreground/90">{track.title}</div>
-            <div className="text-[10px] text-muted-foreground truncate">{track.artist}</div>
-          </div>
-        </div>
+        <MusicHub />
       </div>
 
       {/* Hero stats */}
