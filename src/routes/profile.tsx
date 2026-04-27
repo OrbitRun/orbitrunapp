@@ -8,7 +8,7 @@ import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
 import CoachOnboarding from "@/components/CoachOnboarding";
 import RecoveryStatus from "@/components/RecoveryStatus";
-import { useSwipeNav } from "@/hooks/use-swipe-nav";
+
 import {
   DEFAULT_PROFILE,
   goalLabel,
@@ -31,7 +31,7 @@ function ProfilePage() {
   const [stats, setStats] = useState({ count: 0, distance: 0, time: 0 });
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const { t, lang, setLang } = useI18n();
-  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/records" });
+  
   const [coachOpen, setCoachOpen] = useState(false);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ function ProfilePage() {
   const initial = (profile.name?.trim()?.charAt(0) || "R").toUpperCase();
 
   return (
-    <main ref={swipeRef} className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-8">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-8">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("profile.eyebrow")}

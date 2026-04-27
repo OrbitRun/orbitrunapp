@@ -9,7 +9,7 @@ import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
-import { useSwipeNav } from "@/hooks/use-swipe-nav";
+
 import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
 import { selectGhost } from "@/lib/ghost-runner";
 
@@ -21,7 +21,7 @@ function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [prs, setPrs] = useState<PrMap>({});
   const { t } = useI18n();
-  const swipeRef = useSwipeNav<HTMLElement>({ prev: "/", next: "/records" });
+  
 
   useEffect(() => {
     setRuns(loadRuns());
@@ -50,7 +50,7 @@ function HistoryPage() {
   const totalTime = runs.reduce((a, r) => a + r.durationMs, 0);
 
   return (
-    <main ref={swipeRef} className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("history.eyebrow")}

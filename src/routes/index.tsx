@@ -13,7 +13,7 @@ import FocusRunView from "@/components/FocusRunView";
 
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
-import { useSwipeNav } from "@/hooks/use-swipe-nav";
+
 import { primeAudio } from "@/lib/audio-cues";
 import { formatPace } from "@/lib/run-utils";
 import { useI18n } from "@/lib/i18n";
@@ -52,7 +52,7 @@ function RunPage() {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const wakeLock = useWakeLock();
-  const swipeRef = useSwipeNav<HTMLElement>({ next: "/history" });
+  
 
   useEffect(() => {
     const p = loadProfile();
@@ -151,7 +151,7 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main ref={swipeRef} className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
