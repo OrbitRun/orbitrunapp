@@ -1,8 +1,16 @@
-## Move Spotify controls below map in Focus Mode
+## Past run page — shoe + record badges row, RPE below
 
-Single edit to `src/components/FocusRunView.tsx`:
+Single file: `src/routes/run.$id.tsx`.
 
-- Remove the absolute-positioned mini player overlay currently sitting in the bottom-left of the map.
-- Add a new dedicated row directly beneath the map containing the same prev / play-pause / next buttons, plus the current track title and artist.
-- Style the row with the existing `glass` token + `rounded-2xl` so it matches the rest of the app's color scheme.
-- Map height stays as it is now; only the music controls move.
+### What changes
+
+1. **Shoe + record badges share one row.** Wrap the existing shoe button in a flex container and add a compact "New PR" badge group on the right. The badge group lists every PR category whose `runId` matches this run (looked up from `loadPrs()`) — e.g. `5K`, `FASTEST KM`. Uses neon styling (`bg-neon/10 border-neon/40` container, neon pill chips), Trophy icon, and `pr.newPr` + `pr.cat.*` i18n keys.
+2. **RPE moves below.** Remove the RPE `StatTile` from the 2x2 stats grid. Add a dedicated full-width row directly under the shoe/badges row showing the RPE label, value (e.g. "7 / 10"), and a 10-dot intensity meter.
+
+If the run owns no PRs, the right side simply doesn't render and the shoe button takes the full row width — same as today. If RPE wasn't logged, that row is omitted.
+
+### Imports added
+- `Trophy` from lucide-react
+- `loadPrs`, `PR_ORDER`, `PrCategory` from `@/lib/personal-records`
+
+No other layout, color, or behavior changes.
