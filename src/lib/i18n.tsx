@@ -76,6 +76,16 @@ const en: Dict = {
   // Music
   "music.demo": "demo",
   "music.spotifySoon": "Spotify integration coming soon",
+  "music.connect": "Connect Spotify",
+  "music.connecting": "Connecting…",
+  "music.notConfigured": "Spotify not configured",
+  "music.notConfiguredHint": "Add a Spotify Client ID to enable playback",
+  "music.noDevice": "No active Spotify device",
+  "music.useThisDevice": "Use available device",
+  "music.disconnect": "Disconnect",
+  "music.premiumRequired": "Spotify Premium is required for playback control",
+  "music.nothingPlaying": "Nothing playing",
+  "music.live": "live",
 
   // Nav
   "nav.run": "Run",
@@ -425,6 +435,16 @@ const da: Dict = {
 
   "music.demo": "demo",
   "music.spotifySoon": "Spotify-integration kommer snart",
+  "music.connect": "Forbind Spotify",
+  "music.connecting": "Forbinder…",
+  "music.notConfigured": "Spotify er ikke konfigureret",
+  "music.notConfiguredHint": "Tilføj et Spotify Client ID for at aktivere afspilning",
+  "music.noDevice": "Ingen aktiv Spotify-enhed",
+  "music.useThisDevice": "Brug tilgængelig enhed",
+  "music.disconnect": "Afbryd",
+  "music.premiumRequired": "Spotify Premium kræves for afspilningskontrol",
+  "music.nothingPlaying": "Intet afspilles",
+  "music.live": "live",
 
   "nav.run": "Løb",
   "nav.history": "Historik",
