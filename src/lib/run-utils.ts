@@ -129,6 +129,65 @@ export function smoothSpeeds(speeds: (number | null)[], alpha = 0.25): number[] 
   return out;
 }
 
+// Smooth a sequence of GPS coordinates using exponential moving average to
+// soften micro-jitters in the raw signal. alpha closer to 1 = more responsive.
+export function smoothCoordinates(
+  points: GeoPoint[],
+  alpha = 0.4,
+): { lat: number; lng: number }[] {
+  if (points.length === 0) return [];
+  const out: { lat: number; lng: number }[] = [];
+  let lat = points[0].lat;
+  let lng = points[0].lng;
+  out.push({ lat, lng });
+  for (let i = 1; i < points.length; i++) {
+    lat = alpha * points[i].lat + (1 - alpha) * lat;
+    lng = alpha * points[i].lng + (1 - alpha) * lng;
+    out.push({ lat, lng });
+  }
+  // Anchor the final point to the true position so the head marker matches.
+  out[out.length - 1] = { lat: points[points.length - 1].lat, lng: points[points.length - 1].lng };
+  return out;
+}
+
+// Catmull-Rom spline interpolation between control points. Produces smooth
+// curves rather than jagged straight lines. `segments` is the number of
+// interpolated points generated per input segment.
+export function catmullRomSpline(
+  pts: { lat: number; lng: number }[],
+  segments = 8,
+): { lat: number; lng: number }[] {
+  if (pts.length < 2) return [...pts];
+  if (pts.length === 2) return [...pts];
+  const out: { lat: number; lng: number }[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    for (let j = 0; j < segments; j++) {
+      const t = j / segments;
+      const t2 = t * t;
+      const t3 = t2 * t;
+      const lat =
+        0.5 *
+        (2 * p1.lat +
+          (-p0.lat + p2.lat) * t +
+          (2 * p0.lat - 5 * p1.lat + 4 * p2.lat - p3.lat) * t2 +
+          (-p0.lat + 3 * p1.lat - 3 * p2.lat + p3.lat) * t3);
+      const lng =
+        0.5 *
+        (2 * p1.lng +
+          (-p0.lng + p2.lng) * t +
+          (2 * p0.lng - 5 * p1.lng + 4 * p2.lng - p3.lng) * t2 +
+          (-p0.lng + 3 * p1.lng - 3 * p2.lng + p3.lng) * t3);
+      out.push({ lat, lng });
+    }
+  }
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+
 export function genId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
