@@ -29,6 +29,8 @@ const en: Dict = {
   "stat.sweatLoss": "Sweat loss",
   "stat.fastestKm": "Fastest km",
   "stat.ghost": "Ghost",
+  "stat.hr": "Heart rate",
+  "stat.avgHr": "Avg HR",
   "ghost.race": "Race",
   "ghost.active": "Ghost active",
   "ghost.clear": "Clear",
@@ -45,6 +47,7 @@ const en: Dict = {
   "unit.cm": "cm",
   "unit.ms": "ms",
   "unit.l": "L",
+  "unit.bpm": "bpm",
 
   // Map
   "map.legend.slow": "slow",
