@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Bell, Languages, MapPin, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Activity, Bell, Languages, MapPin, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
 import ShoesSection from "@/components/ShoesSection";
 import CoachOnboarding from "@/components/CoachOnboarding";
 import RecoveryStatus from "@/components/RecoveryStatus";
+import HealthPermissionSheet from "@/components/HealthPermissionSheet";
+import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
 
 import {
   DEFAULT_PROFILE,
@@ -33,6 +35,11 @@ function ProfilePage() {
   const { t, lang, setLang } = useI18n();
   
   const [coachOpen, setCoachOpen] = useState(false);
+  const [healthOpen, setHealthOpen] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<HealthPermissionStatus>(
+    isHealthAvailable() ? "denied" : "unavailable",
+  );
+  const healthAvailable = isHealthAvailable();
 
   useEffect(() => {
     const all = loadRuns();
