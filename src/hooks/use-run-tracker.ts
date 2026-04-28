@@ -156,8 +156,11 @@ export function useRunTracker() {
   const ghostPassedRef = useRef(false);
   const lastGhostBehindCueAtRef = useRef(0);
   const lastGhostDeltaRef = useRef<number | null>(null);
-  // Latest heart rate sample (BPM) from Apple Health, stamped onto new GPS points.
+  // Latest heart rate sample (BPM). BT chest strap takes priority over Apple Health.
   const latestBpmRef = useRef<number | null>(null);
+  const hrSourceRef = useRef<"bt" | "health" | null>(null);
+  const lastHealthBpmRef = useRef<number | null>(null);
+  const btUnsubRef = useRef<(() => void) | null>(null);
   const hrSeriesRef = useRef<HrSample[]>([]);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
