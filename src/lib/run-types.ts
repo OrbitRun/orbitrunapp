@@ -37,6 +37,9 @@ export type Run = {
   weather?: RunWeather;
   shoeId?: string;
   rpe?: number; // 1..10 perceived exertion
+  avgHrBpm?: number;
+  maxHrBpm?: number;
+  hrSeries?: HrSample[];
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";
