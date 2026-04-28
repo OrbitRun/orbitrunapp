@@ -246,6 +246,15 @@
   animation: press 0.18s ease-out;
 }
 
+/* Bluetooth searching pulse — discrete, no glow */
+@keyframes bt-pulse {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.06); }
+}
+.animate-bt-pulse {
+  animation: bt-pulse 1.2s ease-in-out infinite;
+}
+
 /* Force dark theme always */
 html {
   color-scheme: dark;
