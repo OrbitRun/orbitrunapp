@@ -9,6 +9,7 @@ import ShoesSection from "@/components/ShoesSection";
 import CoachOnboarding from "@/components/CoachOnboarding";
 import RecoveryStatus from "@/components/RecoveryStatus";
 import HealthPermissionSheet from "@/components/HealthPermissionSheet";
+import SensorsSection from "@/components/SensorsSection";
 import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
 
 import {
@@ -318,6 +319,8 @@ function ProfilePage() {
           </div>
         </button>
       </section>
+
+      <SensorsSection />
 
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Orbit Lab · v1.0
