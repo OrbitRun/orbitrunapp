@@ -17,7 +17,8 @@ export type MetricId =
   | "vertOsc"
   | "groundContact"
   | "sweatLoss"
-  | "ghost";
+  | "ghost"
+  | "hrBpm";
 
 export type LiveStats = {
   distanceM: number;
@@ -27,6 +28,7 @@ export type LiveStats = {
   cadenceSpm: number;
   elevationGainM: number;
   ghostDeltaMs?: number | null;
+  hrBpm?: number | null;
 };
 
 export type MetricDef = {
@@ -171,6 +173,12 @@ export const METRICS: Record<MetricId, MetricDef> = {
       return v > 0 ? v.toFixed(2) : "—";
     },
   },
+  hrBpm: {
+    id: "hrBpm",
+    labelKey: "stat.hr",
+    unitKey: "unit.bpm",
+    format: (s) => (s.hrBpm != null && s.hrBpm > 0 ? String(Math.round(s.hrBpm)) : "—"),
+  },
   ghost: {
     id: "ghost",
     labelKey: "stat.ghost",
@@ -199,6 +207,7 @@ export const ALL_METRIC_IDS: MetricId[] = [
   "vertOsc",
   "groundContact",
   "sweatLoss",
+  "hrBpm",
   "ghost",
 ];
 
@@ -264,6 +273,7 @@ export function computeRunMetrics(run: Run): LiveStats {
     cadenceSpm: run.avgCadenceSpm,
     elevationGainM: run.elevationGainM,
     ghostDeltaMs: null,
+    hrBpm: run.avgHrBpm ?? null,
   };
 }
 
