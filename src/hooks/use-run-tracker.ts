@@ -565,6 +565,8 @@ export function useRunTracker() {
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     stopHeartRatePolling();
+    btUnsubRef.current?.();
+    btUnsubRef.current = null;
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
@@ -652,6 +654,8 @@ export function useRunTracker() {
       workerRef.current = null;
       stopSilentLoop();
       stopHeartRatePolling();
+      btUnsubRef.current?.();
+      btUnsubRef.current = null;
     };
   }, []);
 
