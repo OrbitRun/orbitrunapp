@@ -218,6 +218,7 @@ export function useRunTracker() {
           alt: pos.coords.altitude,
           t: pos.timestamp,
           speed: pos.coords.speed,
+          hrBpm: latestBpmRef.current,
         };
         const last = prev.points[prev.points.length - 1];
         let addDist = 0;
@@ -468,6 +469,8 @@ export function useRunTracker() {
     ghostPassedRef.current = false;
     lastGhostBehindCueAtRef.current = 0;
     lastGhostDeltaRef.current = null;
+    latestBpmRef.current = null;
+    hrSeriesRef.current = [];
     const startedAt = Date.now();
     setState({
       ...initial,
@@ -478,6 +481,11 @@ export function useRunTracker() {
     });
     armGps();
     startSilentLoop(); // keep iOS from suspending JS when screen locks
+    // Begin polling Apple Health for heart rate (no-op on web).
+    startHeartRatePolling((bpm, t) => {
+      latestBpmRef.current = bpm;
+      hrSeriesRef.current.push({ t, bpm });
+    }, 5000);
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
