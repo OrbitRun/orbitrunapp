@@ -518,12 +518,22 @@ export function useRunTracker() {
     }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
+    stopHeartRatePolling();
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
       return null;
     }
     const primaryShoe = getPrimaryShoe();
+    const hr = hrSeriesRef.current;
+    const hrAggregates =
+      hr.length > 0
+        ? {
+            avgHrBpm: Math.round(hr.reduce((a, b) => a + b.bpm, 0) / hr.length),
+            maxHrBpm: hr.reduce((a, b) => Math.max(a, b.bpm), 0),
+            hrSeries: hr,
+          }
+        : {};
     const run: Run = {
       id: genId(),
       startedAt: s.startedAt,
@@ -537,6 +547,7 @@ export function useRunTracker() {
       splits: s.splits,
       weather: weatherRef.current ?? undefined,
       shoeId: primaryShoe?.id,
+      ...hrAggregates,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
