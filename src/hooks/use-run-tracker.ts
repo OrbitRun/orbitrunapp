@@ -38,6 +38,7 @@ type State = {
   permissionError: string | null;
   ghostDeltaMs: number | null;
   ghost: GhostRef | null;
+  hrBpm: number | null;
 };
 
 const initial: State = {
@@ -54,6 +55,7 @@ const initial: State = {
   permissionError: null,
   ghostDeltaMs: null,
   ghost: null,
+  hrBpm: null,
 };
 
 type PrFlags = {
@@ -485,6 +487,9 @@ export function useRunTracker() {
     startHeartRatePolling((bpm, t) => {
       latestBpmRef.current = bpm;
       hrSeriesRef.current.push({ t, bpm });
+      setState((p) =>
+        p.status === "running" || p.status === "paused" ? { ...p, hrBpm: bpm } : p,
+      );
     }, 5000);
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });

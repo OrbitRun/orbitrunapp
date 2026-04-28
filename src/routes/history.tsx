@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Footprints, Ghost, Mountain, Trash2, Trophy, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Footprints, Ghost, Heart, Mountain, Trash2, Trophy, Zap } from "lucide-react";
 import { deleteRun, loadRuns, type Run, type Split } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -206,6 +206,13 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
               {formatPace(run.avgPaceSecPerKm)}
               {t("unit.perKm")}
             </span>
+            {run.avgHrBpm ? (
+              <span className="inline-flex items-baseline gap-1 font-mono text-sm text-foreground/70">
+                <Heart className="h-3 w-3 self-center text-neon" fill="currentColor" />
+                {Math.round(run.avgHrBpm)}
+                <span className="text-[10px] text-muted-foreground">{t("unit.bpm")}</span>
+              </span>
+            ) : null}
           </div>
           {prCategories?.length ? (
             <div className="mt-1.5 flex flex-wrap items-center gap-1">
