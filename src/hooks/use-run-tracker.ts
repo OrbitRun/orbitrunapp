@@ -605,6 +605,7 @@ export function useRunTracker() {
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
+      stopHeartRatePolling();
     };
   }, []);
 
