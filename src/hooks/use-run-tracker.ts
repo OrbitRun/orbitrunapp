@@ -8,6 +8,7 @@ import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profil
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
+import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -39,6 +40,7 @@ type State = {
   ghostDeltaMs: number | null;
   ghost: GhostRef | null;
   hrBpm: number | null;
+  hrSource: "bt" | "health" | null;
 };
 
 const initial: State = {
@@ -56,6 +58,7 @@ const initial: State = {
   ghostDeltaMs: null,
   ghost: null,
   hrBpm: null,
+  hrSource: null,
 };
 
 type PrFlags = {
@@ -153,8 +156,11 @@ export function useRunTracker() {
   const ghostPassedRef = useRef(false);
   const lastGhostBehindCueAtRef = useRef(0);
   const lastGhostDeltaRef = useRef<number | null>(null);
-  // Latest heart rate sample (BPM) from Apple Health, stamped onto new GPS points.
+  // Latest heart rate sample (BPM). BT chest strap takes priority over Apple Health.
   const latestBpmRef = useRef<number | null>(null);
+  const hrSourceRef = useRef<"bt" | "health" | null>(null);
+  const lastHealthBpmRef = useRef<number | null>(null);
+  const btUnsubRef = useRef<(() => void) | null>(null);
   const hrSeriesRef = useRef<HrSample[]>([]);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
@@ -472,6 +478,8 @@ export function useRunTracker() {
     lastGhostBehindCueAtRef.current = 0;
     lastGhostDeltaRef.current = null;
     latestBpmRef.current = null;
+    hrSourceRef.current = null;
+    lastHealthBpmRef.current = null;
     hrSeriesRef.current = [];
     const startedAt = Date.now();
     setState({
@@ -483,12 +491,45 @@ export function useRunTracker() {
     });
     armGps();
     startSilentLoop(); // keep iOS from suspending JS when screen locks
+
+    // --- Heart rate sources ---------------------------------------------------
+    // Bluetooth chest strap takes priority. Apple Health is used as fallback
+    // only when no BT sensor is currently streaming.
+    btUnsubRef.current = subscribeBtHr((bt: BtHrState) => {
+      if (bt.status === "connected" && bt.bpm != null) {
+        latestBpmRef.current = bt.bpm;
+        hrSourceRef.current = "bt";
+        hrSeriesRef.current.push({ t: Date.now(), bpm: bt.bpm });
+        setState((p) =>
+          p.status === "running" || p.status === "paused"
+            ? { ...p, hrBpm: bt.bpm, hrSource: "bt" }
+            : p,
+        );
+      } else if (hrSourceRef.current === "bt") {
+        // BT just dropped — fall back to last health value if any.
+        const fb = lastHealthBpmRef.current;
+        latestBpmRef.current = fb;
+        hrSourceRef.current = fb != null ? "health" : null;
+        setState((p) =>
+          p.status === "running" || p.status === "paused"
+            ? { ...p, hrBpm: fb, hrSource: fb != null ? "health" : null }
+            : p,
+        );
+      }
+    });
+
     // Begin polling Apple Health for heart rate (no-op on web).
     startHeartRatePolling((bpm, t) => {
+      lastHealthBpmRef.current = bpm;
+      // Only adopt Health value if BT isn't currently the active source.
+      if (hrSourceRef.current === "bt") return;
       latestBpmRef.current = bpm;
+      hrSourceRef.current = "health";
       hrSeriesRef.current.push({ t, bpm });
       setState((p) =>
-        p.status === "running" || p.status === "paused" ? { ...p, hrBpm: bpm } : p,
+        p.status === "running" || p.status === "paused"
+          ? { ...p, hrBpm: bpm, hrSource: "health" }
+          : p,
       );
     }, 5000);
     const w = ensureWorker();
@@ -524,6 +565,8 @@ export function useRunTracker() {
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     stopHeartRatePolling();
+    btUnsubRef.current?.();
+    btUnsubRef.current = null;
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
@@ -611,6 +654,8 @@ export function useRunTracker() {
       workerRef.current = null;
       stopSilentLoop();
       stopHeartRatePolling();
+      btUnsubRef.current?.();
+      btUnsubRef.current = null;
     };
   }, []);
 

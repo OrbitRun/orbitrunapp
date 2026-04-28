@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, Square } from "lucide-react";
+import { Bluetooth, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
 import { useI18n } from "@/lib/i18n";
@@ -142,21 +142,30 @@ export default function FocusRunView({
         paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
       }}
     >
-      {/* Ghost bar */}
-      {ghostActive && (
-        <div className="px-4 pb-2 flex justify-center">
-          <div
-            className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border ${
-              ghostDelta! >= 0
-                ? "bg-neon/15 border-neon/40 text-neon"
-                : "bg-destructive/15 border-destructive/50 text-destructive"
-            }`}
-          >
-            <span>{ghostDelta! >= 0 ? "+" : "−"}{formatGhostDelta(ghostDelta!)}</span>
-            <span className="opacity-70">
-              {ghostDelta! >= 0 ? tr("focus.ahead") : tr("focus.behind")}
-            </span>
-          </div>
+      {/* Ghost / sensor bar */}
+      {(ghostActive || tracker.hrSource === "bt") && (
+        <div className="px-4 pb-2 flex justify-center gap-2">
+          {ghostActive && (
+            <div
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border ${
+                ghostDelta! >= 0
+                  ? "bg-neon/15 border-neon/40 text-neon"
+                  : "bg-destructive/15 border-destructive/50 text-destructive"
+              }`}
+            >
+              <span>{ghostDelta! >= 0 ? "+" : "−"}{formatGhostDelta(ghostDelta!)}</span>
+              <span className="opacity-70">
+                {ghostDelta! >= 0 ? tr("focus.ahead") : tr("focus.behind")}
+              </span>
+            </div>
+          )}
+          {tracker.hrSource === "bt" && tracker.hrBpm != null && (
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border bg-white/5 border-white/15 text-foreground/90">
+              <Bluetooth className="h-3 w-3 text-neon" />
+              <span className="tabular-nums">{tracker.hrBpm}</span>
+              <span className="opacity-60">bpm</span>
+            </div>
+          )}
         </div>
       )}
 
