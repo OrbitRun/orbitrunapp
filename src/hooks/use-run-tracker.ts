@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GeoPoint, Run, RunWeather, Split } from "@/lib/run-types";
+import type { GeoPoint, HrSample, Run, RunWeather, Split } from "@/lib/run-types";
 import { saveRun, updateRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
@@ -7,6 +7,7 @@ import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
+import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -150,6 +151,9 @@ export function useRunTracker() {
   const ghostPassedRef = useRef(false);
   const lastGhostBehindCueAtRef = useRef(0);
   const lastGhostDeltaRef = useRef<number | null>(null);
+  // Latest heart rate sample (BPM) from Apple Health, stamped onto new GPS points.
+  const latestBpmRef = useRef<number | null>(null);
+  const hrSeriesRef = useRef<HrSample[]>([]);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
