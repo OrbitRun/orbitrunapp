@@ -4,7 +4,10 @@ export type GeoPoint = {
   alt: number | null;
   t: number; // ms timestamp
   speed: number | null; // m/s
+  hrBpm?: number | null; // latest known heart rate at this fix (Apple Health)
 };
+
+export type HrSample = { t: number; bpm: number };
 
 export type Split = {
   km: number;
