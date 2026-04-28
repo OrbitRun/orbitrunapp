@@ -8,6 +8,7 @@ import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profil
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
+import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -39,6 +40,7 @@ type State = {
   ghostDeltaMs: number | null;
   ghost: GhostRef | null;
   hrBpm: number | null;
+  hrSource: "bt" | "health" | null;
 };
 
 const initial: State = {
@@ -56,6 +58,7 @@ const initial: State = {
   ghostDeltaMs: null,
   ghost: null,
   hrBpm: null,
+  hrSource: null,
 };
 
 type PrFlags = {
