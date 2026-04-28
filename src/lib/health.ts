@@ -31,11 +31,17 @@ export function isHealthAvailable(): boolean {
 async function loadPlugin(): Promise<unknown | null> {
   if (!isHealthAvailable()) return null;
   try {
+    // Hide the specifier from the TS resolver and Vite's static analysis —
+    // the package is only installed inside the native Capacitor shell.
+    const specifier = "@capacitor-community/health";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod: any = await import(
-      /* @vite-ignore */ "@capacitor-community/health"
-    );
-    return mod?.Health ?? mod?.default ?? null;
+    const mod: any = await (Function(
+      "s",
+      "return import(s)",
+    ) as (s: string) => Promise<unknown>)(specifier);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const m = mod as any;
+    return m?.Health ?? m?.default ?? null;
   } catch {
     return null;
   }

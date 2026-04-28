@@ -1,6 +1,13 @@
 // Capacitor config — used only when the web app is wrapped in a native iOS
 // shell (see docs/IOS_SETUP.md). Has no effect on the web build.
-import type { CapacitorConfig } from "@capacitor/cli";
+// `@capacitor/cli` is intentionally not in the web package.json — install it
+// locally before running `npx cap` commands.
+type CapacitorConfig = {
+  appId: string;
+  appName: string;
+  webDir: string;
+  ios?: { contentInset?: "always" | "automatic" | "never" | "scrollableAxes" };
+};
 
 const config: CapacitorConfig = {
   appId: "app.lovable.orbit",
