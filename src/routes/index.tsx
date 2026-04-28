@@ -10,6 +10,7 @@ import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
 import FocusRunView from "@/components/FocusRunView";
+import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
 import { useRunTracker } from "@/hooks/use-run-tracker";
 import { useWakeLock } from "@/hooks/use-wake-lock";
@@ -48,6 +49,7 @@ function RunPage() {
   const [pressed, setPressed] = useState<string | null>(null);
   const [counting, setCounting] = useState(false);
   const [pendingRun, setPendingRun] = useState<Run | null>(null);
+  const [healthOpen, setHealthOpen] = useState(false);
 
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -96,6 +98,7 @@ function RunPage() {
     void wakeLock.request();
     // Pre-arm GPS so the first fix is ready when the run actually starts
     t.armGps();
+    if (shouldAskHealthPermission()) setHealthOpen(true);
     setCounting(true);
   }, [wakeLock, t]);
 
@@ -154,6 +157,7 @@ function RunPage() {
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
+      <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
       {isActive && !pendingRun && (
         <FocusRunView

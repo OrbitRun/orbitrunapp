@@ -4,7 +4,10 @@ export type GeoPoint = {
   alt: number | null;
   t: number; // ms timestamp
   speed: number | null; // m/s
+  hrBpm?: number | null; // latest known heart rate at this fix (Apple Health)
 };
+
+export type HrSample = { t: number; bpm: number };
 
 export type Split = {
   km: number;
@@ -37,6 +40,9 @@ export type Run = {
   weather?: RunWeather;
   shoeId?: string;
   rpe?: number; // 1..10 perceived exertion
+  avgHrBpm?: number;
+  maxHrBpm?: number;
+  hrSeries?: HrSample[];
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";

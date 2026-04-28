@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { GeoPoint, Run, RunWeather, Split } from "@/lib/run-types";
+import type { GeoPoint, HrSample, Run, RunWeather, Split } from "@/lib/run-types";
 import { saveRun, updateRun } from "@/lib/run-types";
 import { genId, haversine } from "@/lib/run-utils";
 import { speakLocalized, startSilentLoop, stopSilentLoop } from "@/lib/audio-cues";
@@ -7,6 +7,7 @@ import { getStoredLang, paceToWords, type Lang } from "@/lib/i18n";
 import { displayName, loadProfile, type AudioCueMeters } from "@/lib/user-profile";
 import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
+import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -150,6 +151,9 @@ export function useRunTracker() {
   const ghostPassedRef = useRef(false);
   const lastGhostBehindCueAtRef = useRef(0);
   const lastGhostDeltaRef = useRef<number | null>(null);
+  // Latest heart rate sample (BPM) from Apple Health, stamped onto new GPS points.
+  const latestBpmRef = useRef<number | null>(null);
+  const hrSeriesRef = useRef<HrSample[]>([]);
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
@@ -214,6 +218,7 @@ export function useRunTracker() {
           alt: pos.coords.altitude,
           t: pos.timestamp,
           speed: pos.coords.speed,
+          hrBpm: latestBpmRef.current,
         };
         const last = prev.points[prev.points.length - 1];
         let addDist = 0;
@@ -464,6 +469,8 @@ export function useRunTracker() {
     ghostPassedRef.current = false;
     lastGhostBehindCueAtRef.current = 0;
     lastGhostDeltaRef.current = null;
+    latestBpmRef.current = null;
+    hrSeriesRef.current = [];
     const startedAt = Date.now();
     setState({
       ...initial,
@@ -474,6 +481,11 @@ export function useRunTracker() {
     });
     armGps();
     startSilentLoop(); // keep iOS from suspending JS when screen locks
+    // Begin polling Apple Health for heart rate (no-op on web).
+    startHeartRatePolling((bpm, t) => {
+      latestBpmRef.current = bpm;
+      hrSeriesRef.current.push({ t, bpm });
+    }, 5000);
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker]);
@@ -506,12 +518,22 @@ export function useRunTracker() {
     }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
+    stopHeartRatePolling();
     const s = stateRef.current;
     if (!s.startedAt) {
       setState({ ...initial });
       return null;
     }
     const primaryShoe = getPrimaryShoe();
+    const hr = hrSeriesRef.current;
+    const hrAggregates =
+      hr.length > 0
+        ? {
+            avgHrBpm: Math.round(hr.reduce((a, b) => a + b.bpm, 0) / hr.length),
+            maxHrBpm: hr.reduce((a, b) => Math.max(a, b.bpm), 0),
+            hrSeries: hr,
+          }
+        : {};
     const run: Run = {
       id: genId(),
       startedAt: s.startedAt,
@@ -525,6 +547,7 @@ export function useRunTracker() {
       splits: s.splits,
       weather: weatherRef.current ?? undefined,
       shoeId: primaryShoe?.id,
+      ...hrAggregates,
     };
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
@@ -582,6 +605,7 @@ export function useRunTracker() {
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
+      stopHeartRatePolling();
     };
   }, []);
 

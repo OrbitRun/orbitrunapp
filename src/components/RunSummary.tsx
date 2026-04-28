@@ -87,6 +87,12 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
           <StatTile label={t("stat.avgPace")} value={formatPace(run.avgPaceSecPerKm)} unit={t("unit.perKm")} />
           <StatTile label={t("stat.cadence")} value={String(run.avgCadenceSpm)} unit={t("unit.spm")} />
           <StatTile label={t("stat.elevation")} value={Math.round(run.elevationGainM).toString()} unit={t("unit.m")} />
+          {run.avgHrBpm != null && (
+            <>
+              <StatTile label="Avg HR" value={String(run.avgHrBpm)} unit="bpm" />
+              <StatTile label="Max HR" value={String(run.maxHrBpm ?? run.avgHrBpm)} unit="bpm" />
+            </>
+          )}
         </section>
 
         {/* Inline RPE picker — feeds the recovery engine */}

@@ -1,121 +1,64 @@
-# App Store Ready — Final Polish
+## Reality check first
 
-A focused pass to make ORBIT LAB feel like a native installed app. No new features — only behavior, styling, manifest, and cleanup.
+Your app is a **TanStack Start web app** on Cloudflare Workers. **Apple HealthKit is iOS-native only** — no browser/PWA can read it. To actually receive heart rate from Apple Health you need:
 
-## 1. Native Mobile Feel
+1. A **Capacitor iOS shell** wrapping this web app, **and**
+2. Building/signing in **Xcode** with the HealthKit entitlement, **and**
+3. Distributing via **TestFlight / App Store**.
 
-**Disable overscroll bounce (global)**
-- In `src/styles.css`, add to `html, body`:
-  - `overscroll-behavior: none;`
-  - `-webkit-overflow-scrolling: auto;` (kills iOS rubber-band)
-  - `touch-action: manipulation;` (removes 300ms tap delay, blocks double-tap zoom)
+Lovable produces the web bundle the native shell loads — it cannot build/sign the iOS binary. What I **can** do now is build all the app-side plumbing so the moment you wrap this in Capacitor, heart rate just works. On the web it stays cleanly inert.
 
-**Touch optimization**
-- Add a global utility in `styles.css`:
-  - `button, a, [role="button"] { -webkit-tap-highlight-color: transparent; user-select: none; }`
-  - `.tap { transition: transform 120ms ease, opacity 120ms ease; }` `.tap:active { transform: scale(0.96); opacity: 0.85; }`
-- Audit `hover:` classes in mobile-only surfaces (`src/routes/profile.tsx`, `src/routes/history.tsx`, `src/routes/index.tsx`, `src/routes/records.tsx`): wrap mobile-irrelevant hover styles in `@media (hover: hover)` by replacing `hover:` with `md:hover:` where appropriate, or convert to `active:` feedback. Shadcn primitives (`button.tsx`, `badge.tsx`, etc.) keep `hover:` since they use `@media (hover: hover)` semantics implicitly through Tailwind variants — leave those alone.
-- Ensure every interactive button has `active:scale-95` or the new `.tap` class for visual press feedback.
+## What I'll build (web-safe, native-ready)
 
-**Safe area insets**
-- `src/routes/__root.tsx` `<body>` — add `min-h-[100dvh]` and inline `paddingTop: env(safe-area-inset-top)` is currently only on `index.tsx`. Apply consistently across all routes by adding a wrapper in `__root.tsx` that pads top + bottom with `env(safe-area-inset-*)`.
-- `BottomNav.tsx` already uses `pb-[max(env(safe-area-inset-bottom),12px)]` — verify the `mb-[30px]` on the root container in `__root.tsx` doesn't fight it; reduce to rely on safe-area only.
-- `FocusRunView.tsx` already uses safe-area padding — keep.
+### 1. Health bridge — `src/lib/health.ts`
+Thin abstraction over `@capacitor-community/health` (maintained HealthKit plugin):
+- `isHealthAvailable()` — true only inside Capacitor on iOS.
+- `requestHeartRatePermission()` — prompts read access for `HKQuantityTypeIdentifierHeartRate`. Returns `'granted' | 'denied' | 'unavailable'`.
+- `getLatestHeartRate()` — queries the most recent BPM sample (last ~30s window).
+- `startHeartRatePolling(cb, intervalMs = 5000)` / `stopHeartRatePolling()` — interval poller (HealthKit has no true HR push without a watchOS companion; 5s polling is the standard pattern).
 
-## 2. Clean UI & Navigation
+All Capacitor calls are **dynamic-imported** and try/catch'd so the module never breaks the web bundle (Cloudflare Worker SSR + browser).
 
-**Z-index hierarchy** — establish a clear scale:
-- Base content: default
-- BottomNav: `z-40`
-- Overlays/modals (Onboarding, Countdown, RunSummary, MetricPicker): `z-50`
-- **FocusRunView: bump from `z-40` → `z-[60]`** so it covers the nav even before the MutationObserver-based hide kicks in (avoids a 1-frame flicker).
+### 2. Permission flow UI
+- New `src/components/HealthPermissionSheet.tsx`: bottom sheet explaining what data is read and why, "Allow" / "Not now" actions. Shown automatically on first run start in a Capacitor build, gated by `localStorage` flag `orbit:health:asked`.
+- `src/routes/profile.tsx`: new "Apple Health" row showing status (Connected / Denied / Not available) with re-prompt button.
 
-**Loading states**
-- Add a small reusable `<OrbitSpinner />` in `src/components/OrbitSpinner.tsx`: a 24px lime-green orbit ring with `animate-spin`. Use it in:
-  - `RecoveryInsight.tsx` while computing
-  - `MusicHub.tsx` `busy` state (currently no visual)
-  - `WeatherBadge.tsx` if it has a fetching window
+### 3. Run tracker integration — `src/hooks/use-run-tracker.ts`
+- Extend `GeoPoint` in `src/lib/run-types.ts` with optional `hrBpm: number | null`.
+- Extend `Run` with `avgHrBpm?`, `maxHrBpm?`, and `hrSeries?: { t: number; bpm: number }[]` so HR is captured even when standing still (no new GeoPoint).
+- On `start()`: `startHeartRatePolling` (no-op on web). Each poll updates a `latestBpmRef` and appends to `hrSeries`.
+- In `handlePosition`: stamp `latestBpmRef` onto each new `GeoPoint`.
+- On `stop()`: `stopHeartRatePolling`, compute avg/max, persist on the `Run`.
 
-**Global cleanup**
-- Remove `console.error` calls in:
-  - `src/components/ShareSheet.tsx` (lines 51, 92)
-  - `src/lib/share-card-v2.ts` (line 76)
-  - Replace with silent fail (already wrapped in try/catch).
-- Scan for any "TODO", "test", or unused buttons. Confirm none remain.
+### 4. Run history & summary
+- Add HR tile (avg / max BPM) to `src/components/RunSummary.tsx` and `src/routes/run.$id.tsx`. Hidden when no HR data — older runs unaffected.
 
-## 3. Performance & Caching
+### 5. Capacitor scaffold (config + docs only — NOT installed in web build)
+Capacitor cannot run inside the Cloudflare Worker bundle, so I will **not** add `@capacitor/core` to `package.json` (would bloat / risk SSR errors). Instead:
+- `capacitor.config.ts` — appId `app.lovable.orbit`, webDir `dist/client`, iOS plist hint for `NSHealthShareUsageDescription`.
+- `docs/IOS_SETUP.md` — exact recipe to wrap the app: `bun add @capacitor/core @capacitor/cli @capacitor/ios @capacitor-community/health`, `npx cap add ios`, add HealthKit capability in Xcode, etc.
 
-**Icons**
-- The app uses `lucide-react` everywhere — already SVG. ✓ No change needed.
-- The logo (`src/assets/5ceb6f47-...png`) stays as PNG (it's a raster brand mark). Note in plan: leave as-is unless an SVG version is supplied.
+This keeps the web build clean while giving a one-shot path to a working iOS build later.
 
-**Local storage robustness**
-- Audit all `localStorage` writes (`user-profile.ts`, `stat-metrics.ts`, `personal-records.ts`, `ghost-runner.ts`, `shoes.ts`, `coach-plan.ts`):
-  - Wrap every `JSON.parse` in try/catch returning defaults (most already do).
-  - Add a versioned key check so future schema changes don't crash hydration.
-- Add a `src/lib/storage.ts` helper with `safeGet<T>(key, default)` / `safeSet(key, value)` and migrate the most critical files (profile, layout, PRs) to use it.
+## Files touched
 
-## 4. App Manifest & Icons
-
-**Update `public/manifest.webmanifest`**:
-```json
-{
-  "name": "ORBIT LAB",
-  "short_name": "ORBIT",
-  "description": "Premium GPS running tracker with live splits, ghost runner, and Spotify control.",
-  "background_color": "#000000",
-  "theme_color": "#0a0d12",
-  "display": "standalone",
-  "orientation": "portrait",
-  "start_url": "/",
-  "scope": "/",
-  "categories": ["health", "fitness", "sports"],
-  "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
-}
+```text
+src/lib/health.ts                        (new — bridge, web-safe)
+src/lib/run-types.ts                     (add hrBpm, avgHrBpm, maxHrBpm, hrSeries)
+src/hooks/use-run-tracker.ts             (poll + stamp + aggregate)
+src/components/HealthPermissionSheet.tsx (new)
+src/components/RunSummary.tsx            (HR tile)
+src/routes/profile.tsx                   (Apple Health row)
+src/routes/run.$id.tsx                   (HR tile in detail view)
+src/routes/index.tsx                     (mount permission sheet on first run)
+capacitor.config.ts                      (new — config only)
+docs/IOS_SETUP.md                        (new — wrapping recipe)
 ```
 
-**iOS / Android meta tags** in `src/routes/__root.tsx` `head().meta`:
-- `apple-mobile-web-app-capable: yes`
-- `apple-mobile-web-app-status-bar-style: black-translucent`
-- `apple-mobile-web-app-title: ORBIT`
-- `mobile-web-app-capable: yes`
-- `format-detection: telephone=no`
-- Update `theme-color` to `#000000` to match manifest background for a seamless splash.
+## What you need to know
 
-Note: per Lovable PWA guidance we are NOT adding service workers / vite-plugin-pwa. Manifest + meta tags are enough for "Add to Home Screen" installability without offline caching (which would break the in-editor preview).
+- **In the current web preview, this code is dormant.** `isHealthAvailable()` returns false, the sheet never appears, runs save with `hrBpm: null`. Nothing visible changes for web users.
+- **To actually get HR data**, you (or a developer) must follow `docs/IOS_SETUP.md` to wrap in Capacitor and submit through Xcode. Lovable cannot do that step.
+- **5s polling is the iOS HealthKit norm** for live HR during workouts. True push streaming requires a watchOS companion app — out of scope.
 
-## 5. Final Logic Check
-
-**Coach as source of truth for goal progress**
-- Audit `src/components/CoachCard.tsx` and `src/lib/coach-plan.ts`: confirm goal progress reads from `profile.coach.goal` (with `fasterDistance`) before falling back to `profile.goal`. Already implemented in `coachGoalLabel()` in `index.tsx` — verify all other surfaces (history page weekly target, records page) follow the same precedence.
-
-**High-precision GPS + path smoothing**
-- Already verified in `use-run-tracker.ts`:
-  - `enableHighAccuracy: true`, `maximumAge: 0`, `timeout: 5000` ✓
-  - Accuracy gate (≤20m), movement floor (3m / acc×0.4), max-speed reject (10 m/s), elevation EMA (0.7/0.3) ✓
-  - Split boundary interpolation ✓
-- No code change needed — call out as "already active" in the implementation summary so the user has confirmation.
-
-## Files Touched
-
-- `public/manifest.webmanifest` — full rewrite
-- `src/routes/__root.tsx` — meta tags, safe-area wrapper, theme-color
-- `src/styles.css` — overscroll, tap-highlight, `.tap` utility
-- `src/components/FocusRunView.tsx` — `z-[60]`
-- `src/components/OrbitSpinner.tsx` — NEW
-- `src/components/MusicHub.tsx` — spinner in busy state
-- `src/components/ShareSheet.tsx` — strip console.error
-- `src/lib/share-card-v2.ts` — strip console.error
-- `src/lib/storage.ts` — NEW safe storage helpers
-- `src/lib/user-profile.ts`, `src/lib/stat-metrics.ts`, `src/lib/personal-records.ts` — adopt safe storage
-- `src/routes/profile.tsx`, `src/routes/history.tsx`, `src/routes/records.tsx` — gate hover styles behind `md:hover:` / convert to `active:`
-
-## Out of Scope
-
-- Service workers / offline mode (would break Lovable preview)
-- Replacing the PNG logo with SVG (no SVG asset supplied)
-- New features or layout changes
+Approve and I'll implement everything above.
