@@ -478,6 +478,8 @@ export function useRunTracker() {
     lastGhostBehindCueAtRef.current = 0;
     lastGhostDeltaRef.current = null;
     latestBpmRef.current = null;
+    hrSourceRef.current = null;
+    lastHealthBpmRef.current = null;
     hrSeriesRef.current = [];
     const startedAt = Date.now();
     setState({
@@ -489,12 +491,45 @@ export function useRunTracker() {
     });
     armGps();
     startSilentLoop(); // keep iOS from suspending JS when screen locks
+
+    // --- Heart rate sources ---------------------------------------------------
+    // Bluetooth chest strap takes priority. Apple Health is used as fallback
+    // only when no BT sensor is currently streaming.
+    btUnsubRef.current = subscribeBtHr((bt: BtHrState) => {
+      if (bt.status === "connected" && bt.bpm != null) {
+        latestBpmRef.current = bt.bpm;
+        hrSourceRef.current = "bt";
+        hrSeriesRef.current.push({ t: Date.now(), bpm: bt.bpm });
+        setState((p) =>
+          p.status === "running" || p.status === "paused"
+            ? { ...p, hrBpm: bt.bpm, hrSource: "bt" }
+            : p,
+        );
+      } else if (hrSourceRef.current === "bt") {
+        // BT just dropped — fall back to last health value if any.
+        const fb = lastHealthBpmRef.current;
+        latestBpmRef.current = fb;
+        hrSourceRef.current = fb != null ? "health" : null;
+        setState((p) =>
+          p.status === "running" || p.status === "paused"
+            ? { ...p, hrBpm: fb, hrSource: fb != null ? "health" : null }
+            : p,
+        );
+      }
+    });
+
     // Begin polling Apple Health for heart rate (no-op on web).
     startHeartRatePolling((bpm, t) => {
+      lastHealthBpmRef.current = bpm;
+      // Only adopt Health value if BT isn't currently the active source.
+      if (hrSourceRef.current === "bt") return;
       latestBpmRef.current = bpm;
+      hrSourceRef.current = "health";
       hrSeriesRef.current.push({ t, bpm });
       setState((p) =>
-        p.status === "running" || p.status === "paused" ? { ...p, hrBpm: bpm } : p,
+        p.status === "running" || p.status === "paused"
+          ? { ...p, hrBpm: bpm, hrSource: "health" }
+          : p,
       );
     }, 5000);
     const w = ensureWorker();
