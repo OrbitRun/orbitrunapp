@@ -397,6 +397,8 @@ const da: Dict = {
   "stat.sweatLoss": "Væsketab",
   "stat.fastestKm": "Hurtigste km",
   "stat.ghost": "Ghost",
+  "stat.hr": "Puls",
+  "stat.avgHr": "Snit-puls",
   "ghost.race": "Udfordr",
   "ghost.active": "Ghost aktiv",
   "ghost.clear": "Ryd",
@@ -413,6 +415,7 @@ const da: Dict = {
   "unit.cm": "cm",
   "unit.ms": "ms",
   "unit.l": "L",
+  "unit.bpm": "bpm",
 
   "map.legend.slow": "lav",
   "map.legend.mid": "mid",
