@@ -11,6 +11,7 @@ export type BtHrState = {
   status: BtHrStatus;
   deviceName: string | null;
   bpm: number | null;
+  battery: number | null;
   error: string | null;
 };
 
