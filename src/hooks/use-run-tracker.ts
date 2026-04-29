@@ -9,6 +9,7 @@ import { fetchWeather } from "@/lib/weather";
 import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
+import { hrrDrop60s, timeFractionInZone5, DEFAULT_MAX_HR } from "@/lib/hr-analysis";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
