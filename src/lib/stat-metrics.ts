@@ -18,7 +18,9 @@ export type MetricId =
   | "groundContact"
   | "sweatLoss"
   | "ghost"
-  | "hrBpm";
+  | "hrBpm"
+  | "hrMax"
+  | "hrAvg";
 
 export type LiveStats = {
   distanceM: number;
@@ -29,6 +31,8 @@ export type LiveStats = {
   elevationGainM: number;
   ghostDeltaMs?: number | null;
   hrBpm?: number | null;
+  maxHrBpm?: number | null;
+  avgHrBpm?: number | null;
 };
 
 export type MetricDef = {
