@@ -11,6 +11,7 @@ export type BtHrState = {
   status: BtHrStatus;
   deviceName: string | null;
   bpm: number | null;
+  battery: number | null;
   error: string | null;
 };
 
@@ -22,6 +23,7 @@ let state: BtHrState = {
     : "unsupported",
   deviceName: null,
   bpm: null,
+  battery: null,
   error: null,
 };
 const listeners = new Set<Listener>();
@@ -80,9 +82,25 @@ const onMeasurement = (ev: Event) => {
 };
 
 const onDisconnected = () => {
-  setState({ status: "disconnected", bpm: null });
+  setState({ status: "disconnected", bpm: null, battery: null });
   characteristic = null;
 };
+
+async function readBatteryLevel(server: {
+  getPrimaryService: (s: string) => Promise<{
+    getCharacteristic: (c: string) => Promise<{ readValue: () => Promise<DataView> }>;
+  }>;
+}): Promise<number | null> {
+  try {
+    const svc = await server.getPrimaryService("battery_service");
+    const ch = await svc.getCharacteristic("battery_level");
+    const v = await ch.readValue();
+    const pct = v.getUint8(0);
+    return pct >= 0 && pct <= 100 ? pct : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function connectBtHeartRate(): Promise<BtHrState> {
   if (!isWebBluetoothSupported()) {
@@ -115,6 +133,11 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
     ch!.addEventListener("characteristicvaluechanged", onMeasurement);
     await ch!.startNotifications();
     setState({ status: "connected" });
+    // Best-effort battery read (optional service, not all straps expose it)
+    const battery = await readBatteryLevel(
+      server as unknown as Parameters<typeof readBatteryLevel>[0],
+    );
+    if (battery != null) setState({ battery });
     return state;
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Connection failed";
@@ -124,6 +147,7 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
       status: cancelled ? "idle" : "disconnected",
       error: cancelled ? null : msg,
       bpm: null,
+      battery: null,
     });
     return state;
   }
@@ -154,7 +178,7 @@ export async function disconnectBtHeartRate(): Promise<void> {
   } finally {
     characteristic = null;
     device = null;
-    setState({ status: "idle", bpm: null, deviceName: null });
+    setState({ status: "idle", bpm: null, battery: null, deviceName: null });
   }
 }
 

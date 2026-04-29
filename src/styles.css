@@ -255,6 +255,24 @@
   animation: bt-pulse 1.2s ease-in-out infinite;
 }
 
+/* Heart-radar rings — used by sensor pairing modal */
+@keyframes hr-radar {
+  0%   { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.animate-hr-radar {
+  animation: hr-radar 1.8s ease-out infinite;
+}
+@keyframes heart-thump {
+  0%, 100% { transform: scale(1); }
+  20%      { transform: scale(1.18); }
+  40%      { transform: scale(0.96); }
+  60%      { transform: scale(1.08); }
+}
+.animate-heart-thump {
+  animation: heart-thump 1.2s ease-in-out infinite;
+}
+
 /* Force dark theme always */
 html {
   color-scheme: dark;
