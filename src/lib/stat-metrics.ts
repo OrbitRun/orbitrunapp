@@ -183,6 +183,18 @@ export const METRICS: Record<MetricId, MetricDef> = {
     unitKey: "unit.bpm",
     format: (s) => (s.hrBpm != null && s.hrBpm > 0 ? String(Math.round(s.hrBpm)) : "—"),
   },
+  hrMax: {
+    id: "hrMax",
+    labelKey: "stat.hrMax",
+    unitKey: "unit.bpm",
+    format: (s) => (s.maxHrBpm != null && s.maxHrBpm > 0 ? String(Math.round(s.maxHrBpm)) : "—"),
+  },
+  hrAvg: {
+    id: "hrAvg",
+    labelKey: "stat.avgHr",
+    unitKey: "unit.bpm",
+    format: (s) => (s.avgHrBpm != null && s.avgHrBpm > 0 ? String(Math.round(s.avgHrBpm)) : "—"),
+  },
   ghost: {
     id: "ghost",
     labelKey: "stat.ghost",
@@ -212,6 +224,8 @@ export const ALL_METRIC_IDS: MetricId[] = [
   "groundContact",
   "sweatLoss",
   "hrBpm",
+  "hrMax",
+  "hrAvg",
   "ghost",
 ];
 
