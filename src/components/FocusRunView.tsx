@@ -10,6 +10,8 @@ import {
   type StatLayout,
 } from "@/lib/stat-metrics";
 import type { useRunTracker } from "@/hooks/use-run-tracker";
+import { ZONE_VAR, zoneForBpm, type HrZoneId } from "@/lib/hr-zones-config";
+import { useHrZones } from "@/hooks/use-hr-zones";
 
 type Tracker = ReturnType<typeof useRunTracker>;
 
