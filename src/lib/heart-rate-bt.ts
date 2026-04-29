@@ -133,6 +133,11 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
     ch!.addEventListener("characteristicvaluechanged", onMeasurement);
     await ch!.startNotifications();
     setState({ status: "connected" });
+    // Best-effort battery read (optional service, not all straps expose it)
+    const battery = await readBatteryLevel(
+      server as unknown as Parameters<typeof readBatteryLevel>[0],
+    );
+    if (battery != null) setState({ battery });
     return state;
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Connection failed";
@@ -142,6 +147,7 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
       status: cancelled ? "idle" : "disconnected",
       error: cancelled ? null : msg,
       bpm: null,
+      battery: null,
     });
     return state;
   }
