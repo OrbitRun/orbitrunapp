@@ -47,6 +47,10 @@ export type Run = {
   hrrDrop60s?: number;
   // % of run time spent in Zone 5 (>=90% of max HR). Used by the recovery engine.
   zone5PctTime?: number;
+  // Orbit Fitness Score — VO2 Max estimate via Uth–Sørensen–Overgaard–Pedersen.
+  vo2maxEst?: number;
+  // 60s heart-rate-recovery grade derived from `hrrDrop60s`.
+  recoveryGrade?: "poor" | "fair" | "good" | "excellent" | "elite";
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";
