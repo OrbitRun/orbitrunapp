@@ -788,6 +788,38 @@ const da: Dict = {
   "aero.title": "Kardio-fremgang",
   "aero.body": "Samme tempo, {delta} slag lavere end dit nylige snit. Din form er i fremgang.",
 
+  // Stats — heart rate extras
+  "stat.hrMax": "Max-puls",
+
+  // VO2 Max — Orbit Fitness Score
+  "vo2.title": "Orbit Fitness Score (VO2 Max est.)",
+  "vo2.unit": "ml/kg/min",
+  "vo2.disclaimer": "Estimat — kræver 10+ min stabilt løb for præcision.",
+  "vo2.poor": "Lav",
+  "vo2.fair": "Okay",
+  "vo2.good": "God",
+  "vo2.excellent": "Fremragende",
+  "vo2.elite": "Elite",
+
+  // HR zones
+  "zones.title": "Tid i zoner",
+  "zones.z1": "Restitution",
+  "zones.z2": "Aerob base",
+  "zones.z3": "Tempo",
+  "zones.z4": "Tærskel",
+  "zones.z5": "Max indsats",
+
+  // HRR countdown + grade
+  "hrr.countdown.title": "Måler restitution",
+  "hrr.countdown.body": "Hold pulsbæltet på i 60 sekunder.",
+  "hrr.countdown.resultTitle": "Restitutions-score",
+  "hrr.countdown.resultBody": "Puls-fald de første 60 sekunder.",
+  "hrr.grade.poor": "Lav",
+  "hrr.grade.fair": "Okay",
+  "hrr.grade.good": "God",
+  "hrr.grade.excellent": "Fremragende",
+  "hrr.grade.elite": "Elite",
+
   // Coach override + live HR spike alert
   "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",
   "focus.hrSpike": "Pulsen stiger hurtigt — tjek din vejrtrækning",
