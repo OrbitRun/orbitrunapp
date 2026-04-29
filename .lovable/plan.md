@@ -1,60 +1,57 @@
-## Goal
+## Heart Rate Zones — Settings & App-wide Integration
 
-Add a premium, interactive Heart Rate analytics block to both the **Post-Run Summary** and the **Run Detail** view. Replace nothing — slot the new block above `HrZoneBar` so the existing zone breakdown remains a complementary "time-in-zone" view.
+Build a dedicated "Heart Rate Settings" screen that lets the user generate zones from age + resting HR (Karvonen) or override each zone manually. Persist the result and use it everywhere zones are shown today (analytics card, time-in-zone bar, recovery engine) plus three new touchpoints: live BPM color in Focus Mode, audio coach zone callouts, and a post-run donut.
 
-## What the user will see
+### What the user gets
 
-- A neon-green line chart of BPM over time (or distance), filling the card with a soft glow and a translucent gradient under the line
-- 4 thin horizontal guide lines marking the boundaries of HR Zones 1–5, each labelled (Warm-up, Aerobic, Threshold, Anaerobic, Max)
-- Drag a finger / cursor across the chart → a vertical scrubber line snaps to the nearest sample, showing exact BPM, time, distance and pace at that point
-- The map above (in the run detail view) drops a pulsing neon dot at the matching geo-coordinate
-- Below the chart, a 4-tile stat strip: **Max BPM**, **Avg BPM**, **VO2 Max Est.**, **Efficiency Factor (EF)**
+1. **Heart Rate Settings page** (`/profile/heart-rate`)
+   - Inputs: Age, Resting HR, optional Max HR (auto = 220 − age)
+   - "Auto-calculate" button: Karvonen formula generates Z1–Z5 (50/60/70/80/90% HRR)
+   - Manual override: each zone has a dual-handle range row (lower/upper BPM) with type-in numeric fields; edits to one zone clamp neighbors so the band stays continuous
+   - "Reset to auto" restores Karvonen output
+   - Visual: 5 colored stacked blocks (grey/blue/green/orange/red) labeled Z1–Z5 with BPM range and a one-line physiological description per zone
+   - Save/Cancel; live preview updates as values change
 
-When the run has no `hrSeries` data (older runs / no strap), the whole block renders an empty hint instead of breaking the layout.
+2. **Profile entry point** — new row in `src/routes/profile.tsx` ("Heart rate zones · 142–172 bpm" summary) navigating to the new page.
 
-## Files to add / change
+3. **Focus Mode live color** — current BPM number tints by active zone (grey/blue/green/orange/red). Subtle glow on Z4/Z5.
 
-**New**
-- `src/lib/hr-graph.ts` — pure helpers: build `{ t, distM, bpm, pace }[]` series from `run.points` + `run.hrSeries`, find nearest sample by x-position, compute Efficiency Factor (EF = average speed in m/min ÷ avg HR), and zone-boundary lines from `DEFAULT_MAX_HR`.
-- `src/components/HrAnalyticsCard.tsx` — the chart card. Recharts `<ComposedChart>` with `<Area>` (gradient fill, `stroke="none"`) + `<Line>` (neon stroke with SVG `feGaussianBlur` glow filter), `<ReferenceLine>` per zone boundary, custom `<Tooltip>`, and a controlled `activeIndex` driven by pointer/touch events. Emits `onScrub(point | null)` so the parent can move the map marker.
+4. **Audio coach cue** — when the runner crosses into a new zone for ≥10s, the coach speaks: *"You're now in Zone 4."* (gated by `prVoiceEnabled`, throttled to once per zone per 60s).
 
-**Edit**
-- `src/components/RunMap.tsx` — accept an optional `highlight?: { lat: number; lng: number } | null` prop and render a small pulsing neon Marker when set. Cleanly remove on null.
-- `src/components/RunSummary.tsx` — render `<HrAnalyticsCard run={run} />` above `<HrZoneBar />`. (Map is non-interactive in summary, no marker sync needed here.)
-- `src/routes/run.$id.tsx` — lift a `scrubLatLng` state, pass it as `highlight` to `<RunMap>`, render `<HrAnalyticsCard run={run} onScrub={(p) => setScrubLatLng(p?.coord ?? null)} />`.
-- `src/styles.css` — add the `hr-glow` SVG filter as a tiny inline `<defs>` inside the chart component (kept local), plus a `@keyframes hr-marker-pulse` for the map marker.
-- `src/lib/i18n.tsx` — add `hr.graph.title`, `hr.graph.empty`, `hr.stat.max`, `hr.stat.avg`, `hr.stat.vo2`, `hr.stat.ef`, `hr.zone.1`…`hr.zone.5` (English + Danish).
+5. **Post-run donut** — new `HrZoneDonut` rendered above the existing stacked bar in `HrZoneBar`, showing % per zone with the same color ramp.
 
-## Technical details
+### Files to add
 
-**Series building (`hr-graph.ts`)**
-```ts
-type GraphPoint = { t: number; ms: number; distM: number; bpm: number; paceSecPerKm: number | null; coord: { lat: number; lng: number } | null };
-```
-- Walk `run.hrSeries`. For each sample, find the nearest `GeoPoint` by timestamp (binary search) → derive `distM` (cumulative haversine over points up to that t) and instantaneous pace from a 10-sec rolling speed window.
-- Cache the cumulative distance array once.
+- `src/lib/hr-zones-config.ts` — types (`HrZoneConfig`, `ZoneRange`), Karvonen calculator, validators, load/save to localStorage (`orbit:hr-zones:v1`), zone color tokens, descriptions (en/da), and a `zoneForBpm(bpm, config)` helper that replaces the constant-based `zoneFor`.
+- `src/hooks/use-hr-zones.ts` — reactive hook similar to `use-user-profile`, broadcasts `orbit:hr-zones-update`.
+- `src/routes/profile.heart-rate.tsx` — the settings screen (TanStack file route, child of profile layout).
+- `src/components/HrZoneDonut.tsx` — SVG donut with center label.
 
-**Efficiency Factor**
-- `EF = (avgSpeedMetersPerMinute) / avgHrBpm`, rounded to 2 decimals. Standard Daniels-style metric — higher = more aerobically efficient.
-- Surfaced as plain number; `—` when avgHR or distance is missing.
+### Files to modify
 
-**Chart styling**
-- Stroke `var(--neon)` (resolves to `#deff9a`-ish neon-green token), width 2.5, `strokeLinecap="round"`, `filter="url(#hr-glow)"`.
-- Area fill: `linearGradient` from `var(--neon)` at 35% opacity → 0% at the bottom.
-- Reference lines: `strokeDasharray="2 4"` at 60/70/80/90 % of `DEFAULT_MAX_HR`, label aligned right with zone name in 9px uppercase muted text.
-- Background: existing `glass` card. No axis ticks except 3 BPM grid values on the Y axis (resting / mid / max).
+- `src/lib/hr-analysis.ts` — keep `DEFAULT_MAX_HR` for fallback; `zoneFor` reads from saved config when present (sync read of localStorage cached at module level, refreshed on update event).
+- `src/lib/hr-zones.ts` — `timeInZones` accepts an optional `HrZoneConfig`.
+- `src/lib/hr-graph.ts` — `zoneBoundaries` derives from config when supplied.
+- `src/components/HrAnalyticsCard.tsx` — pass user config into boundaries + summary.
+- `src/components/HrZoneBar.tsx` — render `HrZoneDonut` above the existing stacked bar; pull config-driven labels.
+- `src/components/FocusRunView.tsx` — color the BPM readout based on `zoneForBpm`.
+- `src/hooks/use-run-tracker.ts` — emit a `zone-change` event to the audio cue layer.
+- `src/lib/audio-cues.ts` — handle the new "zone changed" cue with throttling.
+- `src/lib/i18n.tsx` — add strings: page title, field labels, zone names, descriptions, audio cue templates (en + da).
 
-**Scrubber**
-- Use Recharts `onMouseMove` / `onTouchMove` on the chart wrapper to set `activeIndex`. A `<ReferenceLine x={...}>` renders the vertical scrubber. Touch-friendly: pointer-events captured at the wrapper, throttled with `requestAnimationFrame`.
-- `onScrub` callback fires with the active `GraphPoint` (or null on leave).
+### Technical details
 
-**Map marker**
-- New Mapbox `Marker` with a 14×14 div: neon dot + outer halo using the new `hr-marker-pulse` keyframe (1.4s scale 1→2.2, opacity 0.6→0). Created on first highlight, position updated thereafter, removed on null.
+- **Karvonen**: `targetBpm = ((maxHR − restingHR) × pct) + restingHR` with pct boundaries `[0.50, 0.60, 0.70, 0.80, 0.90, 1.00]` → 5 contiguous zones.
+- **Storage shape**:
+  ```text
+  { age, restingHr, maxHr, source: "karvonen" | "manual",
+    zones: [{ z: 1..5, lower: number, upper: number }] }
+  ```
+- **Validation**: 30 ≤ resting < max ≤ 230, each zone lower < upper, zones contiguous (lower[n+1] = upper[n] + 1). Invalid input shows inline error and disables Save.
+- **Color tokens** (added to `src/styles.css`): `--hr-z1` grey, `--hr-z2` blue, `--hr-z3` green (neon-aligned), `--hr-z4` orange (Orbit orange), `--hr-z5` red. Reused by donut, bar, and Focus BPM tint.
+- **Backwards compat**: when no config saved, zones fall back to current `DEFAULT_MAX_HR`-based percentages so historical runs still render correctly.
 
-**No new dependencies** — recharts and mapbox-gl are already installed.
+### Out of scope
 
-## Out of scope
-
-- Switching the X axis to distance instead of time (toggle could come later)
-- Editing existing `HrZoneBar` (it stays — the graph is the primary view, the bar is the time-share view)
-- Persisting EF as a stored field (computed on read; cheap)
+- Changing how raw HR samples are captured.
+- Lab-test import (CSV/file). Manual entry covers the "tested in a lab" case.
