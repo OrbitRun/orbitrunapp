@@ -38,6 +38,7 @@ function RunMapInner({
   follow = true,
   interactive = true,
   ghost = null,
+  highlight = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
@@ -45,6 +46,7 @@ function RunMapInner({
   const startRef = useRef<MapboxNS.Marker | null>(null);
   const headRef = useRef<MapboxNS.Marker | null>(null);
   const ghostMarkerRef = useRef<MapboxNS.Marker | null>(null);
+  const highlightMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
