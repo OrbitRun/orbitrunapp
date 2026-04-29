@@ -9,6 +9,7 @@ import WeatherBadge from "@/components/WeatherBadge";
 import WeatherEditor from "@/components/WeatherEditor";
 import ShoePicker from "@/components/ShoePicker";
 import ShareSheet from "@/components/ShareSheet";
+import BioInsightCard from "@/components/BioInsightCard";
 import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -250,7 +251,7 @@ function RunDetailPage() {
         )}
       </section>
 
-      {(() => {
+      <BioInsightCard run={run} />
         const snapshot = computeRunMetrics(run);
         // Skip metrics already shown above (hero + 2x2 primary grid).
         const primary = new Set(["distance", "duration", "avgPace", "cadence", "elevation", "pace"]);
