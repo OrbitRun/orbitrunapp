@@ -73,6 +73,11 @@ export default function CoachCard({ profile }: Props) {
   const goalText = coachGoalLabel(coach.goal, lang, coach.fasterDistance);
   const contextLine = `${coachFrequencyLabel(coach.frequency, lang)} · ${goalText}`;
 
+  // Zone-5 stress override: surface the coach's "rest day" message when the
+  // latest run shows >15% time at ≥90% maxHR, regardless of subjective RPE.
+  const lastRun = runs.length > 0 ? [...runs].sort((a, b) => b.startedAt - a.startedAt)[0] : null;
+  const z5Override = lastRun && (lastRun.zone5PctTime ?? 0) > 15;
+
   return (
     <>
       <section className="mt-1 mb-3 glass rounded-2xl p-4">
