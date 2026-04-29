@@ -608,26 +608,30 @@ export function useRunTracker() {
     }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
-    stopHeartRatePolling();
-    btUnsubRef.current?.();
-    btUnsubRef.current = null;
     const s = stateRef.current;
     if (!s.startedAt) {
+      stopHeartRatePolling();
+      btUnsubRef.current?.();
+      btUnsubRef.current = null;
       setState({ ...initial });
       return null;
     }
     const primaryShoe = getPrimaryShoe();
     const hr = hrSeriesRef.current;
+    const z5Pct =
+      hr.length > 1 ? Math.round(timeFractionInZone5(hr, DEFAULT_MAX_HR) * 1000) / 10 : 0;
     const hrAggregates =
       hr.length > 0
         ? {
             avgHrBpm: Math.round(hr.reduce((a, b) => a + b.bpm, 0) / hr.length),
             maxHrBpm: hr.reduce((a, b) => Math.max(a, b.bpm), 0),
             hrSeries: hr,
+            zone5PctTime: z5Pct,
           }
         : {};
+    const runId = genId();
     const run: Run = {
-      id: genId(),
+      id: runId,
       startedAt: s.startedAt,
       endedAt: Date.now(),
       durationMs: s.elapsedMs,
@@ -641,6 +645,45 @@ export function useRunTracker() {
       shoeId: primaryShoe?.id,
       ...hrAggregates,
     };
+
+    // --- Heart-rate recovery capture ----------------------------------------
+    // Keep BT + Health subscribers active for ~75s after stop so we can sample
+    // how fast BPM falls. The `noteBpmSample` callback above pushes into
+    // `postStopSeriesRef` whenever it is non-null. After the window closes we
+    // tear listeners down and patch the saved run with hrrDrop60s.
+    if (hr.length > 0 && latestBpmRef.current != null) {
+      postStopSeriesRef.current = [{ t: Date.now(), bpm: latestBpmRef.current }];
+      postStopRunIdRef.current = runId;
+      if (postStopTimerRef.current != null) window.clearTimeout(postStopTimerRef.current);
+      postStopTimerRef.current = window.setTimeout(() => {
+        const series = postStopSeriesRef.current ?? [];
+        const drop = hrrDrop60s(series);
+        // Tear down HR sources now that the recovery window has closed.
+        stopHeartRatePolling();
+        btUnsubRef.current?.();
+        btUnsubRef.current = null;
+        if (drop != null && postStopRunIdRef.current) {
+          updateRun(postStopRunIdRef.current, { hrrDrop60s: drop });
+          try {
+            window.dispatchEvent(
+              new CustomEvent("orbit:run-updated", {
+                detail: { runId: postStopRunIdRef.current, hrrDrop60s: drop },
+              }),
+            );
+          } catch {
+            /* noop */
+          }
+        }
+        postStopSeriesRef.current = null;
+        postStopRunIdRef.current = null;
+        postStopTimerRef.current = null;
+      }, 75_000);
+    } else {
+      stopHeartRatePolling();
+      btUnsubRef.current?.();
+      btUnsubRef.current = null;
+    }
+
     setState((p) => ({ ...p, status: "paused" })); // freeze stats while user reviews
     return run;
   }, [haptic]);
