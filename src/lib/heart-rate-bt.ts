@@ -23,6 +23,7 @@ let state: BtHrState = {
     : "unsupported",
   deviceName: null,
   bpm: null,
+  battery: null,
   error: null,
 };
 const listeners = new Set<Listener>();
