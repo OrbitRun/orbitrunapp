@@ -420,6 +420,11 @@ const en: Dict = {
   "hr.zone.3": "Tempo",
   "hr.zone.4": "Threshold",
   "hr.zone.5": "Max",
+  "hr.export.pdf": "Export PDF",
+  "hr.export.title": "Heart Rate Report",
+  "hr.export.subtitle": "Orbit Lab",
+  "hr.export.date": "Date",
+  "hr.export.generated": "Generated",
 
   // HRR countdown + grade
   "hrr.countdown.title": "Measuring recovery",
@@ -834,6 +839,11 @@ const da: Dict = {
   "hr.zone.3": "Tempo",
   "hr.zone.4": "Tærskel",
   "hr.zone.5": "Maks",
+  "hr.export.pdf": "Eksportér PDF",
+  "hr.export.title": "Pulsrapport",
+  "hr.export.subtitle": "Orbit Lab",
+  "hr.export.date": "Dato",
+  "hr.export.generated": "Genereret",
 
   // HRR countdown + grade
   "hrr.countdown.title": "Måler restitution",
