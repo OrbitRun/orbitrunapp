@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Heart, TrendingDown } from "lucide-react";
+import { Activity, Heart, TrendingDown } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import type { Run } from "@/lib/run-types";
 import { loadRuns } from "@/lib/run-types";
 import { aerobicEfficiency, classifyHrr } from "@/lib/hr-analysis";
+import { classifyFitness, estimateVo2Max } from "@/lib/vo2max";
 
 type Props = { run: Run };
 
