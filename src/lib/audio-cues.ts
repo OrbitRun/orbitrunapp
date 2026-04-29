@@ -63,6 +63,24 @@ export function speakGo(lang: Lang = "en") {
   speakLocalized(lang === "da" ? "Løb!" : "Go!", lang);
 }
 
+// Throttled zone-change cue: speaks only when zone has changed AND
+// >= 60s has elapsed since the last zone callout.
+let lastZoneSpoken: number | null = null;
+let lastZoneAt = 0;
+
+export function speakZoneEntered(zone: number, lang: Lang, template: string) {
+  const now = Date.now();
+  if (zone === lastZoneSpoken && now - lastZoneAt < 60_000) return;
+  lastZoneSpoken = zone;
+  lastZoneAt = now;
+  speakLocalized(template.replace("{zone}", String(zone)), lang);
+}
+
+export function resetZoneCueState() {
+  lastZoneSpoken = null;
+  lastZoneAt = 0;
+}
+
 // Pre-warm the audio context + voice list on a user gesture so iOS allows playback later.
 export function primeAudio() {
   const ac = getCtx();
