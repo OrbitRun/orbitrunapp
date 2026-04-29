@@ -7,15 +7,20 @@ import {
   Check,
   Droplets,
   Heart,
+  Signal,
   Smartphone,
+  TriangleAlert,
   X,
+  Zap,
 } from "lucide-react";
 import {
+  clearLastDevice,
   connectBtHeartRate,
   disconnectBtHeartRate,
   getBtHrState,
   isWebBluetoothSupported,
   subscribeBtHr,
+  tryReconnectLastDevice,
   type BtHrState,
 } from "@/lib/heart-rate-bt";
 
@@ -37,6 +42,27 @@ export default function SensorsSection() {
   const supported = isWebBluetoothSupported();
   const connected = bt.status === "connected";
   const busy = bt.status === "scanning" || bt.status === "connecting";
+  const hasLastDevice = !!bt.lastDeviceName && !connected && !busy;
+
+  // Auto-reconnect silently when the app regains focus, if a device was
+  // previously paired and is currently disconnected.
+  useEffect(() => {
+    if (!supported) return;
+    const onFocus = () => {
+      const s = getBtHrState();
+      if (s.status === "disconnected" || (s.status === "idle" && s.lastDeviceName)) {
+        void tryReconnectLastDevice();
+      }
+    };
+    // Try once on mount as well.
+    onFocus();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [supported]);
 
   // Surface troubleshooting tips after 10s of scanning
   useEffect(() => {
@@ -73,6 +99,15 @@ export default function SensorsSection() {
     await disconnectBtHeartRate();
     setTesting(false);
     setStep(1);
+  };
+
+  const onQuickReconnect = async () => {
+    const ok = await tryReconnectLastDevice();
+    if (!ok) openModal();
+  };
+
+  const onForgetDevice = () => {
+    clearLastDevice();
   };
 
   const rowStatus =
@@ -112,7 +147,9 @@ export default function SensorsSection() {
             {connected && (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-background"
+                className={`absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-background ${
+                  bt.poorContact ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+                }`}
               />
             )}
           </div>
@@ -129,15 +166,42 @@ export default function SensorsSection() {
                   {bt.battery}%
                 </span>
               )}
+              {connected && bt.signal != null && (
+                <SignalChip quality={bt.signal} />
+              )}
             </div>
             <div className="text-[11px] text-muted-foreground truncate">
-              {bt.error ? bt.error : rowStatus}
+              {bt.error
+                ? bt.error
+                : connected && bt.poorContact
+                  ? "Dårlig kontakt — fugt sensoren"
+                  : rowStatus}
             </div>
           </div>
           <div className="text-xs font-bold uppercase tracking-wider text-foreground/80">
             {connected ? "Manage" : supported ? "Search" : "—"}
           </div>
         </button>
+        {hasLastDevice && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.02]">
+            <Zap className="h-3.5 w-3.5 text-neon" />
+            <button
+              type="button"
+              onClick={onQuickReconnect}
+              className="flex-1 text-left text-[12px] font-semibold truncate hover:text-neon transition"
+            >
+              Genforbind til {bt.lastDeviceName}
+            </button>
+            <button
+              type="button"
+              onClick={onForgetDevice}
+              className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition"
+              aria-label="Glem enhed"
+            >
+              Glem
+            </button>
+          </div>
+        )}
       </section>
 
       {open && (
@@ -471,6 +535,33 @@ function ConnectedCard({
         )}
       </div>
 
+      {/* Signal quality */}
+      {bt.signal != null && (
+        <div className="mt-3 flex items-center gap-2">
+          <Signal className={`h-3.5 w-3.5 ${signalColor(bt.signal)}`} />
+          <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${signalBarColor(bt.signal)}`}
+              style={{ width: `${Math.max(6, bt.signal)}%` }}
+            />
+          </div>
+          <span className="text-[10px] font-mono tabular-nums text-muted-foreground w-8 text-right">
+            {bt.signal}%
+          </span>
+        </div>
+      )}
+
+      {/* Poor contact warning */}
+      {bt.poorContact && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-[11px] leading-snug text-amber-100/90">
+          <TriangleAlert className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
+          <span>
+            <strong className="text-amber-300">Dårlig kontakt.</strong>{" "}
+            Fugt sensoren med lidt vand og sørg for, at bæltet sidder tæt mod huden.
+          </span>
+        </div>
+      )}
+
       {testing ? (
         <div className="mt-4 rounded-xl bg-background/60 border border-border p-4 flex items-center justify-between">
           <div>
@@ -493,5 +584,31 @@ function ConnectedCard({
         </button>
       )}
     </div>
+  );
+}
+
+/* ============================ Small helpers ============================ */
+
+function signalColor(q: number): string {
+  if (q >= 70) return "text-emerald-400";
+  if (q >= 40) return "text-amber-400";
+  return "text-destructive";
+}
+
+function signalBarColor(q: number): string {
+  if (q >= 70) return "bg-emerald-400";
+  if (q >= 40) return "bg-amber-400";
+  return "bg-destructive";
+}
+
+function SignalChip({ quality }: { quality: number }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-[10px] font-mono ${signalColor(quality)}`}
+      title={`Signal ${quality}%`}
+    >
+      <Signal className="h-3 w-3" />
+      {quality}
+    </span>
   );
 }

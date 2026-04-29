@@ -4,32 +4,80 @@
 // its Heart Rate Measurement characteristic (0x2A37). When a sensor is
 // connected, the latest BPM is broadcast via subscribe() and stored in a
 // module-level snapshot so the run tracker can prefer it over Apple Health.
+//
+// Polish (April 2026):
+//  • Persists last paired device id/name in localStorage and exposes a silent
+//    reconnect path via navigator.bluetooth.getDevices() where supported.
+//  • Tracks a rolling signal-quality score derived from the time between
+//    measurements + plausibility checks (Web Bluetooth doesn't expose RSSI,
+//    so we infer "contact quality" instead — which is what the user actually
+//    cares about).
+//  • Surfaces a contact warning when BPM is missing/zero or jitters wildly.
+//  • Fires short haptic pulses on first valid reading and on connect.
 
 export type BtHrStatus = "idle" | "scanning" | "connecting" | "connected" | "disconnected" | "unsupported";
 
 export type BtHrState = {
   status: BtHrStatus;
   deviceName: string | null;
+  deviceId: string | null;
   bpm: number | null;
   battery: number | null;
+  /** 0–100 inferred contact/signal quality. null until first sample. */
+  signal: number | null;
+  /** True when readings indicate poor skin contact (jitter, drops). */
+  poorContact: boolean;
+  /** Last paired device, available even when disconnected, for one-tap reconnect. */
+  lastDeviceName: string | null;
   error: string | null;
 };
 
 type Listener = (s: BtHrState) => void;
+
+const LS_KEY = "orbit:bt-hr:last-device";
+
+function loadLastDevice(): { id: string | null; name: string | null } {
+  if (typeof localStorage === "undefined") return { id: null, name: null };
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return { id: null, name: null };
+    const parsed = JSON.parse(raw) as { id?: string; name?: string };
+    return { id: parsed.id ?? null, name: parsed.name ?? null };
+  } catch {
+    return { id: null, name: null };
+  }
+}
+
+function saveLastDevice(id: string | null, name: string | null) {
+  if (typeof localStorage === "undefined") return;
+  try {
+    if (!id && !name) localStorage.removeItem(LS_KEY);
+    else localStorage.setItem(LS_KEY, JSON.stringify({ id, name }));
+  } catch {
+    /* noop */
+  }
+}
+
+const initialLast = loadLastDevice();
 
 let state: BtHrState = {
   status: typeof navigator !== "undefined" && (navigator as Navigator & { bluetooth?: unknown }).bluetooth
     ? "idle"
     : "unsupported",
   deviceName: null,
+  deviceId: null,
   bpm: null,
   battery: null,
+  signal: null,
+  poorContact: false,
+  lastDeviceName: initialLast.name,
   error: null,
 };
 const listeners = new Set<Listener>();
 
 // Active connection refs
 type BtDevice = {
+  id?: string;
   name?: string | null;
   gatt?: { connected: boolean; disconnect: () => void; connect: () => Promise<unknown> };
   addEventListener: (t: string, fn: () => void) => void;
@@ -42,6 +90,12 @@ let characteristic: {
   addEventListener: (t: string, fn: (ev: Event) => void) => void;
   removeEventListener: (t: string, fn: (ev: Event) => void) => void;
 } | null = null;
+
+// Quality tracking
+let lastSampleAt = 0;
+let recentBpms: number[] = [];
+let firstReadingFired = false;
+let contactTimer: ReturnType<typeof setTimeout> | null = null;
 
 function setState(patch: Partial<BtHrState>) {
   state = { ...state, ...patch };
@@ -63,8 +117,17 @@ export function isWebBluetoothSupported(): boolean {
   return Boolean((navigator as Navigator & { bluetooth?: unknown }).bluetooth);
 }
 
+function vibrate(pattern: number | number[]) {
+  try {
+    if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      navigator.vibrate(pattern);
+    }
+  } catch {
+    /* noop */
+  }
+}
+
 // Parse the Heart Rate Measurement characteristic per Bluetooth spec.
-// Flags byte: bit 0 → 1 = uint16 BPM, 0 = uint8 BPM.
 function parseHeartRate(value: DataView): number | null {
   if (!value || value.byteLength < 2) return null;
   const flags = value.getUint8(0);
@@ -73,16 +136,65 @@ function parseHeartRate(value: DataView): number | null {
   return bpm > 0 && bpm < 300 ? bpm : null;
 }
 
+function scheduleContactWatch() {
+  if (contactTimer) clearTimeout(contactTimer);
+  contactTimer = setTimeout(() => {
+    if (state.status !== "connected") return;
+    const stale = Date.now() - lastSampleAt > 5000;
+    const noBpm = state.bpm == null || state.bpm <= 0;
+    if (stale || noBpm) {
+      setState({ poorContact: true, signal: 10 });
+    }
+    scheduleContactWatch();
+  }, 2500);
+}
+
+function updateSignalQuality(bpm: number) {
+  const now = Date.now();
+  const dt = lastSampleAt ? now - lastSampleAt : 0;
+  lastSampleAt = now;
+
+  recentBpms.push(bpm);
+  if (recentBpms.length > 8) recentBpms.shift();
+
+  // Cadence score: ideal sample arrives every ~1000ms (1 Hz). Worse → lower.
+  const cadence = dt === 0 ? 100 : Math.max(0, 100 - Math.abs(dt - 1000) / 30);
+
+  // Jitter score: large beat-to-beat swings hint at poor contact.
+  let jitterPenalty = 0;
+  if (recentBpms.length >= 3) {
+    const diffs: number[] = [];
+    for (let i = 1; i < recentBpms.length; i++) diffs.push(Math.abs(recentBpms[i] - recentBpms[i - 1]));
+    const avgDiff = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    jitterPenalty = Math.min(60, avgDiff * 2);
+  }
+
+  const quality = Math.max(0, Math.min(100, Math.round(cadence - jitterPenalty)));
+  const poor = quality < 40;
+  setState({ signal: quality, poorContact: poor });
+}
+
 const onMeasurement = (ev: Event) => {
   const target = ev.target as unknown as { value?: DataView };
   const v = target?.value;
   if (!v) return;
   const bpm = parseHeartRate(v);
-  if (bpm != null) setState({ bpm });
+  if (bpm != null) {
+    if (!firstReadingFired) {
+      firstReadingFired = true;
+      vibrate(40);
+    }
+    setState({ bpm });
+    updateSignalQuality(bpm);
+  }
 };
 
 const onDisconnected = () => {
-  setState({ status: "disconnected", bpm: null, battery: null });
+  if (contactTimer) {
+    clearTimeout(contactTimer);
+    contactTimer = null;
+  }
+  setState({ status: "disconnected", bpm: null, battery: null, signal: null, poorContact: false });
   characteristic = null;
 };
 
@@ -102,6 +214,50 @@ async function readBatteryLevel(server: {
   }
 }
 
+type GattServer = {
+  getPrimaryService: (s: string) => Promise<{
+    getCharacteristic: (c: string) => Promise<typeof characteristic>;
+  }>;
+};
+
+async function attachToDevice(dev: BtDevice): Promise<BtHrState> {
+  device = dev;
+  dev.addEventListener("gattserverdisconnected", onDisconnected);
+  setState({
+    status: "connecting",
+    deviceName: dev.name ?? "Heart Rate",
+    deviceId: dev.id ?? null,
+    error: null,
+  });
+
+  const server = (await dev.gatt!.connect()) as GattServer;
+  const service = await server.getPrimaryService("heart_rate");
+  const ch = await service.getCharacteristic("heart_rate_measurement");
+  characteristic = ch;
+  ch!.addEventListener("characteristicvaluechanged", onMeasurement);
+  await ch!.startNotifications();
+
+  firstReadingFired = false;
+  lastSampleAt = 0;
+  recentBpms = [];
+  saveLastDevice(dev.id ?? null, dev.name ?? null);
+  setState({
+    status: "connected",
+    poorContact: false,
+    signal: null,
+    lastDeviceName: dev.name ?? state.lastDeviceName,
+  });
+  vibrate([20, 60, 20]);
+  scheduleContactWatch();
+
+  // Best-effort battery read
+  const battery = await readBatteryLevel(
+    server as unknown as Parameters<typeof readBatteryLevel>[0],
+  );
+  if (battery != null) setState({ battery });
+  return state;
+}
+
 export async function connectBtHeartRate(): Promise<BtHrState> {
   if (!isWebBluetoothSupported()) {
     setState({ status: "unsupported", error: "Web Bluetooth not supported in this browser." });
@@ -110,47 +266,58 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
   try {
     setState({ status: "scanning", error: null });
     const bt = (navigator as Navigator & {
-      bluetooth: {
-        requestDevice: (o: unknown) => Promise<BtDevice>;
-      };
+      bluetooth: { requestDevice: (o: unknown) => Promise<BtDevice> };
     }).bluetooth;
     const dev = await bt.requestDevice({
       filters: [{ services: ["heart_rate"] }],
       optionalServices: ["battery_service"],
     });
-    device = dev;
-    dev.addEventListener("gattserverdisconnected", onDisconnected);
-
-    setState({ status: "connecting", deviceName: dev.name ?? "Heart Rate" });
-    const server = await dev.gatt!.connect() as {
-      getPrimaryService: (s: string) => Promise<{
-        getCharacteristic: (c: string) => Promise<typeof characteristic>;
-      }>;
-    };
-    const service = await server.getPrimaryService("heart_rate");
-    const ch = await service.getCharacteristic("heart_rate_measurement");
-    characteristic = ch;
-    ch!.addEventListener("characteristicvaluechanged", onMeasurement);
-    await ch!.startNotifications();
-    setState({ status: "connected" });
-    // Best-effort battery read (optional service, not all straps expose it)
-    const battery = await readBatteryLevel(
-      server as unknown as Parameters<typeof readBatteryLevel>[0],
-    );
-    if (battery != null) setState({ battery });
-    return state;
+    return await attachToDevice(dev);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Connection failed";
-    // User-cancelled chooser also lands here — surface as idle, not error.
     const cancelled = /cancelled|user|chosen/i.test(msg);
     setState({
       status: cancelled ? "idle" : "disconnected",
       error: cancelled ? null : msg,
       bpm: null,
       battery: null,
+      signal: null,
+      poorContact: false,
     });
     return state;
   }
+}
+
+/**
+ * Try to silently reconnect to a previously-paired device using
+ * navigator.bluetooth.getDevices() (Chromium-only). Returns true if
+ * reconnection succeeded. No chooser UI is shown.
+ */
+export async function tryReconnectLastDevice(): Promise<boolean> {
+  if (!isWebBluetoothSupported()) return false;
+  if (state.status === "connected" || state.status === "connecting") return true;
+  const last = loadLastDevice();
+  if (!last.id && !last.name) return false;
+  try {
+    const bt = (navigator as Navigator & {
+      bluetooth: { getDevices?: () => Promise<BtDevice[]> };
+    }).bluetooth;
+    if (typeof bt.getDevices !== "function") return false;
+    const devs = await bt.getDevices();
+    const match = devs.find((d) => (last.id && d.id === last.id) || (last.name && d.name === last.name));
+    if (!match) return false;
+    setState({ status: "connecting", deviceName: match.name ?? last.name, error: null });
+    await attachToDevice(match);
+    return true;
+  } catch {
+    setState({ status: "idle" });
+    return false;
+  }
+}
+
+export function clearLastDevice() {
+  saveLastDevice(null, null);
+  setState({ lastDeviceName: null });
 }
 
 export async function disconnectBtHeartRate(): Promise<void> {
@@ -176,9 +343,21 @@ export async function disconnectBtHeartRate(): Promise<void> {
       }
     }
   } finally {
+    if (contactTimer) {
+      clearTimeout(contactTimer);
+      contactTimer = null;
+    }
     characteristic = null;
     device = null;
-    setState({ status: "idle", bpm: null, battery: null, deviceName: null });
+    setState({
+      status: "idle",
+      bpm: null,
+      battery: null,
+      signal: null,
+      poorContact: false,
+      deviceName: null,
+      deviceId: null,
+    });
   }
 }
 
