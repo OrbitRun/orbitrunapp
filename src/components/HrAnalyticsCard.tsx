@@ -120,18 +120,52 @@ export default function HrAnalyticsCard({ run, onScrub }: Props) {
 
   return (
     <section className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-2">
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
           {t("hr.graph.title")}
         </div>
-        {active && (
-          <div className="text-[10px] uppercase tracking-[0.2em] tabular font-bold">
-            <span className="text-neon">{active.bpm}</span>
-            <span className="text-muted-foreground"> bpm · </span>
-            <span className="text-foreground">{fmtMs(active.ms)}</span>
-            <span className="text-muted-foreground"> · {fmtKm(active.distM)} km</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {active && (
+            <div className="text-[10px] uppercase tracking-[0.2em] tabular font-bold">
+              <span className="text-neon">{active.bpm}</span>
+              <span className="text-muted-foreground"> bpm · </span>
+              <span className="text-foreground">{fmtMs(active.ms)}</span>
+              <span className="text-muted-foreground"> · {fmtKm(active.distM)} km</span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() =>
+              exportHrAnalyticsPdf(run, {
+                title: t("hr.export.title"),
+                subtitle: t("hr.export.subtitle"),
+                graph: t("hr.graph.title"),
+                zones: t("zones.title"),
+                max: t("hr.stat.max"),
+                avg: t("hr.stat.avg"),
+                vo2: t("hr.stat.vo2"),
+                vo2Unit: t("vo2.unit"),
+                ef: t("hr.stat.ef"),
+                distance: t("stat.distance"),
+                duration: t("stat.duration"),
+                date: t("hr.export.date"),
+                generated: t("hr.export.generated"),
+                zoneNames: {
+                  1: t("zones.z1"),
+                  2: t("zones.z2"),
+                  3: t("zones.z3"),
+                  4: t("zones.z4"),
+                  5: t("zones.z5"),
+                },
+              })
+            }
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[9px] uppercase tracking-[0.2em] font-bold text-foreground hover:bg-white/10 active:scale-[0.98] transition"
+            aria-label={t("hr.export.pdf")}
+          >
+            <Download className="h-3 w-3" />
+            <span>PDF</span>
+          </button>
+        </div>
       </div>
 
       <div
