@@ -252,6 +252,8 @@ function RunDetailPage() {
       </section>
 
       <BioInsightCard run={run} />
+
+      {(() => {
         const snapshot = computeRunMetrics(run);
         // Skip metrics already shown above (hero + 2x2 primary grid).
         const primary = new Set(["distance", "duration", "avgPace", "cadence", "elevation", "pace"]);
