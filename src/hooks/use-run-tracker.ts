@@ -10,6 +10,8 @@ import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import { hrrDrop60s, timeFractionInZone5, DEFAULT_MAX_HR } from "@/lib/hr-analysis";
+import { estimateVo2Max } from "@/lib/vo2max";
+import { classifyHrrGrade } from "@/lib/hr-zones";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -42,6 +44,8 @@ type State = {
   ghost: GhostRef | null;
   hrBpm: number | null;
   hrSource: "bt" | "health" | null;
+  maxHrBpm: number | null;
+  avgHrBpm: number | null;
 };
 
 const initial: State = {
@@ -60,6 +64,8 @@ const initial: State = {
   ghost: null,
   hrBpm: null,
   hrSource: null,
+  maxHrBpm: null,
+  avgHrBpm: null,
 };
 
 type PrFlags = {
