@@ -178,7 +178,7 @@ export async function disconnectBtHeartRate(): Promise<void> {
   } finally {
     characteristic = null;
     device = null;
-    setState({ status: "idle", bpm: null, deviceName: null });
+    setState({ status: "idle", bpm: null, battery: null, deviceName: null });
   }
 }
 
