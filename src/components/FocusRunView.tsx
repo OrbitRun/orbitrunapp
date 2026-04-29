@@ -159,6 +159,14 @@ export default function FocusRunView({
         paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
       }}
     >
+      {hrSpike && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 rounded-2xl border border-destructive/50 bg-destructive/15 px-3 py-2 text-destructive">
+            <Heart className="h-4 w-4 flex-shrink-0" fill="currentColor" />
+            <div className="text-[11px] font-bold leading-tight">{tr("focus.hrSpike")}</div>
+          </div>
+        </div>
+      )}
       {/* Ghost / sensor bar */}
       {(ghostActive || tracker.hrSource === "bt") && (
         <div className="px-4 pb-2 flex justify-center gap-2">
