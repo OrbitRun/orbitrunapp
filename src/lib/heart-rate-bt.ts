@@ -82,9 +82,25 @@ const onMeasurement = (ev: Event) => {
 };
 
 const onDisconnected = () => {
-  setState({ status: "disconnected", bpm: null });
+  setState({ status: "disconnected", bpm: null, battery: null });
   characteristic = null;
 };
+
+async function readBatteryLevel(server: {
+  getPrimaryService: (s: string) => Promise<{
+    getCharacteristic: (c: string) => Promise<{ readValue: () => Promise<DataView> }>;
+  }>;
+}): Promise<number | null> {
+  try {
+    const svc = await server.getPrimaryService("battery_service");
+    const ch = await svc.getCharacteristic("battery_level");
+    const v = await ch.readValue();
+    const pct = v.getUint8(0);
+    return pct >= 0 && pct <= 100 ? pct : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function connectBtHeartRate(): Promise<BtHrState> {
   if (!isWebBluetoothSupported()) {
