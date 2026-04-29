@@ -520,6 +520,8 @@ export function useRunTracker() {
     hrSourceRef.current = null;
     lastHealthBpmRef.current = null;
     hrSeriesRef.current = [];
+    hrWindowRef.current = [];
+    lastSpikeAtRef.current = 0;
     const startedAt = Date.now();
     setState({
       ...initial,
@@ -538,7 +540,9 @@ export function useRunTracker() {
       if (bt.status === "connected" && bt.bpm != null) {
         latestBpmRef.current = bt.bpm;
         hrSourceRef.current = "bt";
-        hrSeriesRef.current.push({ t: Date.now(), bpm: bt.bpm });
+        const tNow = Date.now();
+        hrSeriesRef.current.push({ t: tNow, bpm: bt.bpm });
+        noteBpmSample(bt.bpm, tNow);
         setState((p) =>
           p.status === "running" || p.status === "paused"
             ? { ...p, hrBpm: bt.bpm, hrSource: "bt" }
@@ -565,6 +569,7 @@ export function useRunTracker() {
       latestBpmRef.current = bpm;
       hrSourceRef.current = "health";
       hrSeriesRef.current.push({ t, bpm });
+      noteBpmSample(bpm, t);
       setState((p) =>
         p.status === "running" || p.status === "paused"
           ? { ...p, hrBpm: bpm, hrSource: "health" }
