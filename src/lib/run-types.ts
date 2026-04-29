@@ -43,6 +43,10 @@ export type Run = {
   avgHrBpm?: number;
   maxHrBpm?: number;
   hrSeries?: HrSample[];
+  // Heart-rate recovery: BPM drop in the first 60s after stop. Higher = better recovery.
+  hrrDrop60s?: number;
+  // % of run time spent in Zone 5 (>=90% of max HR). Used by the recovery engine.
+  zone5PctTime?: number;
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";

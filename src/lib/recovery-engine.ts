@@ -27,7 +27,8 @@ export type RecoveryScenarioMessage =
   | { key: "recovery.scenario.overreaching.pace" }
   | { key: "recovery.scenario.overreaching.both" }
   | { key: "recovery.scenario.recovery" }
-  | { key: "recovery.scenario.firstRun" };
+  | { key: "recovery.scenario.firstRun" }
+  | { key: "recovery.scenario.zone5"; pct: number };
 
 export type Baseline = {
   weeklyAvgKm: number;
@@ -179,7 +180,7 @@ export function analyzeRun(run: Run, history: Run[]): RunAnalysis {
   if (rpe <= 3) hours -= 4;
 
   hours = clamp(hours, 12, 72);
-  const recommendedHours = roundHours(hours);
+  // recommendedHours is finalized below after Z5 override.
 
   // Scenario classification
   let scenario: RecoveryScenario = "maintenance";
@@ -208,11 +209,26 @@ export function analyzeRun(run: Run, history: Run[]): RunAnalysis {
     headline = w >= 1 ? { key: "recovery.headline.fastestInWeeks", weeks: w } : { key: "recovery.headline.normalLoad" };
   }
 
+  // Zone-5 stress override: if pulse spent >15% of the run at ≥90% maxHR,
+  // the cardiovascular system needs more time regardless of subjective RPE.
+  const z5 = typeof run.zone5PctTime === "number" ? run.zone5PctTime : 0;
+  const z5Override = z5 > 15;
+  if (z5Override) {
+    hours = Math.max(hours, 36);
+    scenario = "overreaching";
+    message = { key: "recovery.scenario.zone5", pct: Math.round(z5) };
+    if (headline.key === "recovery.headline.normalLoad") {
+      headline = { key: "recovery.headline.normalLoad" };
+    }
+  }
+  hours = clamp(hours, 12, 72);
+  const finalHours = roundHours(hours);
+
   return {
     scenario,
     headline,
     message,
-    recommendedHours,
+    recommendedHours: finalHours,
     distanceRatio,
     paceDelta,
     rpe,

@@ -374,6 +374,22 @@ const en: Dict = {
   "recovery.headline.normalLoad": "Normal load.",
   "recovery.headline.recoveryRun": "Easy shake-out.",
   "recovery.headline.firstRun": "First run logged.",
+  "recovery.scenario.zone5": "Heart spent {pct}% in Zone 5. Min 36h rest — protect your nervous system.",
+
+  // Heart-rate recovery (post-stop drop in BPM)
+  "hrr.eyebrow": "Heart-rate recovery",
+  "hrr.unit": "bpm in 60s",
+  "hrr.strong": "Strong recovery — your body is well-rested.",
+  "hrr.normal": "Normal recovery curve.",
+  "hrr.weak": "Slow recovery — consider easing up or resting.",
+
+  // Aerobic efficiency
+  "aero.title": "Aerobic gain",
+  "aero.body": "Same pace, {delta} bpm lower than your recent average. Your cardio is improving.",
+
+  // Coach override + live HR spike alert
+  "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
+  "focus.hrSpike": "Heart rate climbing fast — check your breathing",
 };
 
 const da: Dict = {
@@ -727,6 +743,22 @@ const da: Dict = {
   "recovery.headline.normalLoad": "Normal belastning.",
   "recovery.headline.recoveryRun": "Rolig udløsning.",
   "recovery.headline.firstRun": "Første tur logget.",
+  "recovery.scenario.zone5": "Pulsen var {pct}% i Zone 5. Min. 36 timers hvile — beskyt dit nervesystem.",
+
+  // Heart-rate recovery (post-stop drop in BPM)
+  "hrr.eyebrow": "Puls-restitution",
+  "hrr.unit": "slag på 60 sek.",
+  "hrr.strong": "Stærk restitution — din krop er veludhvilet.",
+  "hrr.normal": "Normal restitutions-kurve.",
+  "hrr.weak": "Langsom restitution — overvej en pause eller hviledag.",
+
+  // Aerobic efficiency
+  "aero.title": "Kardio-fremgang",
+  "aero.body": "Samme tempo, {delta} slag lavere end dit nylige snit. Din form er i fremgang.",
+
+  // Coach override + live HR spike alert
+  "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",
+  "focus.hrSpike": "Pulsen stiger hurtigt — tjek din vejrtrækning",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };

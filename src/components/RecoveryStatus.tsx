@@ -51,6 +51,9 @@ export default function RecoveryStatus() {
     if (a.message.key === "recovery.scenario.overreaching.distance") {
       return t(a.message.key, { pct: a.message.pct });
     }
+    if (a.message.key === "recovery.scenario.zone5") {
+      return t(a.message.key, { pct: a.message.pct });
+    }
     return t(a.message.key);
   })();
 

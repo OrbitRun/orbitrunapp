@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bluetooth, Pause, Play, Square } from "lucide-react";
+import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
 import { useI18n } from "@/lib/i18n";
@@ -56,7 +56,24 @@ export default function FocusRunView({
     };
   }, []);
 
-  // ---------- Carousel ----------
+  // Live HR spike alert: tracker dispatches `orbit:hr-spike` whenever BPM
+  // climbs >25 bpm in ~30s. We surface a transient banner that auto-hides.
+  const [hrSpike, setHrSpike] = useState(false);
+  useEffect(() => {
+    let timer: number | null = null;
+    const onSpike = () => {
+      setHrSpike(true);
+      try { navigator.vibrate?.([60, 40, 60]); } catch { /* noop */ }
+      if (timer != null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => setHrSpike(false), 6000);
+    };
+    window.addEventListener("orbit:hr-spike", onSpike);
+    return () => {
+      window.removeEventListener("orbit:hr-spike", onSpike);
+      if (timer != null) window.clearTimeout(timer);
+    };
+  }, []);
+
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
   const carouselMetrics: MetricId[] = (() => {
@@ -142,6 +159,14 @@ export default function FocusRunView({
         paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
       }}
     >
+      {hrSpike && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 rounded-2xl border border-destructive/50 bg-destructive/15 px-3 py-2 text-destructive">
+            <Heart className="h-4 w-4 flex-shrink-0" fill="currentColor" />
+            <div className="text-[11px] font-bold leading-tight">{tr("focus.hrSpike")}</div>
+          </div>
+        </div>
+      )}
       {/* Ghost / sensor bar */}
       {(ghostActive || tracker.hrSource === "bt") && (
         <div className="px-4 pb-2 flex justify-center gap-2">
