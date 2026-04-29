@@ -41,6 +41,9 @@ export default function RecoveryInsight({ analysis, readyAt }: Props) {
     if (analysis.message.key === "recovery.scenario.overreaching.distance") {
       return t(analysis.message.key, { pct: analysis.message.pct });
     }
+    if (analysis.message.key === "recovery.scenario.zone5") {
+      return t(analysis.message.key, { pct: analysis.message.pct });
+    }
     return t(analysis.message.key);
   })();
 
