@@ -5,6 +5,7 @@
 import type { GeoPoint, HrSample, Run } from "@/lib/run-types";
 import { haversine } from "@/lib/run-utils";
 import { DEFAULT_MAX_HR } from "@/lib/hr-analysis";
+import { loadHrZones } from "@/lib/hr-zones-config";
 
 export type HrGraphPoint = {
   /** Absolute timestamp (ms). */
