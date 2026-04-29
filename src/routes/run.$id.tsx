@@ -11,6 +11,7 @@ import ShoePicker from "@/components/ShoePicker";
 import ShareSheet from "@/components/ShareSheet";
 import BioInsightCard from "@/components/BioInsightCard";
 import HrZoneBar from "@/components/HrZoneBar";
+import HrAnalyticsCard from "@/components/HrAnalyticsCard";
 import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -42,6 +43,7 @@ function RunDetailPage() {
   const [editingWeather, setEditingWeather] = useState(false);
   const [pickingShoe, setPickingShoe] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [scrubLatLng, setScrubLatLng] = useState<{ lat: number; lng: number } | null>(null);
   const { t } = useI18n();
 
   const handleWeatherSave = (w: RunWeather) => {
@@ -106,7 +108,7 @@ function RunDetailPage() {
       </header>
 
       <section className="rounded-3xl overflow-hidden border border-border shadow-card relative">
-        <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} />
+        <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} highlight={scrubLatLng} />
         {run.weather && (
           <div className="absolute top-3 left-3">
             <WeatherBadge weather={run.weather} />
@@ -253,6 +255,7 @@ function RunDetailPage() {
       </section>
 
       <BioInsightCard run={run} />
+      <HrAnalyticsCard run={run} onScrub={(p) => setScrubLatLng(p?.coord ?? null)} />
       <HrZoneBar series={run.hrSeries} />
 
 
