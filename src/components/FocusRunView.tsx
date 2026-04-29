@@ -3,6 +3,8 @@ import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
 import { useI18n } from "@/lib/i18n";
+import { resetZoneCueState, speakZoneEntered } from "@/lib/audio-cues";
+import { loadProfile } from "@/lib/user-profile";
 import {
   ALL_METRIC_IDS,
   METRICS,
