@@ -42,6 +42,27 @@ export default function SensorsSection() {
   const supported = isWebBluetoothSupported();
   const connected = bt.status === "connected";
   const busy = bt.status === "scanning" || bt.status === "connecting";
+  const hasLastDevice = !!bt.lastDeviceName && !connected && !busy;
+
+  // Auto-reconnect silently when the app regains focus, if a device was
+  // previously paired and is currently disconnected.
+  useEffect(() => {
+    if (!supported) return;
+    const onFocus = () => {
+      const s = getBtHrState();
+      if (s.status === "disconnected" || (s.status === "idle" && s.lastDeviceName)) {
+        void tryReconnectLastDevice();
+      }
+    };
+    // Try once on mount as well.
+    onFocus();
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [supported]);
 
   // Surface troubleshooting tips after 10s of scanning
   useEffect(() => {
@@ -78,6 +99,15 @@ export default function SensorsSection() {
     await disconnectBtHeartRate();
     setTesting(false);
     setStep(1);
+  };
+
+  const onQuickReconnect = async () => {
+    const ok = await tryReconnectLastDevice();
+    if (!ok) openModal();
+  };
+
+  const onForgetDevice = () => {
+    clearLastDevice();
   };
 
   const rowStatus =
