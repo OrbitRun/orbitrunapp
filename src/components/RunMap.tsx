@@ -132,10 +132,39 @@ function RunMapInner({
       headRef.current = null;
       ghostMarkerRef.current?.remove();
       ghostMarkerRef.current = null;
+      highlightMarkerRef.current?.remove();
+      highlightMarkerRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
     };
   }, [interactive]);
+
+  // Scrubber highlight marker — pulsing neon dot at the synced HR sample.
+  useEffect(() => {
+    const map = mapRef.current;
+    const M = MRef.current;
+    if (!map || !M || !ready) return;
+    if (!highlight) {
+      highlightMarkerRef.current?.remove();
+      highlightMarkerRef.current = null;
+      return;
+    }
+    if (!highlightMarkerRef.current) {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "position:relative;width:14px;height:14px;border-radius:9999px;background:oklch(0.92 0.21 130);border:2px solid #000;box-shadow:0 0 12px oklch(0.92 0.21 130);";
+      const halo = document.createElement("div");
+      halo.style.cssText =
+        "position:absolute;inset:-6px;border-radius:9999px;background:oklch(0.92 0.21 130);opacity:0.35;animation:hr-marker-pulse 1.4s ease-out infinite;";
+      el.appendChild(halo);
+      highlightMarkerRef.current = new M.Marker({ element: el })
+        .setLngLat([highlight.lng, highlight.lat])
+        .addTo(map);
+    } else {
+      highlightMarkerRef.current.setLngLat([highlight.lng, highlight.lat]);
+    }
+  }, [highlight, ready]);
+
 
   // Ghost marker: hollow white circle interpolated along saved path.
   useEffect(() => {
