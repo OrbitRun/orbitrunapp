@@ -7,15 +7,20 @@ import {
   Check,
   Droplets,
   Heart,
+  Signal,
   Smartphone,
+  TriangleAlert,
   X,
+  Zap,
 } from "lucide-react";
 import {
+  clearLastDevice,
   connectBtHeartRate,
   disconnectBtHeartRate,
   getBtHrState,
   isWebBluetoothSupported,
   subscribeBtHr,
+  tryReconnectLastDevice,
   type BtHrState,
 } from "@/lib/heart-rate-bt";
 
