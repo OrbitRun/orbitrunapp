@@ -408,6 +408,19 @@ const en: Dict = {
   "zones.z4": "Threshold",
   "zones.z5": "Max effort",
 
+  // HR analytics graph
+  "hr.graph.title": "Heart rate",
+  "hr.graph.empty": "No heart rate data captured for this run.",
+  "hr.stat.max": "Max",
+  "hr.stat.avg": "Avg",
+  "hr.stat.vo2": "VO₂ Est.",
+  "hr.stat.ef": "EF",
+  "hr.zone.1": "Warm-up",
+  "hr.zone.2": "Aerobic",
+  "hr.zone.3": "Tempo",
+  "hr.zone.4": "Threshold",
+  "hr.zone.5": "Max",
+
   // HRR countdown + grade
   "hrr.countdown.title": "Measuring recovery",
   "hrr.countdown.body": "Keep your strap on for 60 seconds.",
@@ -808,6 +821,19 @@ const da: Dict = {
   "zones.z3": "Tempo",
   "zones.z4": "Tærskel",
   "zones.z5": "Max indsats",
+
+  // HR analytics graph
+  "hr.graph.title": "Puls",
+  "hr.graph.empty": "Ingen pulsdata registreret for denne tur.",
+  "hr.stat.max": "Maks",
+  "hr.stat.avg": "Gns.",
+  "hr.stat.vo2": "VO₂ Est.",
+  "hr.stat.ef": "EF",
+  "hr.zone.1": "Opvarmning",
+  "hr.zone.2": "Aerob",
+  "hr.zone.3": "Tempo",
+  "hr.zone.4": "Tærskel",
+  "hr.zone.5": "Maks",
 
   // HRR countdown + grade
   "hrr.countdown.title": "Måler restitution",
