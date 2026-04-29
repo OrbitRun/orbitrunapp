@@ -4,24 +4,31 @@
 // Pure functions only — no UI, no side effects.
 
 import type { HrSample, Run } from "@/lib/run-types";
+import { effectiveMaxHr, zoneForBpm } from "@/lib/hr-zones-config";
 
 // Default max HR estimate when the user hasn't supplied an age.
 // Tuned for a generic adult recreational runner; can be made user-configurable later.
 export const DEFAULT_MAX_HR = 190;
 
 export function maxHrFor(_run?: Run): number {
-  return DEFAULT_MAX_HR;
+  return effectiveMaxHr();
 }
 
 export type HrZone = 1 | 2 | 3 | 4 | 5;
 
+// Zone classification now reads from the saved HR-zone config when present,
+// falling back to fixed % of `maxHr` for legacy callers.
 export function zoneFor(bpm: number, maxHr: number = DEFAULT_MAX_HR): HrZone {
-  const pct = bpm / maxHr;
-  if (pct >= 0.9) return 5;
-  if (pct >= 0.8) return 4;
-  if (pct >= 0.7) return 3;
-  if (pct >= 0.6) return 2;
-  return 1;
+  // If caller passed a custom maxHr (legacy), honour it via straight %.
+  if (maxHr !== DEFAULT_MAX_HR) {
+    const pct = bpm / maxHr;
+    if (pct >= 0.9) return 5;
+    if (pct >= 0.8) return 4;
+    if (pct >= 0.7) return 3;
+    if (pct >= 0.6) return 2;
+    return 1;
+  }
+  return zoneForBpm(bpm);
 }
 
 // Returns the fraction (0..1) of the run that BPM was in Zone 5 (>=90% maxHR).
