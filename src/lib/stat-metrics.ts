@@ -292,6 +292,8 @@ export function computeRunMetrics(run: Run): LiveStats {
     elevationGainM: run.elevationGainM,
     ghostDeltaMs: null,
     hrBpm: run.avgHrBpm ?? null,
+    maxHrBpm: run.maxHrBpm ?? null,
+    avgHrBpm: run.avgHrBpm ?? null,
   };
 }
 
