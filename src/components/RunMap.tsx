@@ -12,6 +12,8 @@ type Props = {
   follow?: boolean;
   interactive?: boolean;
   ghost?: { path: { lat: number; lng: number; t: number }[]; elapsedMs: number } | null;
+  /** Optional pulsing highlight marker (e.g. driven by the HR scrubber). */
+  highlight?: { lat: number; lng: number } | null;
 };
 
 export default function RunMap(props: Props) {
