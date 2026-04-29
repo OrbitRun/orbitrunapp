@@ -10,6 +10,8 @@ import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import { hrrDrop60s, timeFractionInZone5, DEFAULT_MAX_HR } from "@/lib/hr-analysis";
+import { estimateVo2Max } from "@/lib/vo2max";
+import { classifyHrrGrade } from "@/lib/hr-zones";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -42,6 +44,8 @@ type State = {
   ghost: GhostRef | null;
   hrBpm: number | null;
   hrSource: "bt" | "health" | null;
+  maxHrBpm: number | null;
+  avgHrBpm: number | null;
 };
 
 const initial: State = {
@@ -60,6 +64,8 @@ const initial: State = {
   ghost: null,
   hrBpm: null,
   hrSource: null,
+  maxHrBpm: null,
+  avgHrBpm: null,
 };
 
 type PrFlags = {
@@ -543,9 +549,12 @@ export function useRunTracker() {
         const tNow = Date.now();
         hrSeriesRef.current.push({ t: tNow, bpm: bt.bpm });
         noteBpmSample(bt.bpm, tNow);
+        const series = hrSeriesRef.current;
+        const max = series.reduce((a, b) => Math.max(a, b.bpm), 0);
+        const avg = Math.round(series.reduce((a, b) => a + b.bpm, 0) / series.length);
         setState((p) =>
           p.status === "running" || p.status === "paused"
-            ? { ...p, hrBpm: bt.bpm, hrSource: "bt" }
+            ? { ...p, hrBpm: bt.bpm, hrSource: "bt", maxHrBpm: max, avgHrBpm: avg }
             : p,
         );
       } else if (hrSourceRef.current === "bt") {
@@ -570,9 +579,12 @@ export function useRunTracker() {
       hrSourceRef.current = "health";
       hrSeriesRef.current.push({ t, bpm });
       noteBpmSample(bpm, t);
+      const series = hrSeriesRef.current;
+      const max = series.reduce((a, b) => Math.max(a, b.bpm), 0);
+      const avg = Math.round(series.reduce((a, b) => a + b.bpm, 0) / series.length);
       setState((p) =>
         p.status === "running" || p.status === "paused"
-          ? { ...p, hrBpm: bpm, hrSource: "health" }
+          ? { ...p, hrBpm: bpm, hrSource: "health", maxHrBpm: max, avgHrBpm: avg }
           : p,
       );
     }, 5000);
@@ -630,7 +642,7 @@ export function useRunTracker() {
           }
         : {};
     const runId = genId();
-    const run: Run = {
+    const baseRun: Run = {
       id: runId,
       startedAt: s.startedAt,
       endedAt: Date.now(),
@@ -645,6 +657,8 @@ export function useRunTracker() {
       shoeId: primaryShoe?.id,
       ...hrAggregates,
     };
+    const vo2 = estimateVo2Max(baseRun);
+    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2 } : baseRun;
 
     // --- Heart-rate recovery capture ----------------------------------------
     // Keep BT + Health subscribers active for ~75s after stop so we can sample
@@ -663,11 +677,12 @@ export function useRunTracker() {
         btUnsubRef.current?.();
         btUnsubRef.current = null;
         if (drop != null && postStopRunIdRef.current) {
-          updateRun(postStopRunIdRef.current, { hrrDrop60s: drop });
+          const grade = classifyHrrGrade(drop);
+          updateRun(postStopRunIdRef.current, { hrrDrop60s: drop, recoveryGrade: grade });
           try {
             window.dispatchEvent(
               new CustomEvent("orbit:run-updated", {
-                detail: { runId: postStopRunIdRef.current, hrrDrop60s: drop },
+                detail: { runId: postStopRunIdRef.current, hrrDrop60s: drop, recoveryGrade: grade },
               }),
             );
           } catch {

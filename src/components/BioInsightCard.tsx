@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Heart, TrendingDown } from "lucide-react";
+import { Activity, Heart, TrendingDown } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import type { Run } from "@/lib/run-types";
 import { loadRuns } from "@/lib/run-types";
 import { aerobicEfficiency, classifyHrr } from "@/lib/hr-analysis";
+import { classifyFitness, estimateVo2Max } from "@/lib/vo2max";
 
 type Props = { run: Run };
 
@@ -27,7 +28,9 @@ export default function BioInsightCard({ run }: Props) {
   }, [run.id, run.hrrDrop60s]);
 
   const aero = aerobicEfficiency(run, loadRuns());
-  if (hrr == null && !aero) return null;
+  const vo2 = run.vo2maxEst ?? estimateVo2Max(run);
+  if (hrr == null && !aero && vo2 == null) return null;
+  const fitness = vo2 != null ? classifyFitness(vo2) : null;
 
   const hrrInsight = hrr != null ? classifyHrr(hrr) : null;
   const tone =
@@ -74,6 +77,30 @@ export default function BioInsightCard({ run }: Props) {
           <div className="mt-2 flex items-center gap-2 text-[11px] text-foreground leading-snug">
             <TrendingDown className="h-3.5 w-3.5 flex-shrink-0 text-neon" />
             <span>{t("aero.body", { delta: aero.bpmDelta })}</span>
+          </div>
+        </div>
+      )}
+      {vo2 != null && fitness && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="flex items-baseline justify-between">
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+              {t("vo2.title")}
+            </div>
+            <div className="font-display font-black tabular text-base leading-none text-foreground">
+              {vo2.toFixed(1)}
+              <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold ml-1">
+                {t("vo2.unit")}
+              </span>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-foreground leading-snug">
+            <Activity className="h-3.5 w-3.5 flex-shrink-0 text-neon" />
+            <span className="font-display font-black uppercase tracking-[0.18em]">
+              {t(`vo2.${fitness}`)}
+            </span>
+          </div>
+          <div className="mt-1 text-[10px] text-muted-foreground leading-snug">
+            {t("vo2.disclaimer")}
           </div>
         </div>
       )}

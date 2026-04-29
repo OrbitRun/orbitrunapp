@@ -387,6 +387,38 @@ const en: Dict = {
   "aero.title": "Aerobic gain",
   "aero.body": "Same pace, {delta} bpm lower than your recent average. Your cardio is improving.",
 
+  // Stats — heart rate extras
+  "stat.hrMax": "Max HR",
+
+  // VO2 Max — Orbit Fitness Score
+  "vo2.title": "Orbit Fitness Score (VO2 Max Est.)",
+  "vo2.unit": "ml/kg/min",
+  "vo2.disclaimer": "Estimate — needs 10+ min steady running for accuracy.",
+  "vo2.poor": "Poor",
+  "vo2.fair": "Fair",
+  "vo2.good": "Good",
+  "vo2.excellent": "Excellent",
+  "vo2.elite": "Elite",
+
+  // HR zones
+  "zones.title": "Time in zones",
+  "zones.z1": "Recovery",
+  "zones.z2": "Aerobic base",
+  "zones.z3": "Tempo",
+  "zones.z4": "Threshold",
+  "zones.z5": "Max effort",
+
+  // HRR countdown + grade
+  "hrr.countdown.title": "Measuring recovery",
+  "hrr.countdown.body": "Keep your strap on for 60 seconds.",
+  "hrr.countdown.resultTitle": "Recovery score",
+  "hrr.countdown.resultBody": "Heart-rate drop in the first 60 seconds.",
+  "hrr.grade.poor": "Poor",
+  "hrr.grade.fair": "Fair",
+  "hrr.grade.good": "Good",
+  "hrr.grade.excellent": "Excellent",
+  "hrr.grade.elite": "Elite",
+
   // Coach override + live HR spike alert
   "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
   "focus.hrSpike": "Heart rate climbing fast — check your breathing",
@@ -755,6 +787,38 @@ const da: Dict = {
   // Aerobic efficiency
   "aero.title": "Kardio-fremgang",
   "aero.body": "Samme tempo, {delta} slag lavere end dit nylige snit. Din form er i fremgang.",
+
+  // Stats — heart rate extras
+  "stat.hrMax": "Max-puls",
+
+  // VO2 Max — Orbit Fitness Score
+  "vo2.title": "Orbit Fitness Score (VO2 Max est.)",
+  "vo2.unit": "ml/kg/min",
+  "vo2.disclaimer": "Estimat — kræver 10+ min stabilt løb for præcision.",
+  "vo2.poor": "Lav",
+  "vo2.fair": "Okay",
+  "vo2.good": "God",
+  "vo2.excellent": "Fremragende",
+  "vo2.elite": "Elite",
+
+  // HR zones
+  "zones.title": "Tid i zoner",
+  "zones.z1": "Restitution",
+  "zones.z2": "Aerob base",
+  "zones.z3": "Tempo",
+  "zones.z4": "Tærskel",
+  "zones.z5": "Max indsats",
+
+  // HRR countdown + grade
+  "hrr.countdown.title": "Måler restitution",
+  "hrr.countdown.body": "Hold pulsbæltet på i 60 sekunder.",
+  "hrr.countdown.resultTitle": "Restitutions-score",
+  "hrr.countdown.resultBody": "Puls-fald de første 60 sekunder.",
+  "hrr.grade.poor": "Lav",
+  "hrr.grade.fair": "Okay",
+  "hrr.grade.good": "God",
+  "hrr.grade.excellent": "Fremragende",
+  "hrr.grade.elite": "Elite",
 
   // Coach override + live HR spike alert
   "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",

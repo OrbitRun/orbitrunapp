@@ -5,6 +5,8 @@ import WeatherBadge from "@/components/WeatherBadge";
 import StatTile from "@/components/StatTile";
 import RecoveryInsight from "@/components/RecoveryInsight";
 import BioInsightCard from "@/components/BioInsightCard";
+import HrZoneBar from "@/components/HrZoneBar";
+import HrrCountdown from "@/components/HrrCountdown";
 import ShareSheet from "@/components/ShareSheet";
 import {
   AlertDialog,
@@ -124,7 +126,9 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </section>
 
         <RecoveryInsight analysis={analysis} readyAt={readyAt} />
+        <HrrCountdown run={run} />
         <BioInsightCard run={run} />
+        <HrZoneBar series={run.hrSeries} />
 
         {run.splits.length > 0 && (
           <section className="mt-4 glass rounded-2xl p-4">
