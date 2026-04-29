@@ -1,64 +1,91 @@
-## Reality check first
+## Expand Heart Rate Analytics
 
-Your app is a **TanStack Start web app** on Cloudflare Workers. **Apple HealthKit is iOS-native only** — no browser/PWA can read it. To actually receive heart rate from Apple Health you need:
+Build out four HR-driven features that plug into the existing infrastructure (`use-run-tracker`, `hr-analysis`, `stat-metrics`, `RunSummary`).
 
-1. A **Capacitor iOS shell** wrapping this web app, **and**
-2. Building/signing in **Xcode** with the HealthKit entitlement, **and**
-3. Distributing via **TestFlight / App Store**.
+### 1. Live Max HR + Avg HR tiles in Focus Mode
 
-Lovable produces the web bundle the native shell loads — it cannot build/sign the iOS binary. What I **can** do now is build all the app-side plumbing so the moment you wrap this in Capacitor, heart rate just works. On the web it stays cleanly inert.
+In `src/hooks/use-run-tracker.ts`, expose two new live values alongside `hrBpm`:
+- `maxHrBpm` — running max of every sample fed through `noteBpmSample`.
+- `avgHrBpm` — time-weighted mean of `hrSeriesRef` (already maintained).
 
-## What I'll build (web-safe, native-ready)
+Reset both in `start()` and clear in `reset()`. Surface them in the tracker return object.
 
-### 1. Health bridge — `src/lib/health.ts`
-Thin abstraction over `@capacitor-community/health` (maintained HealthKit plugin):
-- `isHealthAvailable()` — true only inside Capacitor on iOS.
-- `requestHeartRatePermission()` — prompts read access for `HKQuantityTypeIdentifierHeartRate`. Returns `'granted' | 'denied' | 'unavailable'`.
-- `getLatestHeartRate()` — queries the most recent BPM sample (last ~30s window).
-- `startHeartRatePolling(cb, intervalMs = 5000)` / `stopHeartRatePolling()` — interval poller (HealthKit has no true HR push without a watchOS companion; 5s polling is the standard pattern).
+In `src/lib/stat-metrics.ts`:
+- Extend `LiveStats` with `maxHrBpm` and `avgHrLiveBpm`.
+- Add metrics: `hrMax` ("Max HR", bpm) and `hrAvg` ("Avg HR", bpm).
+- Append both to `ALL_METRIC_IDS` so they appear in the swipable carousel and in `MetricPicker`.
 
-All Capacitor calls are **dynamic-imported** and try/catch'd so the module never breaks the web bundle (Cloudflare Worker SSR + browser).
+In `src/components/FocusRunView.tsx`, no structural change needed — the carousel already iterates `ALL_METRIC_IDS`. Just add the new ids to the i18n labels.
 
-### 2. Permission flow UI
-- New `src/components/HealthPermissionSheet.tsx`: bottom sheet explaining what data is read and why, "Allow" / "Not now" actions. Shown automatically on first run start in a Capacitor build, gated by `localStorage` flag `orbit:health:asked`.
-- `src/routes/profile.tsx`: new "Apple Health" row showing status (Connected / Denied / Not available) with re-prompt button.
+### 2. VO2 Max estimate ("Orbit Fitness Score")
 
-### 3. Run tracker integration — `src/hooks/use-run-tracker.ts`
-- Extend `GeoPoint` in `src/lib/run-types.ts` with optional `hrBpm: number | null`.
-- Extend `Run` with `avgHrBpm?`, `maxHrBpm?`, and `hrSeries?: { t: number; bpm: number }[]` so HR is captured even when standing still (no new GeoPoint).
-- On `start()`: `startHeartRatePolling` (no-op on web). Each poll updates a `latestBpmRef` and appends to `hrSeries`.
-- In `handlePosition`: stamp `latestBpmRef` onto each new `GeoPoint`.
-- On `stop()`: `stopHeartRatePolling`, compute avg/max, persist on the `Run`.
+New file `src/lib/vo2max.ts`:
+- `estimateVo2Max(run): number | null` using the **Uth–Sørensen–Overgaard–Pedersen** formula:
+  `VO2max ≈ 15.3 × (HRmax / HRrest)`
+  with HRmax from `maxHrBpm` (fallback to `DEFAULT_MAX_HR`) and HRrest from user profile (default 60).
+- Validity gate: only return a value when run ≥10 min, has avgHrBpm, and avgHrBpm ≥ 60% of HRmax. Otherwise null.
+- Expose helper `classifyFitness(vo2, ageOptional)` returning a band label key (`vo2.poor` / `fair` / `good` / `excellent` / `elite`).
 
-### 4. Run history & summary
-- Add HR tile (avg / max BPM) to `src/components/RunSummary.tsx` and `src/routes/run.$id.tsx`. Hidden when no HR data — older runs unaffected.
+Persist on the run:
+- Add `vo2maxEst?: number` to `Run` in `src/lib/run-types.ts`.
+- Compute and store in `use-run-tracker.stop()` before `saveRun`.
 
-### 5. Capacitor scaffold (config + docs only — NOT installed in web build)
-Capacitor cannot run inside the Cloudflare Worker bundle, so I will **not** add `@capacitor/core` to `package.json` (would bloat / risk SSR errors). Instead:
-- `capacitor.config.ts` — appId `app.lovable.orbit`, webDir `dist/client`, iOS plist hint for `NSHealthShareUsageDescription`.
-- `docs/IOS_SETUP.md` — exact recipe to wrap the app: `bun add @capacitor/core @capacitor/cli @capacitor/ios @capacitor-community/health`, `npx cap add ios`, add HealthKit capability in Xcode, etc.
+UI:
+- Show inside `BioInsightCard` (or new `Vo2Card`) titled **"Orbit Fitness Score (VO2 Max Est.)"** with the disclaimer line "Estimate — needs 10+ min steady running for accuracy."
+- Render in `RunSummary` and `routes/run.$id.tsx`.
 
-This keeps the web build clean while giving a one-shot path to a working iOS build later.
+### 3. Zone Tracker bar chart
 
-## Files touched
+New file `src/lib/hr-zones.ts`:
+- `timeInZones(hrSeries, maxHr): { zone: 1-5, ms: number, pct: number }[]` — time-weighted, mirroring `timeFractionInZone5` logic but for all 5 zones.
 
-```text
-src/lib/health.ts                        (new — bridge, web-safe)
-src/lib/run-types.ts                     (add hrBpm, avgHrBpm, maxHrBpm, hrSeries)
-src/hooks/use-run-tracker.ts             (poll + stamp + aggregate)
-src/components/HealthPermissionSheet.tsx (new)
-src/components/RunSummary.tsx            (HR tile)
-src/routes/profile.tsx                   (Apple Health row)
-src/routes/run.$id.tsx                   (HR tile in detail view)
-src/routes/index.tsx                     (mount permission sheet on first run)
-capacitor.config.ts                      (new — config only)
-docs/IOS_SETUP.md                        (new — wrapping recipe)
-```
+New component `src/components/HrZoneBar.tsx`:
+- Minimalist horizontal stacked bar (5 segments, one per zone) with subtle color ramp from neon-cool (Z1) to neon-hot (Z5) using existing tokens.
+- Underneath: a 5-row legend `Z1 · 24% · 12:34`, monospace, uppercase eyebrow style matching `RecoveryInsight`.
 
-## What you need to know
+Render in `RunSummary` and `routes/run.$id.tsx` whenever `hrSeries` has ≥2 samples.
 
-- **In the current web preview, this code is dormant.** `isHealthAvailable()` returns false, the sheet never appears, runs save with `hrBpm: null`. Nothing visible changes for web users.
-- **To actually get HR data**, you (or a developer) must follow `docs/IOS_SETUP.md` to wrap in Capacitor and submit through Xcode. Lovable cannot do that step.
-- **5s polling is the iOS HealthKit norm** for live HR during workouts. True push streaming requires a watchOS companion app — out of scope.
+### 4. Recovery Score (60s HRR fitness rating)
 
-Approve and I'll implement everything above.
+Extend the existing post-stop HRR pipeline (already captures 75s of post-stop HR):
+- After `hrrDrop60s` is computed, classify into a fitness grade:
+  - ≥40 bpm → Elite
+  - 30–39 → Excellent
+  - 20–29 → Good
+  - 12–19 → Fair
+  - <12 → Poor
+- Expose `recoveryGrade` on the Run type and update via `updateRun` in the same `orbit:run-updated` dispatch.
+
+UI — countdown at finish:
+- New component `src/components/HrrCountdown.tsx`. When `RunSummary` mounts and we have an active BT/Health connection (check `tracker.hrSource` snapshot just before finish, persisted in a ref), show a 60-second countdown card at the top:
+  - Big circular ring (reusing the SVG ring pattern from `FocusRunView` stop button).
+  - Label "Measuring recovery — keep your strap on".
+  - Live BPM tick.
+  - When timer hits 0 (or `orbit:run-updated` fires with `hrrDrop60s`), morph into a result card showing the BPM drop and the grade badge.
+- Skip the countdown automatically if no HR source was active during the run (graceful fallback to existing `BioInsightCard`).
+
+i18n — add Danish + English keys for: `hr.max`, `hr.avg`, `vo2.title`, `vo2.disclaimer`, `vo2.poor|fair|good|excellent|elite`, `zones.title`, `zones.z1..z5`, `hrr.countdown.title`, `hrr.countdown.body`, `hrr.grade.poor..elite`.
+
+### Technical details
+
+- All math lives in pure modules (`vo2max.ts`, `hr-zones.ts`) — no React, easy to unit-test later.
+- `Run` type gains two optional fields: `vo2maxEst?: number`, `recoveryGrade?: "poor"|"fair"|"good"|"excellent"|"elite"`. Backward compatible — old runs simply hide the new tiles.
+- `noteBpmSample` already runs on every BT + Health sample, so live max/avg need only one extra ref + one setState per sample (already throttled by sample rate).
+- Stat carousel re-render cost is unchanged — same iteration, two extra entries.
+- HRR countdown uses the existing 75s post-stop window, so no new GATT subscriptions are introduced.
+
+### Files to create
+- `src/lib/vo2max.ts`
+- `src/lib/hr-zones.ts`
+- `src/components/HrZoneBar.tsx`
+- `src/components/HrrCountdown.tsx`
+
+### Files to edit
+- `src/hooks/use-run-tracker.ts` — live max/avg HR, vo2/grade persistence
+- `src/lib/stat-metrics.ts` — new metrics + LiveStats fields
+- `src/lib/run-types.ts` — `vo2maxEst`, `recoveryGrade`
+- `src/components/FocusRunView.tsx` — (no-op besides ensuring new metric ids render)
+- `src/components/RunSummary.tsx` — HrrCountdown, HrZoneBar, VO2 card
+- `src/components/BioInsightCard.tsx` — VO2 row + recovery grade badge
+- `src/routes/run.$id.tsx` — same new sections for past runs
+- `src/lib/i18n.tsx` — new keys (en + da)
