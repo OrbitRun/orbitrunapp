@@ -44,11 +44,36 @@ export default function FocusRunView({
   onResume,
   onStop,
 }: Props) {
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
   const hrZones = useHrZones();
   const liveZone: HrZoneId | null =
     tracker.hrBpm != null ? zoneForBpm(tracker.hrBpm, hrZones) : null;
   const liveZoneColor = liveZone ? ZONE_VAR[liveZone] : undefined;
+
+  // Audio cue when the runner sustains a new zone for ≥10s.
+  // Gated by `prVoiceEnabled` (same toggle that controls voice notifications).
+  const pendingZoneRef = useRef<{ zone: HrZoneId; since: number } | null>(null);
+  const announcedZoneRef = useRef<HrZoneId | null>(null);
+  useEffect(() => {
+    if (liveZone == null) return;
+    const profile = loadProfile();
+    if (profile.prVoiceEnabled === false) return;
+    const now = Date.now();
+    const pending = pendingZoneRef.current;
+    if (!pending || pending.zone !== liveZone) {
+      pendingZoneRef.current = { zone: liveZone, since: now };
+      return;
+    }
+    if (
+      now - pending.since >= 10_000 &&
+      announcedZoneRef.current !== liveZone
+    ) {
+      announcedZoneRef.current = liveZone;
+      speakZoneEntered(liveZone, lang, tr("hrz.cue.enter"));
+    }
+  }, [liveZone, lang, tr]);
+  // Reset on unmount so a new run starts fresh.
+  useEffect(() => () => resetZoneCueState(), []);
 
   // Lock global UI: hide bottom nav, kill body scroll/bounce.
   useEffect(() => {
