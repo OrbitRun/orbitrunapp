@@ -642,7 +642,7 @@ export function useRunTracker() {
           }
         : {};
     const runId = genId();
-    const run: Run = {
+    const baseRun: Run = {
       id: runId,
       startedAt: s.startedAt,
       endedAt: Date.now(),
@@ -657,6 +657,8 @@ export function useRunTracker() {
       shoeId: primaryShoe?.id,
       ...hrAggregates,
     };
+    const vo2 = estimateVo2Max(baseRun);
+    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2 } : baseRun;
 
     // --- Heart-rate recovery capture ----------------------------------------
     // Keep BT + Health subscribers active for ~75s after stop so we can sample
@@ -675,11 +677,12 @@ export function useRunTracker() {
         btUnsubRef.current?.();
         btUnsubRef.current = null;
         if (drop != null && postStopRunIdRef.current) {
-          updateRun(postStopRunIdRef.current, { hrrDrop60s: drop });
+          const grade = classifyHrrGrade(drop);
+          updateRun(postStopRunIdRef.current, { hrrDrop60s: drop, recoveryGrade: grade });
           try {
             window.dispatchEvent(
               new CustomEvent("orbit:run-updated", {
-                detail: { runId: postStopRunIdRef.current, hrrDrop60s: drop },
+                detail: { runId: postStopRunIdRef.current, hrrDrop60s: drop, recoveryGrade: grade },
               }),
             );
           } catch {
