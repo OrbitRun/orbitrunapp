@@ -15,7 +15,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SpotifyCallbackRouteImport } from './routes/spotify.callback'
 import { Route as RunIdRouteImport } from './routes/run.$id'
-import { Route as ProfileHeartRateRouteImport } from './routes/profile.heart-rate'
+import { Route as ProfileHeartRateRouteImport } from './routes/profile_.heart-rate'
 
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
@@ -48,15 +48,15 @@ const RunIdRoute = RunIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileHeartRateRoute = ProfileHeartRateRouteImport.update({
-  id: '/heart-rate',
-  path: '/heart-rate',
-  getParentRoute: () => ProfileRoute,
+  id: '/profile_/heart-rate',
+  path: '/profile/heart-rate',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
-  '/profile': typeof ProfileRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/profile/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
@@ -65,7 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
-  '/profile': typeof ProfileRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
   '/profile/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
@@ -75,9 +75,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
-  '/profile': typeof ProfileRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
-  '/profile/heart-rate': typeof ProfileHeartRateRoute
+  '/profile_/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
 }
@@ -106,7 +106,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/profile'
     | '/records'
-    | '/profile/heart-rate'
+    | '/profile_/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
   fileRoutesById: FileRoutesById
@@ -114,8 +114,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   HistoryRoute: typeof HistoryRoute
-  ProfileRoute: typeof ProfileRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
   RecordsRoute: typeof RecordsRoute
+  ProfileHeartRateRoute: typeof ProfileHeartRateRoute
   RunIdRoute: typeof RunIdRoute
   SpotifyCallbackRoute: typeof SpotifyCallbackRoute
 }
@@ -164,35 +165,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RunIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile/heart-rate': {
-      id: '/profile/heart-rate'
-      path: '/heart-rate'
+    '/profile_/heart-rate': {
+      id: '/profile_/heart-rate'
+      path: '/profile/heart-rate'
       fullPath: '/profile/heart-rate'
       preLoaderRoute: typeof ProfileHeartRateRouteImport
-      parentRoute: typeof ProfileRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface ProfileRouteChildren {
-  ProfileHeartRateRoute: typeof ProfileHeartRateRoute
-}
-
-const ProfileRouteChildren: ProfileRouteChildren = {
-  ProfileHeartRateRoute: ProfileHeartRateRoute,
-}
-
-const ProfileRouteWithChildren =
-  ProfileRoute._addFileChildren(ProfileRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   HistoryRoute: HistoryRoute,
-  ProfileRoute: ProfileRouteWithChildren,
+  ProfileRoute: ProfileRoute,
   RecordsRoute: RecordsRoute,
+  ProfileHeartRateRoute: ProfileHeartRateRoute,
   RunIdRoute: RunIdRoute,
   SpotifyCallbackRoute: SpotifyCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

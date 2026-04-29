@@ -15,7 +15,7 @@ import {
   type ZoneRange,
 } from "@/lib/hr-zones-config";
 
-export const Route = createFileRoute("/profile/heart-rate")({
+export const Route = createFileRoute("/profile_/heart-rate")({
   head: () => ({
     meta: [
       { title: "Heart Rate Zones — Orbit Lab" },
