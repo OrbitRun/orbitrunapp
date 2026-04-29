@@ -90,6 +90,32 @@ export default function HrAnalyticsCard({ run, onScrub }: Props) {
 
   const chartStyle: CSSProperties = { touchAction: "pan-y" };
 
+  // Touch fallback: Recharts ComposedChart doesn't expose onTouchMove props,
+  // so we map a touch's clientX to elapsed-ms using the chart wrapper rect.
+  // We approximate by treating the visible plot area as the wrapper minus
+  // the YAxis width (28px) and the right margin (8px).
+  const Y_AXIS_W = 28;
+  const RIGHT_M = 8;
+  const handleTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    const el = wrapRef.current;
+    if (!el || series.length === 0) return;
+    const touch = e.touches[0] ?? e.changedTouches[0];
+    if (!touch) return;
+    const rect = el.getBoundingClientRect();
+    const plotX = touch.clientX - rect.left - Y_AXIS_W;
+    const plotW = rect.width - Y_AXIS_W - RIGHT_M;
+    if (plotW <= 0) return;
+    const frac = Math.max(0, Math.min(1, plotX / plotW));
+    const minMs = series[0].ms;
+    const maxMs = series[series.length - 1].ms;
+    const ms = minMs + frac * (maxMs - minMs);
+    const idx = nearestIndexByMs(series, ms);
+    if (idx !== activeIdx) {
+      setActiveIdx(idx);
+      onScrub?.(series[idx]);
+    }
+  };
+
   return (
     <section className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <div className="flex items-baseline justify-between">
@@ -106,15 +132,20 @@ export default function HrAnalyticsCard({ run, onScrub }: Props) {
         )}
       </div>
 
-      <div ref={wrapRef} className="mt-3 h-44 w-full select-none" style={chartStyle}>
+      <div
+        ref={wrapRef}
+        className="mt-3 h-44 w-full select-none"
+        style={chartStyle}
+        onTouchStart={handleTouch}
+        onTouchMove={handleTouch}
+        onTouchEnd={handleLeave}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={series}
-            margin={{ top: 6, right: 8, bottom: 0, left: 0 }}
+            margin={{ top: 6, right: RIGHT_M, bottom: 0, left: 0 }}
             onMouseMove={handleMove}
             onMouseLeave={handleLeave}
-            onTouchMove={handleMove}
-            onTouchEnd={handleLeave}
           >
             <defs>
               <linearGradient id="hr-fill" x1="0" y1="0" x2="0" y2="1">
