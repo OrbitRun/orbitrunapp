@@ -42,6 +42,7 @@ function ProfilePage() {
     isHealthAvailable() ? "denied" : "unavailable",
   );
   const healthAvailable = isHealthAvailable();
+  const hrZones = useHrZones();
 
   useEffect(() => {
     const all = loadRuns();
