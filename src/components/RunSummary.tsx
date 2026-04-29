@@ -6,6 +6,7 @@ import StatTile from "@/components/StatTile";
 import RecoveryInsight from "@/components/RecoveryInsight";
 import BioInsightCard from "@/components/BioInsightCard";
 import HrZoneBar from "@/components/HrZoneBar";
+import HrAnalyticsCard from "@/components/HrAnalyticsCard";
 import HrrCountdown from "@/components/HrrCountdown";
 import ShareSheet from "@/components/ShareSheet";
 import {
@@ -128,6 +129,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         <RecoveryInsight analysis={analysis} readyAt={readyAt} />
         <HrrCountdown run={run} />
         <BioInsightCard run={run} />
+        <HrAnalyticsCard run={run} />
         <HrZoneBar series={run.hrSeries} />
 
         {run.splits.length > 0 && (
