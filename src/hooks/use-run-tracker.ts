@@ -743,7 +743,12 @@ export function useRunTracker() {
       stopHeartRatePolling();
       btUnsubRef.current?.();
       btUnsubRef.current = null;
-    };
+      if (postStopTimerRef.current != null) {
+        window.clearTimeout(postStopTimerRef.current);
+        postStopTimerRef.current = null;
+      }
+      postStopSeriesRef.current = null;
+      postStopRunIdRef.current = null;
   }, []);
 
   return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps };
