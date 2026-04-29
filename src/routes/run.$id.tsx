@@ -10,6 +10,7 @@ import WeatherEditor from "@/components/WeatherEditor";
 import ShoePicker from "@/components/ShoePicker";
 import ShareSheet from "@/components/ShareSheet";
 import BioInsightCard from "@/components/BioInsightCard";
+import HrZoneBar from "@/components/HrZoneBar";
 import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
@@ -252,6 +253,8 @@ function RunDetailPage() {
       </section>
 
       <BioInsightCard run={run} />
+      <HrZoneBar series={run.hrSeries} />
+
 
       {(() => {
         const snapshot = computeRunMetrics(run);
