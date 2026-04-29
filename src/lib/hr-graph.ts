@@ -135,20 +135,13 @@ export type ZoneBoundary = {
 
 /** Lower bounds of zones 2..5 — used as horizontal guide lines. */
 export function zoneBoundaries(maxHr: number = DEFAULT_MAX_HR): ZoneBoundary[] {
-  // Prefer user-saved zone config when it exists.
-  try {
-    // Lazy import to avoid pulling localStorage into SSR boundaries unnecessarily.
-    const { loadHrZones } = require("@/lib/hr-zones-config") as typeof import("@/lib/hr-zones-config");
-    const cfg = loadHrZones();
-    if (cfg) {
-      return [2, 3, 4, 5].map((z) => ({
-        zone: z as 2 | 3 | 4 | 5,
-        bpm: cfg.zones[z - 1].lower,
-        labelKey: `hr.zone.${z - 1}`,
-      }));
-    }
-  } catch {
-    /* fall through */
+  const cfg = loadHrZones();
+  if (cfg) {
+    return [2, 3, 4, 5].map((z) => ({
+      zone: z as 2 | 3 | 4 | 5,
+      bpm: cfg.zones[z - 1].lower,
+      labelKey: `hr.zone.${z - 1}`,
+    }));
   }
   return [
     { zone: 2, bpm: Math.round(maxHr * 0.6), labelKey: "hr.zone.1" },
