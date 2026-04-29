@@ -5,6 +5,7 @@
 import type { GeoPoint, HrSample, Run } from "@/lib/run-types";
 import { haversine } from "@/lib/run-utils";
 import { DEFAULT_MAX_HR } from "@/lib/hr-analysis";
+import { loadHrZones } from "@/lib/hr-zones-config";
 
 export type HrGraphPoint = {
   /** Absolute timestamp (ms). */
@@ -134,6 +135,14 @@ export type ZoneBoundary = {
 
 /** Lower bounds of zones 2..5 — used as horizontal guide lines. */
 export function zoneBoundaries(maxHr: number = DEFAULT_MAX_HR): ZoneBoundary[] {
+  const cfg = loadHrZones();
+  if (cfg) {
+    return [2, 3, 4, 5].map((z) => ({
+      zone: z as 2 | 3 | 4 | 5,
+      bpm: cfg.zones[z - 1].lower,
+      labelKey: `hr.zone.${z - 1}`,
+    }));
+  }
   return [
     { zone: 2, bpm: Math.round(maxHr * 0.6), labelKey: "hr.zone.1" },
     { zone: 3, bpm: Math.round(maxHr * 0.7), labelKey: "hr.zone.2" },

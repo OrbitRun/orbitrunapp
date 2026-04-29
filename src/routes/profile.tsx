@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Activity, Bell, Languages, MapPin, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Activity, Bell, Heart, Languages, MapPin, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -11,6 +11,7 @@ import RecoveryStatus from "@/components/RecoveryStatus";
 import HealthPermissionSheet from "@/components/HealthPermissionSheet";
 import SensorsSection from "@/components/SensorsSection";
 import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
+import { useHrZones } from "@/hooks/use-hr-zones";
 
 import {
   DEFAULT_PROFILE,
@@ -41,6 +42,7 @@ function ProfilePage() {
     isHealthAvailable() ? "denied" : "unavailable",
   );
   const healthAvailable = isHealthAvailable();
+  const hrZones = useHrZones();
 
   useEffect(() => {
     const all = loadRuns();
@@ -291,6 +293,24 @@ function ProfilePage() {
             {langs.find((l) => l.code === lang)?.label}
           </div>
         </button>
+      </section>
+
+      {/* HR zones shortcut */}
+      <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <Link
+          to="/profile/heart-rate"
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Heart className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("hrz.profileRow")}</div>
+          <div className="text-xs text-muted-foreground tabular">
+            {hrZones
+              ? `${hrZones.zones[1].lower}–${hrZones.zones[3].upper} bpm`
+              : t("hrz.profileRow.unset")}
+          </div>
+        </Link>
       </section>
 
       {/* Apple Health */}

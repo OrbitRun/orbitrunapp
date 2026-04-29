@@ -15,6 +15,7 @@ import { Route as HistoryRouteImport } from './routes/history'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SpotifyCallbackRouteImport } from './routes/spotify.callback'
 import { Route as RunIdRouteImport } from './routes/run.$id'
+import { Route as ProfileHeartRateRouteImport } from './routes/profile_.heart-rate'
 
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
@@ -46,12 +47,18 @@ const RunIdRoute = RunIdRouteImport.update({
   path: '/run/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileHeartRateRoute = ProfileHeartRateRouteImport.update({
+  id: '/profile_/heart-rate',
+  path: '/profile/heart-rate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/history': typeof HistoryRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
+  '/profile/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/history': typeof HistoryRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
+  '/profile/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/history': typeof HistoryRoute
   '/profile': typeof ProfileRoute
   '/records': typeof RecordsRoute
+  '/profile_/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/profile'
     | '/records'
+    | '/profile/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/profile'
     | '/records'
+    | '/profile/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/history'
     | '/profile'
     | '/records'
+    | '/profile_/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
   fileRoutesById: FileRoutesById
@@ -104,6 +116,7 @@ export interface RootRouteChildren {
   HistoryRoute: typeof HistoryRoute
   ProfileRoute: typeof ProfileRoute
   RecordsRoute: typeof RecordsRoute
+  ProfileHeartRateRoute: typeof ProfileHeartRateRoute
   RunIdRoute: typeof RunIdRoute
   SpotifyCallbackRoute: typeof SpotifyCallbackRoute
 }
@@ -152,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RunIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile_/heart-rate': {
+      id: '/profile_/heart-rate'
+      path: '/profile/heart-rate'
+      fullPath: '/profile/heart-rate'
+      preLoaderRoute: typeof ProfileHeartRateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -160,9 +180,19 @@ const rootRouteChildren: RootRouteChildren = {
   HistoryRoute: HistoryRoute,
   ProfileRoute: ProfileRoute,
   RecordsRoute: RecordsRoute,
+  ProfileHeartRateRoute: ProfileHeartRateRoute,
   RunIdRoute: RunIdRoute,
   SpotifyCallbackRoute: SpotifyCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

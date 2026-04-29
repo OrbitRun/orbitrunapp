@@ -3,6 +3,8 @@ import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
 import { useI18n } from "@/lib/i18n";
+import { resetZoneCueState, speakZoneEntered } from "@/lib/audio-cues";
+import { loadProfile } from "@/lib/user-profile";
 import {
   ALL_METRIC_IDS,
   METRICS,
@@ -10,6 +12,8 @@ import {
   type StatLayout,
 } from "@/lib/stat-metrics";
 import type { useRunTracker } from "@/hooks/use-run-tracker";
+import { ZONE_VAR, zoneForBpm, type HrZoneId } from "@/lib/hr-zones-config";
+import { useHrZones } from "@/hooks/use-hr-zones";
 
 type Tracker = ReturnType<typeof useRunTracker>;
 
@@ -40,7 +44,36 @@ export default function FocusRunView({
   onResume,
   onStop,
 }: Props) {
-  const { t: tr } = useI18n();
+  const { t: tr, lang } = useI18n();
+  const hrZones = useHrZones();
+  const liveZone: HrZoneId | null =
+    tracker.hrBpm != null ? zoneForBpm(tracker.hrBpm, hrZones) : null;
+  const liveZoneColor = liveZone ? ZONE_VAR[liveZone] : undefined;
+
+  // Audio cue when the runner sustains a new zone for ≥10s.
+  // Gated by `prVoiceEnabled` (same toggle that controls voice notifications).
+  const pendingZoneRef = useRef<{ zone: HrZoneId; since: number } | null>(null);
+  const announcedZoneRef = useRef<HrZoneId | null>(null);
+  useEffect(() => {
+    if (liveZone == null) return;
+    const profile = loadProfile();
+    if (profile.prVoiceEnabled === false) return;
+    const now = Date.now();
+    const pending = pendingZoneRef.current;
+    if (!pending || pending.zone !== liveZone) {
+      pendingZoneRef.current = { zone: liveZone, since: now };
+      return;
+    }
+    if (
+      now - pending.since >= 10_000 &&
+      announcedZoneRef.current !== liveZone
+    ) {
+      announcedZoneRef.current = liveZone;
+      speakZoneEntered(liveZone, lang, tr("hrz.cue.enter"));
+    }
+  }, [liveZone, lang, tr]);
+  // Reset on unmount so a new run starts fresh.
+  useEffect(() => () => resetZoneCueState(), []);
 
   // Lock global UI: hide bottom nav, kill body scroll/bounce.
   useEffect(() => {
@@ -185,10 +218,23 @@ export default function FocusRunView({
             </div>
           )}
           {tracker.hrSource === "bt" && tracker.hrBpm != null && (
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border bg-white/5 border-white/15 text-foreground/90">
-              <Bluetooth className="h-3 w-3 text-neon" />
+            <div
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border bg-white/5"
+              style={{
+                borderColor: liveZoneColor ?? "rgba(255,255,255,0.15)",
+                color: liveZoneColor,
+                boxShadow:
+                  liveZone && liveZone >= 4
+                    ? `0 0 18px color-mix(in oklch, ${liveZoneColor} 60%, transparent)`
+                    : undefined,
+              }}
+            >
+              <Bluetooth className="h-3 w-3" style={{ color: liveZoneColor }} />
               <span className="tabular-nums">{tracker.hrBpm}</span>
-              <span className="opacity-60">bpm</span>
+              <span className="opacity-70">bpm</span>
+              {liveZone && (
+                <span className="opacity-80 ml-1">Z{liveZone}</span>
+              )}
             </div>
           )}
         </div>

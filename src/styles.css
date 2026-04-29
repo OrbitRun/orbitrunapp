@@ -114,6 +114,13 @@
   );
   --shadow-neon: 0 0 40px oklch(0.92 0.21 130 / 0.35);
   --shadow-card: 0 8px 32px oklch(0 0 0 / 0.5);
+
+  /* HR zone color ramp — grey → blue → green → orange → red */
+  --hr-z1: oklch(0.72 0.02 250);
+  --hr-z2: oklch(0.72 0.14 235);
+  --hr-z3: oklch(0.86 0.20 145);
+  --hr-z4: oklch(0.78 0.18 60);
+  --hr-z5: oklch(0.65 0.24 25);
 }
 
 @layer base {
