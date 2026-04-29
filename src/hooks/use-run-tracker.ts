@@ -749,6 +749,7 @@ export function useRunTracker() {
       }
       postStopSeriesRef.current = null;
       postStopRunIdRef.current = null;
+    };
   }, []);
 
   return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps };
