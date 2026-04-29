@@ -163,6 +163,44 @@ export function useRunTracker() {
   const lastHealthBpmRef = useRef<number | null>(null);
   const btUnsubRef = useRef<(() => void) | null>(null);
   const hrSeriesRef = useRef<HrSample[]>([]);
+  // Sliding ~60s window used to detect rapid HR climbs during a run.
+  const hrWindowRef = useRef<HrSample[]>([]);
+  const lastSpikeAtRef = useRef(0);
+  // Post-stop HR capture: BT + Health keep streaming for ~75s after stop so
+  // we can compute the heart-rate-recovery drop, then we tear down listeners.
+  const postStopSeriesRef = useRef<HrSample[] | null>(null);
+  const postStopRunIdRef = useRef<string | null>(null);
+  const postStopTimerRef = useRef<number | null>(null);
+
+  // Called whenever a fresh BPM sample arrives (BT or Health). Maintains the
+  // rolling window, dispatches a `orbit:hr-spike` event when BPM rises >25 bpm
+  // versus ~30s ago, and appends to the post-stop series when finalizing HRR.
+  const noteBpmSample = useCallback((bpm: number, t: number) => {
+    // Post-stop capture takes priority — we keep recording even when status
+    // has flipped to "paused" / "finished" so HRR can settle.
+    if (postStopSeriesRef.current) {
+      postStopSeriesRef.current.push({ t, bpm });
+    }
+    if (stateRef.current.status !== "running") return;
+    const win = hrWindowRef.current;
+    win.push({ t, bpm });
+    const cutoff = t - 60_000;
+    while (win.length > 0 && win[0].t < cutoff) win.shift();
+    // Need ≥25s of history before a spike call has any meaning.
+    const ref = win.find((s) => s.t <= t - 25_000);
+    if (!ref) return;
+    if (bpm - ref.bpm >= 25 && t - lastSpikeAtRef.current > 90_000) {
+      lastSpikeAtRef.current = t;
+      try {
+        window.dispatchEvent(
+          new CustomEvent("orbit:hr-spike", { detail: { bpm, from: ref.bpm } }),
+        );
+      } catch {
+        /* noop */
+      }
+    }
+  }, []);
+
 
   const haptic = useCallback((ms: number | number[] = 30) => {
     if (!hapticEnabledRef.current) return;
