@@ -147,7 +147,9 @@ export default function SensorsSection() {
             {connected && (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-background"
+                className={`absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-background ${
+                  bt.poorContact ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+                }`}
               />
             )}
           </div>
@@ -164,15 +166,42 @@ export default function SensorsSection() {
                   {bt.battery}%
                 </span>
               )}
+              {connected && bt.signal != null && (
+                <SignalChip quality={bt.signal} />
+              )}
             </div>
             <div className="text-[11px] text-muted-foreground truncate">
-              {bt.error ? bt.error : rowStatus}
+              {bt.error
+                ? bt.error
+                : connected && bt.poorContact
+                  ? "Dårlig kontakt — fugt sensoren"
+                  : rowStatus}
             </div>
           </div>
           <div className="text-xs font-bold uppercase tracking-wider text-foreground/80">
             {connected ? "Manage" : supported ? "Search" : "—"}
           </div>
         </button>
+        {hasLastDevice && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.02]">
+            <Zap className="h-3.5 w-3.5 text-neon" />
+            <button
+              type="button"
+              onClick={onQuickReconnect}
+              className="flex-1 text-left text-[12px] font-semibold truncate hover:text-neon transition"
+            >
+              Genforbind til {bt.lastDeviceName}
+            </button>
+            <button
+              type="button"
+              onClick={onForgetDevice}
+              className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition"
+              aria-label="Glem enhed"
+            >
+              Glem
+            </button>
+          </div>
+        )}
       </section>
 
       {open && (
