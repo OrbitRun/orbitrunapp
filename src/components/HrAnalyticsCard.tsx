@@ -22,6 +22,8 @@ import {
 import { DEFAULT_MAX_HR } from "@/lib/hr-analysis";
 import { estimateVo2Max } from "@/lib/vo2max";
 import { formatDuration, formatPace } from "@/lib/run-utils";
+import { exportHrAnalyticsPdf } from "@/lib/hr-pdf-report";
+import { Download } from "lucide-react";
 
 type Props = {
   run: Run;
