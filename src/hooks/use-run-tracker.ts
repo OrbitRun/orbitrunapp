@@ -578,7 +578,7 @@ export function useRunTracker() {
     }, 5000);
     const w = ensureWorker();
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
-  }, [haptic, armGps, ensureWorker]);
+  }, [haptic, armGps, ensureWorker, noteBpmSample]);
 
   const pause = useCallback(() => {
     haptic(25);
