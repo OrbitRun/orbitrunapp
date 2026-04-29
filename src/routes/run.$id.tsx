@@ -43,6 +43,7 @@ function RunDetailPage() {
   const [editingWeather, setEditingWeather] = useState(false);
   const [pickingShoe, setPickingShoe] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [scrubLatLng, setScrubLatLng] = useState<{ lat: number; lng: number } | null>(null);
   const { t } = useI18n();
 
   const handleWeatherSave = (w: RunWeather) => {
@@ -107,7 +108,7 @@ function RunDetailPage() {
       </header>
 
       <section className="rounded-3xl overflow-hidden border border-border shadow-card relative">
-        <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} />
+        <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} highlight={scrubLatLng} />
         {run.weather && (
           <div className="absolute top-3 left-3">
             <WeatherBadge weather={run.weather} />
@@ -254,6 +255,7 @@ function RunDetailPage() {
       </section>
 
       <BioInsightCard run={run} />
+      <HrAnalyticsCard run={run} onScrub={(p) => setScrubLatLng(p?.coord ?? null)} />
       <HrZoneBar series={run.hrSeries} />
 
 
