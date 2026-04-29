@@ -295,6 +295,24 @@ function ProfilePage() {
         </button>
       </section>
 
+      {/* HR zones shortcut */}
+      <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <Link
+          to="/profile/heart-rate"
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <Heart className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("hrz.profileRow")}</div>
+          <div className="text-xs text-muted-foreground tabular">
+            {hrZones
+              ? `${hrZones.zones[1].lower}–${hrZones.zones[3].upper} bpm`
+              : t("hrz.profileRow.unset")}
+          </div>
+        </Link>
+      </section>
+
       {/* Apple Health */}
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <button
