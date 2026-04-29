@@ -535,6 +535,33 @@ function ConnectedCard({
         )}
       </div>
 
+      {/* Signal quality */}
+      {bt.signal != null && (
+        <div className="mt-3 flex items-center gap-2">
+          <Signal className={`h-3.5 w-3.5 ${signalColor(bt.signal)}`} />
+          <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${signalBarColor(bt.signal)}`}
+              style={{ width: `${Math.max(6, bt.signal)}%` }}
+            />
+          </div>
+          <span className="text-[10px] font-mono tabular-nums text-muted-foreground w-8 text-right">
+            {bt.signal}%
+          </span>
+        </div>
+      )}
+
+      {/* Poor contact warning */}
+      {bt.poorContact && (
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-[11px] leading-snug text-amber-100/90">
+          <TriangleAlert className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
+          <span>
+            <strong className="text-amber-300">Dårlig kontakt.</strong>{" "}
+            Fugt sensoren med lidt vand og sørg for, at bæltet sidder tæt mod huden.
+          </span>
+        </div>
+      )}
+
       {testing ? (
         <div className="mt-4 rounded-xl bg-background/60 border border-border p-4 flex items-center justify-between">
           <div>
@@ -557,5 +584,31 @@ function ConnectedCard({
         </button>
       )}
     </div>
+  );
+}
+
+/* ============================ Small helpers ============================ */
+
+function signalColor(q: number): string {
+  if (q >= 70) return "text-emerald-400";
+  if (q >= 40) return "text-amber-400";
+  return "text-destructive";
+}
+
+function signalBarColor(q: number): string {
+  if (q >= 70) return "bg-emerald-400";
+  if (q >= 40) return "bg-amber-400";
+  return "bg-destructive";
+}
+
+function SignalChip({ quality }: { quality: number }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-[10px] font-mono ${signalColor(quality)}`}
+      title={`Signal ${quality}%`}
+    >
+      <Signal className="h-3 w-3" />
+      {quality}
+    </span>
   );
 }
