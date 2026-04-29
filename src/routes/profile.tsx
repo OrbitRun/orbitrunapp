@@ -11,6 +11,7 @@ import RecoveryStatus from "@/components/RecoveryStatus";
 import HealthPermissionSheet from "@/components/HealthPermissionSheet";
 import SensorsSection from "@/components/SensorsSection";
 import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
+import { useHrZones } from "@/hooks/use-hr-zones";
 
 import {
   DEFAULT_PROFILE,
