@@ -107,8 +107,16 @@ export default function CoachCard({ profile }: Props) {
           <span className="leading-snug truncate">{contextLine}</span>
         </div>
 
-        <button
-          onClick={() => setShowDetail((v) => !v)}
+        {z5Override && (
+          <div className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
+            <Zap className="h-3.5 w-3.5 text-destructive flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] text-foreground leading-snug">
+              {t("coach.zone5Override")}
+            </p>
+          </div>
+        )}
+
+
           aria-expanded={showDetail}
           className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-neon/10 border border-neon/30 text-neon text-xs font-black uppercase tracking-[0.15em] hover:bg-neon/15 active:scale-[0.98] transition"
         >
