@@ -191,10 +191,23 @@ export default function FocusRunView({
             </div>
           )}
           {tracker.hrSource === "bt" && tracker.hrBpm != null && (
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border bg-white/5 border-white/15 text-foreground/90">
-              <Bluetooth className="h-3 w-3 text-neon" />
+            <div
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border bg-white/5"
+              style={{
+                borderColor: liveZoneColor ?? "rgba(255,255,255,0.15)",
+                color: liveZoneColor,
+                boxShadow:
+                  liveZone && liveZone >= 4
+                    ? `0 0 18px color-mix(in oklch, ${liveZoneColor} 60%, transparent)`
+                    : undefined,
+              }}
+            >
+              <Bluetooth className="h-3 w-3" style={{ color: liveZoneColor }} />
               <span className="tabular-nums">{tracker.hrBpm}</span>
-              <span className="opacity-60">bpm</span>
+              <span className="opacity-70">bpm</span>
+              {liveZone && (
+                <span className="opacity-80 ml-1">Z{liveZone}</span>
+              )}
             </div>
           )}
         </div>
