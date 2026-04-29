@@ -56,7 +56,24 @@ export default function FocusRunView({
     };
   }, []);
 
-  // ---------- Carousel ----------
+  // Live HR spike alert: tracker dispatches `orbit:hr-spike` whenever BPM
+  // climbs >25 bpm in ~30s. We surface a transient banner that auto-hides.
+  const [hrSpike, setHrSpike] = useState(false);
+  useEffect(() => {
+    let timer: number | null = null;
+    const onSpike = () => {
+      setHrSpike(true);
+      try { navigator.vibrate?.([60, 40, 60]); } catch { /* noop */ }
+      if (timer != null) window.clearTimeout(timer);
+      timer = window.setTimeout(() => setHrSpike(false), 6000);
+    };
+    window.addEventListener("orbit:hr-spike", onSpike);
+    return () => {
+      window.removeEventListener("orbit:hr-spike", onSpike);
+      if (timer != null) window.clearTimeout(timer);
+    };
+  }, []);
+
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
   const carouselMetrics: MetricId[] = (() => {
