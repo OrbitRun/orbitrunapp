@@ -180,7 +180,7 @@ export function analyzeRun(run: Run, history: Run[]): RunAnalysis {
   if (rpe <= 3) hours -= 4;
 
   hours = clamp(hours, 12, 72);
-  const recommendedHours = roundHours(hours);
+  // recommendedHours is finalized below after Z5 override.
 
   // Scenario classification
   let scenario: RecoveryScenario = "maintenance";
