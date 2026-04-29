@@ -43,6 +43,10 @@ export default function FocusRunView({
   onStop,
 }: Props) {
   const { t: tr } = useI18n();
+  const hrZones = useHrZones();
+  const liveZone: HrZoneId | null =
+    tracker.hrBpm != null ? zoneForBpm(tracker.hrBpm, hrZones) : null;
+  const liveZoneColor = liveZone ? ZONE_VAR[liveZone] : undefined;
 
   // Lock global UI: hide bottom nav, kill body scroll/bounce.
   useEffect(() => {
