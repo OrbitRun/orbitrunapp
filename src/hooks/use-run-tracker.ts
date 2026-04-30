@@ -51,6 +51,9 @@ type State = {
   hrSource: "bt" | "health" | null;
   maxHrBpm: number | null;
   avgHrBpm: number | null;
+  // True when the runner is paused because the auto-pause heuristic fired
+  // (vs a manual pause). Used by FocusRunView to surface a chip.
+  autoPaused: boolean;
 };
 
 const initial: State = {
@@ -71,6 +74,7 @@ const initial: State = {
   hrSource: null,
   maxHrBpm: null,
   avgHrBpm: null,
+  autoPaused: false,
 };
 
 type PrFlags = {
