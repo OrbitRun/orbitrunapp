@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
+import ZonePacingChip from "@/components/ZonePacingChip";
 import { useI18n } from "@/lib/i18n";
-import { resetZoneCueState, speakZoneEntered } from "@/lib/audio-cues";
+import { resetZoneCueState, speakPacingCue, speakZoneEntered } from "@/lib/audio-cues";
 import { loadProfile } from "@/lib/user-profile";
 import {
   ALL_METRIC_IDS,
@@ -14,6 +15,8 @@ import {
 import type { useRunTracker } from "@/hooks/use-run-tracker";
 import { ZONE_VAR, zoneForBpm, type HrZoneId } from "@/lib/hr-zones-config";
 import { useHrZones } from "@/hooks/use-hr-zones";
+import { useZonePacing } from "@/hooks/use-zone-pacing";
+import { paceStatus, targetForZone } from "@/lib/zone-pacing";
 
 type Tracker = ReturnType<typeof useRunTracker>;
 
