@@ -1,29 +1,40 @@
 ## Goal
-Reposition the chevron in the Flight Recorder row in `src/routes/profile.tsx` so it sits right next to the "Flight Recorder" label (instead of on the far right), while preserving:
-- Tapping the row body still toggles the recorder on/off.
-- Toggling on/off still auto-reveals the info box for 5 seconds.
-- Tapping the chevron still manually opens/closes the info box (and cancels the auto-close timer).
+Add a **Juridisk / Legal** section at the bottom of the Profile page with two items — Privacy Policy and Terms & Disclaimer — that open as modal sheets containing the provided DA/EN content (language follows the app's current `lang`).
 
-## Changes (single file)
+## Implementation
 
-**`src/routes/profile.tsx` — Flight Recorder row only**
+### 1. New component: `src/components/LegalSheet.tsx`
+- Single reusable bottom-sheet/modal styled to match Orbit Lab dark theme (glass panel, neon accents, same look as `HealthPermissionSheet` / `CoachOnboarding`).
+- Props: `open: boolean`, `onClose: () => void`, `kind: "privacy" | "terms"`.
+- Renders title + numbered body. Pulls strings from `useI18n()` so it auto-switches DA/EN.
+- Fixed overlay with backdrop blur, centered max-w-md card, scrollable body, close button (X icon) and a "Luk / Close" footer button.
+- Safe-area-aware padding.
 
-Restructure the row so the chevron is inline with the title:
+### 2. Profile page: `src/routes/profile.tsx`
+- Add a new `<section>` directly above the `Orbit Lab · v1.0` footer, styled like the other settings sections (`glass rounded-2xl divide-y divide-border`).
+- Header chip "Juridisk / Legal" (small uppercase eyebrow above the section, matching existing patterns).
+- Two button rows with icons from `lucide-react`:
+  - Privacy Policy — `ShieldCheck` (or `Lock`)
+  - Terms & Disclaimer — `FileText` (or `ScrollText`)
+- Each row sets local state `legalOpen: "privacy" | "terms" | null`.
+- Render `<LegalSheet>` when state is non-null.
 
-```text
-[icon] Flight Recorder ⌄        On
-└─ toggles info ──┘   └─ toggles recorder ──┘
-```
+### 3. i18n: `src/lib/i18n.tsx`
+Add keys to both `en` and `da` dictionaries:
+- `legal.section` → "Legal" / "Juridisk"
+- `legal.privacy.row` → "Privacy Policy" / "Privatlivspolitik"
+- `legal.terms.row` → "Terms & Disclaimer" / "Vilkår & Ansvarsfraskrivelse"
+- `legal.close` → "Close" / "Luk"
+- `legal.privacy.title` — DA: "Privatlivspolitik for Orbit Lab" / EN: "Orbit Lab Privacy Policy"
+- `legal.privacy.intro` — full intro paragraph
+- `legal.privacy.1.title` … `legal.privacy.4.title` and `.body` for the 4 numbered items
+- `legal.terms.title` — DA: "Vilkår og Medicinsk Ansvarsfraskrivelse" / EN: "Terms & Medical Disclaimer"
+- `legal.terms.intro` — agreement intro line
+- `legal.terms.1.title` … `legal.terms.3.title` and `.body` for the 3 numbered items
 
-- Outer container stays a flex row (no longer needs to wrap a button + button).
-- Left side: icon + title + small chevron button grouped together. The chevron stays a separate `<button>` so its tap target doesn't toggle the recorder.
-- Clicking anywhere else on the row (icon, title text area, status label on the right) calls `handleToggleFlightRecorder` (recorder on/off + 5s auto-reveal).
-- Chevron button keeps its current behavior: cancels the auto-close timer and flips `flightInfoOpen`.
-- Use `e.stopPropagation()` on the chevron's `onClick` so it doesn't also fire the row's toggle.
-- Rotation animation on the chevron (`rotate-180` when open) is preserved.
-
-Everything else in the section (info box markup, animation, translations, state, refs, cleanup effect) stays exactly as it is.
+All copy taken verbatim from the prompt.
 
 ## Out of scope
-- No changes to `flight-recorder.ts`, `use-recover-run.ts`, `RecoverRunBanner.tsx`, i18n strings, or the user profile model.
-- No visual changes to the info box itself or to neighboring rows (Auto-pause, Haptic, etc.).
+- No routing changes (modal-only, no `/legal` routes).
+- No backend, no consent tracking, no acceptance log.
+- No changes to existing sections.
