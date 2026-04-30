@@ -403,6 +403,11 @@ function ProfilePage() {
         onClose={() => setLegalOpen(null)}
         kind={legalOpen ?? "privacy"}
       />
+      <CoachInfoModal
+        open={coachInfoOpen}
+        onClose={() => setCoachInfoOpen(false)}
+        onNavigateToSettings={handleNavigateToAudioSettings}
+      />
     </main>
   );
 }
