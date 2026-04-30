@@ -25,6 +25,11 @@ import {
   type GhostRef,
 } from "@/lib/ghost-runner";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
+import {
+  clearSnapshot as clearFlightSnapshot,
+  createDebouncedRecorder,
+  type FlightSnapshot,
+} from "@/lib/flight-recorder";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -46,6 +51,9 @@ type State = {
   hrSource: "bt" | "health" | null;
   maxHrBpm: number | null;
   avgHrBpm: number | null;
+  // True when the runner is paused because the auto-pause heuristic fired
+  // (vs a manual pause). Used by FocusRunView to surface a chip.
+  autoPaused: boolean;
 };
 
 const initial: State = {
@@ -66,6 +74,7 @@ const initial: State = {
   hrSource: null,
   maxHrBpm: null,
   avgHrBpm: null,
+  autoPaused: false,
 };
 
 type PrFlags = {
@@ -177,6 +186,30 @@ export function useRunTracker() {
   const postStopSeriesRef = useRef<HrSample[] | null>(null);
   const postStopRunIdRef = useRef<string | null>(null);
   const postStopTimerRef = useRef<number | null>(null);
+
+  // ---- Auto-pause + Flight Recorder --------------------------------------
+  const autoPauseEnabledRef = useRef<boolean>(true);
+  const flightRecorderEnabledRef = useRef<boolean>(true);
+  // True only when the *current* paused state was triggered by auto-pause
+  // (so a manual pause doesn't get auto-resumed).
+  const autoPausedRef = useRef<boolean>(false);
+  // Sliding window of (t, distance) for short-window movement detection.
+  const movementWindowRef = useRef<{ t: number; d: number }[]>([]);
+  // Cumulative moving distance counter (independent of `state.distanceM` so
+  // the auto-pause logic can run before setState commits).
+  const cumDistanceRef = useRef<number>(0);
+  // Continuous time the runner has been moving fast enough to auto-resume.
+  const autoResumeMovingSinceRef = useRef<number | null>(null);
+  // Throttle the spoken auto-pause/resume cues.
+  const lastAutoCueAtRef = useRef<number>(0);
+  // Debounced flight-recorder writer (single instance per tracker lifetime).
+  const recorderRef = useRef<ReturnType<typeof createDebouncedRecorder> | null>(null);
+  function getRecorder() {
+    if (!recorderRef.current) recorderRef.current = createDebouncedRecorder(1000);
+    return recorderRef.current;
+  }
+  // Captured run identity for the snapshot — populated on `start()`.
+  const runIdRef = useRef<string | null>(null);
 
   // Called whenever a fresh BPM sample arrives (BT or Health). Maintains the
   // rolling window, dispatches a `orbit:hr-spike` event when BPM rises >25 bpm
@@ -507,6 +540,19 @@ export function useRunTracker() {
     cueIntervalRef.current = profile.audioCueMeters ?? 500;
     hapticEnabledRef.current = profile.hapticEnabled !== false;
     prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
+    autoPauseEnabledRef.current = profile.autoPauseEnabled !== false;
+    flightRecorderEnabledRef.current = profile.flightRecorderEnabled !== false;
+    autoPausedRef.current = false;
+    movementWindowRef.current = [];
+    cumDistanceRef.current = 0;
+    autoResumeMovingSinceRef.current = null;
+    lastAutoCueAtRef.current = 0;
+    runIdRef.current = genId();
+    // Wipe any stale flight-recorder snapshot from a previous session before
+    // we start writing a fresh one. (Recovery flow has its own copy.)
+    clearFlightSnapshot();
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
     announcedDistancePrsRef.current = new Set();
@@ -592,14 +638,20 @@ export function useRunTracker() {
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker, noteBpmSample]);
 
-  const pause = useCallback(() => {
+  // Internal: shared pause primitive used by both manual and auto-pause.
+  const doPause = useCallback((auto: boolean) => {
     haptic(25);
     pausedAtRef.current = Date.now();
     workerRef.current?.postMessage({ type: "pause", at: pausedAtRef.current });
-    setState((p) => ({ ...p, status: "paused" }));
+    autoPausedRef.current = auto;
+    setState((p) =>
+      p.status === "running"
+        ? { ...p, status: "paused", autoPaused: auto, currentPaceSecPerKm: 0 }
+        : p,
+    );
   }, [haptic]);
 
-  const resume = useCallback(() => {
+  const doResume = useCallback(() => {
     haptic(25);
     const at = Date.now();
     if (pausedAtRef.current) {
@@ -607,8 +659,15 @@ export function useRunTracker() {
       pausedAtRef.current = null;
     }
     workerRef.current?.postMessage({ type: "resume", at });
-    setState((p) => ({ ...p, status: "running" }));
+    autoPausedRef.current = false;
+    autoResumeMovingSinceRef.current = null;
+    setState((p) =>
+      p.status === "paused" ? { ...p, status: "running", autoPaused: false } : p,
+    );
   }, [haptic]);
+
+  const pause = useCallback(() => doPause(false), [doPause]);
+  const resume = useCallback(() => doResume(), [doResume]);
 
   // Stops tracking and returns the in-memory Run WITHOUT persisting it.
   // Caller decides whether to save (commitRun) or discard (discardRun).
@@ -705,6 +764,9 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    clearFlightSnapshot();
     // Backfill weather if the in-flight fetch never completed before stop().
     if (!run.weather && run.points.length > 0) {
       const seed = run.points[0];
@@ -744,10 +806,104 @@ export function useRunTracker() {
   }, []);
 
   const discardRun = useCallback(() => {
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    clearFlightSnapshot();
     setState({ ...initial });
   }, []);
 
   const reset = useCallback(() => setState({ ...initial }), []);
+
+  // ---- Auto-pause + auto-resume reactor ---------------------------------
+  // Watches state (which is updated by handlePosition) and applies the
+  // movement-window heuristic. Decoupled from setState's prev-callback so we
+  // can read the freshest cumulative state and trigger actions safely.
+  useEffect(() => {
+    if (!autoPauseEnabledRef.current) return;
+    const now = Date.now();
+    if (state.status === "running") {
+      // Update movement window with the latest cumulative distance.
+      const win = movementWindowRef.current;
+      cumDistanceRef.current = state.distanceM;
+      win.push({ t: now, d: state.distanceM });
+      // Keep only the last 12s.
+      const cutoff = now - 12_000;
+      while (win.length > 0 && win[0].t < cutoff) win.shift();
+      // Need at least 10s of history before we trust the call.
+      const ref = win.find((s) => s.t <= now - 10_000);
+      if (ref) {
+        const movedM = state.distanceM - ref.d;
+        const dt = (now - ref.t) / 1000;
+        const speedMs = dt > 0 ? movedM / dt : 0;
+        if (movedM < 5 && speedMs < 0.5) {
+          // Stopped — auto-pause.
+          if (prVoiceEnabledRef.current && now - lastAutoCueAtRef.current > 30_000) {
+            lastAutoCueAtRef.current = now;
+            speakLocalized(
+              langRef.current === "da" ? "Auto-pause." : "Auto-pause.",
+              langRef.current,
+            );
+          }
+          doPause(true);
+        }
+      }
+    } else if (state.status === "paused" && autoPausedRef.current) {
+      // Use the most recent rolling pace as a proxy for current speed.
+      const speedMs =
+        state.currentPaceSecPerKm > 0 ? 1000 / state.currentPaceSecPerKm : 0;
+      if (speedMs >= 1.2) {
+        if (autoResumeMovingSinceRef.current == null) {
+          autoResumeMovingSinceRef.current = now;
+        } else if (now - autoResumeMovingSinceRef.current >= 3_000) {
+          if (prVoiceEnabledRef.current && now - lastAutoCueAtRef.current > 30_000) {
+            lastAutoCueAtRef.current = now;
+            speakLocalized(
+              langRef.current === "da" ? "Genoptaget." : "Resumed.",
+              langRef.current,
+            );
+          }
+          doResume();
+        }
+      } else {
+        autoResumeMovingSinceRef.current = null;
+      }
+    }
+  }, [state.status, state.distanceM, state.currentPaceSecPerKm, doPause, doResume]);
+
+  // ---- Flight Recorder -------------------------------------------------
+  // Persist a snapshot to localStorage on every meaningful state change so a
+  // crash/refresh during a run can offer recovery on next launch.
+  useEffect(() => {
+    if (!flightRecorderEnabledRef.current) return;
+    if (state.status !== "running" && state.status !== "paused") return;
+    if (!state.startedAt || !runIdRef.current) return;
+    const snapshot: FlightSnapshot = {
+      runId: runIdRef.current,
+      startedAt: state.startedAt,
+      endedAt: Date.now(),
+      durationMs: state.elapsedMs,
+      distanceM: state.distanceM,
+      elevationGainM: state.elevationGainM,
+      points: state.points,
+      splits: state.splits,
+      hrSeries: hrSeriesRef.current,
+      weather: weatherRef.current ?? undefined,
+      avgHrBpm: state.avgHrBpm ?? undefined,
+      maxHrBpm: state.maxHrBpm ?? undefined,
+      lastSavedAt: Date.now(),
+    };
+    getRecorder().queue(snapshot);
+  }, [
+    state.status,
+    state.startedAt,
+    state.elapsedMs,
+    state.distanceM,
+    state.elevationGainM,
+    state.points,
+    state.splits,
+    state.avgHrBpm,
+    state.maxHrBpm,
+  ]);
 
   useEffect(() => {
     return () => {

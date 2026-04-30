@@ -29,6 +29,11 @@ export type UserProfile = {
   onboarded: boolean;
   coach?: CoachConfig;
   coachEnabled?: boolean;
+  // Default ON. Pause tracking automatically when the runner stops moving.
+  autoPauseEnabled?: boolean;
+  // Default ON. Persist live run snapshots to localStorage so a crash/refresh
+  // can offer to recover the run on next launch.
+  flightRecorderEnabled?: boolean;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -42,6 +47,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   prVoiceEnabled: true,
   windUnit: "ms",
   onboarded: false,
+  autoPauseEnabled: true,
+  flightRecorderEnabled: true,
 };
 
 export function loadProfile(): UserProfile {

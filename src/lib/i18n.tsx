@@ -490,6 +490,21 @@ const en: Dict = {
   // Coach override + live HR spike alert
   "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
   "focus.hrSpike": "Heart rate climbing fast — check your breathing",
+  "focus.autoPause": "Auto-pause",
+
+  // Auto-pause + Flight Recorder settings
+  "profile.autoPause": "Auto-pause",
+  "profile.autoPause.on": "On",
+  "profile.autoPause.off": "Off",
+  "profile.flightRecorder": "Flight Recorder",
+  "profile.flightRecorder.on": "On",
+  "profile.flightRecorder.off": "Off",
+
+  // Recover unsaved run banner
+  "recover.title": "Recover unsaved run?",
+  "recover.body": "We saved your last run as you went. Save it now or discard.",
+  "recover.save": "Save run",
+  "recover.discard": "Discard",
 };
 
 const da: Dict = {
@@ -959,6 +974,21 @@ const da: Dict = {
   // Coach override + live HR spike alert
   "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",
   "focus.hrSpike": "Pulsen stiger hurtigt — tjek din vejrtrækning",
+  "focus.autoPause": "Auto-pause",
+
+  // Auto-pause + Flight Recorder settings
+  "profile.autoPause": "Auto-pause",
+  "profile.autoPause.on": "Til",
+  "profile.autoPause.off": "Fra",
+  "profile.flightRecorder": "Flight Recorder",
+  "profile.flightRecorder.on": "Til",
+  "profile.flightRecorder.off": "Fra",
+
+  // Recover unsaved run banner
+  "recover.title": "Gendan ikke-gemt løb?",
+  "recover.body": "Vi gemte dit løb løbende. Gem det nu eller kassér.",
+  "recover.save": "Gem løb",
+  "recover.discard": "Kassér",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
