@@ -31,6 +31,9 @@ export type UserProfile = {
   coachEnabled?: boolean;
   // Default ON. Pause tracking automatically when the runner stops moving.
   autoPauseEnabled?: boolean;
+  // Default ON. Continuously snapshot the active run to localStorage so a
+  // crash, refresh, or connectivity drop never loses the data.
+  flightRecorderEnabled?: boolean;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -45,6 +48,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   windUnit: "ms",
   onboarded: false,
   autoPauseEnabled: true,
+  flightRecorderEnabled: true,
 };
 
 export function loadProfile(): UserProfile {
