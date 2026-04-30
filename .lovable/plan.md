@@ -1,68 +1,72 @@
-## Zone-Based Pacing Mode
+## Auto-Pause & Flight Recorder
 
-Add an optional **HR-Zone Pacing** mode that, while running, recommends a target pace based on the current HR zone and tells the runner whether to speed up, hold, or ease off.
+Two opt-in safety nets for tracking, both controlled from Profile (same row style as the Coach toggle), with the choice persisted to `UserProfile`.
 
-### How it works
+### 1. Smart Auto-Pause
 
-Each HR zone (Z1–Z5) maps to a recommended pace range. Defaults are derived from the user's recent runs (median pace) and shifted per zone:
+While `status === "running"`, the tracker monitors the rolling speed window already maintained for live pace.
 
-| Zone | Intent | Pace offset vs. easy pace |
-|------|--------|---------------------------|
-| Z1 Warm-up | Recovery | +90 s/km |
-| Z2 Aerobic | Easy / long | +30 s/km |
-| Z3 Tempo | Steady | base |
-| Z4 Threshold | Hard | −25 s/km |
-| Z5 VO₂ | Sprint | −55 s/km |
+- If average speed over the last **10 s** drops below **0.5 m/s** (≈3:20 km/h walking pace) AND distance moved < 5 m, fire `pause()` automatically.
+- Once paused by auto-pause, watch new GPS samples: when speed climbs back above **1.2 m/s** for **3 s** continuously, fire `resume()` automatically.
+- Auto-pause never overrides a *manual* pause — manual pauses persist until the user manually resumes.
+- Voice cue (gated by `prVoiceEnabled`): short "Auto-pause" / "Resumed" callouts, throttled.
+- A small `AUTO PAUSE` chip is appended to the existing focus-mode chip bar while the auto-pause is active so the runner knows what happened.
 
-`base` = median pace from last 10 runs (fallback 6:00/km). All offsets and base are user-overridable.
+### 2. Flight Recorder (offline buffer)
 
-Live logic (every tracker tick):
-- Read `tracker.hrBpm` → resolve `liveZone` (already wired).
-- Look up the zone's target pace window.
-- Compare against `tracker.currentPaceSecPerKm` (rolling).
-- Emit a status: `on-target`, `too-fast`, `too-slow` (±10 s/km dead-band).
-- Throttled audio cue every 45 s when off-target (gated by `prVoiceEnabled`).
+Every successful GPS update is appended to a rolling localStorage buffer so a crash, refresh, or app kill in mid-run never loses the data.
 
-### UI
+- Buffer key: `orbit:flight-recorder:v1` — `{ runId, startedAt, points: GeoPoint[], splits: Split[], hrSeries: HrSample[], lastSavedAt }`.
+- Flushed (debounced ~1 s) on every state mutation while running/paused.
+- Cleared on `commitRun()` or `discardRun()`.
+- On app boot (root layout effect), if a non-stale buffer exists (started within last 24 h, ≥30 s of data, no matching saved Run), surface a one-time **"Recover unsaved run?"** banner that lets the user save it or discard.
+- Recovery saves the partial Run via `saveRun()` and runs the same PR check pipeline.
 
-**Focus mode chip** (next to the existing HR chip):
-`Z2 · target 5:30–6:00 · ↓ ease off`
-Color follows the live zone color; arrow + text reflect status.
+### 3. Settings UI
 
-**Profile → Heart Rate settings** gains a "Zone Pacing" card:
-- Toggle on/off (default off).
-- Editable base easy pace (m:ss/km).
-- Per-zone offset sliders (s/km, ±120).
-- "Reset to recommended" button.
+In `src/routes/profile.tsx`, add **two new rows in the same Coach-style section, placed directly below the existing "Orbit Coach" section** (above HR zones), each a single tappable row that toggles on/off:
+
+| Row | Icon | Default |
+|-----|------|---------|
+| Auto-pause | `PauseCircle` | **on** |
+| Flight Recorder | `ShieldCheck` | **on** |
+
+State stored on `UserProfile`:
+
+```ts
+type UserProfile = {
+  // …existing
+  autoPauseEnabled?: boolean;       // default true
+  flightRecorderEnabled?: boolean;  // default true
+};
+```
+
+Backwards-compatible: missing keys are treated as `true` (`!== false` pattern, matching `coachEnabled`).
 
 ### Files to add
 
-- `src/lib/zone-pacing.ts` — types, defaults, `loadZonePacing`/`saveZonePacing` (localStorage `orbit:zone-pacing:v1`), `targetPaceForZone(zone, cfg)`, `paceStatus(currentSec, target)`, custom event `orbit:zone-pacing-update`.
-- `src/hooks/use-zone-pacing.ts` — reactive snapshot hook.
-- `src/components/ZonePacingChip.tsx` — focus-mode chip; takes `zone`, `currentPaceSecPerKm`, `cfg`.
-- `src/components/ZonePacingSettings.tsx` — settings card embedded in HR settings page.
+- `src/lib/flight-recorder.ts` — `saveSnapshot`, `loadSnapshot`, `clearSnapshot`, `hasRecoverableSnapshot`, `snapshotToRun`. Pure helpers around `localStorage`.
+- `src/components/RecoverRunBanner.tsx` — fixed-position banner shown on home route when a snapshot is recoverable.
+- `src/hooks/use-recover-run.ts` — checks the buffer on mount and exposes `{ snapshot, save, discard }`.
 
 ### Files to edit
 
-- `src/components/FocusRunView.tsx` — render `<ZonePacingChip>` when pacing is enabled and `liveZone` is known; trigger throttled `speakLocalized` cue on persistent off-target.
-- `src/routes/profile_.heart-rate.tsx` — mount `<ZonePacingSettings>` below the manual-zones block.
-- `src/lib/i18n.tsx` — add keys: `pacing.title`, `pacing.enable`, `pacing.basePace`, `pacing.offset`, `pacing.target`, `pacing.tooFast`, `pacing.tooSlow`, `pacing.onTarget`, `pacing.cue.easeOff`, `pacing.cue.pickUp` (en + da).
-- `src/lib/audio-cues.ts` — add `speakPacingCue(status, lang, text)` reusing `speakLocalized` with internal 45 s throttle.
-- `src/lib/run-utils.ts` — reuse existing `formatPace`; no API change.
+- `src/lib/user-profile.ts` — add the two optional flags to `UserProfile` and `DEFAULT_PROFILE`.
+- `src/hooks/use-run-tracker.ts` —
+  - Read `autoPauseEnabled` + `flightRecorderEnabled` on `start()` into refs.
+  - Auto-pause logic inside the existing `setState` block in `handlePosition` (computes movement window from the same `recent` array used for rolling pace).
+  - On every mutation while running/paused, debounced flush to flight recorder.
+  - Add `autoPaused` boolean state so the UI chip can show it; cleared on manual pause/resume.
+  - Clear snapshot in `commitRun` and `discardRun`.
+- `src/routes/profile.tsx` — insert the two toggle rows directly under the Orbit Coach section (above the HR zones row), matching the row style used for Coach.
+- `src/routes/__root.tsx` (or `src/routes/index.tsx`) — mount `<RecoverRunBanner />` so the prompt is visible right after app launch.
+- `src/lib/i18n.tsx` — keys: `profile.autoPause`, `profile.autoPause.on`, `profile.autoPause.off`, `profile.flightRecorder`, `profile.flightRecorder.on`, `profile.flightRecorder.off`, `recover.title`, `recover.body`, `recover.save`, `recover.discard`, `focus.autoPause`, `cue.autoPaused`, `cue.autoResumed` (en + da).
+- `src/components/FocusRunView.tsx` — render `AUTO PAUSE` chip in the existing chip bar when tracker exposes `autoPaused === true`.
 
 ### Technical details
 
-- Base pace computed once on settings open via `loadRuns()` median of `avgPaceSecPerKm`, last 10 runs.
-- Status dead-band: `|currentSec − targetMid| < 10` → on-target. Above target window → too-slow. Below → too-fast.
-- Cue throttle: module-level `lastCueAt` map keyed by status; min 45 s, reset on status change.
-- Settings shape:
-  ```ts
-  type ZonePacingConfig = {
-    enabled: boolean;
-    baseSecPerKm: number;       // default 360
-    offsets: Record<HrZoneId, number>; // default [90,30,0,-25,-55]
-    updatedAt: number;
-  };
-  ```
-- Chip is suppressed when `tracker.hrBpm == null` or pacing is disabled.
-- No backend changes; pure client persistence.
+- Auto-pause thresholds tuned to avoid false triggers at traffic lights (10 s observation) and false negatives on slow uphill walks (0.5 m/s floor, well under jogging).
+- Flight recorder writes use a `requestIdleCallback`-with-fallback debounce so heavy GPS bursts don't stall the main thread.
+- Snapshot freshness = `startedAt` within last 24 h. Older snapshots auto-discarded silently.
+- Recovery banner only appears on `/` to avoid interrupting an active run on `/run/$id`.
+- No backend changes — pure client-side persistence in `localStorage`.
