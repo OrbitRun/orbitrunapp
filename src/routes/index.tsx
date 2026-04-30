@@ -195,6 +195,8 @@ function RunPage() {
         </div>
       </header>
 
+      {(t.status === "idle" || t.status === "finished") && <RecoverRunBanner />}
+
       {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <CoachCard profile={profile} />}
 
       {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
