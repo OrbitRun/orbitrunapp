@@ -75,6 +75,28 @@ export default function FocusRunView({
       speakZoneEntered(liveZone, lang, tr("hrz.cue.enter"));
     }
   }, [liveZone, lang, tr]);
+
+  // Zone-pacing: throttled cue when current pace is off-target for active zone.
+  const pacingCfg = useZonePacing();
+  useEffect(() => {
+    if (!pacingCfg.enabled || liveZone == null) return;
+    const profile = loadProfile();
+    if (profile.prVoiceEnabled === false) return;
+    const current = tracker.currentPaceSecPerKm;
+    if (!current || current <= 0) return;
+    const target = targetForZone(liveZone, pacingCfg);
+    const status = paceStatus(current, target);
+    if (status === "on-target") {
+      speakPacingCue("on-target", lang, "");
+      return;
+    }
+    speakPacingCue(
+      status,
+      lang,
+      status === "too-fast" ? tr("pacing.cue.easeOff") : tr("pacing.cue.pickUp"),
+    );
+  }, [pacingCfg, liveZone, tracker.currentPaceSecPerKm, lang, tr]);
+
   // Reset on unmount so a new run starts fresh.
   useEffect(() => () => resetZoneCueState(), []);
 
