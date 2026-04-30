@@ -764,6 +764,9 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    clearFlightSnapshot();
     // Backfill weather if the in-flight fetch never completed before stop().
     if (!run.weather && run.points.length > 0) {
       const seed = run.points[0];
