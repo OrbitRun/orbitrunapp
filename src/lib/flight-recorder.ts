@@ -3,7 +3,7 @@
 // On boot we surface a one-time "recover unsaved run?" banner.
 
 import type { GeoPoint, HrSample, Run, RunWeather, Split } from "@/lib/run-types";
-import { genId, paceFromDistanceDuration } from "@/lib/run-utils";
+import { genId } from "@/lib/run-utils";
 import { loadRuns } from "@/lib/run-types";
 
 export type FlightSnapshot = {
