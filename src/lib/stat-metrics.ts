@@ -241,7 +241,7 @@ export const LEVEL_LAYOUTS: Record<ExperienceLevel, StatLayout> = {
   },
   expert: {
     hero: ["distance", "pace"],
-    secondary: ["duration", "cadence", "elevation"],
+    secondary: ["duration", "cadence", "hrBpm"],
   },
 };
 
