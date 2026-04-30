@@ -803,10 +803,104 @@ export function useRunTracker() {
   }, []);
 
   const discardRun = useCallback(() => {
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    clearFlightSnapshot();
     setState({ ...initial });
   }, []);
 
   const reset = useCallback(() => setState({ ...initial }), []);
+
+  // ---- Auto-pause + auto-resume reactor ---------------------------------
+  // Watches state (which is updated by handlePosition) and applies the
+  // movement-window heuristic. Decoupled from setState's prev-callback so we
+  // can read the freshest cumulative state and trigger actions safely.
+  useEffect(() => {
+    if (!autoPauseEnabledRef.current) return;
+    const now = Date.now();
+    if (state.status === "running") {
+      // Update movement window with the latest cumulative distance.
+      const win = movementWindowRef.current;
+      cumDistanceRef.current = state.distanceM;
+      win.push({ t: now, d: state.distanceM });
+      // Keep only the last 12s.
+      const cutoff = now - 12_000;
+      while (win.length > 0 && win[0].t < cutoff) win.shift();
+      // Need at least 10s of history before we trust the call.
+      const ref = win.find((s) => s.t <= now - 10_000);
+      if (ref) {
+        const movedM = state.distanceM - ref.d;
+        const dt = (now - ref.t) / 1000;
+        const speedMs = dt > 0 ? movedM / dt : 0;
+        if (movedM < 5 && speedMs < 0.5) {
+          // Stopped — auto-pause.
+          if (prVoiceEnabledRef.current && now - lastAutoCueAtRef.current > 30_000) {
+            lastAutoCueAtRef.current = now;
+            speakLocalized(
+              langRef.current === "da" ? "Auto-pause." : "Auto-pause.",
+              langRef.current,
+            );
+          }
+          doPause(true);
+        }
+      }
+    } else if (state.status === "paused" && autoPausedRef.current) {
+      // Use the most recent rolling pace as a proxy for current speed.
+      const speedMs =
+        state.currentPaceSecPerKm > 0 ? 1000 / state.currentPaceSecPerKm : 0;
+      if (speedMs >= 1.2) {
+        if (autoResumeMovingSinceRef.current == null) {
+          autoResumeMovingSinceRef.current = now;
+        } else if (now - autoResumeMovingSinceRef.current >= 3_000) {
+          if (prVoiceEnabledRef.current && now - lastAutoCueAtRef.current > 30_000) {
+            lastAutoCueAtRef.current = now;
+            speakLocalized(
+              langRef.current === "da" ? "Genoptaget." : "Resumed.",
+              langRef.current,
+            );
+          }
+          doResume();
+        }
+      } else {
+        autoResumeMovingSinceRef.current = null;
+      }
+    }
+  }, [state.status, state.distanceM, state.currentPaceSecPerKm, doPause, doResume]);
+
+  // ---- Flight Recorder -------------------------------------------------
+  // Persist a snapshot to localStorage on every meaningful state change so a
+  // crash/refresh during a run can offer recovery on next launch.
+  useEffect(() => {
+    if (!flightRecorderEnabledRef.current) return;
+    if (state.status !== "running" && state.status !== "paused") return;
+    if (!state.startedAt || !runIdRef.current) return;
+    const snapshot: FlightSnapshot = {
+      runId: runIdRef.current,
+      startedAt: state.startedAt,
+      endedAt: Date.now(),
+      durationMs: state.elapsedMs,
+      distanceM: state.distanceM,
+      elevationGainM: state.elevationGainM,
+      points: state.points,
+      splits: state.splits,
+      hrSeries: hrSeriesRef.current,
+      weather: weatherRef.current ?? undefined,
+      avgHrBpm: state.avgHrBpm ?? undefined,
+      maxHrBpm: state.maxHrBpm ?? undefined,
+      lastSavedAt: Date.now(),
+    };
+    getRecorder().queue(snapshot);
+  }, [
+    state.status,
+    state.startedAt,
+    state.elapsedMs,
+    state.distanceM,
+    state.elevationGainM,
+    state.points,
+    state.splits,
+    state.avgHrBpm,
+    state.maxHrBpm,
+  ]);
 
   useEffect(() => {
     return () => {
