@@ -297,6 +297,28 @@ function ProfilePage() {
           </div>
         </button>
         <button
+          onClick={() => update({ flightRecorderEnabled: profile.flightRecorderEnabled === false })}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.flightRecorder")}</div>
+          <div className="text-xs text-muted-foreground">
+            {t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.off" : "profile.flightRecorder.on")}
+          </div>
+        </button>
+        <div className="px-4 py-3 bg-white/[0.02] border-l-2 border-neon/30">
+          <div className="flex items-start gap-2">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-neon font-bold mt-0.5 shrink-0">
+              {profile.flightRecorderEnabled === false ? t("profile.flightRecorder.off") : t("profile.flightRecorder.on")}
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">
+              {t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.info.off" : "profile.flightRecorder.info.on")}
+            </p>
+          </div>
+        </div>
+        <button
           onClick={() => {
             const next = !profile.hapticEnabled;
             update({ hapticEnabled: next });
