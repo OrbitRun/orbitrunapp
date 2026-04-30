@@ -286,132 +286,58 @@ function ProfilePage() {
       </section>
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
-        <button
-          onClick={toggleAudioCue}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Volume2 className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.audio")}</div>
-          <div className="text-xs text-muted-foreground">
-            {t(`profile.audio.value.${profile.audioCueMeters}`)}
-          </div>
-        </button>
-        <button
-          onClick={() => update({ prVoiceEnabled: !profile.prVoiceEnabled })}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Trophy className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.prVoice")}</div>
-          <div className="text-xs text-muted-foreground">
-            {profile.prVoiceEnabled ? t("profile.prVoice.value.on") : t("profile.prVoice.value.off")}
-          </div>
-        </button>
-        <button
-          onClick={() => update({ autoPauseEnabled: profile.autoPauseEnabled === false })}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <PauseCircle className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.autoPause")}</div>
-          <div className="text-xs text-muted-foreground">
-            {t(profile.autoPauseEnabled === false ? "profile.autoPause.off" : "profile.autoPause.on")}
-          </div>
-        </button>
-        <div
-          onClick={handleToggleFlightRecorder}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleToggleFlightRecorder();
-            }
-          }}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <ShieldCheck className="h-4 w-4" />
-          </div>
-          <div className="flex items-center gap-1 flex-1 min-w-0">
-            <div className="text-sm font-semibold truncate">{t("profile.flightRecorder")}</div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (flightInfoTimerRef.current != null) {
-                  window.clearTimeout(flightInfoTimerRef.current);
-                  flightInfoTimerRef.current = null;
-                }
-                setFlightInfoAutoOpen(false);
-                setFlightInfoOpen((v) => !v);
-              }}
-              aria-label="Toggle info"
-              className="h-6 w-6 grid place-items-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
-            >
-              <ChevronDown
-                className={`h-4 w-4 transition-transform ${(flightInfoOpen || flightInfoAutoOpen) ? "rotate-180" : ""}`}
-              />
-            </button>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.off" : "profile.flightRecorder.on")}
-          </div>
-        </div>
-        <div
-          className={`grid transition-all duration-300 ease-out ${
-            (flightInfoOpen || flightInfoAutoOpen) ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-          }`}
-        >
-          <div className="overflow-hidden">
-            <div className="px-4 py-3 bg-white/[0.02] border-l-2 border-neon/30">
-              <div className="flex items-start gap-2">
-                <div className="text-[10px] uppercase tracking-[0.18em] text-neon font-bold mt-0.5 shrink-0">
-                  {profile.flightRecorderEnabled === false ? t("profile.flightRecorder.off") : t("profile.flightRecorder.on")}
-                </div>
-                <p className="text-[11px] leading-snug text-muted-foreground">
-                  {t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.info.off" : "profile.flightRecorder.info.on")}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <button
-          onClick={() => {
+        <SettingRowWithInfo
+          icon={<Volume2 className="h-4 w-4" />}
+          label={t("profile.audio")}
+          valueText={t(`profile.audio.value.${profile.audioCueMeters}`)}
+          infoText={t("profile.audio.info")}
+          onToggle={toggleAudioCue}
+        />
+        <SettingRowWithInfo
+          icon={<Trophy className="h-4 w-4" />}
+          label={t("profile.prVoice")}
+          valueText={profile.prVoiceEnabled ? t("profile.prVoice.value.on") : t("profile.prVoice.value.off")}
+          infoText={t("profile.prVoice.info")}
+          onToggle={() => update({ prVoiceEnabled: !profile.prVoiceEnabled })}
+        />
+        <SettingRowWithInfo
+          icon={<PauseCircle className="h-4 w-4" />}
+          label={t("profile.autoPause")}
+          valueText={t(profile.autoPauseEnabled === false ? "profile.autoPause.off" : "profile.autoPause.on")}
+          infoText={t("profile.autoPause.info")}
+          onToggle={() => update({ autoPauseEnabled: profile.autoPauseEnabled === false })}
+        />
+        <SettingRowWithInfo
+          icon={<ShieldCheck className="h-4 w-4" />}
+          label={t("profile.flightRecorder")}
+          valueText={t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.off" : "profile.flightRecorder.on")}
+          infoText={t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.info.off" : "profile.flightRecorder.info.on")}
+          infoBadge={profile.flightRecorderEnabled === false ? t("profile.flightRecorder.off") : t("profile.flightRecorder.on")}
+          onToggle={() => update({ flightRecorderEnabled: profile.flightRecorderEnabled === false })}
+        />
+        <SettingRowWithInfo
+          icon={<Bell className="h-4 w-4" />}
+          label={t("profile.haptic")}
+          valueText={profile.hapticEnabled ? t("profile.haptic.value.on") : t("profile.haptic.value.off")}
+          infoText={t("profile.haptic.info")}
+          onToggle={() => {
             const next = !profile.hapticEnabled;
             update({ hapticEnabled: next });
             if (next && typeof navigator !== "undefined" && "vibrate" in navigator) {
               try { navigator.vibrate(40); } catch { /* noop */ }
             }
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Bell className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.haptic")}</div>
-          <div className="text-xs text-muted-foreground">
-            {profile.hapticEnabled ? t("profile.haptic.value.on") : t("profile.haptic.value.off")}
-          </div>
-        </button>
-        <button
-          onClick={() => {
+        />
+        <SettingRowWithInfo
+          icon={<Wind className="h-4 w-4" />}
+          label={t("profile.windUnit")}
+          valueText={profile.windUnit === "kmh" ? "km/h" : "m/s"}
+          infoText={t("profile.windUnit.info")}
+          onToggle={() => {
             const next: WindUnit = profile.windUnit === "ms" ? "kmh" : "ms";
             update({ windUnit: next });
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Wind className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.windUnit")}</div>
-          <div className="text-xs text-muted-foreground">
-            {profile.windUnit === "kmh" ? "km/h" : "m/s"}
-          </div>
-        </button>
+        />
         {[
           { Icon: MapPin, label: t("profile.gps"), value: t("profile.gps.value") },
         ].map(({ Icon, label, value }) => (
