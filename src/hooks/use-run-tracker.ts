@@ -800,10 +800,14 @@ export function useRunTracker() {
         : `Well done ${name}! Run finished. Distance ${km} kilometers. Average pace ${paceWords}.`,
       lang,
     );
+    recorderRef.current?.cancel();
+    clearFlightSnapshot();
     setState({ ...initial, status: "finished" });
   }, []);
 
   const discardRun = useCallback(() => {
+    recorderRef.current?.cancel();
+    clearFlightSnapshot();
     setState({ ...initial });
   }, []);
 
