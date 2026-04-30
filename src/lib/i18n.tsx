@@ -938,6 +938,24 @@ const da: Dict = {
   "hrz.zone.4.desc": "Mælkesyretærskel — konkurrencetempo.",
   "hrz.zone.5.desc": "VO₂max & anaerob — korte, hårde intervaller.",
 
+  // Zone-based pacing
+  "pacing.title": "Zone-tempo",
+  "pacing.subtitle": "Foreslå et måltempo baseret på din aktuelle pulszone.",
+  "pacing.enable": "Aktivér zone-tempo",
+  "pacing.basePace": "Basis roligt tempo (Z3)",
+  "pacing.basePaceHint": "Dit referencetempo. Andre zoner justeres herfra.",
+  "pacing.useRecent": "Brug median af seneste løb",
+  "pacing.offset": "Offset",
+  "pacing.offsetUnit": "s/km vs basis",
+  "pacing.zoneTarget": "Mål",
+  "pacing.target": "Mål",
+  "pacing.tooFast": "Slap af",
+  "pacing.tooSlow": "Skru op",
+  "pacing.onTarget": "På mål",
+  "pacing.cue.easeOff": "Slap af — sænk tempoet",
+  "pacing.cue.pickUp": "Skru op — øg tempoet",
+  "pacing.reset": "Nulstil til standard",
+
   // Coach override + live HR spike alert
   "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",
   "focus.hrSpike": "Pulsen stiger hurtigt — tjek din vejrtrækning",
