@@ -284,7 +284,7 @@ function ProfilePage() {
         </button>
       </section>
 
-      <section className="mt-4 glass rounded-2xl divide-y divide-border">
+      <section ref={audioSectionRef} className="mt-4 glass rounded-2xl divide-y divide-border scroll-mt-4">
         <SettingRowWithInfo
           icon={<Volume2 className="h-4 w-4" />}
           label={t("profile.audio")}
