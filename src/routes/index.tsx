@@ -10,6 +10,7 @@ import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
 import FocusRunView from "@/components/FocusRunView";
+import RecoverRunBanner from "@/components/RecoverRunBanner";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -195,6 +196,8 @@ function RunPage() {
           />
         </div>
       </header>
+
+      {(t.status === "idle" || t.status === "finished") && <RecoverRunBanner />}
 
       {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <CoachCard profile={profile} />}
 

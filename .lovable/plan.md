@@ -1,72 +1,49 @@
-## Auto-Pause & Flight Recorder
+## Reintroduce Flight Recorder with info box
 
-Two opt-in safety nets for tracking, both controlled from Profile (same row style as the Coach toggle), with the choice persisted to `UserProfile`.
+Restore the Flight Recorder safety net (auto-saves your run to local storage so a crash, refresh, or app kill never loses it), expose it as a toggle inside the **General settings** section in Profile, and add a small info box that explains what happens when it's on vs. off.
 
-### 1. Smart Auto-Pause
+### What you'll see
 
-While `status === "running"`, the tracker monitors the rolling speed window already maintained for live pace.
+In Profile → general settings (the section that holds Stemmesignal / PR / Auto-pause / Vibrering / Vindenhed / Sprog), a new **"Flight Recorder"** row appears directly below **"Auto-pause"**, with the same row style as Coach.
 
-- If average speed over the last **10 s** drops below **0.5 m/s** (≈3:20 km/h walking pace) AND distance moved < 5 m, fire `pause()` automatically.
-- Once paused by auto-pause, watch new GPS samples: when speed climbs back above **1.2 m/s** for **3 s** continuously, fire `resume()` automatically.
-- Auto-pause never overrides a *manual* pause — manual pauses persist until the user manually resumes.
-- Voice cue (gated by `prVoiceEnabled`): short "Auto-pause" / "Resumed" callouts, throttled.
-- A small `AUTO PAUSE` chip is appended to the existing focus-mode chip bar while the auto-pause is active so the runner knows what happened.
+Below that row sits a compact info box (matching the glass card style) that explains:
 
-### 2. Flight Recorder (offline buffer)
+- **When ON:** "Dit løb gemmes automatisk hvert sekund lokalt på telefonen. Hvis appen crasher eller mister forbindelsen, kan du gendanne løbet næste gang du åbner Orbit Lab."
+- **When OFF:** "Dit aktive løb gemmes ikke undervejs. Mister du forbindelsen eller appen lukker uventet, går dataene tabt."
 
-Every successful GPS update is appended to a rolling localStorage buffer so a crash, refresh, or app kill in mid-run never loses the data.
+The box label switches based on the current toggle state, so the user immediately understands what they just chose.
 
-- Buffer key: `orbit:flight-recorder:v1` — `{ runId, startedAt, points: GeoPoint[], splits: Split[], hrSeries: HrSample[], lastSavedAt }`.
-- Flushed (debounced ~1 s) on every state mutation while running/paused.
-- Cleared on `commitRun()` or `discardRun()`.
-- On app boot (root layout effect), if a non-stale buffer exists (started within last 24 h, ≥30 s of data, no matching saved Run), surface a one-time **"Recover unsaved run?"** banner that lets the user save it or discard.
-- Recovery saves the partial Run via `saveRun()` and runs the same PR check pipeline.
+On the home screen, the existing **"Recover unsaved run?"** banner returns — it appears only if a recoverable snapshot was saved and the user hasn't started a new run.
 
-### 3. Settings UI
+### Files to add (restore)
 
-In `src/routes/profile.tsx`, add **two new rows in the same Coach-style section, placed directly below the existing "Orbit Coach" section** (above HR zones), each a single tappable row that toggles on/off:
-
-| Row | Icon | Default |
-|-----|------|---------|
-| Auto-pause | `PauseCircle` | **on** |
-| Flight Recorder | `ShieldCheck` | **on** |
-
-State stored on `UserProfile`:
-
-```ts
-type UserProfile = {
-  // …existing
-  autoPauseEnabled?: boolean;       // default true
-  flightRecorderEnabled?: boolean;  // default true
-};
-```
-
-Backwards-compatible: missing keys are treated as `true` (`!== false` pattern, matching `coachEnabled`).
-
-### Files to add
-
-- `src/lib/flight-recorder.ts` — `saveSnapshot`, `loadSnapshot`, `clearSnapshot`, `hasRecoverableSnapshot`, `snapshotToRun`. Pure helpers around `localStorage`.
-- `src/components/RecoverRunBanner.tsx` — fixed-position banner shown on home route when a snapshot is recoverable.
-- `src/hooks/use-recover-run.ts` — checks the buffer on mount and exposes `{ snapshot, save, discard }`.
+- `src/lib/flight-recorder.ts` — `localStorage` helpers (`saveSnapshot`, `loadSnapshot`, `clearSnapshot`, `hasRecoverableSnapshot`, `snapshotToRun`) plus `createDebouncedRecorder` for ~1s debounced writes.
+- `src/hooks/use-recover-run.ts` — checks the buffer on mount; returns `{ snapshot, save, discard }`.
+- `src/components/RecoverRunBanner.tsx` — banner shown on `/` when a snapshot is recoverable.
 
 ### Files to edit
 
-- `src/lib/user-profile.ts` — add the two optional flags to `UserProfile` and `DEFAULT_PROFILE`.
-- `src/hooks/use-run-tracker.ts` —
-  - Read `autoPauseEnabled` + `flightRecorderEnabled` on `start()` into refs.
-  - Auto-pause logic inside the existing `setState` block in `handlePosition` (computes movement window from the same `recent` array used for rolling pace).
-  - On every mutation while running/paused, debounced flush to flight recorder.
-  - Add `autoPaused` boolean state so the UI chip can show it; cleared on manual pause/resume.
-  - Clear snapshot in `commitRun` and `discardRun`.
-- `src/routes/profile.tsx` — insert the two toggle rows directly under the Orbit Coach section (above the HR zones row), matching the row style used for Coach.
-- `src/routes/__root.tsx` (or `src/routes/index.tsx`) — mount `<RecoverRunBanner />` so the prompt is visible right after app launch.
-- `src/lib/i18n.tsx` — keys: `profile.autoPause`, `profile.autoPause.on`, `profile.autoPause.off`, `profile.flightRecorder`, `profile.flightRecorder.on`, `profile.flightRecorder.off`, `recover.title`, `recover.body`, `recover.save`, `recover.discard`, `focus.autoPause`, `cue.autoPaused`, `cue.autoResumed` (en + da).
-- `src/components/FocusRunView.tsx` — render `AUTO PAUSE` chip in the existing chip bar when tracker exposes `autoPaused === true`.
+- `src/lib/user-profile.ts` — re-add `flightRecorderEnabled?: boolean` to `UserProfile` and `DEFAULT_PROFILE` (default `true`, backwards compatible via `!== false` pattern).
+- `src/hooks/use-run-tracker.ts`:
+  - Re-import flight-recorder helpers.
+  - Add `flightRecorderEnabledRef`, `recorderRef`, and `getRecorder()` back.
+  - On `start()`, read the flag, clear any stale snapshot, reset the recorder.
+  - On `commitRun()` and `discardRun()`, cancel recorder + clear snapshot.
+  - Re-add the `useEffect` that queues a `FlightSnapshot` on every meaningful state change while running/paused.
+- `src/routes/profile.tsx`:
+  - Add the **Flight Recorder** toggle row (icon `ShieldCheck`) right after the **Auto-pause** row in the existing general settings `<section>`.
+  - Directly under that row, render a small info paragraph inside the same section (no new card) that swaps copy based on `profile.flightRecorderEnabled !== false`.
+  - Import `ShieldCheck` from `lucide-react`.
+- `src/routes/index.tsx` — re-mount `<RecoverRunBanner />` in the idle/finished states (same spot as before).
+- `src/lib/i18n.tsx` — re-add the en+da keys:
+  - `profile.flightRecorder`, `profile.flightRecorder.on`, `profile.flightRecorder.off`
+  - `profile.flightRecorder.info.on`, `profile.flightRecorder.info.off` (the explanation copy)
 
 ### Technical details
 
-- Auto-pause thresholds tuned to avoid false triggers at traffic lights (10 s observation) and false negatives on slow uphill walks (0.5 m/s floor, well under jogging).
-- Flight recorder writes use a `requestIdleCallback`-with-fallback debounce so heavy GPS bursts don't stall the main thread.
-- Snapshot freshness = `startedAt` within last 24 h. Older snapshots auto-discarded silently.
-- Recovery banner only appears on `/` to avoid interrupting an active run on `/run/$id`.
-- No backend changes — pure client-side persistence in `localStorage`.
+- Flight recorder buffer key: `orbit:flight-recorder:v1`, shape `{ runId, startedAt, endedAt, durationMs, distanceM, elevationGainM, points, splits, hrSeries, weather?, avgHrBpm?, maxHrBpm?, lastSavedAt }`.
+- Debounced writes (~1s) so heavy GPS bursts don't block the main thread.
+- Snapshot is considered recoverable if `startedAt` is within the last 24h, has ≥30s of data, and no saved Run with the same `runId` exists.
+- All persistence stays client-side in `localStorage` — no backend changes.
+- Toggle state respects existing `coachEnabled`-style "missing key = on" convention so existing users default to on.
+- Info box uses muted-foreground text inside the glass section (no extra card chrome) so it doesn't visually break the settings list.

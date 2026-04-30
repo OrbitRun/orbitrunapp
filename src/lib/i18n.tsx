@@ -496,6 +496,13 @@ const en: Dict = {
   "profile.autoPause": "Auto-pause",
   "profile.autoPause.on": "On",
   "profile.autoPause.off": "Off",
+  "profile.flightRecorder": "Flight Recorder",
+  "profile.flightRecorder.on": "On",
+  "profile.flightRecorder.off": "Off",
+  "profile.flightRecorder.info.on":
+    "Your run is auto-saved to this device every second. If the app crashes or loses connection, you can recover the run next time you open Orbit Lab.",
+  "profile.flightRecorder.info.off":
+    "Your active run is not saved while running. If you lose connection or the app closes unexpectedly, the data will be lost.",
 
   // Recover unsaved run banner
   "recover.title": "Recover unsaved run?",
@@ -977,6 +984,13 @@ const da: Dict = {
   "profile.autoPause": "Auto-pause",
   "profile.autoPause.on": "Til",
   "profile.autoPause.off": "Fra",
+  "profile.flightRecorder": "Flight Recorder",
+  "profile.flightRecorder.on": "Til",
+  "profile.flightRecorder.off": "Fra",
+  "profile.flightRecorder.info.on":
+    "Dit løb gemmes automatisk hvert sekund lokalt på telefonen. Hvis appen crasher eller mister forbindelsen, kan du gendanne løbet næste gang du åbner Orbit Lab.",
+  "profile.flightRecorder.info.off":
+    "Dit aktive løb gemmes ikke undervejs. Mister du forbindelsen eller lukker appen uventet, går dataene tabt.",
 
   // Recover unsaved run banner
   "recover.title": "Gendan ikke-gemt løb?",
