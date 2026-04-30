@@ -974,6 +974,21 @@ const da: Dict = {
   // Coach override + live HR spike alert
   "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",
   "focus.hrSpike": "Pulsen stiger hurtigt — tjek din vejrtrækning",
+  "focus.autoPause": "Auto-pause",
+
+  // Auto-pause + Flight Recorder settings
+  "profile.autoPause": "Auto-pause",
+  "profile.autoPause.on": "Til",
+  "profile.autoPause.off": "Fra",
+  "profile.flightRecorder": "Flight Recorder",
+  "profile.flightRecorder.on": "Til",
+  "profile.flightRecorder.off": "Fra",
+
+  // Recover unsaved run banner
+  "recover.title": "Gendan ikke-gemt løb?",
+  "recover.body": "Vi gemte dit løb løbende. Gem det nu eller kassér.",
+  "recover.save": "Gem løb",
+  "recover.discard": "Kassér",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
