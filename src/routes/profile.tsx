@@ -437,6 +437,33 @@ function ProfilePage() {
         </button>
       </section>
 
+      {/* Legal */}
+      <div className="mt-6 mb-2 px-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+        {t("legal.section")}
+      </div>
+      <section className="glass rounded-2xl divide-y divide-border">
+        <button
+          onClick={() => setLegalOpen("privacy")}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("legal.privacy.row")}</div>
+          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+        </button>
+        <button
+          onClick={() => setLegalOpen("terms")}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <FileText className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("legal.terms.row")}</div>
+          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground" />
+        </button>
+      </section>
+
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Orbit Lab · v1.0
       </p>
@@ -445,6 +472,11 @@ function ProfilePage() {
         open={healthOpen}
         onOpenChange={setHealthOpen}
         onResult={setHealthStatus}
+      />
+      <LegalSheet
+        open={legalOpen !== null}
+        onClose={() => setLegalOpen(null)}
+        kind={legalOpen ?? "privacy"}
       />
     </main>
   );
