@@ -509,6 +509,38 @@ const en: Dict = {
   "recover.body": "We saved your last run as you went. Save it now or discard.",
   "recover.save": "Save run",
   "recover.discard": "Discard",
+
+  // Legal
+  "legal.section": "Legal",
+  "legal.privacy.row": "Privacy Policy",
+  "legal.terms.row": "Terms & Disclaimer",
+  "legal.close": "Close",
+  "legal.privacy.title": "Orbit Lab Privacy Policy",
+  "legal.privacy.intro":
+    "Orbit Lab is committed to protecting your privacy. We collect location data (GPS) to track your running routes and pace, and biometric data (heart rate) to provide personalized training insights via our AI coach.",
+  "legal.privacy.1.title": "Data Collection",
+  "legal.privacy.1.body":
+    "Your data is stored securely and used exclusively to enhance your training experience within the app.",
+  "legal.privacy.2.title": "Third Parties",
+  "legal.privacy.2.body":
+    "We never sell or share your personal health data with third parties.",
+  "legal.privacy.3.title": "Apple Health",
+  "legal.privacy.3.body":
+    "With your permission, we read and write data to Apple Health to synchronize your workout history.",
+  "legal.privacy.4.title": "Your Rights",
+  "legal.privacy.4.body":
+    "You can delete your profile and all associated data at any time directly within the app.",
+  "legal.terms.title": "Terms & Medical Disclaimer",
+  "legal.terms.intro": "By using Orbit Lab, you agree to the following:",
+  "legal.terms.1.title": "Not a Medical Device",
+  "legal.terms.1.body":
+    "Orbit Lab and Orbit Coach AI provide training guidance only. The app is not a medical device and does not replace professional medical advice.",
+  "legal.terms.2.title": "Health",
+  "legal.terms.2.body":
+    "Always consult a physician before starting a new exercise program, especially if you have known heart conditions or other health concerns.",
+  "legal.terms.3.title": "Safety",
+  "legal.terms.3.body":
+    "Always stay aware of your surroundings while running. Orbit Lab is not responsible for accidents or injuries sustained while using the app.",
 };
 
 const da: Dict = {
@@ -997,6 +1029,38 @@ const da: Dict = {
   "recover.body": "Vi gemte dit løb løbende. Gem det nu eller kassér.",
   "recover.save": "Gem løb",
   "recover.discard": "Kassér",
+
+  // Legal
+  "legal.section": "Juridisk",
+  "legal.privacy.row": "Privatlivspolitik",
+  "legal.terms.row": "Vilkår & Ansvarsfraskrivelse",
+  "legal.close": "Luk",
+  "legal.privacy.title": "Privatlivspolitik for Orbit Lab",
+  "legal.privacy.intro":
+    "Orbit Lab er forpligtet til at beskytte dit privatliv. Vi indsamler lokationsdata (GPS) for at kunne tracke dine løberuter og hastighed, samt biometriske data (puls) for at give dig personlig træningsindsigt via vores AI-coach.",
+  "legal.privacy.1.title": "Dataindsamling",
+  "legal.privacy.1.body":
+    "Dine data gemmes sikkert og bruges udelukkende til at forbedre din træningsoplevelse i appen.",
+  "legal.privacy.2.title": "Tredjeparter",
+  "legal.privacy.2.body":
+    "Vi sælger eller deler aldrig dine personlige sundhedsdata med tredjeparter.",
+  "legal.privacy.3.title": "Apple Health",
+  "legal.privacy.3.body":
+    "Hvis du giver tilladelse, læser og skriver vi data til Apple Health for at synkronisere din træningshistorik.",
+  "legal.privacy.4.title": "Dine rettigheder",
+  "legal.privacy.4.body":
+    "Du kan til enhver tid slette din profil og alle tilhørende data direkte i appen.",
+  "legal.terms.title": "Vilkår og Medicinsk Ansvarsfraskrivelse",
+  "legal.terms.intro": "Ved at bruge Orbit Lab accepterer du følgende:",
+  "legal.terms.1.title": "Ikke medicinsk udstyr",
+  "legal.terms.1.body":
+    "Orbit Lab og Orbit Coach AI leverer kun vejledende træningsdata. Appen er ikke medicinsk udstyr og kan ikke erstatte professionel lægelig rådgivning.",
+  "legal.terms.2.title": "Helbred",
+  "legal.terms.2.body":
+    "Konsultér altid en læge, før du påbegynder et nyt træningsprogram, især hvis du har kendte hjerteproblemer eller andre helbredsmæssige udfordringer.",
+  "legal.terms.3.title": "Sikkerhed",
+  "legal.terms.3.body":
+    "Vær altid opmærksom på dine omgivelser under løb. Orbit Lab er ikke ansvarlig for ulykker eller skader opstået under brug af appen.",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
