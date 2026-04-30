@@ -529,18 +529,12 @@ export function useRunTracker() {
     hapticEnabledRef.current = profile.hapticEnabled !== false;
     prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
     autoPauseEnabledRef.current = profile.autoPauseEnabled !== false;
-    flightRecorderEnabledRef.current = profile.flightRecorderEnabled !== false;
     autoPausedRef.current = false;
     movementWindowRef.current = [];
     cumDistanceRef.current = 0;
     autoResumeMovingSinceRef.current = null;
     lastAutoCueAtRef.current = 0;
     runIdRef.current = genId();
-    // Wipe any stale flight-recorder snapshot from a previous session before
-    // we start writing a fresh one. (Recovery flow has its own copy.)
-    clearFlightSnapshot();
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
     announcedDistancePrsRef.current = new Set();
