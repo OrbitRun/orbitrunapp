@@ -47,12 +47,10 @@ function ProfilePage() {
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
   const [coachInfoOpen, setCoachInfoOpen] = useState(false);
-  const audioSectionRef = useRef<HTMLElement>(null);
 
-  const handleNavigateToAudioSettings = () => {
-    requestAnimationFrame(() => {
-      audioSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+  const handleOpenCoachOnboarding = () => {
+    setCoachInfoOpen(false);
+    requestAnimationFrame(() => setCoachOpen(true));
   };
 
 
@@ -284,7 +282,7 @@ function ProfilePage() {
         </button>
       </section>
 
-      <section ref={audioSectionRef} className="mt-4 glass rounded-2xl divide-y divide-border scroll-mt-4">
+      <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <SettingRowWithInfo
           icon={<Volume2 className="h-4 w-4" />}
           label={t("profile.audio")}
@@ -406,7 +404,7 @@ function ProfilePage() {
       <CoachInfoModal
         open={coachInfoOpen}
         onClose={() => setCoachInfoOpen(false)}
-        onNavigateToSettings={handleNavigateToAudioSettings}
+        onNavigateToSettings={handleOpenCoachOnboarding}
       />
     </main>
   );
