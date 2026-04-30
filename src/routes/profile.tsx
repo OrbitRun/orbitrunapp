@@ -47,12 +47,10 @@ function ProfilePage() {
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
   const [coachInfoOpen, setCoachInfoOpen] = useState(false);
-  const audioSectionRef = useRef<HTMLElement>(null);
 
-  const handleNavigateToAudioSettings = () => {
-    requestAnimationFrame(() => {
-      audioSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+  const handleOpenCoachOnboarding = () => {
+    setCoachInfoOpen(false);
+    requestAnimationFrame(() => setCoachOpen(true));
   };
 
 
