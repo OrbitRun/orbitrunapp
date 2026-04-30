@@ -1033,6 +1033,16 @@ const da: Dict = {
     "Dit løb gemmes automatisk hvert sekund lokalt på telefonen. Hvis appen crasher eller mister forbindelsen, kan du gendanne løbet næste gang du åbner Orbit Lab.",
   "profile.flightRecorder.info.off":
     "Dit aktive løb gemmes ikke undervejs. Mister du forbindelsen eller lukker appen uventet, går dataene tabt.",
+  "profile.audio.info":
+    "Vælg hvor ofte AI-coachen skal give dig lydopdateringer (f.eks. for hver kilometer eller 500 meter) om dit tempo og din puls.",
+  "profile.prVoice.info":
+    "Slå til for at få et lydsignal, når du sætter ny personlig rekord eller slår din Ghost Runner.",
+  "profile.autoPause.info":
+    "Sætter tiden på pause automatisk, hvis du stopper op (f.eks. ved et lyskryds), så din gennemsnitshastighed forbliver præcis.",
+  "profile.haptic.info":
+    "Mærk små, diskrete vibrationer (\"heartbeats\"), når du skifter pulszone, så du kan holde fokus uden at kigge på skærmen.",
+  "profile.windUnit.info":
+    "Vælg enheden for vindhastighed (meter pr. sekund m/s eller kilometer i timen km/t) til AI-vejranalysen.",
 
   // Recover unsaved run banner
   "recover.title": "Gendan ikke-gemt løb?",
