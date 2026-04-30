@@ -25,6 +25,11 @@ import {
   type GhostRef,
 } from "@/lib/ghost-runner";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
+import {
+  clearSnapshot as clearFlightSnapshot,
+  createDebouncedRecorder,
+  type FlightSnapshot,
+} from "@/lib/flight-recorder";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
