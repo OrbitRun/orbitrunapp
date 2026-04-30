@@ -88,7 +88,7 @@ export function snapshotToRun(s: FlightSnapshot): Run {
   const durationMs = s.durationMs;
   const avgPace =
     distanceM > 50 && durationMs > 0
-      ? paceFromDistanceDuration(distanceM, durationMs)
+      ? durationMs / 1000 / (distanceM / 1000)
       : 0;
   const avgCadenceSpm = avgPace > 0 ? Math.round(180 - Math.min(20, (avgPace - 240) / 12)) : 168;
   const run: Run = {
