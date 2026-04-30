@@ -846,41 +846,6 @@ export function useRunTracker() {
     }
   }, [state.status, state.distanceM, state.currentPaceSecPerKm, doPause, doResume]);
 
-  // ---- Flight Recorder -------------------------------------------------
-  // Persist a snapshot to localStorage on every meaningful state change so a
-  // crash/refresh during a run can offer recovery on next launch.
-  useEffect(() => {
-    if (!flightRecorderEnabledRef.current) return;
-    if (state.status !== "running" && state.status !== "paused") return;
-    if (!state.startedAt || !runIdRef.current) return;
-    const snapshot: FlightSnapshot = {
-      runId: runIdRef.current,
-      startedAt: state.startedAt,
-      endedAt: Date.now(),
-      durationMs: state.elapsedMs,
-      distanceM: state.distanceM,
-      elevationGainM: state.elevationGainM,
-      points: state.points,
-      splits: state.splits,
-      hrSeries: hrSeriesRef.current,
-      weather: weatherRef.current ?? undefined,
-      avgHrBpm: state.avgHrBpm ?? undefined,
-      maxHrBpm: state.maxHrBpm ?? undefined,
-      lastSavedAt: Date.now(),
-    };
-    getRecorder().queue(snapshot);
-  }, [
-    state.status,
-    state.startedAt,
-    state.elapsedMs,
-    state.distanceM,
-    state.elevationGainM,
-    state.points,
-    state.splits,
-    state.avgHrBpm,
-    state.maxHrBpm,
-  ]);
-
   useEffect(() => {
     return () => {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
