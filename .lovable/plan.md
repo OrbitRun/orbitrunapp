@@ -1,55 +1,57 @@
-## Add expandable info boxes to settings rows
+## Orbit Coach Info Modal
 
-Mirror the Flight Recorder pattern on five additional settings: Audio cues, PR voice, Auto-pause, Haptic feedback, and Wind unit. Each row gets a small chevron next to the label that toggles a slide-down info box, while the rest of the row keeps its current toggle action.
+Add an interactive info modal that explains what Orbit Coach AI does, with a CTA that scrolls the user to the audio + haptic settings.
 
-### Behavior (matches Flight Recorder)
+### New component: `src/components/CoachInfoModal.tsx`
 
-- Chevron sits inline next to the setting name (not on the far right).
-- Tapping the chevron expands/collapses the info text only — `e.stopPropagation()` so it does not fire the row's toggle.
-- Tapping the row itself still toggles the underlying setting.
-- When the setting is toggled (via the row), the info box auto-reveals for 5 seconds, then collapses.
-- Manual chevron tap cancels the auto-timer (same as Flight Recorder).
-- Info box uses the same styling: `bg-white/[0.02]`, neon left border, status chip + body text, animated `grid-rows-[1fr]/[0fr]` transition.
+A centered modal with the existing dark glass + neon accent styling:
 
-### Files to edit
+- Backdrop: fixed inset-0, `bg-background/80 backdrop-blur-sm`, fade-in, click-to-close.
+- Card: `glass rounded-2xl` with neon border accent, max-w-sm, `animate-scale-in` (already in tailwind config).
+- Header: small "Orbit Coach AI" eyebrow + title row with a close (×) button.
+- Intro paragraph (DA/EN via i18n).
+- Three bullet rows with neon-accent dot icons (Activity / Wind / Volume2 from lucide-react):
+  - Biometric Guidance — pace adjusts to heart rate
+  - Environmental Analysis — wind & temperature
+  - Smart Feedback — voice cues toward PR
+- Primary CTA button "Gå til opsætning" / "Go to setup" — neon background, full-width, calls `onNavigateToSettings()` then closes.
+- Body-scroll lock while open (same pattern used by `LegalSheet`).
+- ESC key closes. `role="dialog" aria-modal="true"`.
 
-**`src/lib/i18n.tsx`** — add Danish + English info strings:
+### `src/routes/profile.tsx` changes
 
-- `profile.audio.info` — "Vælg hvor ofte AI-coachen skal give dig lydopdateringer (f.eks. for hver kilometer eller 500 meter) om dit tempo og din puls."
-- `profile.prVoice.info` — "Slå til for at få et lydsignal, når du sætter ny personlig rekord eller slår din Ghost Runner."
-- `profile.autoPause.info` — "Sætter tiden på pause automatisk, hvis du stopper op (f.eks. ved et lyskryds), så din gennemsnitshastighed forbliver præcis."
-- `profile.haptic.info` — "Mærk små, diskrete vibrationer (\"heartbeats\"), når du skifter pulszone, så du kan holde fokus uden at kigge på skærmen."
-- `profile.windUnit.info` — "Vælg enheden for vindhastighed (meter pr. sekund m/s eller kilometer i timen km/t) til AI-vejranalysen."
+1. Import the new `CoachInfoModal` and an `Info` icon from lucide-react.
+2. Add state: `const [coachInfoOpen, setCoachInfoOpen] = useState(false);`
+3. Add a ref for the audio/haptic settings section: `const audioSectionRef = useRef<HTMLElement>(null);` and attach it to the existing `<section>` that holds the audio/PR/auto-pause/flight-recorder/haptic/wind rows.
+4. In the "Orbit Coach" section header row (the one rendering `{t("coach.enable")}`), restructure the label so the chevron-style info icon sits next to the text, mirroring how the Flight Recorder chevron works:
+   - Wrap the label in a small flex container.
+   - Add a button `<Info />` with `e.stopPropagation()` so it does NOT toggle coach on/off — it only opens the modal.
+   - Keep the row's existing toggle behavior intact.
+5. Render `<CoachInfoModal open={coachInfoOpen} onClose={...} onNavigateToSettings={...} />` near the bottom of the page (next to the other modals).
+6. `onNavigateToSettings` callback: closes the modal, then `audioSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })` after a `requestAnimationFrame` to ensure the close animation doesn't interfere.
 
-English equivalents added in the `en` dictionary (translated counterparts of the above).
+### `src/lib/i18n.tsx` — new keys (DA + EN)
 
-These descriptions are general (not state-dependent), so a single `*.info` key per setting — no `.on` / `.off` split.
+Added near the existing `coach.*` group:
 
-### `src/routes/profile.tsx` — refactor
+- `coach.info.title` — "Orbit Coach AI"
+- `coach.info.intro` — DA: "Din personlige AI-strateg, der optimerer dit løb baseret på puls, vejr og mål." / EN: "Your personal AI strategist that optimizes your run based on heart rate, weather, and goals."
+- `coach.info.bullet1.title` / `.body` — Biometrisk Guidance / Justerer dit tempo efter din hjerterytme.
+- `coach.info.bullet2.title` / `.body` — Miljø-analyse / Tager højde for vind og temperatur.
+- `coach.info.bullet3.title` / `.body` — Smart Feedback / Stemmesignaler der guider dig mod din PR.
+- `coach.info.cta` — "Gå til opsætning" / "Go to setup"
+- `coach.info.close` — "Luk" / "Close"
 
-To avoid duplicating the same JSX five times, introduce a small local helper `SettingRowWithInfo` inside the file (or inline render) that takes:
+### Why scroll-to-section instead of a sub-page
 
-- `icon`, `label`, `valueText`, `infoText`, `onToggle`
+The existing settings (audio cues, haptic feedback, PR voice) live in the same profile page section — scrolling there is faster and avoids creating a separate route that would duplicate controls. The CTA target is the settings section that already contains those rows.
 
-It encapsulates:
+### Animation
 
-1. State refs for `open` + `autoOpen` + `timer` (one set per row, kept as small local state objects in the parent or via a tiny child component).
-2. The clickable row with chevron-next-to-label and stopPropagation.
-3. The animated info panel below.
+Uses the existing `animate-scale-in` keyframe (already in the project's tailwind config) for the modal card; backdrop uses `animate-fade-in`. No new keyframes required.
 
-Replace the existing buttons for Audio cues, PR voice, Auto-pause, Haptic, Wind unit with this component. Auto-pause already has a button — convert it to the same div-based row pattern used by Flight Recorder. Convert the existing Flight Recorder block to also use the new helper for consistency (its current inline implementation can be removed in favor of the shared component).
+### Files
 
-The "GPS" read-only row and the Language row are NOT changed (no info text requested for them).
-
-### Technical notes
-
-- `SettingRowWithInfo` is defined in the same file as a function component to keep the change localized.
-- Each instance owns its own `useState` + `useRef` for timer, so multiple info boxes can be open independently and timers don't leak.
-- Cleanup `useEffect` clears its own timeout on unmount.
-- Keep accessibility: `role="button"`, `tabIndex={0}`, `onKeyDown` for Enter/Space on the row; `aria-label="Toggle info"` on the chevron button.
-- For the haptic row, the existing side-effect (vibrate on enable) stays inside the `onToggle` callback passed to the helper.
-
-### Out of scope
-
-- No changes to the underlying setting logic, storage, or other rows.
-- No new dependencies.
+- **New**: `src/components/CoachInfoModal.tsx`
+- **Edit**: `src/routes/profile.tsx` (info icon, modal mount, scroll ref + handler)
+- **Edit**: `src/lib/i18n.tsx` (DA + EN keys)

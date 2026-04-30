@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
-import { Activity, Bell, ChevronDown, FileText, Heart, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Activity, Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -10,6 +10,7 @@ import CoachOnboarding from "@/components/CoachOnboarding";
 import RecoveryStatus from "@/components/RecoveryStatus";
 import HealthPermissionSheet from "@/components/HealthPermissionSheet";
 import LegalSheet from "@/components/LegalSheet";
+import CoachInfoModal from "@/components/CoachInfoModal";
 import SensorsSection from "@/components/SensorsSection";
 import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
 import { useHrZones } from "@/hooks/use-hr-zones";
@@ -45,6 +46,14 @@ function ProfilePage() {
   const healthAvailable = isHealthAvailable();
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
+  const [coachInfoOpen, setCoachInfoOpen] = useState(false);
+  const audioSectionRef = useRef<HTMLElement>(null);
+
+  const handleNavigateToAudioSettings = () => {
+    requestAnimationFrame(() => {
+      audioSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
 
   useEffect(() => {
@@ -192,7 +201,20 @@ function ProfilePage() {
           <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
             <Sparkles className="h-4 w-4" />
           </div>
-          <div className="flex-1 text-sm font-semibold">{t("coach.enable")}</div>
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            <div className="text-sm font-semibold truncate">{t("coach.enable")}</div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setCoachInfoOpen(true);
+              }}
+              aria-label={t("coach.info.title")}
+              className="h-6 w-6 grid place-items-center rounded-lg text-muted-foreground hover:text-neon hover:bg-white/5 transition"
+            >
+              <Info className="h-4 w-4" />
+            </button>
+          </div>
           <div className="text-xs text-muted-foreground">
             {t(profile.coachEnabled === false ? "coach.enable.off" : "coach.enable.on")}
           </div>
@@ -262,7 +284,7 @@ function ProfilePage() {
         </button>
       </section>
 
-      <section className="mt-4 glass rounded-2xl divide-y divide-border">
+      <section ref={audioSectionRef} className="mt-4 glass rounded-2xl divide-y divide-border scroll-mt-4">
         <SettingRowWithInfo
           icon={<Volume2 className="h-4 w-4" />}
           label={t("profile.audio")}
@@ -380,6 +402,11 @@ function ProfilePage() {
         open={legalOpen !== null}
         onClose={() => setLegalOpen(null)}
         kind={legalOpen ?? "privacy"}
+      />
+      <CoachInfoModal
+        open={coachInfoOpen}
+        onClose={() => setCoachInfoOpen(false)}
+        onNavigateToSettings={handleNavigateToAudioSettings}
       />
     </main>
   );
