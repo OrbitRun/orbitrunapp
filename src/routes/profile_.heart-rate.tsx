@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, RotateCcw, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import ZonePacingSettings from "@/components/ZonePacingSettings";
 import {
   defaultConfig,
   karvonenZones,
@@ -171,6 +172,9 @@ function HeartRateSettingsPage() {
           ))}
         </div>
       </section>
+
+      {/* Zone-based pacing */}
+      <ZonePacingSettings />
 
       {error && (
         <div className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">

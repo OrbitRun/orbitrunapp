@@ -469,6 +469,24 @@ const en: Dict = {
   "hrz.zone.4.desc": "Lactate threshold — race-pace effort.",
   "hrz.zone.5.desc": "VO₂max & anaerobic — short, intense intervals.",
 
+  // Zone-based pacing
+  "pacing.title": "Zone pacing",
+  "pacing.subtitle": "Suggest a target pace based on your current heart-rate zone.",
+  "pacing.enable": "Enable zone pacing",
+  "pacing.basePace": "Base easy pace (Z3)",
+  "pacing.basePaceHint": "Your reference pace. We adjust other zones from here.",
+  "pacing.useRecent": "Use median of recent runs",
+  "pacing.offset": "Offset",
+  "pacing.offsetUnit": "s/km vs base",
+  "pacing.zoneTarget": "Target",
+  "pacing.target": "Target",
+  "pacing.tooFast": "Ease off",
+  "pacing.tooSlow": "Pick it up",
+  "pacing.onTarget": "On target",
+  "pacing.cue.easeOff": "Ease off — slow your pace",
+  "pacing.cue.pickUp": "Pick it up — push the pace",
+  "pacing.reset": "Reset to defaults",
+
   // Coach override + live HR spike alert
   "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
   "focus.hrSpike": "Heart rate climbing fast — check your breathing",
@@ -919,6 +937,24 @@ const da: Dict = {
   "hrz.zone.3.desc": "Forbedrer effektivitet ved højere tempo.",
   "hrz.zone.4.desc": "Mælkesyretærskel — konkurrencetempo.",
   "hrz.zone.5.desc": "VO₂max & anaerob — korte, hårde intervaller.",
+
+  // Zone-based pacing
+  "pacing.title": "Zone-tempo",
+  "pacing.subtitle": "Foreslå et måltempo baseret på din aktuelle pulszone.",
+  "pacing.enable": "Aktivér zone-tempo",
+  "pacing.basePace": "Basis roligt tempo (Z3)",
+  "pacing.basePaceHint": "Dit referencetempo. Andre zoner justeres herfra.",
+  "pacing.useRecent": "Brug median af seneste løb",
+  "pacing.offset": "Offset",
+  "pacing.offsetUnit": "s/km vs basis",
+  "pacing.zoneTarget": "Mål",
+  "pacing.target": "Mål",
+  "pacing.tooFast": "Slap af",
+  "pacing.tooSlow": "Skru op",
+  "pacing.onTarget": "På mål",
+  "pacing.cue.easeOff": "Slap af — sænk tempoet",
+  "pacing.cue.pickUp": "Skru op — øg tempoet",
+  "pacing.reset": "Nulstil til standard",
 
   // Coach override + live HR spike alert
   "coach.zone5Override": "Jeg kan se på din puls, at dit hjerte arbejdede hårdere end normalt i dag. Selvom dine ben føles friske, anbefaler jeg en hviledag for at beskytte dit nervesystem.",

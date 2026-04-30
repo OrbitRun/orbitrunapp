@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
+import ZonePacingChip from "@/components/ZonePacingChip";
 import { useI18n } from "@/lib/i18n";
-import { resetZoneCueState, speakZoneEntered } from "@/lib/audio-cues";
+import { resetZoneCueState, speakPacingCue, speakZoneEntered } from "@/lib/audio-cues";
 import { loadProfile } from "@/lib/user-profile";
 import {
   ALL_METRIC_IDS,
@@ -14,6 +15,8 @@ import {
 import type { useRunTracker } from "@/hooks/use-run-tracker";
 import { ZONE_VAR, zoneForBpm, type HrZoneId } from "@/lib/hr-zones-config";
 import { useHrZones } from "@/hooks/use-hr-zones";
+import { useZonePacing } from "@/hooks/use-zone-pacing";
+import { paceStatus, targetForZone } from "@/lib/zone-pacing";
 
 type Tracker = ReturnType<typeof useRunTracker>;
 
@@ -72,6 +75,28 @@ export default function FocusRunView({
       speakZoneEntered(liveZone, lang, tr("hrz.cue.enter"));
     }
   }, [liveZone, lang, tr]);
+
+  // Zone-pacing: throttled cue when current pace is off-target for active zone.
+  const pacingCfg = useZonePacing();
+  useEffect(() => {
+    if (!pacingCfg.enabled || liveZone == null) return;
+    const profile = loadProfile();
+    if (profile.prVoiceEnabled === false) return;
+    const current = tracker.currentPaceSecPerKm;
+    if (!current || current <= 0) return;
+    const target = targetForZone(liveZone, pacingCfg);
+    const status = paceStatus(current, target);
+    if (status === "on-target") {
+      speakPacingCue("on-target", lang, "");
+      return;
+    }
+    speakPacingCue(
+      status,
+      lang,
+      status === "too-fast" ? tr("pacing.cue.easeOff") : tr("pacing.cue.pickUp"),
+    );
+  }, [pacingCfg, liveZone, tracker.currentPaceSecPerKm, lang, tr]);
+
   // Reset on unmount so a new run starts fresh.
   useEffect(() => () => resetZoneCueState(), []);
 
@@ -200,9 +225,9 @@ export default function FocusRunView({
           </div>
         </div>
       )}
-      {/* Ghost / sensor bar */}
-      {(ghostActive || tracker.hrSource === "bt") && (
-        <div className="px-4 pb-2 flex justify-center gap-2">
+      {/* Ghost / sensor / pacing bar */}
+      {(ghostActive || tracker.hrSource === "bt" || (pacingCfg.enabled && liveZone != null)) && (
+        <div className="px-4 pb-2 flex flex-wrap justify-center gap-2">
           {ghostActive && (
             <div
               className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border ${
@@ -236,6 +261,13 @@ export default function FocusRunView({
                 <span className="opacity-80 ml-1">Z{liveZone}</span>
               )}
             </div>
+          )}
+          {pacingCfg.enabled && liveZone != null && (
+            <ZonePacingChip
+              zone={liveZone}
+              currentPaceSecPerKm={tracker.currentPaceSecPerKm}
+              cfg={pacingCfg}
+            />
           )}
         </div>
       )}
