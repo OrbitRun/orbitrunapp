@@ -24,6 +24,12 @@ import {
   loadGhost,
   type GhostRef,
 } from "@/lib/ghost-runner";
+import {
+  clearSnapshot as clearFlightSnapshot,
+  createDebouncedRecorder,
+  type DebouncedRecorder,
+  type FlightSnapshot,
+} from "@/lib/flight-recorder";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 
 type Status = "idle" | "running" | "paused" | "finished";
@@ -198,6 +204,14 @@ export function useRunTracker() {
   const lastAutoCueAtRef = useRef<number>(0);
   // Captured run identity — populated on `start()`.
   const runIdRef = useRef<string | null>(null);
+
+  // ---- Flight recorder ---------------------------------------------------
+  const flightRecorderEnabledRef = useRef<boolean>(true);
+  const recorderRef = useRef<DebouncedRecorder | null>(null);
+  const getRecorder = useCallback(() => {
+    if (!recorderRef.current) recorderRef.current = createDebouncedRecorder(1000);
+    return recorderRef.current;
+  }, []);
 
   // Called whenever a fresh BPM sample arrives (BT or Health). Maintains the
   // rolling window, dispatches a `orbit:hr-spike` event when BPM rises >25 bpm
