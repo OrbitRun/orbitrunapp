@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Activity, Bell, Heart, Languages, MapPin, PauseCircle, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Activity, Bell, Heart, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
