@@ -503,6 +503,16 @@ const en: Dict = {
     "Your run is auto-saved to this device every second. If the app crashes or loses connection, you can recover the run next time you open Orbit Lab.",
   "profile.flightRecorder.info.off":
     "Your active run is not saved while running. If you lose connection or the app closes unexpectedly, the data will be lost.",
+  "profile.audio.info":
+    "Choose how often the AI coach should give you audio updates (e.g. every kilometer or 500 meters) about your pace and heart rate.",
+  "profile.prVoice.info":
+    "Turn on to get an audio cue when you set a new personal record or beat your Ghost Runner.",
+  "profile.autoPause.info":
+    "Automatically pauses the timer if you stop (e.g. at a traffic light), so your average speed stays accurate.",
+  "profile.haptic.info":
+    "Feel small, discreet vibrations (\"heartbeats\") when you switch heart-rate zones, so you can stay focused without looking at the screen.",
+  "profile.windUnit.info":
+    "Choose the unit for wind speed (meters per second m/s or kilometers per hour km/h) used in the AI weather analysis.",
 
   // Recover unsaved run banner
   "recover.title": "Recover unsaved run?",
