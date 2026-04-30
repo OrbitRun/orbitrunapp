@@ -25,11 +25,6 @@ import {
   type GhostRef,
 } from "@/lib/ghost-runner";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
-import {
-  clearSnapshot as clearFlightSnapshot,
-  createDebouncedRecorder,
-  type FlightSnapshot,
-} from "@/lib/flight-recorder";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -187,9 +182,8 @@ export function useRunTracker() {
   const postStopRunIdRef = useRef<string | null>(null);
   const postStopTimerRef = useRef<number | null>(null);
 
-  // ---- Auto-pause + Flight Recorder --------------------------------------
+  // ---- Auto-pause --------------------------------------------------------
   const autoPauseEnabledRef = useRef<boolean>(true);
-  const flightRecorderEnabledRef = useRef<boolean>(true);
   // True only when the *current* paused state was triggered by auto-pause
   // (so a manual pause doesn't get auto-resumed).
   const autoPausedRef = useRef<boolean>(false);
@@ -202,13 +196,7 @@ export function useRunTracker() {
   const autoResumeMovingSinceRef = useRef<number | null>(null);
   // Throttle the spoken auto-pause/resume cues.
   const lastAutoCueAtRef = useRef<number>(0);
-  // Debounced flight-recorder writer (single instance per tracker lifetime).
-  const recorderRef = useRef<ReturnType<typeof createDebouncedRecorder> | null>(null);
-  function getRecorder() {
-    if (!recorderRef.current) recorderRef.current = createDebouncedRecorder(1000);
-    return recorderRef.current;
-  }
-  // Captured run identity for the snapshot — populated on `start()`.
+  // Captured run identity — populated on `start()`.
   const runIdRef = useRef<string | null>(null);
 
   // Called whenever a fresh BPM sample arrives (BT or Health). Maintains the
