@@ -490,6 +490,21 @@ const en: Dict = {
   // Coach override + live HR spike alert
   "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
   "focus.hrSpike": "Heart rate climbing fast — check your breathing",
+  "focus.autoPause": "Auto-pause",
+
+  // Auto-pause + Flight Recorder settings
+  "profile.autoPause": "Auto-pause",
+  "profile.autoPause.on": "On",
+  "profile.autoPause.off": "Off",
+  "profile.flightRecorder": "Flight Recorder",
+  "profile.flightRecorder.on": "On",
+  "profile.flightRecorder.off": "Off",
+
+  // Recover unsaved run banner
+  "recover.title": "Recover unsaved run?",
+  "recover.body": "We saved your last run as you went. Save it now or discard.",
+  "recover.save": "Save run",
+  "recover.discard": "Discard",
 };
 
 const da: Dict = {
