@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, RotateCcw, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import ZonePacingSettings from "@/components/ZonePacingSettings";
 import {
   defaultConfig,
   karvonenZones,
