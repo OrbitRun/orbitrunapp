@@ -1,49 +1,30 @@
-## Reintroduce Flight Recorder with info box
+## Collapse Flight Recorder info box behind a chevron, auto-reveal on toggle
 
-Restore the Flight Recorder safety net (auto-saves your run to local storage so a crash, refresh, or app kill never loses it), expose it as a toggle inside the **General settings** section in Profile, and add a small info box that explains what happens when it's on vs. off.
+Today the explanatory text under the **Flight Recorder** row in Profile → general settings is always visible, which makes the section feel heavy. We'll tuck it behind a small chevron and only auto-expand it briefly (5 seconds) right after the user flips the switch, so they get instant feedback on what just changed without permanent clutter.
 
 ### What you'll see
 
-In Profile → general settings (the section that holds Stemmesignal / PR / Auto-pause / Vibrering / Vindenhed / Sprog), a new **"Flight Recorder"** row appears directly below **"Auto-pause"**, with the same row style as Coach.
-
-Below that row sits a compact info box (matching the glass card style) that explains:
-
-- **When ON:** "Dit løb gemmes automatisk hvert sekund lokalt på telefonen. Hvis appen crasher eller mister forbindelsen, kan du gendanne løbet næste gang du åbner Orbit Lab."
-- **When OFF:** "Dit aktive løb gemmes ikke undervejs. Mister du forbindelsen eller appen lukker uventet, går dataene tabt."
-
-The box label switches based on the current toggle state, so the user immediately understands what they just chose.
-
-On the home screen, the existing **"Recover unsaved run?"** banner returns — it appears only if a recoverable snapshot was saved and the user hasn't started a new run.
-
-### Files to add (restore)
-
-- `src/lib/flight-recorder.ts` — `localStorage` helpers (`saveSnapshot`, `loadSnapshot`, `clearSnapshot`, `hasRecoverableSnapshot`, `snapshotToRun`) plus `createDebouncedRecorder` for ~1s debounced writes.
-- `src/hooks/use-recover-run.ts` — checks the buffer on mount; returns `{ snapshot, save, discard }`.
-- `src/components/RecoverRunBanner.tsx` — banner shown on `/` when a snapshot is recoverable.
+- The **Flight Recorder** row gets a small chevron on the right (▾ when closed, ▴ when open), tappable independently of the toggle.
+- The info box (with `ON / OFF` label + explanation copy) is hidden by default.
+- Tap the chevron → info box smoothly expands/collapses and stays in that state.
+- Toggle the Flight Recorder switch → info box auto-expands for **5 seconds**, showing the new state's copy ("Dit løb gemmes automatisk…" or "Dit aktive løb gemmes ikke…"), then auto-collapses (unless the user manually opened it, in which case it stays open).
+- Toggling again resets the 5s timer and updates the copy live.
 
 ### Files to edit
 
-- `src/lib/user-profile.ts` — re-add `flightRecorderEnabled?: boolean` to `UserProfile` and `DEFAULT_PROFILE` (default `true`, backwards compatible via `!== false` pattern).
-- `src/hooks/use-run-tracker.ts`:
-  - Re-import flight-recorder helpers.
-  - Add `flightRecorderEnabledRef`, `recorderRef`, and `getRecorder()` back.
-  - On `start()`, read the flag, clear any stale snapshot, reset the recorder.
-  - On `commitRun()` and `discardRun()`, cancel recorder + clear snapshot.
-  - Re-add the `useEffect` that queues a `FlightSnapshot` on every meaningful state change while running/paused.
-- `src/routes/profile.tsx`:
-  - Add the **Flight Recorder** toggle row (icon `ShieldCheck`) right after the **Auto-pause** row in the existing general settings `<section>`.
-  - Directly under that row, render a small info paragraph inside the same section (no new card) that swaps copy based on `profile.flightRecorderEnabled !== false`.
-  - Import `ShieldCheck` from `lucide-react`.
-- `src/routes/index.tsx` — re-mount `<RecoverRunBanner />` in the idle/finished states (same spot as before).
-- `src/lib/i18n.tsx` — re-add the en+da keys:
-  - `profile.flightRecorder`, `profile.flightRecorder.on`, `profile.flightRecorder.off`
-  - `profile.flightRecorder.info.on`, `profile.flightRecorder.info.off` (the explanation copy)
+- **`src/routes/profile.tsx`**
+  - Add local state `flightInfoOpen` (manual) and `flightInfoAutoOpen` (timed).
+  - Split the row: the main button still flips `flightRecorderEnabled`; a small chevron button on the right toggles `flightInfoOpen`.
+  - When the toggle is flipped, set `flightInfoAutoOpen=true` and start a 5s `setTimeout` to clear it; clear any existing timer first so rapid toggles reset the countdown.
+  - Wrap the info box in a `<div>` rendered only when `flightInfoOpen || flightInfoAutoOpen`, with a simple `transition-all` max-height/opacity animation for a clean reveal.
+  - Cleanup the timeout on unmount.
+  - Import `ChevronDown` from `lucide-react`.
+
+No other files change. No new translation keys, no logic changes to the recorder itself.
 
 ### Technical details
 
-- Flight recorder buffer key: `orbit:flight-recorder:v1`, shape `{ runId, startedAt, endedAt, durationMs, distanceM, elevationGainM, points, splits, hrSeries, weather?, avgHrBpm?, maxHrBpm?, lastSavedAt }`.
-- Debounced writes (~1s) so heavy GPS bursts don't block the main thread.
-- Snapshot is considered recoverable if `startedAt` is within the last 24h, has ≥30s of data, and no saved Run with the same `runId` exists.
-- All persistence stays client-side in `localStorage` — no backend changes.
-- Toggle state respects existing `coachEnabled`-style "missing key = on" convention so existing users default to on.
-- Info box uses muted-foreground text inside the glass section (no extra card chrome) so it doesn't visually break the settings list.
+- Auto-reveal uses a single `useRef<number | null>` for the timeout id so re-toggles cancel the previous timer cleanly.
+- Manual-open state is independent of auto-open: closing the box manually during the 5s window cancels the timer; opening manually keeps it open past 5s.
+- Animation: `grid-rows-[0fr]` → `grid-rows-[1fr]` trick (or `max-h-0` → `max-h-40`) with `overflow-hidden` so the surrounding settings list doesn't jump.
+- Chevron button uses the same hit-area pattern as other inline icon buttons in this file; rotates 180° via `className` when open.
