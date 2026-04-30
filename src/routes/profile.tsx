@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
-import { Activity, Bell, ChevronDown, Heart, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Activity, Bell, ChevronDown, FileText, Heart, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -9,6 +9,7 @@ import ShoesSection from "@/components/ShoesSection";
 import CoachOnboarding from "@/components/CoachOnboarding";
 import RecoveryStatus from "@/components/RecoveryStatus";
 import HealthPermissionSheet from "@/components/HealthPermissionSheet";
+import LegalSheet from "@/components/LegalSheet";
 import SensorsSection from "@/components/SensorsSection";
 import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
 import { useHrZones } from "@/hooks/use-hr-zones";
