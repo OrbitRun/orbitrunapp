@@ -1,16 +1,29 @@
-## Fix: "Gå til opsætning" skal åbne Coach Onboarding
+## Mål
+Når brugeren vælger erfaringsniveau **Pro** (`expert`), skal det forudvalgte sekundære stat-felt **Stigning** (elevation) erstattes af **Puls** (hrBpm).
 
-I dag scroller knappen i `CoachInfoModal` blot ned til lyd/haptik-sektionen i bunden af Profile. Den skal i stedet åbne selve **Coach Onboarding** (det modal med de 3-4 spørgsmål: niveau, frekvens, mål, evt. distance) — samme flow som "Konfigurér" / "Tilpas" knappen i Orbit Coach-rækken bruger.
+## Hvor
+`src/lib/stat-metrics.ts` – objektet `LEVEL_LAYOUTS.expert`:
 
-### Ændringer
+```ts
+expert: {
+  hero: ["distance", "pace"],
+  secondary: ["duration", "cadence", "elevation"], // ← elevation skiftes til hrBpm
+},
+```
 
-**`src/routes/profile.tsx`**
-- Erstat `onNavigateToSettings={handleNavigateToAudioSettings}` med en handler der sætter `setCoachOpen(true)` (samme state der allerede styrer `<CoachOnboarding>`).
-- Fjern den nu ubrugte `handleNavigateToAudioSettings` funktion og `audioSectionRef` (ref + import af `useRef` hvis ikke længere brugt andre steder — tjekkes og bevares hvis nødvendigt).
-- Fjern `ref={audioSectionRef}` og `scroll-mt-4` fra audio-sektionen.
+## Ændring
+Skift `"elevation"` → `"hrBpm"` i `expert.secondary`, så Pro-layoutet bliver:
 
-**`src/components/CoachInfoModal.tsx`**
-- Ingen API-ændringer; prop `onNavigateToSettings` beholder navnet (kalder bare det nye handler). Modal lukker stadig efter klik, hvorefter Coach Onboarding mounter ovenpå.
+```ts
+expert: {
+  hero: ["distance", "pace"],
+  secondary: ["duration", "cadence", "hrBpm"],
+},
+```
 
-### Resultat
-Brugeren trykker info-ikonet ved Orbit Coach → ser modal-forklaring → trykker "Gå til opsætning" → modal lukker og Coach Onboarding (3-4 spørgsmål) åbner med det samme.
+## Påvirkning
+- Kun standardlayoutet for Pro ændres. Brugere som allerede har gemt et tilpasset layout (i `localStorage` under `orbit:stat-layout:v2:expert`) bevarer deres valg – `loadLayout` falder kun tilbage til standarden, hvis der ikke findes et gemt layout.
+- Recreational/Motionist-layoutet er uændret.
+- Brugeren kan stadig manuelt vælge Stigning igen via MetricPicker.
+
+## Ingen øvrige filer skal ændres.
