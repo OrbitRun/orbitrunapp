@@ -509,6 +509,38 @@ const en: Dict = {
   "recover.body": "We saved your last run as you went. Save it now or discard.",
   "recover.save": "Save run",
   "recover.discard": "Discard",
+
+  // Legal
+  "legal.section": "Legal",
+  "legal.privacy.row": "Privacy Policy",
+  "legal.terms.row": "Terms & Disclaimer",
+  "legal.close": "Close",
+  "legal.privacy.title": "Orbit Lab Privacy Policy",
+  "legal.privacy.intro":
+    "Orbit Lab is committed to protecting your privacy. We collect location data (GPS) to track your running routes and pace, and biometric data (heart rate) to provide personalized training insights via our AI coach.",
+  "legal.privacy.1.title": "Data Collection",
+  "legal.privacy.1.body":
+    "Your data is stored securely and used exclusively to enhance your training experience within the app.",
+  "legal.privacy.2.title": "Third Parties",
+  "legal.privacy.2.body":
+    "We never sell or share your personal health data with third parties.",
+  "legal.privacy.3.title": "Apple Health",
+  "legal.privacy.3.body":
+    "With your permission, we read and write data to Apple Health to synchronize your workout history.",
+  "legal.privacy.4.title": "Your Rights",
+  "legal.privacy.4.body":
+    "You can delete your profile and all associated data at any time directly within the app.",
+  "legal.terms.title": "Terms & Medical Disclaimer",
+  "legal.terms.intro": "By using Orbit Lab, you agree to the following:",
+  "legal.terms.1.title": "Not a Medical Device",
+  "legal.terms.1.body":
+    "Orbit Lab and Orbit Coach AI provide training guidance only. The app is not a medical device and does not replace professional medical advice.",
+  "legal.terms.2.title": "Health",
+  "legal.terms.2.body":
+    "Always consult a physician before starting a new exercise program, especially if you have known heart conditions or other health concerns.",
+  "legal.terms.3.title": "Safety",
+  "legal.terms.3.body":
+    "Always stay aware of your surroundings while running. Orbit Lab is not responsible for accidents or injuries sustained while using the app.",
 };
 
 const da: Dict = {
