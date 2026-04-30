@@ -79,6 +79,29 @@ export function speakZoneEntered(zone: number, lang: Lang, template: string) {
 export function resetZoneCueState() {
   lastZoneSpoken = null;
   lastZoneAt = 0;
+  lastPacingStatus = null;
+  lastPacingAt = 0;
+}
+
+// Throttled pacing cue: only speaks when the off-target status persists or
+// changes, with at least 45s between callouts. `on-target` is silent.
+let lastPacingStatus: string | null = null;
+let lastPacingAt = 0;
+
+export function speakPacingCue(
+  status: "too-fast" | "too-slow" | "on-target",
+  lang: Lang,
+  text: string,
+) {
+  if (status === "on-target") {
+    lastPacingStatus = status;
+    return;
+  }
+  const now = Date.now();
+  if (status === lastPacingStatus && now - lastPacingAt < 45_000) return;
+  lastPacingStatus = status;
+  lastPacingAt = now;
+  speakLocalized(text, lang);
 }
 
 // Pre-warm the audio context + voice list on a user gesture so iOS allows playback later.
