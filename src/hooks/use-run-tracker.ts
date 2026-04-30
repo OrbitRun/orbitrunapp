@@ -25,11 +25,6 @@ import {
   type GhostRef,
 } from "@/lib/ghost-runner";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
-import {
-  clearSnapshot as clearFlightSnapshot,
-  createDebouncedRecorder,
-  type FlightSnapshot,
-} from "@/lib/flight-recorder";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -187,9 +182,8 @@ export function useRunTracker() {
   const postStopRunIdRef = useRef<string | null>(null);
   const postStopTimerRef = useRef<number | null>(null);
 
-  // ---- Auto-pause + Flight Recorder --------------------------------------
+  // ---- Auto-pause --------------------------------------------------------
   const autoPauseEnabledRef = useRef<boolean>(true);
-  const flightRecorderEnabledRef = useRef<boolean>(true);
   // True only when the *current* paused state was triggered by auto-pause
   // (so a manual pause doesn't get auto-resumed).
   const autoPausedRef = useRef<boolean>(false);
@@ -202,13 +196,7 @@ export function useRunTracker() {
   const autoResumeMovingSinceRef = useRef<number | null>(null);
   // Throttle the spoken auto-pause/resume cues.
   const lastAutoCueAtRef = useRef<number>(0);
-  // Debounced flight-recorder writer (single instance per tracker lifetime).
-  const recorderRef = useRef<ReturnType<typeof createDebouncedRecorder> | null>(null);
-  function getRecorder() {
-    if (!recorderRef.current) recorderRef.current = createDebouncedRecorder(1000);
-    return recorderRef.current;
-  }
-  // Captured run identity for the snapshot — populated on `start()`.
+  // Captured run identity — populated on `start()`.
   const runIdRef = useRef<string | null>(null);
 
   // Called whenever a fresh BPM sample arrives (BT or Health). Maintains the
@@ -541,18 +529,12 @@ export function useRunTracker() {
     hapticEnabledRef.current = profile.hapticEnabled !== false;
     prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
     autoPauseEnabledRef.current = profile.autoPauseEnabled !== false;
-    flightRecorderEnabledRef.current = profile.flightRecorderEnabled !== false;
     autoPausedRef.current = false;
     movementWindowRef.current = [];
     cumDistanceRef.current = 0;
     autoResumeMovingSinceRef.current = null;
     lastAutoCueAtRef.current = 0;
     runIdRef.current = genId();
-    // Wipe any stale flight-recorder snapshot from a previous session before
-    // we start writing a fresh one. (Recovery flow has its own copy.)
-    clearFlightSnapshot();
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
     lastSplitKmRef.current = 0;
     lastCueIndexRef.current = 0;
     announcedDistancePrsRef.current = new Set();
@@ -764,9 +746,6 @@ export function useRunTracker() {
 
   const commitRun = useCallback((run: Run) => {
     saveRun(run);
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    clearFlightSnapshot();
     // Backfill weather if the in-flight fetch never completed before stop().
     if (!run.weather && run.points.length > 0) {
       const seed = run.points[0];
@@ -806,9 +785,6 @@ export function useRunTracker() {
   }, []);
 
   const discardRun = useCallback(() => {
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    clearFlightSnapshot();
     setState({ ...initial });
   }, []);
 
@@ -869,41 +845,6 @@ export function useRunTracker() {
       }
     }
   }, [state.status, state.distanceM, state.currentPaceSecPerKm, doPause, doResume]);
-
-  // ---- Flight Recorder -------------------------------------------------
-  // Persist a snapshot to localStorage on every meaningful state change so a
-  // crash/refresh during a run can offer recovery on next launch.
-  useEffect(() => {
-    if (!flightRecorderEnabledRef.current) return;
-    if (state.status !== "running" && state.status !== "paused") return;
-    if (!state.startedAt || !runIdRef.current) return;
-    const snapshot: FlightSnapshot = {
-      runId: runIdRef.current,
-      startedAt: state.startedAt,
-      endedAt: Date.now(),
-      durationMs: state.elapsedMs,
-      distanceM: state.distanceM,
-      elevationGainM: state.elevationGainM,
-      points: state.points,
-      splits: state.splits,
-      hrSeries: hrSeriesRef.current,
-      weather: weatherRef.current ?? undefined,
-      avgHrBpm: state.avgHrBpm ?? undefined,
-      maxHrBpm: state.maxHrBpm ?? undefined,
-      lastSavedAt: Date.now(),
-    };
-    getRecorder().queue(snapshot);
-  }, [
-    state.status,
-    state.startedAt,
-    state.elapsedMs,
-    state.distanceM,
-    state.elevationGainM,
-    state.points,
-    state.splits,
-    state.avgHrBpm,
-    state.maxHrBpm,
-  ]);
 
   useEffect(() => {
     return () => {

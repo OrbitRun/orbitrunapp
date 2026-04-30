@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useState } from "react";
-import { Activity, Bell, Heart, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Activity, Bell, Heart, Languages, MapPin, PauseCircle, Sparkles, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -212,34 +212,6 @@ function ProfilePage() {
         )}
       </section>
 
-      {/* Auto-pause + Flight Recorder */}
-      <section className="mt-4 glass rounded-2xl divide-y divide-border">
-        <button
-          onClick={() => update({ autoPauseEnabled: profile.autoPauseEnabled === false })}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <PauseCircle className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.autoPause")}</div>
-          <div className="text-xs text-muted-foreground">
-            {t(profile.autoPauseEnabled === false ? "profile.autoPause.off" : "profile.autoPause.on")}
-          </div>
-        </button>
-        <button
-          onClick={() => update({ flightRecorderEnabled: profile.flightRecorderEnabled === false })}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <ShieldCheck className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">{t("profile.flightRecorder")}</div>
-          <div className="text-xs text-muted-foreground">
-            {t(profile.flightRecorderEnabled === false ? "profile.flightRecorder.off" : "profile.flightRecorder.on")}
-          </div>
-        </button>
-      </section>
-
       {/* HR zones shortcut */}
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <Link
@@ -310,6 +282,18 @@ function ProfilePage() {
           <div className="flex-1 text-sm font-semibold">{t("profile.prVoice")}</div>
           <div className="text-xs text-muted-foreground">
             {profile.prVoiceEnabled ? t("profile.prVoice.value.on") : t("profile.prVoice.value.off")}
+          </div>
+        </button>
+        <button
+          onClick={() => update({ autoPauseEnabled: profile.autoPauseEnabled === false })}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"
+        >
+          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+            <PauseCircle className="h-4 w-4" />
+          </div>
+          <div className="flex-1 text-sm font-semibold">{t("profile.autoPause")}</div>
+          <div className="text-xs text-muted-foreground">
+            {t(profile.autoPauseEnabled === false ? "profile.autoPause.off" : "profile.autoPause.on")}
           </div>
         </button>
         <button

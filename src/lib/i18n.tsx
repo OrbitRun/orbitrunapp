@@ -496,9 +496,6 @@ const en: Dict = {
   "profile.autoPause": "Auto-pause",
   "profile.autoPause.on": "On",
   "profile.autoPause.off": "Off",
-  "profile.flightRecorder": "Flight Recorder",
-  "profile.flightRecorder.on": "On",
-  "profile.flightRecorder.off": "Off",
 
   // Recover unsaved run banner
   "recover.title": "Recover unsaved run?",
@@ -980,9 +977,6 @@ const da: Dict = {
   "profile.autoPause": "Auto-pause",
   "profile.autoPause.on": "Til",
   "profile.autoPause.off": "Fra",
-  "profile.flightRecorder": "Flight Recorder",
-  "profile.flightRecorder.on": "Til",
-  "profile.flightRecorder.off": "Fra",
 
   // Recover unsaved run banner
   "recover.title": "Gendan ikke-gemt løb?",
