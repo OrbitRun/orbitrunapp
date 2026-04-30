@@ -225,9 +225,9 @@ export default function FocusRunView({
           </div>
         </div>
       )}
-      {/* Ghost / sensor bar */}
-      {(ghostActive || tracker.hrSource === "bt") && (
-        <div className="px-4 pb-2 flex justify-center gap-2">
+      {/* Ghost / sensor / pacing bar */}
+      {(ghostActive || tracker.hrSource === "bt" || (pacingCfg.enabled && liveZone != null)) && (
+        <div className="px-4 pb-2 flex flex-wrap justify-center gap-2">
           {ghostActive && (
             <div
               className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border ${
@@ -261,6 +261,13 @@ export default function FocusRunView({
                 <span className="opacity-80 ml-1">Z{liveZone}</span>
               )}
             </div>
+          )}
+          {pacingCfg.enabled && liveZone != null && (
+            <ZonePacingChip
+              zone={liveZone}
+              currentPaceSecPerKm={tracker.currentPaceSecPerKm}
+              cfg={pacingCfg}
+            />
           )}
         </div>
       )}
