@@ -46,6 +46,14 @@ function ProfilePage() {
   const healthAvailable = isHealthAvailable();
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
+  const [coachInfoOpen, setCoachInfoOpen] = useState(false);
+  const audioSectionRef = useRef<HTMLElement>(null);
+
+  const handleNavigateToAudioSettings = () => {
+    requestAnimationFrame(() => {
+      audioSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
 
 
   useEffect(() => {
