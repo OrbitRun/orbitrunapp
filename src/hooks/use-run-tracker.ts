@@ -187,6 +187,30 @@ export function useRunTracker() {
   const postStopRunIdRef = useRef<string | null>(null);
   const postStopTimerRef = useRef<number | null>(null);
 
+  // ---- Auto-pause + Flight Recorder --------------------------------------
+  const autoPauseEnabledRef = useRef<boolean>(true);
+  const flightRecorderEnabledRef = useRef<boolean>(true);
+  // True only when the *current* paused state was triggered by auto-pause
+  // (so a manual pause doesn't get auto-resumed).
+  const autoPausedRef = useRef<boolean>(false);
+  // Sliding window of (t, distance) for short-window movement detection.
+  const movementWindowRef = useRef<{ t: number; d: number }[]>([]);
+  // Cumulative moving distance counter (independent of `state.distanceM` so
+  // the auto-pause logic can run before setState commits).
+  const cumDistanceRef = useRef<number>(0);
+  // Continuous time the runner has been moving fast enough to auto-resume.
+  const autoResumeMovingSinceRef = useRef<number | null>(null);
+  // Throttle the spoken auto-pause/resume cues.
+  const lastAutoCueAtRef = useRef<number>(0);
+  // Debounced flight-recorder writer (single instance per tracker lifetime).
+  const recorderRef = useRef<ReturnType<typeof createDebouncedRecorder> | null>(null);
+  function getRecorder() {
+    if (!recorderRef.current) recorderRef.current = createDebouncedRecorder(1000);
+    return recorderRef.current;
+  }
+  // Captured run identity for the snapshot — populated on `start()`.
+  const runIdRef = useRef<string | null>(null);
+
   // Called whenever a fresh BPM sample arrives (BT or Health). Maintains the
   // rolling window, dispatches a `orbit:hr-spike` event when BPM rises >25 bpm
   // versus ~30s ago, and appends to the post-stop series when finalizing HRR.
