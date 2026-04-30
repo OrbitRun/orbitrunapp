@@ -10,6 +10,7 @@ import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
 import FocusRunView from "@/components/FocusRunView";
+import RecoverRunBanner from "@/components/RecoverRunBanner";
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
 import { useRunTracker } from "@/hooks/use-run-tracker";
