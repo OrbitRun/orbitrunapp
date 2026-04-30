@@ -44,6 +44,7 @@ function ProfilePage() {
   );
   const healthAvailable = isHealthAvailable();
   const hrZones = useHrZones();
+  const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
 
   const [flightInfoOpen, setFlightInfoOpen] = useState(false);
   const [flightInfoAutoOpen, setFlightInfoAutoOpen] = useState(false);
