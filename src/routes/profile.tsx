@@ -384,3 +384,97 @@ function ProfilePage() {
     </main>
   );
 }
+
+type SettingRowWithInfoProps = {
+  icon: React.ReactNode;
+  label: string;
+  valueText: string;
+  infoText: string;
+  infoBadge?: string;
+  onToggle: () => void;
+};
+
+function SettingRowWithInfo({ icon, label, valueText, infoText, infoBadge, onToggle }: SettingRowWithInfoProps) {
+  const [open, setOpen] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current != null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const handleRowToggle = () => {
+    onToggle();
+    if (timerRef.current != null) window.clearTimeout(timerRef.current);
+    setAutoOpen(true);
+    timerRef.current = window.setTimeout(() => {
+      setAutoOpen(false);
+      timerRef.current = null;
+    }, 5000);
+  };
+
+  const expanded = open || autoOpen;
+
+  return (
+    <>
+      <div
+        onClick={handleRowToggle}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleRowToggle();
+          }
+        }}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer text-left"
+      >
+        <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+          {icon}
+        </div>
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <div className="text-sm font-semibold truncate">{label}</div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (timerRef.current != null) {
+                window.clearTimeout(timerRef.current);
+                timerRef.current = null;
+              }
+              setAutoOpen(false);
+              setOpen((v) => !v);
+            }}
+            aria-label="Toggle info"
+            className="h-6 w-6 grid place-items-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
+          </button>
+        </div>
+        <div className="text-xs text-muted-foreground">{valueText}</div>
+      </div>
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-4 py-3 bg-white/[0.02] border-l-2 border-neon/30">
+            <div className="flex items-start gap-2">
+              {infoBadge && (
+                <div className="text-[10px] uppercase tracking-[0.18em] text-neon font-bold mt-0.5 shrink-0">
+                  {infoBadge}
+                </div>
+              )}
+              <p className="text-[11px] leading-snug text-muted-foreground">{infoText}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
