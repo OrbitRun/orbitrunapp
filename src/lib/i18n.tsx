@@ -469,6 +469,24 @@ const en: Dict = {
   "hrz.zone.4.desc": "Lactate threshold — race-pace effort.",
   "hrz.zone.5.desc": "VO₂max & anaerobic — short, intense intervals.",
 
+  // Zone-based pacing
+  "pacing.title": "Zone pacing",
+  "pacing.subtitle": "Suggest a target pace based on your current heart-rate zone.",
+  "pacing.enable": "Enable zone pacing",
+  "pacing.basePace": "Base easy pace (Z3)",
+  "pacing.basePaceHint": "Your reference pace. We adjust other zones from here.",
+  "pacing.useRecent": "Use median of recent runs",
+  "pacing.offset": "Offset",
+  "pacing.offsetUnit": "s/km vs base",
+  "pacing.zoneTarget": "Target",
+  "pacing.target": "Target",
+  "pacing.tooFast": "Ease off",
+  "pacing.tooSlow": "Pick it up",
+  "pacing.onTarget": "On target",
+  "pacing.cue.easeOff": "Ease off — slow your pace",
+  "pacing.cue.pickUp": "Pick it up — push the pace",
+  "pacing.reset": "Reset to defaults",
+
   // Coach override + live HR spike alert
   "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
   "focus.hrSpike": "Heart rate climbing fast — check your breathing",
