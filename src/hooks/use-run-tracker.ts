@@ -638,14 +638,20 @@ export function useRunTracker() {
     w.postMessage({ type: "start", startedAt, pauseAccum: 0 });
   }, [haptic, armGps, ensureWorker, noteBpmSample]);
 
-  const pause = useCallback(() => {
+  // Internal: shared pause primitive used by both manual and auto-pause.
+  const doPause = useCallback((auto: boolean) => {
     haptic(25);
     pausedAtRef.current = Date.now();
     workerRef.current?.postMessage({ type: "pause", at: pausedAtRef.current });
-    setState((p) => ({ ...p, status: "paused" }));
+    autoPausedRef.current = auto;
+    setState((p) =>
+      p.status === "running"
+        ? { ...p, status: "paused", autoPaused: auto, currentPaceSecPerKm: 0 }
+        : p,
+    );
   }, [haptic]);
 
-  const resume = useCallback(() => {
+  const doResume = useCallback(() => {
     haptic(25);
     const at = Date.now();
     if (pausedAtRef.current) {
@@ -653,8 +659,15 @@ export function useRunTracker() {
       pausedAtRef.current = null;
     }
     workerRef.current?.postMessage({ type: "resume", at });
-    setState((p) => ({ ...p, status: "running" }));
+    autoPausedRef.current = false;
+    autoResumeMovingSinceRef.current = null;
+    setState((p) =>
+      p.status === "paused" ? { ...p, status: "running", autoPaused: false } : p,
+    );
   }, [haptic]);
+
+  const pause = useCallback(() => doPause(false), [doPause]);
+  const resume = useCallback(() => doResume(), [doResume]);
 
   // Stops tracking and returns the in-memory Run WITHOUT persisting it.
   // Caller decides whether to save (commitRun) or discard (discardRun).
