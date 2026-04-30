@@ -46,29 +46,6 @@ function ProfilePage() {
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
 
-  const [flightInfoOpen, setFlightInfoOpen] = useState(false);
-  const [flightInfoAutoOpen, setFlightInfoAutoOpen] = useState(false);
-  const flightInfoTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (flightInfoTimerRef.current != null) {
-        window.clearTimeout(flightInfoTimerRef.current);
-      }
-    };
-  }, []);
-
-  const handleToggleFlightRecorder = () => {
-    update({ flightRecorderEnabled: profile.flightRecorderEnabled === false });
-    if (flightInfoTimerRef.current != null) {
-      window.clearTimeout(flightInfoTimerRef.current);
-    }
-    setFlightInfoAutoOpen(true);
-    flightInfoTimerRef.current = window.setTimeout(() => {
-      setFlightInfoAutoOpen(false);
-      flightInfoTimerRef.current = null;
-    }, 5000);
-  };
 
   useEffect(() => {
     const all = loadRuns();
