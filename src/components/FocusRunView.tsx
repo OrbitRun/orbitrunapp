@@ -226,8 +226,14 @@ export default function FocusRunView({
         </div>
       )}
       {/* Ghost / sensor / pacing bar */}
-      {(ghostActive || tracker.hrSource === "bt" || (pacingCfg.enabled && liveZone != null)) && (
+      {(ghostActive || tracker.hrSource === "bt" || (pacingCfg.enabled && liveZone != null) || tracker.autoPaused) && (
         <div className="px-4 pb-2 flex flex-wrap justify-center gap-2">
+          {tracker.autoPaused && (
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border border-amber-300/50 bg-amber-300/10 text-amber-200">
+              <Pause className="h-3 w-3" />
+              <span>{tr("focus.autoPause")}</span>
+            </div>
+          )}
           {ghostActive && (
             <div
               className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] border ${
