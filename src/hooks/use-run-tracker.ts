@@ -543,6 +543,11 @@ export function useRunTracker() {
     hapticEnabledRef.current = profile.hapticEnabled !== false;
     prVoiceEnabledRef.current = profile.prVoiceEnabled !== false;
     autoPauseEnabledRef.current = profile.autoPauseEnabled !== false;
+    flightRecorderEnabledRef.current = profile.flightRecorderEnabled !== false;
+    // Clear any stale snapshot from a previous session before this run starts
+    // accumulating new data.
+    clearFlightSnapshot();
+    recorderRef.current?.cancel();
     autoPausedRef.current = false;
     movementWindowRef.current = [];
     cumDistanceRef.current = 0;
