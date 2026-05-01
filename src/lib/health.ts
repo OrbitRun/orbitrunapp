@@ -107,3 +107,19 @@ export function stopHeartRatePolling(): void {
     pollTimer = null;
   }
 }
+
+/**
+ * Convenience: ensure permission, then start polling. Returns the granted
+ * status. Used by the Bluetooth façade as a fallback HR source on iOS when
+ * direct BLE is not available or pairing fails.
+ */
+export async function startHealthHeartRateStream(
+  cb: (bpm: number, t: number) => void,
+  intervalMs = 5000,
+): Promise<HealthPermissionStatus> {
+  const status = await requestHeartRatePermission();
+  if (status !== "granted") return status;
+  startHeartRatePolling(cb, intervalMs);
+  return status;
+}
+
