@@ -9,6 +9,7 @@ type Dict = Record<string, string>;
 const en: Dict = {
   // Header / status
   "app.brand": "Orbit Run",
+  "profile.athlete": "Athlete",
   "status.ready": "Ready to run",
   "status.running": "In motion",
   "status.paused": "Paused",
@@ -565,6 +566,7 @@ const en: Dict = {
 
 const da: Dict = {
   "app.brand": "Orbit Run",
+  "profile.athlete": "Atlet",
   "status.ready": "Klar til løb",
   "status.running": "I bevægelse",
   "status.paused": "Pause",
