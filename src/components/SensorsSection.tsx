@@ -158,7 +158,7 @@ export default function SensorsSection() {
         </div>
         <button
           type="button"
-          onClick={openModal}
+          onClick={onRowClick}
           disabled={!supported}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left disabled:opacity-60"
         >
