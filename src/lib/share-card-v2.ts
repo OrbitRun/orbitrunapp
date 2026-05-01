@@ -149,14 +149,14 @@ function drawOverlay(
   const sans = "ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter";
   const mono = "ui-monospace, Menlo, Consolas, monospace";
 
-  // Top-left: ORBIT LAB wordmark.
+  // Top-left: ORBIT RUN wordmark.
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
   ctx.fillStyle = "rgba(255,255,255,0.92)";
   ctx.font = `800 28px ${sans}`;
   ctx.letterSpacing = "6px"; // ignored by canvas but kept for intent
   // Manual letter-spacing emulation:
-  drawTracked(ctx, "ORBIT LAB", 80, 100, 6);
+  drawTracked(ctx, "ORBIT RUN", 80, 100, 6);
 
   // Top-right: PR pill if any.
   const hasPr = previewRunPrs(run).length > 0;
@@ -306,7 +306,7 @@ export async function shareBlob(
       await nav.share({
         files: [file],
         title: lang === "da" ? "Mit løb" : "My run",
-        text: lang === "da" ? "Friskt løb fra Orbit Lab" : "Fresh run from Orbit Lab",
+        text: lang === "da" ? "Friskt løb fra Orbit Run" : "Fresh run from Orbit Run",
       });
       return "shared";
     } catch (err) {

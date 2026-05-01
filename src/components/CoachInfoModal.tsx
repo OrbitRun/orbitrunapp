@@ -58,7 +58,7 @@ export default function CoachInfoModal({
         <div className="relative flex items-start justify-between gap-3 px-5 pt-5 pb-3">
           <div className="min-w-0">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
-              Orbit Lab
+              Orbit Run
             </div>
             <h2
               id="coach-info-title"

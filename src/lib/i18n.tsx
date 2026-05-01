@@ -8,7 +8,7 @@ type Dict = Record<string, string>;
 
 const en: Dict = {
   // Header / status
-  "app.brand": "Orbit Lab",
+  "app.brand": "Orbit Run",
   "status.ready": "Ready to run",
   "status.running": "In motion",
   "status.paused": "Paused",
@@ -174,7 +174,7 @@ const en: Dict = {
   "greet.welcome": "Welcome, {name}",
 
   // Onboarding
-  "onb.title": "Welcome to Orbit Lab",
+  "onb.title": "Welcome to Orbit Run",
   "onb.subtitle": "Let's personalize your experience",
   "onb.step.name": "What's your name?",
   "onb.step.goal": "What's your primary goal?",
@@ -432,7 +432,7 @@ const en: Dict = {
   "hr.zone.5": "Max",
   "hr.export.pdf": "Export PDF",
   "hr.export.title": "Heart Rate Report",
-  "hr.export.subtitle": "Orbit Lab",
+  "hr.export.subtitle": "Orbit Run",
   "hr.export.date": "Date",
   "hr.export.generated": "Generated",
 
@@ -510,7 +510,7 @@ const en: Dict = {
   "profile.flightRecorder.on": "On",
   "profile.flightRecorder.off": "Off",
   "profile.flightRecorder.info.on":
-    "Your run is auto-saved to this device every second. If the app crashes or loses connection, you can recover the run next time you open Orbit Lab.",
+    "Your run is auto-saved to this device every second. If the app crashes or loses connection, you can recover the run next time you open Orbit Run.",
   "profile.flightRecorder.info.off":
     "Your active run is not saved while running. If you lose connection or the app closes unexpectedly, the data will be lost.",
   "profile.audio.info":
@@ -535,9 +535,9 @@ const en: Dict = {
   "legal.privacy.row": "Privacy Policy",
   "legal.terms.row": "Terms & Disclaimer",
   "legal.close": "Close",
-  "legal.privacy.title": "Orbit Lab Privacy Policy",
+  "legal.privacy.title": "Orbit Run Privacy Policy",
   "legal.privacy.intro":
-    "Orbit Lab is committed to protecting your privacy. We collect location data (GPS) to track your running routes and pace, and biometric data (heart rate) to provide personalized training insights via our AI coach.",
+    "Orbit Run is committed to protecting your privacy. We collect location data (GPS) to track your running routes and pace, and biometric data (heart rate) to provide personalized training insights via our AI coach.",
   "legal.privacy.1.title": "Data Collection",
   "legal.privacy.1.body":
     "Your data is stored securely and used exclusively to enhance your training experience within the app.",
@@ -551,20 +551,20 @@ const en: Dict = {
   "legal.privacy.4.body":
     "You can delete your profile and all associated data at any time directly within the app.",
   "legal.terms.title": "Terms & Medical Disclaimer",
-  "legal.terms.intro": "By using Orbit Lab, you agree to the following:",
+  "legal.terms.intro": "By using Orbit Run, you agree to the following:",
   "legal.terms.1.title": "Not a Medical Device",
   "legal.terms.1.body":
-    "Orbit Lab and Orbit Coach AI provide training guidance only. The app is not a medical device and does not replace professional medical advice.",
+    "Orbit Run and Orbit Coach AI provide training guidance only. The app is not a medical device and does not replace professional medical advice.",
   "legal.terms.2.title": "Health",
   "legal.terms.2.body":
     "Always consult a physician before starting a new exercise program, especially if you have known heart conditions or other health concerns.",
   "legal.terms.3.title": "Safety",
   "legal.terms.3.body":
-    "Always stay aware of your surroundings while running. Orbit Lab is not responsible for accidents or injuries sustained while using the app.",
+    "Always stay aware of your surroundings while running. Orbit Run is not responsible for accidents or injuries sustained while using the app.",
 };
 
 const da: Dict = {
-  "app.brand": "Orbit Lab",
+  "app.brand": "Orbit Run",
   "status.ready": "Klar til løb",
   "status.running": "I bevægelse",
   "status.paused": "Pause",
@@ -702,7 +702,7 @@ const da: Dict = {
   "greet.goal": "Lad os ramme dit mål om {goal}!",
   "greet.welcome": "Velkommen, {name}",
 
-  "onb.title": "Velkommen til Orbit Lab",
+  "onb.title": "Velkommen til Orbit Run",
   "onb.subtitle": "Lad os personalisere din oplevelse",
   "onb.step.name": "Hvad hedder du?",
   "onb.step.goal": "Hvad er dit primære mål?",
@@ -972,7 +972,7 @@ const da: Dict = {
   "hr.zone.5": "Maks",
   "hr.export.pdf": "Eksportér PDF",
   "hr.export.title": "Pulsrapport",
-  "hr.export.subtitle": "Orbit Lab",
+  "hr.export.subtitle": "Orbit Run",
   "hr.export.date": "Dato",
   "hr.export.generated": "Genereret",
 
@@ -1050,7 +1050,7 @@ const da: Dict = {
   "profile.flightRecorder.on": "Til",
   "profile.flightRecorder.off": "Fra",
   "profile.flightRecorder.info.on":
-    "Dit løb gemmes automatisk hvert sekund lokalt på telefonen. Hvis appen crasher eller mister forbindelsen, kan du gendanne løbet næste gang du åbner Orbit Lab.",
+    "Dit løb gemmes automatisk hvert sekund lokalt på telefonen. Hvis appen crasher eller mister forbindelsen, kan du gendanne løbet næste gang du åbner Orbit Run.",
   "profile.flightRecorder.info.off":
     "Dit aktive løb gemmes ikke undervejs. Mister du forbindelsen eller lukker appen uventet, går dataene tabt.",
   "profile.audio.info":
@@ -1075,9 +1075,9 @@ const da: Dict = {
   "legal.privacy.row": "Privatlivspolitik",
   "legal.terms.row": "Vilkår & Ansvarsfraskrivelse",
   "legal.close": "Luk",
-  "legal.privacy.title": "Privatlivspolitik for Orbit Lab",
+  "legal.privacy.title": "Privatlivspolitik for Orbit Run",
   "legal.privacy.intro":
-    "Orbit Lab er forpligtet til at beskytte dit privatliv. Vi indsamler lokationsdata (GPS) for at kunne tracke dine løberuter og hastighed, samt biometriske data (puls) for at give dig personlig træningsindsigt via vores AI-coach.",
+    "Orbit Run er forpligtet til at beskytte dit privatliv. Vi indsamler lokationsdata (GPS) for at kunne tracke dine løberuter og hastighed, samt biometriske data (puls) for at give dig personlig træningsindsigt via vores AI-coach.",
   "legal.privacy.1.title": "Dataindsamling",
   "legal.privacy.1.body":
     "Dine data gemmes sikkert og bruges udelukkende til at forbedre din træningsoplevelse i appen.",
@@ -1091,16 +1091,16 @@ const da: Dict = {
   "legal.privacy.4.body":
     "Du kan til enhver tid slette din profil og alle tilhørende data direkte i appen.",
   "legal.terms.title": "Vilkår og Medicinsk Ansvarsfraskrivelse",
-  "legal.terms.intro": "Ved at bruge Orbit Lab accepterer du følgende:",
+  "legal.terms.intro": "Ved at bruge Orbit Run accepterer du følgende:",
   "legal.terms.1.title": "Ikke medicinsk udstyr",
   "legal.terms.1.body":
-    "Orbit Lab og Orbit Coach AI leverer kun vejledende træningsdata. Appen er ikke medicinsk udstyr og kan ikke erstatte professionel lægelig rådgivning.",
+    "Orbit Run og Orbit Coach AI leverer kun vejledende træningsdata. Appen er ikke medicinsk udstyr og kan ikke erstatte professionel lægelig rådgivning.",
   "legal.terms.2.title": "Helbred",
   "legal.terms.2.body":
     "Konsultér altid en læge, før du påbegynder et nyt træningsprogram, især hvis du har kendte hjerteproblemer eller andre helbredsmæssige udfordringer.",
   "legal.terms.3.title": "Sikkerhed",
   "legal.terms.3.body":
-    "Vær altid opmærksom på dine omgivelser under løb. Orbit Lab er ikke ansvarlig for ulykker eller skader opstået under brug af appen.",
+    "Vær altid opmærksom på dine omgivelser under løb. Orbit Run er ikke ansvarlig for ulykker eller skader opstået under brug af appen.",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };

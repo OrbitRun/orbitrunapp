@@ -104,7 +104,7 @@ function ProfilePage() {
         />
         <div className="relative flex items-center">
           <div className="text-[8px] uppercase tracking-[0.4em] text-neon font-black">
-            Orbit Lab · Runner
+            Orbit Run · Runner
           </div>
         </div>
         <div className="relative mt-3 flex items-center gap-3">
@@ -388,7 +388,7 @@ function ProfilePage() {
       </section>
 
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-        Orbit Lab · v1.0
+        Orbit Run · v1.0
       </p>
       {coachOpen && <CoachOnboarding onClose={() => { setCoachOpen(false); setProfile(loadProfile()); }} />}
       <HealthPermissionSheet

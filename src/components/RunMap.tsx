@@ -25,7 +25,7 @@ export default function RunMap(props: Props) {
 }
 
 // Resolve the neon green primary token at runtime so the path matches the
-// rest of the Orbit Lab aesthetic without hard-coding hex values.
+// rest of the Orbit Run aesthetic without hard-coding hex values.
 function readNeonColor(): string {
   if (typeof window === "undefined") return "#9aff1f";
   const v = getComputedStyle(document.documentElement).getPropertyValue("--neon").trim();

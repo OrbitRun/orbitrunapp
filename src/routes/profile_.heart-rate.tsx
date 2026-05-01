@@ -19,7 +19,7 @@ import {
 export const Route = createFileRoute("/profile_/heart-rate")({
   head: () => ({
     meta: [
-      { title: "Heart Rate Zones — Orbit Lab" },
+      { title: "Heart Rate Zones — Orbit Run" },
       { name: "description", content: "Configure your personal heart rate training zones." },
     ],
   }),
