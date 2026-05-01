@@ -346,34 +346,22 @@ function ZoneRow({
           <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
             {t("hrz.lower")}
           </span>
-          <input
-            type="number"
-            inputMode="numeric"
+          <BoundField
             value={zone.lower}
             min={prevUpper + 1}
             max={zone.upper - 1}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (Number.isFinite(n)) onChange({ lower: Math.round(n) });
-            }}
-            className="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5 text-right text-sm tabular font-bold focus:border-neon focus:outline-none"
+            onChange={(n) => onChange({ lower: n })}
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
             {t("hrz.upper")}
           </span>
-          <input
-            type="number"
-            inputMode="numeric"
+          <BoundField
             value={zone.upper}
             min={zone.lower + 1}
             max={nextLower}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (Number.isFinite(n)) onChange({ upper: Math.round(n) });
-            }}
-            className="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5 text-right text-sm tabular font-bold focus:border-neon focus:outline-none"
+            onChange={(n) => onChange({ upper: n })}
           />
         </label>
       </div>
