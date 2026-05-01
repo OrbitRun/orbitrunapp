@@ -260,7 +260,7 @@ async function attachToDevice(dev: BtDevice): Promise<BtHrState> {
   return state;
 }
 
-export async function connectBtHeartRate(): Promise<BtHrState> {
+async function _webConnect(): Promise<BtHrState> {
   if (!isWebBluetoothSupported()) {
     setState({ status: "unsupported", error: "Web Bluetooth not supported in this browser." });
     return state;
@@ -295,7 +295,7 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
  * navigator.bluetooth.getDevices() (Chromium-only). Returns true if
  * reconnection succeeded. No chooser UI is shown.
  */
-export async function tryReconnectLastDevice(): Promise<boolean> {
+async function _webTryReconnect(): Promise<boolean> {
   if (!isWebBluetoothSupported()) return false;
   if (state.status === "connected" || state.status === "connecting") return true;
   const last = loadLastDevice();
@@ -317,12 +317,12 @@ export async function tryReconnectLastDevice(): Promise<boolean> {
   }
 }
 
-export function clearLastDevice() {
+function _webClearLast() {
   saveLastDevice(null, null);
   setState({ lastDeviceName: null });
 }
 
-export async function disconnectBtHeartRate(): Promise<void> {
+async function _webDisconnect(): Promise<void> {
   try {
     if (characteristic) {
       try {
