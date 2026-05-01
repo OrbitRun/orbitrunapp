@@ -234,6 +234,10 @@ export default function SensorsSection() {
           showTrouble={showTrouble}
           testing={testing}
           setTesting={setTesting}
+          healthFallback={healthFallback}
+          onUseHealth={async () => {
+            await connectViaAppleHealth();
+          }}
           onClose={() => {
             setOpen(false);
             setTesting(false);
