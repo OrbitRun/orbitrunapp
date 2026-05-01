@@ -115,9 +115,9 @@ export default function SensorsSection() {
     clearLastDevice();
   };
 
-  // iOS Safari (no native shell, no Web Bluetooth) but Apple Health may exist.
-  const iosWebOnly = !webBtSupported && !isHeartRateSensorSupported() === false && !connected && !busy && bt.status !== "connected";
-  const noBleButHealth = !webBtSupported && healthFallback;
+  // When only Apple Health is available (iOS Safari, no Web BT, no native shell)
+  // we route the row tap to the Health fallback instead of the BT pairing modal.
+  const healthOnly = !webBtSupported && healthFallback;
 
   const rowStatus =
     !supported
@@ -128,12 +128,17 @@ export default function SensorsSection() {
           ? "Searching…"
           : bt.status === "disconnected"
             ? "Disconnected"
-            : noBleButHealth
+            : healthOnly
               ? "Tap to use Apple Health"
               : "Tap to pair";
 
-  const onUseHealth = async () => {
-    await connectViaAppleHealth();
+  const onRowClick = () => {
+    if (!supported) return;
+    if (!connected && healthOnly) {
+      void connectViaAppleHealth();
+      return;
+    }
+    openModal();
   };
 
   return (
