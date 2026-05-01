@@ -16,8 +16,11 @@ import {
 import {
   clearLastDevice,
   connectBtHeartRate,
+  connectViaAppleHealth,
   disconnectBtHeartRate,
   getBtHrState,
+  isHealthFallbackAvailable,
+  isHeartRateSensorSupported,
   isWebBluetoothSupported,
   subscribeBtHr,
   tryReconnectLastDevice,
@@ -39,7 +42,9 @@ export default function SensorsSection() {
 
   useEffect(() => subscribeBtHr(setBt), []);
 
-  const supported = isWebBluetoothSupported();
+  const supported = isHeartRateSensorSupported();
+  const webBtSupported = isWebBluetoothSupported();
+  const healthFallback = isHealthFallbackAvailable();
   const connected = bt.status === "connected";
   const busy = bt.status === "scanning" || bt.status === "connecting";
   const hasLastDevice = !!bt.lastDeviceName && !connected && !busy;
