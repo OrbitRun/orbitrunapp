@@ -39,7 +39,7 @@ import {
   loadGhost,
   type GhostRef,
 } from "@/lib/ghost-runner";
-import logo from "@/assets/5ceb6f47-d99d-4cc8-8db5-fe46db27659c.png";
+import logo from "@/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png";
 
 export const Route = createFileRoute("/")({
   component: RunPage,
