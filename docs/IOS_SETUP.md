@@ -41,8 +41,13 @@ In Xcode:
    ```xml
    <key>NSHealthShareUsageDescription</key>
    <string>Orbit reads your heart rate during runs to show live BPM and save it alongside your route.</string>
+   <key>NSBluetoothAlwaysUsageDescription</key>
+   <string>Orbit connects to your heart rate strap to show live BPM during runs.</string>
    ```
-3. Build & run on a real device (HealthKit is unavailable in the simulator).
+   `NSBluetoothAlwaysUsageDescription` is required by Apple — without it iOS
+   terminates the app the first time it tries to scan for a BLE sensor.
+3. Build & run on a real device (HealthKit and BLE are unavailable in the
+   simulator).
 
 ## 4. Update flow after web changes
 
