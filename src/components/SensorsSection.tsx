@@ -115,16 +115,26 @@ export default function SensorsSection() {
     clearLastDevice();
   };
 
+  // iOS Safari (no native shell, no Web Bluetooth) but Apple Health may exist.
+  const iosWebOnly = !webBtSupported && !isHeartRateSensorSupported() === false && !connected && !busy && bt.status !== "connected";
+  const noBleButHealth = !webBtSupported && healthFallback;
+
   const rowStatus =
     !supported
-      ? "Not supported"
+      ? "Open in Orbit app to pair"
       : connected
         ? `Connected: ${bt.deviceName ?? "Heart Rate"}`
         : busy
           ? "Searching…"
           : bt.status === "disconnected"
             ? "Disconnected"
-            : "Tap to pair";
+            : noBleButHealth
+              ? "Tap to use Apple Health"
+              : "Tap to pair";
+
+  const onUseHealth = async () => {
+    await connectViaAppleHealth();
+  };
 
   return (
     <>
