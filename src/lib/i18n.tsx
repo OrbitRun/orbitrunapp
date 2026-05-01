@@ -566,6 +566,7 @@ const en: Dict = {
 
 const da: Dict = {
   "app.brand": "Orbit Run",
+  "profile.athlete": "Atlet",
   "status.ready": "Klar til løb",
   "status.running": "I bevægelse",
   "status.paused": "Pause",
