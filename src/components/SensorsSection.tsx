@@ -199,7 +199,7 @@ export default function SensorsSection() {
             </div>
           </div>
           <div className="text-xs font-bold uppercase tracking-wider text-foreground/80">
-            {connected ? "Manage" : supported ? "Search" : "—"}
+            {connected ? "Manage" : !supported ? "—" : healthOnly ? "Health" : "Search"}
           </div>
         </button>
         {hasLastDevice && (
