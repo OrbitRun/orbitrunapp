@@ -370,3 +370,170 @@ export function isBtHrConnected(): boolean {
 export function getLatestBtBpm(): number | null {
   return state.status === "connected" ? state.bpm : null;
 }
+
+/* ========================================================================== *
+ *                     TRANSPORT FAÇADE (BLE / Web BT / Health)               *
+ * ========================================================================== *
+ * Picks the best HR source at runtime:
+ *   1. Native BLE (Capacitor iOS/Android shell)
+ *   2. Web Bluetooth (Chromium browsers)
+ *   3. Apple Health polling (iOS fallback when BLE pairing fails)
+ * The public API below mirrors the legacy Web Bluetooth exports so that
+ * existing consumers (SensorsSection, use-run-tracker) keep working.
+ */
+
+import {
+  isNativeBleAvailable,
+  connectNativeBleHeartRate,
+  disconnectNativeBleHeartRate,
+  subscribeNativeBle,
+  clearLastNativeDevice,
+  getNativeBleState,
+} from "@/lib/heart-rate-ble-native";
+import {
+  isHealthAvailable,
+  startHealthHeartRateStream,
+  stopHeartRatePolling,
+} from "@/lib/health";
+
+export type HrTransport = "native" | "web" | "health" | "none";
+
+let activeTransport: HrTransport = "none";
+let nativeUnsub: (() => void) | null = null;
+let healthBpmTimer: ReturnType<typeof setInterval> | null = null;
+
+function pickPrimaryTransport(): HrTransport {
+  if (isNativeBleAvailable()) return "native";
+  if (isWebBluetoothSupported()) return "web";
+  if (isHealthAvailable()) return "health";
+  return "none";
+}
+
+export function isHeartRateSensorSupported(): boolean {
+  return pickPrimaryTransport() !== "none";
+}
+
+export function isHealthFallbackAvailable(): boolean {
+  return isHealthAvailable();
+}
+
+export function getActiveHrTransport(): HrTransport {
+  return activeTransport;
+}
+
+function bridgeNativeState() {
+  if (nativeUnsub) return;
+  nativeUnsub = subscribeNativeBle((s) => {
+    if (activeTransport !== "native") return;
+    setState({ ...s });
+  });
+}
+
+function teardownTransport() {
+  if (nativeUnsub) {
+    nativeUnsub();
+    nativeUnsub = null;
+  }
+  if (healthBpmTimer) {
+    clearInterval(healthBpmTimer);
+    healthBpmTimer = null;
+  }
+  stopHeartRatePolling();
+}
+
+/** Public façade: connect via the best available transport. */
+export async function connectBtHeartRate(): Promise<BtHrState> {
+  const t = pickPrimaryTransport();
+  teardownTransport();
+  if (t === "native") {
+    activeTransport = "native";
+    bridgeNativeState();
+    const s = await connectNativeBleHeartRate();
+    setState({ ...s });
+    return state;
+  }
+  if (t === "web") {
+    activeTransport = "web";
+    return await _webConnect();
+  }
+  if (t === "health") {
+    return await connectViaAppleHealth();
+  }
+  setState({ status: "unsupported", error: "No heart-rate transport available." });
+  return state;
+}
+
+/** Explicit Apple Health fallback (for "Use Apple Health" button). */
+export async function connectViaAppleHealth(): Promise<BtHrState> {
+  if (!isHealthAvailable()) {
+    setState({ status: "unsupported", error: "Apple Health unavailable" });
+    return state;
+  }
+  teardownTransport();
+  activeTransport = "health";
+  setState({
+    status: "connecting",
+    deviceName: "Apple Health",
+    deviceId: null,
+    bpm: null,
+    battery: null,
+    signal: null,
+    poorContact: false,
+    error: null,
+  });
+  const status = await startHealthHeartRateStream((bpm) => {
+    if (activeTransport !== "health") return;
+    setState({ bpm, signal: 80 });
+  }, 5000);
+  if (status !== "granted") {
+    activeTransport = "none";
+    setState({
+      status: "disconnected",
+      error: status === "denied" ? "Permission denied" : "Apple Health unavailable",
+    });
+    return state;
+  }
+  setState({ status: "connected", lastDeviceName: "Apple Health" });
+  return state;
+}
+
+export async function disconnectBtHeartRate(): Promise<void> {
+  const t = activeTransport;
+  teardownTransport();
+  activeTransport = "none";
+  if (t === "native") {
+    await disconnectNativeBleHeartRate();
+    const s = getNativeBleState();
+    setState({ ...s, status: "idle" });
+    return;
+  }
+  if (t === "web") {
+    await _webDisconnect();
+    return;
+  }
+  // health or none
+  setState({
+    status: "idle",
+    bpm: null,
+    battery: null,
+    signal: null,
+    poorContact: false,
+    deviceName: null,
+    deviceId: null,
+  });
+}
+
+export async function tryReconnectLastDevice(): Promise<boolean> {
+  const t = pickPrimaryTransport();
+  if (t === "web") return await _webTryReconnect();
+  // Native BLE silent reconnect would require scanning + permission — skip
+  // and let the user tap to reconnect explicitly.
+  return false;
+}
+
+export function clearLastDevice(): void {
+  _webClearLast();
+  clearLastNativeDevice();
+  setState({ lastDeviceName: null });
+}
+
