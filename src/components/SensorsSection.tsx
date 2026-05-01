@@ -495,6 +495,20 @@ function StepScan({
         </div>
       )}
 
+      {/* Apple Health fallback */}
+      {healthFallback && !connected && (
+        <button
+          onClick={onUseHealth}
+          disabled={busy}
+          className="mt-3 w-full rounded-xl border border-neon/30 bg-neon/5 px-3 py-2.5 text-[12px] leading-snug text-foreground/90 hover:bg-neon/10 active:scale-[0.99] transition disabled:opacity-50"
+        >
+          <span className="block text-[10px] uppercase tracking-wider text-neon font-bold mb-0.5">
+            Kan ikke finde dit bælte?
+          </span>
+          Brug Apple Health i stedet (kræver at bæltet er parret med iPhone)
+        </button>
+      )}
+
       {/* Actions */}
       <div className="grid grid-cols-2 gap-2 mt-4">
         {connected ? (
