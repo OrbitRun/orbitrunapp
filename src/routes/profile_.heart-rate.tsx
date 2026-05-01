@@ -227,23 +227,84 @@ function NumField({
   unit?: string;
   onChange: (v: number) => void;
 }) {
+  const [draft, setDraft] = useState<string>(String(value));
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = () => {
+    const n = Number(draft);
+    if (!Number.isFinite(n) || draft.trim() === "") {
+      setDraft(String(value));
+      return;
+    }
+    const clamped = Math.max(min, Math.min(max, Math.round(n)));
+    setDraft(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+
   return (
     <label className="flex items-center gap-3">
       <span className="flex-1 text-sm font-semibold">{label}</span>
       <input
         type="number"
         inputMode="numeric"
-        value={value}
+        value={draft}
         min={min}
         max={max}
-        onChange={(e) => {
-          const n = Number(e.target.value);
-          if (Number.isFinite(n)) onChange(Math.max(min, Math.min(max, Math.round(n))));
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         }}
         className="w-20 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-right text-sm tabular font-bold focus:border-neon focus:outline-none"
       />
       {unit && <span className="text-[10px] text-muted-foreground uppercase">{unit}</span>}
     </label>
+  );
+}
+
+function BoundField({
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<string>(String(value));
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  const commit = () => {
+    const n = Number(draft);
+    if (!Number.isFinite(n) || draft.trim() === "") {
+      setDraft(String(value));
+      return;
+    }
+    const clamped = Math.max(min, Math.min(max, Math.round(n)));
+    setDraft(String(clamped));
+    if (clamped !== value) onChange(clamped);
+  };
+
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      value={draft}
+      min={min}
+      max={max}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+      }}
+      className="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5 text-right text-sm tabular font-bold focus:border-neon focus:outline-none"
+    />
   );
 }
 
@@ -285,34 +346,22 @@ function ZoneRow({
           <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
             {t("hrz.lower")}
           </span>
-          <input
-            type="number"
-            inputMode="numeric"
+          <BoundField
             value={zone.lower}
             min={prevUpper + 1}
             max={zone.upper - 1}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (Number.isFinite(n)) onChange({ lower: Math.round(n) });
-            }}
-            className="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5 text-right text-sm tabular font-bold focus:border-neon focus:outline-none"
+            onChange={(n) => onChange({ lower: n })}
           />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
             {t("hrz.upper")}
           </span>
-          <input
-            type="number"
-            inputMode="numeric"
+          <BoundField
             value={zone.upper}
             min={zone.lower + 1}
             max={nextLower}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (Number.isFinite(n)) onChange({ upper: Math.round(n) });
-            }}
-            className="rounded-lg bg-white/5 border border-white/10 px-2 py-1.5 text-right text-sm tabular font-bold focus:border-neon focus:outline-none"
+            onChange={(n) => onChange({ upper: n })}
           />
         </label>
       </div>
