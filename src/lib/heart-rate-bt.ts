@@ -60,10 +60,11 @@ function saveLastDevice(id: string | null, name: string | null) {
 
 const initialLast = loadLastDevice();
 
+// NOTE: initial status is "idle" regardless of Web Bluetooth availability —
+// the façade decides whether the device is actually unsupported by also
+// considering the native BLE bridge and Apple Health fallback.
 let state: BtHrState = {
-  status: typeof navigator !== "undefined" && (navigator as Navigator & { bluetooth?: unknown }).bluetooth
-    ? "idle"
-    : "unsupported",
+  status: "idle",
   deviceName: null,
   deviceId: null,
   bpm: null,
@@ -73,6 +74,7 @@ let state: BtHrState = {
   lastDeviceName: initialLast.name,
   error: null,
 };
+
 const listeners = new Set<Listener>();
 
 // Active connection refs
