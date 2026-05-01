@@ -175,7 +175,7 @@ function RunPage() {
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={logo}
-            alt="ORBIT LAB"
+            alt="ORBIT RUN"
             className="h-10 w-10 object-contain drop-shadow-[0_0_12px_oklch(0.92_0.21_130/0.5)]"
           />
           <div className="min-w-0">
