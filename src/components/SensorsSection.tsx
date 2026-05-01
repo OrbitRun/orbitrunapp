@@ -413,6 +413,8 @@ function StepScan({
   onRescan,
   onDisconnect,
   onClose,
+  healthFallback,
+  onUseHealth,
 }: {
   bt: BtHrState;
   busy: boolean;
@@ -423,6 +425,8 @@ function StepScan({
   onRescan: () => void | Promise<void>;
   onDisconnect: () => void | Promise<void>;
   onClose: () => void;
+  healthFallback: boolean;
+  onUseHealth: () => void | Promise<void>;
 }) {
   return (
     <div>
