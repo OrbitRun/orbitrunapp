@@ -265,6 +265,8 @@ type ModalProps = {
   showTrouble: boolean;
   testing: boolean;
   setTesting: (b: boolean) => void;
+  healthFallback: boolean;
+  onUseHealth: () => void | Promise<void>;
   onClose: () => void;
   onStartScan: () => void | Promise<void>;
   onDisconnect: () => void | Promise<void>;
@@ -280,6 +282,8 @@ function PairingModal({
   showTrouble,
   testing,
   setTesting,
+  healthFallback,
+  onUseHealth,
   onClose,
   onStartScan,
   onDisconnect,
