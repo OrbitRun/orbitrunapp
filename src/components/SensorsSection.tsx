@@ -334,6 +334,8 @@ function PairingModal({
             onRescan={onRescan}
             onDisconnect={onDisconnect}
             onClose={onClose}
+            healthFallback={healthFallback}
+            onUseHealth={onUseHealth}
           />
         )}
       </div>
