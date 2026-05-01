@@ -16,8 +16,11 @@ import {
 import {
   clearLastDevice,
   connectBtHeartRate,
+  connectViaAppleHealth,
   disconnectBtHeartRate,
   getBtHrState,
+  isHealthFallbackAvailable,
+  isHeartRateSensorSupported,
   isWebBluetoothSupported,
   subscribeBtHr,
   tryReconnectLastDevice,
@@ -39,7 +42,9 @@ export default function SensorsSection() {
 
   useEffect(() => subscribeBtHr(setBt), []);
 
-  const supported = isWebBluetoothSupported();
+  const supported = isHeartRateSensorSupported();
+  const webBtSupported = isWebBluetoothSupported();
+  const healthFallback = isHealthFallbackAvailable();
   const connected = bt.status === "connected";
   const busy = bt.status === "scanning" || bt.status === "connecting";
   const hasLastDevice = !!bt.lastDeviceName && !connected && !busy;
@@ -110,16 +115,31 @@ export default function SensorsSection() {
     clearLastDevice();
   };
 
+  // When only Apple Health is available (iOS Safari, no Web BT, no native shell)
+  // we route the row tap to the Health fallback instead of the BT pairing modal.
+  const healthOnly = !webBtSupported && healthFallback;
+
   const rowStatus =
     !supported
-      ? "Not supported"
+      ? "Open in Orbit app to pair"
       : connected
         ? `Connected: ${bt.deviceName ?? "Heart Rate"}`
         : busy
           ? "Searching…"
           : bt.status === "disconnected"
             ? "Disconnected"
-            : "Tap to pair";
+            : healthOnly
+              ? "Tap to use Apple Health"
+              : "Tap to pair";
+
+  const onRowClick = () => {
+    if (!supported) return;
+    if (!connected && healthOnly) {
+      void connectViaAppleHealth();
+      return;
+    }
+    openModal();
+  };
 
   return (
     <>
@@ -138,7 +158,7 @@ export default function SensorsSection() {
         </div>
         <button
           type="button"
-          onClick={openModal}
+          onClick={onRowClick}
           disabled={!supported}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left disabled:opacity-60"
         >
@@ -179,7 +199,7 @@ export default function SensorsSection() {
             </div>
           </div>
           <div className="text-xs font-bold uppercase tracking-wider text-foreground/80">
-            {connected ? "Manage" : supported ? "Search" : "—"}
+            {connected ? "Manage" : !supported ? "—" : healthOnly ? "Health" : "Search"}
           </div>
         </button>
         {hasLastDevice && (
@@ -214,6 +234,10 @@ export default function SensorsSection() {
           showTrouble={showTrouble}
           testing={testing}
           setTesting={setTesting}
+          healthFallback={healthFallback}
+          onUseHealth={async () => {
+            await connectViaAppleHealth();
+          }}
           onClose={() => {
             setOpen(false);
             setTesting(false);
@@ -241,6 +265,8 @@ type ModalProps = {
   showTrouble: boolean;
   testing: boolean;
   setTesting: (b: boolean) => void;
+  healthFallback: boolean;
+  onUseHealth: () => void | Promise<void>;
   onClose: () => void;
   onStartScan: () => void | Promise<void>;
   onDisconnect: () => void | Promise<void>;
@@ -256,6 +282,8 @@ function PairingModal({
   showTrouble,
   testing,
   setTesting,
+  healthFallback,
+  onUseHealth,
   onClose,
   onStartScan,
   onDisconnect,
@@ -306,6 +334,8 @@ function PairingModal({
             onRescan={onRescan}
             onDisconnect={onDisconnect}
             onClose={onClose}
+            healthFallback={healthFallback}
+            onUseHealth={onUseHealth}
           />
         )}
       </div>
@@ -383,6 +413,8 @@ function StepScan({
   onRescan,
   onDisconnect,
   onClose,
+  healthFallback,
+  onUseHealth,
 }: {
   bt: BtHrState;
   busy: boolean;
@@ -393,6 +425,8 @@ function StepScan({
   onRescan: () => void | Promise<void>;
   onDisconnect: () => void | Promise<void>;
   onClose: () => void;
+  healthFallback: boolean;
+  onUseHealth: () => void | Promise<void>;
 }) {
   return (
     <div>
@@ -459,6 +493,20 @@ function StepScan({
           Prøv at tage bæltet af og på igen, eller tjek om det er forbundet til en anden app
           (f.eks. Strava eller Garmin) — Bluetooth kan ofte kun forbinde til én app ad gangen.
         </div>
+      )}
+
+      {/* Apple Health fallback */}
+      {healthFallback && !connected && (
+        <button
+          onClick={onUseHealth}
+          disabled={busy}
+          className="mt-3 w-full rounded-xl border border-neon/30 bg-neon/5 px-3 py-2.5 text-[12px] leading-snug text-foreground/90 hover:bg-neon/10 active:scale-[0.99] transition disabled:opacity-50"
+        >
+          <span className="block text-[10px] uppercase tracking-wider text-neon font-bold mb-0.5">
+            Kan ikke finde dit bælte?
+          </span>
+          Brug Apple Health i stedet (kræver at bæltet er parret med iPhone)
+        </button>
       )}
 
       {/* Actions */}

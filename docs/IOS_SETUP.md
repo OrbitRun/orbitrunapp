@@ -4,15 +4,20 @@ The web app already contains all the logic needed to read heart rate from
 Apple Health. To actually see HR data on a device you must wrap the web
 build in a Capacitor iOS shell and build it in Xcode.
 
-## 1. Install Capacitor + HealthKit plugin
+## 1. Install Capacitor + HealthKit + BLE plugins
 
 In a local clone of the project (Capacitor cannot run in the Cloudflare
 Worker bundle, so these are NOT added to the web `package.json`):
 
 ```bash
-bun add @capacitor/core @capacitor/ios @capacitor-community/health
+bun add @capacitor/core @capacitor/ios @capacitor-community/health @capacitor-community/bluetooth-le
 bun add -d @capacitor/cli
 ```
+
+> The Bluetooth LE plugin powers direct pairing with standard BLE heart-rate
+> straps (e.g. iGPSPORT HR50, Polar H10, Garmin HRM-Pro). On iOS Safari the
+> web app falls back to Apple Health for HR data — both paths are handled
+> automatically by `src/lib/heart-rate-bt.ts`.
 
 ## 2. Add the iOS platform
 
@@ -36,8 +41,13 @@ In Xcode:
    ```xml
    <key>NSHealthShareUsageDescription</key>
    <string>Orbit reads your heart rate during runs to show live BPM and save it alongside your route.</string>
+   <key>NSBluetoothAlwaysUsageDescription</key>
+   <string>Orbit connects to your heart rate strap to show live BPM during runs.</string>
    ```
-3. Build & run on a real device (HealthKit is unavailable in the simulator).
+   `NSBluetoothAlwaysUsageDescription` is required by Apple — without it iOS
+   terminates the app the first time it tries to scan for a BLE sensor.
+3. Build & run on a real device (HealthKit and BLE are unavailable in the
+   simulator).
 
 ## 4. Update flow after web changes
 
