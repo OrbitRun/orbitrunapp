@@ -8,7 +8,7 @@ import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
 import MetricPicker from "@/components/MetricPicker";
 import Onboarding from "@/components/Onboarding";
-import CoachCard from "@/components/CoachCard";
+// CoachCard moved to /coach route
 import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";

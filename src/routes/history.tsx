@@ -10,6 +10,7 @@ import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import WeeklyTrimpBreakdown from "@/components/WeeklyTrimpBreakdown";
+import RecordsCarousel from "@/components/RecordsCarousel";
 
 import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
 import { selectGhost } from "@/lib/ghost-runner";
@@ -58,6 +59,8 @@ function HistoryPage() {
         </div>
         <h1 className="font-display font-black text-3xl tracking-tight">{t("history.title")}</h1>
       </header>
+
+      <RecordsCarousel />
 
       <section className="grid grid-cols-3 gap-3 mb-4">
         <div className="glass rounded-2xl p-3 text-center">
