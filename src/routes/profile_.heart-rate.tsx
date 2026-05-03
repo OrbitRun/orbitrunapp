@@ -300,6 +300,19 @@ function VitalsSection() {
         />
         <span className="text-xs text-muted-foreground font-bold w-10">{t("readiness.unit.ms")}</span>
       </label>
+      {healthAvailable && (
+        <button
+          type="button"
+          onClick={syncFromHealth}
+          disabled={syncing}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-foreground disabled:opacity-50 active:scale-[0.98] transition"
+        >
+          {syncing ? t("vitals.sync.loading") : t("vitals.sync.cta")}
+        </button>
+      )}
+      {syncMsg && (
+        <p className="text-[11px] text-muted-foreground text-center">{syncMsg}</p>
+      )}
       <button
         type="button"
         onClick={save}
