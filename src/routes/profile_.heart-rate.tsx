@@ -221,6 +221,13 @@ function VitalsSection() {
   const [v, setV] = useState(() => loadVitals());
   const [rhr, setRhr] = useState<string>(v.restingHr ? String(v.restingHr) : "");
   const [hrv, setHrv] = useState<string>(v.hrvMs ? String(v.hrvMs) : "");
+  const [healthAvailable, setHealthAvailable] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    setHealthAvailable(isHealthAvailable());
+  }, []);
 
   const save = () => {
     const r = Number(rhr);
@@ -231,6 +238,32 @@ function VitalsSection() {
     if (Object.keys(patch).length === 0) return;
     const next = saveVitals(patch);
     setV(next);
+  };
+
+  const syncFromHealth = async () => {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await syncVitalsFromHealth();
+      if (res.status !== "granted") {
+        setSyncMsg(t("vitals.sync.denied"));
+        return;
+      }
+      const patch: { restingHr?: number; hrvMs?: number } = {};
+      if (res.restingHr) patch.restingHr = res.restingHr;
+      if (res.hrvMs) patch.hrvMs = res.hrvMs;
+      if (Object.keys(patch).length === 0) {
+        setSyncMsg(t("vitals.sync.empty"));
+        return;
+      }
+      const next = saveVitals(patch);
+      setV(next);
+      if (patch.restingHr) setRhr(String(patch.restingHr));
+      if (patch.hrvMs) setHrv(String(patch.hrvMs));
+      setSyncMsg(t("vitals.sync.ok"));
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (
