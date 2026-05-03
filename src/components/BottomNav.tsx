@@ -2,10 +2,12 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Activity, History, Sparkles, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 export default function BottomNav() {
   const { location } = useRouterState();
   const { t } = useI18n();
+  const profile = useUserProfile();
   const [focusMode, setFocusMode] = useState(false);
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -16,9 +18,10 @@ export default function BottomNav() {
     return () => obs.disconnect();
   }, []);
   if (focusMode) return null;
+  const coachEnabled = profile.coachEnabled !== false;
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },
-    { to: "/coach", label: t("nav.coach"), Icon: Sparkles },
+    ...(coachEnabled ? [{ to: "/coach", label: t("nav.coach"), Icon: Sparkles }] : []),
     { to: "/history", label: t("nav.history"), Icon: History },
     { to: "/profile", label: t("nav.profile"), Icon: User },
   ] as const;
