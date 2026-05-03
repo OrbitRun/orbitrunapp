@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Ghost, Pause, Pencil, Play, Square, X } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
@@ -44,6 +44,9 @@ import logo from "@/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png";
 
 export const Route = createFileRoute("/")({
   component: RunPage,
+  validateSearch: (s: Record<string, unknown>) => ({
+    autostart: s.autostart === 1 || s.autostart === "1" ? (1 as const) : undefined,
+  }),
 });
 
 function RunPage() {
