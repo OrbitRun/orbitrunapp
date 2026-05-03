@@ -15,6 +15,7 @@ import {
   type HrZoneId,
   type ZoneRange,
 } from "@/lib/hr-zones-config";
+import { loadVitals, saveVitals } from "@/lib/vitals";
 
 export const Route = createFileRoute("/profile_/heart-rate")({
   head: () => ({
@@ -140,6 +141,8 @@ function HeartRateSettingsPage() {
         </button>
         <p className="text-[11px] text-muted-foreground text-center">{t("hrz.autoHint")}</p>
       </section>
+
+      <VitalsSection />
 
       {/* Visual preview */}
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
