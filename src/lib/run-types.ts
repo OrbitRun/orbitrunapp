@@ -51,6 +51,10 @@ export type Run = {
   vo2maxEst?: number;
   // 60s heart-rate-recovery grade derived from `hrrDrop60s`.
   recoveryGrade?: "poor" | "fair" | "good" | "excellent" | "elite";
+  // Banister TRIMP score for this run (training impulse / load).
+  trimp?: number;
+  // Intensity factor 0..1 used to derive TRIMP (HRr or normalized RPE).
+  intensityFactor?: number;
 };
 
 export const RUNS_KEY = "lux-runner:runs:v1";

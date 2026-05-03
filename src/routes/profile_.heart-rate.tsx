@@ -15,6 +15,7 @@ import {
   type HrZoneId,
   type ZoneRange,
 } from "@/lib/hr-zones-config";
+import { loadVitals, saveVitals } from "@/lib/vitals";
 
 export const Route = createFileRoute("/profile_/heart-rate")({
   head: () => ({
@@ -141,6 +142,8 @@ function HeartRateSettingsPage() {
         <p className="text-[11px] text-muted-foreground text-center">{t("hrz.autoHint")}</p>
       </section>
 
+      <VitalsSection />
+
       {/* Visual preview */}
       <section className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         <div className="flex items-center justify-between">
@@ -210,6 +213,68 @@ function errorMessage(reason: string, t: (k: string) => string): string {
   if (reason === "resting") return t("hrz.error.resting");
   if (reason === "max") return t("hrz.error.max");
   return t("hrz.error.zones");
+}
+
+function VitalsSection() {
+  const { t } = useI18n();
+  const [v, setV] = useState(() => loadVitals());
+  const [rhr, setRhr] = useState<string>(v.restingHr ? String(v.restingHr) : "");
+  const [hrv, setHrv] = useState<string>(v.hrvMs ? String(v.hrvMs) : "");
+
+  const save = () => {
+    const r = Number(rhr);
+    const h = Number(hrv);
+    const patch: { restingHr?: number; hrvMs?: number } = {};
+    if (Number.isFinite(r) && r > 0) patch.restingHr = Math.round(r);
+    if (Number.isFinite(h) && h > 0) patch.hrvMs = Math.round(h);
+    if (Object.keys(patch).length === 0) return;
+    const next = saveVitals(patch);
+    setV(next);
+  };
+
+  return (
+    <section className="mt-4 glass rounded-2xl p-4 space-y-3">
+      <div>
+        <div className="text-[10px] uppercase tracking-[0.25em] text-neon font-bold">
+          {t("readiness.cta.logVitals")}
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
+          {t("readiness.missing")}
+        </p>
+      </div>
+      <label className="flex items-center gap-3">
+        <span className="flex-1 text-sm font-semibold">{t("readiness.metric.restingHr")}</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          value={rhr}
+          placeholder="—"
+          onChange={(e) => setRhr(e.target.value)}
+          className="w-24 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-right text-base font-bold tabular focus:outline-none focus:ring-2 focus:ring-neon/40"
+        />
+        <span className="text-xs text-muted-foreground font-bold w-10">{t("readiness.unit.bpm")}</span>
+      </label>
+      <label className="flex items-center gap-3">
+        <span className="flex-1 text-sm font-semibold">{t("readiness.metric.hrv")}</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          value={hrv}
+          placeholder="—"
+          onChange={(e) => setHrv(e.target.value)}
+          className="w-24 rounded-lg bg-white/5 border border-white/10 px-3 py-2 text-right text-base font-bold tabular focus:outline-none focus:ring-2 focus:ring-neon/40"
+        />
+        <span className="text-xs text-muted-foreground font-bold w-10">{t("readiness.unit.ms")}</span>
+      </label>
+      <button
+        type="button"
+        onClick={save}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-neon px-4 py-2.5 text-sm font-bold text-primary-foreground active:scale-[0.98] transition"
+      >
+        {t("hrz.save")}
+      </button>
+    </section>
+  );
 }
 
 function NumField({
