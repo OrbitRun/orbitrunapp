@@ -16,6 +16,7 @@ import {
   type ZoneRange,
 } from "@/lib/hr-zones-config";
 import { loadVitals, saveVitals } from "@/lib/vitals";
+import { isHealthAvailable, syncVitalsFromHealth } from "@/lib/health";
 
 export const Route = createFileRoute("/profile_/heart-rate")({
   head: () => ({
