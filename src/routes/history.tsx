@@ -9,6 +9,7 @@ import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
+import WeeklyTrimpBreakdown from "@/components/WeeklyTrimpBreakdown";
 
 import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
 import { selectGhost } from "@/lib/ghost-runner";
