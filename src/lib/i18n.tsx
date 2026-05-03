@@ -418,12 +418,6 @@ const en: Dict = {
   "readiness.rec.coldAdjust": "Cold out there ({temp}°C). Add 5–10 min of warm-up indoors before stepping out.",
   "readiness.rec.firstRun": "Log your first run to seed the readiness model.",
   "readiness.rec.missingData": "Add resting HR & HRV in your profile for a personal readiness score.",
-  "coach.actions.title": "Today's action",
-  "coach.actions.startWorkout": "Start workout",
-  "coach.actions.startRecovery": "Start recovery",
-  "coach.actions.savePlan": "Save as plan",
-  "coach.actions.saved": "Saved for today",
-  "coach.actions.plannedToday": "Today's plan",
 
   // Recovery engine
   "recovery.eyebrow": "Recovery",
@@ -1016,12 +1010,6 @@ const da: Dict = {
   "readiness.rec.coldAdjust": "Koldt derude ({temp}°C). Tag 5–10 min ekstra opvarmning inden du går ud.",
   "readiness.rec.firstRun": "Log din første tur, så coachen har data at arbejde med.",
   "readiness.rec.missingData": "Tilføj hvilepuls & HRV i din profil for en personlig score.",
-  "coach.actions.title": "Dagens handling",
-  "coach.actions.startWorkout": "Start træning",
-  "coach.actions.startRecovery": "Start restitution",
-  "coach.actions.savePlan": "Gem som plan",
-  "coach.actions.saved": "Gemt til i dag",
-  "coach.actions.plannedToday": "Dagens plan",
 
   // Recovery engine
   "recovery.eyebrow": "Restitution",

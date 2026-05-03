@@ -4,7 +4,6 @@ import { useI18n } from "@/lib/i18n";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
 import ReadinessPanel from "@/components/ReadinessPanel";
-import ReadinessActions from "@/components/ReadinessActions";
 import CoachCard from "@/components/CoachCard";
 import WeeklyTrimpBreakdown from "@/components/WeeklyTrimpBreakdown";
 
@@ -38,7 +37,6 @@ function CoachPage() {
       </header>
 
       <ReadinessPanel />
-      <ReadinessActions />
       <CoachCard profile={profile} />
       {runs.length > 0 && <WeeklyTrimpBreakdown runs={runs} />}
     </main>
