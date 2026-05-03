@@ -42,11 +42,14 @@ import {
 } from "@/lib/ghost-runner";
 import logo from "@/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png";
 
+type IndexSearch = { autostart?: 1 };
+
 export const Route = createFileRoute("/")({
   component: RunPage,
-  validateSearch: (s: Record<string, unknown>) => ({
-    autostart: s.autostart === 1 || s.autostart === "1" ? (1 as const) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): IndexSearch => {
+    if (s.autostart === 1 || s.autostart === "1") return { autostart: 1 };
+    return {};
+  },
 });
 
 function RunPage() {
