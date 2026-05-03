@@ -93,9 +93,14 @@ const en: Dict = {
 
   // Nav
   "nav.run": "Run",
+  "nav.coach": "Coach",
   "nav.history": "History",
-  "nav.records": "Records",
   "nav.profile": "Profile",
+  "coach.eyebrow": "Your Coach",
+  "coach.title": "AI Coach",
+  "dailyStatus.eyebrow": "Today's status",
+  "dailyStatus.cta": "Open coach",
+  "records.carousel.eyebrow": "Personal records",
 
   // Personal records
   "pr.eyebrow": "Milestones",
@@ -688,8 +693,14 @@ const da: Dict = {
   "music.live": "live",
 
   "nav.run": "Løb",
+  "nav.coach": "Coach",
   "nav.history": "Historik",
   "nav.profile": "Profil",
+  "coach.eyebrow": "Din coach",
+  "coach.title": "AI-coach",
+  "dailyStatus.eyebrow": "Dagens status",
+  "dailyStatus.cta": "Åbn coach",
+  "records.carousel.eyebrow": "Personlige rekorder",
 
   "history.eyebrow": "Arkiv",
   "history.title": "Tidligere løb",
@@ -866,7 +877,6 @@ const da: Dict = {
   "weather.edit.invalid": "Ugyldig værdi",
   "profile.windUnit": "Vindenhed",
 
-  "nav.records": "Rekorder",
   "pr.eyebrow": "Milepæle",
   "pr.title": "Personlige rekorder",
   "pr.notDone": "Endnu ikke gennemført",
