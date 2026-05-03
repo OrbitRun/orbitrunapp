@@ -198,7 +198,7 @@ function RunPage() {
         </div>
       </header>
 
-      {(t.status === "idle" || t.status === "finished") && <DailyStatusStrip />}
+      {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <DailyStatusStrip />}
       {(t.status === "idle" || t.status === "finished") && <RecoverRunBanner />}
 
       {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
