@@ -12,6 +12,8 @@ import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import { hrrDrop60s, timeFractionInZone5, DEFAULT_MAX_HR } from "@/lib/hr-analysis";
 import { estimateVo2Max } from "@/lib/vo2max";
 import { classifyHrrGrade } from "@/lib/hr-zones";
+import { loadHrZones } from "@/lib/hr-zones-config";
+import { computeTrimp } from "@/lib/readiness-engine";
 import {
   bestTimeForPoints,
   checkAndUpdatePrs,
@@ -764,6 +766,14 @@ export function useRunTracker() {
   }, [haptic]);
 
   const commitRun = useCallback((run: Run) => {
+    // Compute TRIMP using personal HR config when available.
+    try {
+      const cfg = loadHrZones();
+      const trimp = computeTrimp(run, cfg ? { restingHr: cfg.restingHr, maxHr: cfg.maxHr } : null);
+      run = { ...run, trimp };
+    } catch {
+      /* TRIMP is non-critical */
+    }
     saveRun(run);
     // Backfill weather if the in-flight fetch never completed before stop().
     if (!run.weather && run.points.length > 0) {
