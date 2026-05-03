@@ -11,7 +11,7 @@ import Onboarding from "@/components/Onboarding";
 import CoachCard from "@/components/CoachCard";
 import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
-import ReadinessPanel from "@/components/ReadinessPanel";
+import DailyStatusStrip from "@/components/DailyStatusStrip";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -198,10 +198,8 @@ function RunPage() {
         </div>
       </header>
 
-      {(t.status === "idle" || t.status === "finished") && <ReadinessPanel />}
+      {(t.status === "idle" || t.status === "finished") && <DailyStatusStrip />}
       {(t.status === "idle" || t.status === "finished") && <RecoverRunBanner />}
-
-      {(t.status === "idle" || t.status === "finished") && profile.coachEnabled !== false && <CoachCard profile={profile} />}
 
       {(armedGhost || t.ghost) && (t.status === "idle" || t.status === "finished") && (
         <div className="mb-2 flex items-center justify-between gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2">
