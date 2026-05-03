@@ -3,6 +3,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import BottomNav from "@/components/BottomNav";
 import PrAchievement from "@/components/PrAchievement";
+import { Toaster } from "@/components/ui/sonner";
 import { I18nProvider } from "@/lib/i18n";
 
 function NotFoundComponent() {
@@ -91,6 +92,7 @@ function RootComponent() {
         <Outlet />
         <BottomNav />
         <PrAchievement />
+        <Toaster />
       </div>
     </I18nProvider>
   );
