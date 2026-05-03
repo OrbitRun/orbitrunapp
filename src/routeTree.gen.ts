@@ -9,19 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as CoachRouteImport } from './routes/coach'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SpotifyCallbackRouteImport } from './routes/spotify.callback'
 import { Route as RunIdRouteImport } from './routes/run.$id'
 import { Route as ProfileHeartRateRouteImport } from './routes/profile_.heart-rate'
 
-const RecordsRoute = RecordsRouteImport.update({
-  id: '/records',
-  path: '/records',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -30,6 +25,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -55,18 +55,18 @@ const ProfileHeartRateRoute = ProfileHeartRateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
   '/history': typeof HistoryRoute
   '/profile': typeof ProfileRoute
-  '/records': typeof RecordsRoute
   '/profile/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
   '/history': typeof HistoryRoute
   '/profile': typeof ProfileRoute
-  '/records': typeof RecordsRoute
   '/profile/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
@@ -74,9 +74,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
   '/history': typeof HistoryRoute
   '/profile': typeof ProfileRoute
-  '/records': typeof RecordsRoute
   '/profile_/heart-rate': typeof ProfileHeartRateRoute
   '/run/$id': typeof RunIdRoute
   '/spotify/callback': typeof SpotifyCallbackRoute
@@ -85,27 +85,27 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/coach'
     | '/history'
     | '/profile'
-    | '/records'
     | '/profile/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/coach'
     | '/history'
     | '/profile'
-    | '/records'
     | '/profile/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
   id:
     | '__root__'
     | '/'
+    | '/coach'
     | '/history'
     | '/profile'
-    | '/records'
     | '/profile_/heart-rate'
     | '/run/$id'
     | '/spotify/callback'
@@ -113,9 +113,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CoachRoute: typeof CoachRoute
   HistoryRoute: typeof HistoryRoute
   ProfileRoute: typeof ProfileRoute
-  RecordsRoute: typeof RecordsRoute
   ProfileHeartRateRoute: typeof ProfileHeartRateRoute
   RunIdRoute: typeof RunIdRoute
   SpotifyCallbackRoute: typeof SpotifyCallbackRoute
@@ -123,13 +123,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/records': {
-      id: '/records'
-      path: '/records'
-      fullPath: '/records'
-      preLoaderRoute: typeof RecordsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -142,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -177,9 +177,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CoachRoute: CoachRoute,
   HistoryRoute: HistoryRoute,
   ProfileRoute: ProfileRoute,
-  RecordsRoute: RecordsRoute,
   ProfileHeartRateRoute: ProfileHeartRateRoute,
   RunIdRoute: RunIdRoute,
   SpotifyCallbackRoute: SpotifyCallbackRoute,

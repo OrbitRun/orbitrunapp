@@ -1,109 +1,84 @@
-## Goal
+# 4-tab navigation restructure
 
-Upgrade the AI coach into a hyper-personal advisor surfaced as a fixed **Daily Readiness Score** panel on the Dashboard (no modals). The panel combines resting HR, HRV, recent training load (TRIMP), personal HR zones, and current weather into one score plus a proactive coaching message.
+Goal: keep current visuals intact, just reorganize where things live.
 
-## What the user will see (Dashboard, between greeting and CoachCard)
+## New tabs (BottomNav)
 
-```text
-┌─ READINESS ─────────────────  82 / 100 ──┐
-│  ████████████████░░░░  Ready to train     │
-│                                            │
-│  Coach: "Great recovery — your HRV is up  │
-│  4ms vs. baseline. Today's tempo run is   │
-│  green-lit. It's 24°C & humid, so start   │
-│  20s/km slower than goal pace."           │
-│                                            │
-│  Resting HR  52   HRV   68ms              │
-│  7-day TRIMP 412  Trend  +8% (stable)     │
-│  Weather     24°C · 78% humidity · clear  │
-└────────────────────────────────────────────┘
-```
+`src/components/BottomNav.tsx` — replace the Records item with Coach. Order: **Run · Coach · History · Profile**.
 
-Score < 70 → message recommends easy/rest day and the panel border tints amber/red. Score ≥ 85 → green tint + "go hard" nudge.
+| Tab | Path | Icon |
+|-----|------|------|
+| Run (Løb) | `/` | Activity |
+| Coach | `/coach` | Sparkles |
+| History (Historik) | `/history` | History |
+| Profile | `/profile` | User |
 
-## Implementation
+Add i18n key `nav.coach` ("Coach" / "Coach").
 
-### 1. Score engine — `src/lib/readiness-engine.ts` (new)
+## Tab 1 — Run (`src/routes/index.tsx`)
 
-Pure function `computeReadiness({ profile, runs, hrZones, vitals, weather })` returning:
-```ts
-{ score: 0..100, band: "rest"|"easy"|"ready"|"prime",
-  components: { recovery, hrv, load, weather },
-  trimp7d: number, trimp3d: number, loadTrend: number,
-  recommendationKey: "readiness.rec.rest"|"...easy"|"...go"|"...heatAdjust",
-  recommendationParams?: Record<string,string|number> }
-```
-Weighting (sum to 100):
-- Recovery (resting HR vs. 28-day baseline): 25
-- HRV (today vs. 28-day baseline, higher = better): 25
-- Acute load (3-day TRIMP) vs. chronic (28-day TRIMP/9.3) ratio: 30 — penalise > 1.3 (overreach), reward 0.8–1.2
-- Weather penalty (heat/humidity/wind for outdoor sessions): 20
+Keep map, stats, Spotify/MusicHub, start button exactly as today. Changes:
 
-### 2. TRIMP — extend `src/lib/run-types.ts` + `recovery-engine.ts`
+- Remove `<ReadinessPanel />` and `<CoachCard …/>` from this route.
+- Insert a slim "Dagens status" strip immediately under the header that links to `/coach`. New component `DailyStatusStrip`:
+  - Computes the readiness score via existing `computeReadiness({ runs, vitals, hrZones, env })` (same hooks already used by ReadinessPanel).
+  - Renders one line: small dot in band color + `score/100` + band label + recommendation (truncated) + chevron.
+  - Wrapped in `<Link to="/coach">`, same `glass` rounded styling for visual consistency.
+- Keep `RecoverRunBanner` and ghost banner where they are.
 
-- Add optional `trimp?: number` and `intensityFactor?: number` to `Run`.
-- Compute on run save in `use-run-tracker.ts` finalizer:
-  `TRIMP = durationMin × HRr × 0.64 × e^(1.92 × HRr)` (Banister, men) where `HRr = (avgHR − restHR) / (maxHR − restHR)`. Falls back to `durationMin × rpe` when HR is missing.
-- Add `weeklyTrimp(runs, days=7)` helper used by the score engine and exposed in the panel.
+## Tab 2 — Coach (new `src/routes/coach.tsx`)
 
-### 3. Personal HR thresholds — `src/lib/hr-zones-config.ts` already supports manual `restingHr` + `maxHr`
+A dedicated page that hosts the deep coaching experience. Layout (top-down):
 
-- The route `/profile/heart-rate` already lets the user enter age, restingHr, maxHr (Karvonen). It's reachable but not surfaced from the Dashboard.
-- Add an inline "Personalize zones" link in the Readiness panel when the user is still on default values (`source !== "manual"` and resting/max HR untouched), routing to `/profile/heart-rate`.
-- Add Apple Health import button on that route: call existing `health.ts` to pull resting HR + HRV samples (already wired for HR; extend with `fetchVitals()` returning `{ restingHr, hrvMs }` — guarded by `Capacitor.isNativePlatform()`).
+1. Page header: eyebrow `coach.eyebrow`, title `coach.title`.
+2. `<ReadinessPanel />` (already deep — score, HR/HRV/TRIMP/weather mini-stats, CTAs).
+3. `<CoachCard profile={profile} />` (existing card with next session, plan progress, zone-5 override).
+4. `<WeeklyTrimpBreakdown runs={runs} />` reused for in-context training-load analysis.
 
-### 4. Vitals store — `src/lib/vitals.ts` (new)
+No design changes to those components — pure relocation/composition. Profile loaded via `useUserProfile()`; runs via `loadRuns()` + the same `orbit:run-updated` listener pattern used elsewhere.
 
-LocalStorage at `orbit:vitals:v1`:
-```ts
-type Vitals = { restingHr?: number; hrvMs?: number; updatedAt: number;
-                history: Array<{ t: number; restingHr?: number; hrvMs?: number }> }
-```
-Helpers: `loadVitals`, `saveVitals`, `vitalsBaseline(history, days=28)`, manual entry on the heart-rate page (two number inputs), plus an optional Health import button.
+## Tab 3 — History (`src/routes/history.tsx`)
 
-### 5. Weather integration — reuse `src/lib/weather.ts`
+Keep the existing list + WeeklyTrimpBreakdown unchanged. Add a **swipeable Records carousel** at the top (above the 3-stat summary):
 
-- Add `fetchCurrentEnv(lat, lng)` extending Open-Meteo current vars to include `relative_humidity_2m` and `apparent_temperature`. Cache in `sessionStorage` for 30 minutes.
-- Use the user's last known location (last run's final point) to fetch on mount; gracefully skip if unavailable.
-- Heat penalty: subtract up to 20 points using apparent temperature (>22°C scaled, >30°C max); humidity > 70% adds penalty; wind > 8 m/s small penalty. Recommendation key switches to `readiness.rec.heatAdjust` with a pace-shift suggestion (`+15s/km` per 5°C above 18°C apparent).
+- New component `src/components/RecordsCarousel.tsx` using the existing `embla-carousel-react` (already in `src/components/ui/carousel.tsx`).
+- Each slide reuses the visual treatment from `src/routes/records.tsx`: `glass rounded-2xl px-4 py-4`, category title, large neon mono value, date-set line, and the "Race ghost" button (same handler — `selectGhost(run, …); navigate({ to: "/" })`).
+- Iterates `PR_ORDER` from `personal-records`, calls `recomputeAllPrs()` on mount, listens for `orbit:new-pr`.
+- One PR per slide, snap-scroll, dot indicators below; no nav arrows on mobile.
 
-### 6. Dashboard panel — `src/components/ReadinessPanel.tsx` (new)
+## Tab 4 — Profile
 
-- Mounted in `src/routes/index.tsx` immediately after the greeting and before `<RecoverRunBanner />`/`<CoachCard />`, only when `t.status === "idle" || "finished"`.
-- Visual: glass card matching `RecoveryStatus`/`CoachCard` styles. Big tabular score, neon progress bar, coloured ring (red < 60, amber 60-74, neon 75-100), proactive coach line (uses i18n keys), and a 4-stat sub-grid (resting HR, HRV, 7-day TRIMP, weather chip).
-- Uses `useUserProfile`, `useHrZones`, `loadRuns()`, new `useVitals()` and `useEnv()` hooks; recomputes via `useMemo` and on `orbit:run-updated`/`orbit:vitals-update`/`orbit:hr-zones-update` events.
+No changes.
 
-### 7. CoachCard tie-in
+## Removals
 
-- Pass readiness to existing `CoachCard` so when score < 70 the displayed session downgrades (`easy → walkRun`, `intervals → easy`, `tempo/long → easy short`) and the existing zone-5 override message is replaced with the readiness recommendation. No layout change — same card, smarter copy.
+- Delete `src/routes/records.tsx` (content fully migrated to the carousel).
+- Routes regenerate automatically; do not hand-edit `routeTree.gen.ts`.
+- Remove any in-app `<Link to="/records">` references (BottomNav is the only one expected; verify with `rg "/records"`).
 
-### 8. i18n
+## i18n additions (`src/lib/i18n.tsx`)
 
-Add EN + DA strings under namespaces:
-- `readiness.title`, `readiness.band.rest|easy|ready|prime`
-- `readiness.metric.restingHr|hrv|trimp7d|trend|weather`
-- `readiness.rec.rest|easy|go|heatAdjust|missingData`
-- `readiness.cta.personalize`, `readiness.cta.logVitals`
+- `nav.coach` — Coach / Coach
+- `coach.eyebrow` — Your Coach / Din coach
+- `coach.title` — AI Coach / AI-coach
+- `dailyStatus.eyebrow` — Today's status / Dagens status
+- `dailyStatus.cta` — Open coach / Åbn coach
+- `records.carousel.eyebrow` — Personal records / Personlige rekorder
 
-### 9. Files touched
+## File summary
 
-New:
-- `src/lib/readiness-engine.ts`
-- `src/lib/vitals.ts`
-- `src/components/ReadinessPanel.tsx`
-- `src/hooks/use-vitals.ts`
-- `src/hooks/use-current-env.ts`
+Create:
+- `src/routes/coach.tsx`
+- `src/components/DailyStatusStrip.tsx`
+- `src/components/RecordsCarousel.tsx`
 
-Edited:
-- `src/lib/run-types.ts` (add `trimp`, `intensityFactor` fields)
-- `src/lib/recovery-engine.ts` (export `weeklyTrimp` helper, optional)
-- `src/hooks/use-run-tracker.ts` (compute TRIMP at run finalize)
-- `src/lib/weather.ts` (extend current fetch with humidity/apparent temp)
-- `src/routes/index.tsx` (mount `ReadinessPanel`)
-- `src/routes/profile_.heart-rate.tsx` (add vitals inputs + Health import button + link visibility from dashboard)
-- `src/components/CoachCard.tsx` (downgrade recommendation when readiness < 70)
-- `src/lib/i18n.tsx` (new strings, EN/DA)
+Edit:
+- `src/components/BottomNav.tsx` (swap Records → Coach)
+- `src/routes/index.tsx` (remove ReadinessPanel + CoachCard, insert DailyStatusStrip)
+- `src/routes/history.tsx` (mount RecordsCarousel above stats)
+- `src/lib/i18n.tsx` (new keys)
 
-### Open question
+Delete:
+- `src/routes/records.tsx`
 
-For HRV import on web (no Apple Health), we'll show a manual entry field. On native iOS we'll pull `HKQuantityTypeIdentifierHeartRateVariabilitySDNN` via the existing `health.ts` bridge. OK to proceed with manual-entry-first and treat Health import as a follow-up if the bridge isn't ready?
+No data model, storage, or backend changes.
