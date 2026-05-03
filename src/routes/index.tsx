@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Ghost, Pause, Pencil, Play, Square, X } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHub from "@/components/MusicHub";
@@ -42,8 +42,14 @@ import {
 } from "@/lib/ghost-runner";
 import logo from "@/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png";
 
+type IndexSearch = { autostart?: 1 };
+
 export const Route = createFileRoute("/")({
   component: RunPage,
+  validateSearch: (s: Record<string, unknown>): IndexSearch => {
+    if (s.autostart === 1 || s.autostart === "1") return { autostart: 1 };
+    return {};
+  },
 });
 
 function RunPage() {
@@ -104,6 +110,18 @@ function RunPage() {
     if (shouldAskHealthPermission()) setHealthOpen(true);
     setCounting(true);
   }, [wakeLock, t]);
+
+  const search = Route.useSearch();
+  const navigateRoute = useNavigate();
+  const autostartRef = useRef(false);
+  useEffect(() => {
+    if (search.autostart !== 1) return;
+    if (autostartRef.current) return;
+    if (t.status !== "idle" && t.status !== "finished") return;
+    autostartRef.current = true;
+    beginCountdown();
+    void navigateRoute({ to: "/", search: {}, replace: true });
+  }, [search.autostart, t.status, beginCountdown, navigateRoute]);
 
   const launchRun = useCallback(() => {
     setCounting(false);
