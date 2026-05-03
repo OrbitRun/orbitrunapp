@@ -86,6 +86,8 @@ function HistoryPage() {
         </div>
       </section>
 
+      {runs.length > 0 && <WeeklyTrimpBreakdown runs={runs} />}
+
       {runs.length === 0 ? (
         <div className="glass rounded-3xl p-8 text-center">
           <p className="text-muted-foreground text-sm">{t("history.empty")}</p>
