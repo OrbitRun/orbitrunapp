@@ -1,34 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Activity, ChevronRight, Heart, Sparkles, Thermometer, Wind } from "lucide-react";
+import { Activity, ChevronRight, Heart, Thermometer, Wind } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { useVitals } from "@/hooks/use-vitals";
 import { useHrZones } from "@/hooks/use-hr-zones";
 import { useCurrentEnv } from "@/hooks/use-current-env";
-import { computeReadiness, type ReadinessResult } from "@/lib/readiness-engine";
-
-function bandColor(band: ReadinessResult["band"]): string {
-  switch (band) {
-    case "rest":
-      return "var(--destructive)";
-    case "easy":
-      return "oklch(0.78 0.18 60)"; // amber
-    case "ready":
-      return "var(--neon)";
-    case "prime":
-      return "var(--neon)";
-  }
-}
+import { computeReadiness } from "@/lib/readiness-engine";
 
 export default function ReadinessPanel() {
   const { t } = useI18n();
   const [runs, setRuns] = useState<Run[]>([]);
+  const [mounted, setMounted] = useState(false);
   const vitals = useVitals();
   const hrZones = useHrZones();
   const env = useCurrentEnv();
 
   useEffect(() => {
+    setMounted(true);
     setRuns(loadRuns());
     const onUpdate = () => setRuns(loadRuns());
     window.addEventListener("orbit:run-updated", onUpdate);
@@ -44,73 +33,30 @@ export default function ReadinessPanel() {
     [runs, vitals, hrZones, env],
   );
 
-  const color = bandColor(r.band);
-  const bandLabel = t(`readiness.band.${r.band}`);
-  const recommendation = t(r.recommendationKey, r.recommendationParams as Record<string, string>);
-
   return (
-    <section
-      className="mt-1 mb-3 glass rounded-2xl p-4"
-      style={{ borderColor: "color-mix(in oklab, " + color + " 35%, transparent)" }}
-    >
-      <div className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-[0.25em] font-bold" style={{ color }}>
-          {t("readiness.title")}
-        </div>
-        <div className="font-display font-black tabular leading-none">
-          <span className="text-2xl" style={{ color }}>{r.score}</span>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold ml-1">
-            {t("readiness.score.of")}
-          </span>
-        </div>
+    <section className="mt-1 mb-3 glass rounded-2xl p-4">
+      <div className="text-[10px] uppercase tracking-[0.25em] font-bold text-muted-foreground mb-3">
+        {t("readiness.title")}
       </div>
-
-      <div
-        className="mt-2 h-[3px] w-full bg-white/5 overflow-hidden rounded-full"
-        role="progressbar"
-        aria-valuenow={r.score}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${r.score}%`, backgroundColor: color }}
-        />
-      </div>
-
-      <div className="mt-2 flex items-center gap-1.5">
-        <Sparkles className="h-3 w-3" style={{ color }} />
-        <span className="text-[10px] uppercase tracking-[0.18em] font-bold" style={{ color }}>
-          {bandLabel}
-        </span>
-      </div>
-
-      <p className="mt-2 text-[12px] leading-snug text-foreground">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold mr-1">
-          {t("readiness.coach")}:
-        </span>
-        {recommendation}
-      </p>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <MiniStat
           icon={<Heart className="h-3 w-3" />}
           label={t("readiness.metric.restingHr")}
-          value={vitals.restingHr ? String(vitals.restingHr) : "—"}
-          unit={vitals.restingHr ? t("readiness.unit.bpm") : ""}
+          value={mounted && vitals.restingHr ? String(vitals.restingHr) : "—"}
+          unit={mounted && vitals.restingHr ? t("readiness.unit.bpm") : ""}
         />
         <MiniStat
           icon={<Activity className="h-3 w-3" />}
           label={t("readiness.metric.hrv")}
-          value={vitals.hrvMs ? String(vitals.hrvMs) : "—"}
-          unit={vitals.hrvMs ? t("readiness.unit.ms") : ""}
+          value={mounted && vitals.hrvMs ? String(vitals.hrvMs) : "—"}
+          unit={mounted && vitals.hrvMs ? t("readiness.unit.ms") : ""}
         />
         <MiniStat
           icon={<Activity className="h-3 w-3" />}
           label={t("readiness.metric.trimp7d")}
-          value={String(r.trimp7d)}
+          value={mounted ? String(r.trimp7d) : "—"}
           unit={
-            r.loadTrendPct !== 0
+            mounted && r.loadTrendPct !== 0
               ? `${r.loadTrendPct > 0 ? "+" : ""}${r.loadTrendPct}%`
               : ""
           }
@@ -118,13 +64,17 @@ export default function ReadinessPanel() {
         <MiniStat
           icon={<Thermometer className="h-3 w-3" />}
           label={t("readiness.metric.weather")}
-          value={env ? `${env.apparentTempC}°` : "—"}
-          unit={env ? `${env.humidityPct}%` : ""}
-          extra={env && env.windMs >= 5 ? <Wind className="h-3 w-3 text-muted-foreground" /> : null}
+          value={mounted && env ? `${env.apparentTempC}°` : "—"}
+          unit={mounted && env ? `${env.humidityPct}%` : ""}
+          extra={
+            mounted && env && env.windMs >= 5 ? (
+              <Wind className="h-3 w-3 text-muted-foreground" />
+            ) : null
+          }
         />
       </div>
 
-      {(r.missingVitals || hrZones?.source !== "manual") && (
+      {mounted && (r.missingVitals || hrZones?.source !== "manual") && (
         <div className="mt-3 pt-3 border-t border-white/5 flex flex-col gap-1.5">
           {r.missingVitals && (
             <Link
