@@ -53,13 +53,72 @@ export async function requestHeartRatePermission(): Promise<HealthPermissionStat
   if (!plugin) return "unavailable";
   try {
     await plugin.requestAuth?.({
-      read: ["HKQuantityTypeIdentifierHeartRate"],
+      read: [
+        "HKQuantityTypeIdentifierHeartRate",
+        "HKQuantityTypeIdentifierRestingHeartRate",
+        "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
+      ],
       write: [],
     });
     return "granted";
   } catch {
     return "denied";
   }
+}
+
+async function queryLatestSample(sampleName: string, windowDays = 7): Promise<number | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugin: any = await loadPlugin();
+  if (!plugin) return null;
+  try {
+    const end = new Date();
+    const start = new Date(end.getTime() - windowDays * 24 * 60 * 60 * 1000);
+    const res = await plugin.queryHKitSampleType?.({
+      sampleName,
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      limit: 1,
+    });
+    const samples: Array<{ value?: number }> = res?.resultData ?? res ?? [];
+    if (!samples?.length) return null;
+    const last = samples[samples.length - 1];
+    return typeof last?.value === "number" ? last.value : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function getLatestRestingHeartRate(): Promise<number | null> {
+  const v = await queryLatestSample("HKQuantityTypeIdentifierRestingHeartRate", 14);
+  return v == null ? null : Math.round(v);
+}
+
+export async function getLatestHrv(): Promise<number | null> {
+  // SDNN is reported in seconds by HealthKit — convert to ms.
+  const v = await queryLatestSample("HKQuantityTypeIdentifierHeartRateVariabilitySDNN", 14);
+  if (v == null) return null;
+  return Math.round(v < 5 ? v * 1000 : v);
+}
+
+export type VitalsSyncResult = {
+  status: HealthPermissionStatus;
+  restingHr: number | null;
+  hrvMs: number | null;
+};
+
+export async function syncVitalsFromHealth(): Promise<VitalsSyncResult> {
+  if (!isHealthAvailable()) {
+    return { status: "unavailable", restingHr: null, hrvMs: null };
+  }
+  const status = await requestHeartRatePermission();
+  if (status !== "granted") {
+    return { status, restingHr: null, hrvMs: null };
+  }
+  const [restingHr, hrvMs] = await Promise.all([
+    getLatestRestingHeartRate(),
+    getLatestHrv(),
+  ]);
+  return { status, restingHr, hrvMs };
 }
 
 export async function getLatestHeartRate(): Promise<number | null> {
