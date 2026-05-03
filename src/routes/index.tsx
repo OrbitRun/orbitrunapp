@@ -111,6 +111,18 @@ function RunPage() {
     setCounting(true);
   }, [wakeLock, t]);
 
+  const search = Route.useSearch();
+  const navigateRoute = useNavigate();
+  const autostartRef = useRef(false);
+  useEffect(() => {
+    if (search.autostart !== 1) return;
+    if (autostartRef.current) return;
+    if (t.status !== "idle" && t.status !== "finished") return;
+    autostartRef.current = true;
+    beginCountdown();
+    void navigateRoute({ to: "/", search: {}, replace: true });
+  }, [search.autostart, t.status, beginCountdown, navigateRoute]);
+
   const launchRun = useCallback(() => {
     setCounting(false);
     t.start();
