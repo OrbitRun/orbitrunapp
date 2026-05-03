@@ -1,64 +1,84 @@
-## Mål
+# 4-tab navigation restructure
 
-Forenkle Coach-siden så der kun er én samlet hero-boks (Orbit Coach + Dagens Form + Start-knap), efterfulgt af 2x2 grid med vitals/vejr og TRIMP-grafen nederst. Ingen separat "Dagens handling"-sektion.
+Goal: keep current visuals intact, just reorganize where things live.
 
-## Ny struktur på `/coach`
+## New tabs (BottomNav)
 
-```
-[Header: COACH / Orbit Coach]
-[Orbit Coach hero-kort]                ← samlet ny boks
-  • Score + bånd (rest/easy/ready/prime) + progressbar
-  • AI-besked (recommendation)
-  • Næste pas (titel + summary, tilpasset readiness-bånd)
-  • Plan-progress (uge x / total, %)
-  • [START TRÆNING]  (stor neon-knap)
-  • [Gem som plan]   (sekundær, lille)
-[2x2 grid: Hvilepuls · HRV · TRIMP 7d · Vejr]
-[Ugentlig TRIMP-graf]
-```
+`src/components/BottomNav.tsx` — replace the Records item with Coach. Order: **Run · Coach · History · Profile**.
 
-Den eksisterende "Dagens handling"-sektion (`ReadinessActions`) fjernes som selvstændig boks, og dens logik (anbefalet pas ud fra readiness-bånd, save/start) flyttes ind i den samlede coach-boks.
+| Tab | Path | Icon |
+|-----|------|------|
+| Run (Løb) | `/` | Activity |
+| Coach | `/coach` | Sparkles |
+| History (Historik) | `/history` | History |
+| Profile | `/profile` | User |
 
-## Filændringer
+Add i18n key `nav.coach` ("Coach" / "Coach").
 
-**`src/components/CoachCard.tsx` — omskrives til den nye samlede boks**
-- Tilføjer hooks: `useVitals`, `useHrZones`, `useCurrentEnv`, `loadRuns` → kalder `computeReadiness` for score + bånd + recommendation.
-- Bruger samme `recommendedSession(band, baseSession, lang)` logik som i `ReadinessActions` (rest → walk, easy → easy run, ellers coach.next session).
-- Topsektion: bånd-eyebrow + score (stort, farvet efter bånd) + tynd progressbar (samme stil som `ReadinessPanel`).
-- AI-besked: `t(r.recommendationKey, r.recommendationParams)` med `Sparkles`-ikon.
-- Næste pas: titel + summary i et `bg-white/5`-felt.
-- Z5-override-banner bevares.
-- Plan-progress strip bevares nederst.
-- CTA: `Start træning` (neon, fuld bredde) → `savePlannedSession({session, band, score})` + `navigate({ to: "/", search: { autostart: 1 } })`.
-- Sekundær: `Gem som plan` (toast) + den eksisterende `Vis detaljer`-toggle.
-- Unconfigured-state forbliver uændret (onboarding-kortet).
+## Tab 1 — Run (`src/routes/index.tsx`)
 
-**`src/components/ReadinessPanel.tsx` — slankes til 2x2 grid**
-- Behold `MiniStat`-grid med Hvilepuls / HRV / TRIMP 7d / Vejr.
-- Fjern score-header, progressbar, bånd-label og recommendation (de bor nu i coach-boksen).
-- Behold de to bund-CTAs ("log vitals", "personalize") når relevant.
+Keep map, stats, Spotify/MusicHub, start button exactly as today. Changes:
 
-**`src/components/ReadinessActions.tsx` — slettes**
+- Remove `<ReadinessPanel />` and `<CoachCard …/>` from this route.
+- Insert a slim "Dagens status" strip immediately under the header that links to `/coach`. New component `DailyStatusStrip`:
+  - Computes the readiness score via existing `computeReadiness({ runs, vitals, hrZones, env })` (same hooks already used by ReadinessPanel).
+  - Renders one line: small dot in band color + `score/100` + band label + recommendation (truncated) + chevron.
+  - Wrapped in `<Link to="/coach">`, same `glass` rounded styling for visual consistency.
+- Keep `RecoverRunBanner` and ghost banner where they are.
 
-**`src/routes/coach.tsx`**
-- Ny rækkefølge: `<CoachCard>` → `<ReadinessPanel>` → `<WeeklyTrimpBreakdown>`.
-- Fjern `<ReadinessActions />` import + brug.
+## Tab 2 — Coach (new `src/routes/coach.tsx`)
 
-**`src/routes/index.tsx` — autostart fra Coach**
-- Læs `?autostart=1` via `Route.useSearch()` (tilføj `validateSearch` på rute-definitionen så search er typed: `{ autostart?: 1 }`).
-- Når `autostart === 1` og `t.status === "idle"`: kald `beginCountdown()` én gang i en `useEffect` med en lokal `useRef`-guard, og ryd parameter via `navigate({ to: "/", replace: true })` så reload ikke gentager.
-- Den planlagte session er allerede i `localStorage` via `savePlannedSession`; eksisterende `DailyStatusStrip` viser den.
+A dedicated page that hosts the deep coaching experience. Layout (top-down):
 
-**`src/lib/i18n.tsx`**
-- Genbrug eksisterende `coach.actions.startWorkout` / `startRecovery` / `savePlan` / `saved` til den nye knap.
-- Ingen nye nøgler nødvendige (alt findes allerede fra tidligere iteration).
+1. Page header: eyebrow `coach.eyebrow`, title `coach.title`.
+2. `<ReadinessPanel />` (already deep — score, HR/HRV/TRIMP/weather mini-stats, CTAs).
+3. `<CoachCard profile={profile} />` (existing card with next session, plan progress, zone-5 override).
+4. `<WeeklyTrimpBreakdown runs={runs} />` reused for in-context training-load analysis.
 
-## Teknisk note
+No design changes to those components — pure relocation/composition. Profile loaded via `useUserProfile()`; runs via `loadRuns()` + the same `orbit:run-updated` listener pattern used elsewhere.
 
-- `Route` for `/` opdateres med `validateSearch: (s) => ({ autostart: s.autostart === "1" || s.autostart === 1 ? 1 : undefined })` så TanStack Router-typecheck holder.
-- Autostart-effect kører kun når brugeren er på Run-tabben med `idle/finished` og ikke under et igangværende run.
-- Hydration-mismatch i runtime errors (vejr `16°` vs `—`) løses ved at lade `MiniStat` rendere `—` initielt og opdatere efter mount — `useCurrentEnv` returnerer allerede `null` på server, så at flytte grid'et bag en `mounted`-flag i `ReadinessPanel` fjerner mismatchet.
+## Tab 3 — History (`src/routes/history.tsx`)
 
-## Resultat
+Keep the existing list + WeeklyTrimpBreakdown unchanged. Add a **swipeable Records carousel** at the top (above the 3-stat summary):
 
-Brugeren får én klar handling pr. dag direkte i toppen af Coach-tabben: se score + besked, tryk "Start træning" → lander på Run-tabben med countdown i gang og det anbefalede pas planlagt.
+- New component `src/components/RecordsCarousel.tsx` using the existing `embla-carousel-react` (already in `src/components/ui/carousel.tsx`).
+- Each slide reuses the visual treatment from `src/routes/records.tsx`: `glass rounded-2xl px-4 py-4`, category title, large neon mono value, date-set line, and the "Race ghost" button (same handler — `selectGhost(run, …); navigate({ to: "/" })`).
+- Iterates `PR_ORDER` from `personal-records`, calls `recomputeAllPrs()` on mount, listens for `orbit:new-pr`.
+- One PR per slide, snap-scroll, dot indicators below; no nav arrows on mobile.
+
+## Tab 4 — Profile
+
+No changes.
+
+## Removals
+
+- Delete `src/routes/records.tsx` (content fully migrated to the carousel).
+- Routes regenerate automatically; do not hand-edit `routeTree.gen.ts`.
+- Remove any in-app `<Link to="/records">` references (BottomNav is the only one expected; verify with `rg "/records"`).
+
+## i18n additions (`src/lib/i18n.tsx`)
+
+- `nav.coach` — Coach / Coach
+- `coach.eyebrow` — Your Coach / Din coach
+- `coach.title` — AI Coach / AI-coach
+- `dailyStatus.eyebrow` — Today's status / Dagens status
+- `dailyStatus.cta` — Open coach / Åbn coach
+- `records.carousel.eyebrow` — Personal records / Personlige rekorder
+
+## File summary
+
+Create:
+- `src/routes/coach.tsx`
+- `src/components/DailyStatusStrip.tsx`
+- `src/components/RecordsCarousel.tsx`
+
+Edit:
+- `src/components/BottomNav.tsx` (swap Records → Coach)
+- `src/routes/index.tsx` (remove ReadinessPanel + CoachCard, insert DailyStatusStrip)
+- `src/routes/history.tsx` (mount RecordsCarousel above stats)
+- `src/lib/i18n.tsx` (new keys)
+
+Delete:
+- `src/routes/records.tsx`
+
+No data model, storage, or backend changes.
