@@ -756,7 +756,7 @@ const da: Dict = {
   "profile.audio.value.500": "Hver 500 m",
   "profile.audio.value.1000": "Hver 1 km",
   "profile.countdown": "Nedtælling før start",
-  "profile.countdown.info": "Antal sekunder der tælles ned, før løbet starter. Vælg Fra for at starte med det samme.",
+  "profile.countdown.info": "Tæller ned højt, før løbet begynder, så du har tid til at lægge telefonen væk eller komme i position. Tryk på værdien for at vælge hvor mange sekunder nedtællingen skal vare, eller vælg Fra for at starte løbet med det samme.",
   "profile.countdown.off": "Fra",
   "profile.music": "Musikkilde",
   "profile.music.value": "Spotify (snart)",
