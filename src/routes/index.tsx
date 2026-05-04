@@ -102,8 +102,15 @@ function RunPage() {
     // Pre-arm GPS so the first fix is ready when the run actually starts
     t.armGps();
     if (shouldAskHealthPermission()) setHealthOpen(true);
-    setCounting(true);
-  }, [wakeLock, t]);
+    const secs = profile.countdownSeconds ?? 10;
+    if (secs === 0) {
+      setCounting(false);
+      t.start();
+      window.dispatchEvent(new CustomEvent("orbit:run-start"));
+    } else {
+      setCounting(true);
+    }
+  }, [wakeLock, t, profile.countdownSeconds]);
 
   const launchRun = useCallback(() => {
     setCounting(false);
