@@ -52,6 +52,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   onboarded: false,
   autoPauseEnabled: true,
   flightRecorderEnabled: true,
+  countdownSeconds: 10,
 };
 
 export function loadProfile(): UserProfile {
