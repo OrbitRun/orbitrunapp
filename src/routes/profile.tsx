@@ -292,6 +292,13 @@ function ProfilePage() {
           infoText={t("profile.audio.info")}
           onToggle={toggleAudioCue}
         />
+        <CountdownPickerRow
+          value={(profile.countdownSeconds ?? 10) as CountdownSeconds}
+          offLabel={t("profile.countdown.off")}
+          label={t("profile.countdown")}
+          infoText={t("profile.countdown.info")}
+          onChange={(v) => update({ countdownSeconds: v })}
+        />
         <SettingRowWithInfo
           icon={<Trophy className="h-4 w-4" />}
           label={t("profile.prVoice")}
