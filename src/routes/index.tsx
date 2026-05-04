@@ -102,8 +102,15 @@ function RunPage() {
     // Pre-arm GPS so the first fix is ready when the run actually starts
     t.armGps();
     if (shouldAskHealthPermission()) setHealthOpen(true);
-    setCounting(true);
-  }, [wakeLock, t]);
+    const secs = profile.countdownSeconds ?? 10;
+    if (secs === 0) {
+      setCounting(false);
+      t.start();
+      window.dispatchEvent(new CustomEvent("orbit:run-start"));
+    } else {
+      setCounting(true);
+    }
+  }, [wakeLock, t, profile.countdownSeconds]);
 
   const launchRun = useCallback(() => {
     setCounting(false);
@@ -159,7 +166,7 @@ function RunPage() {
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
-      {counting && <CountdownOverlay onComplete={launchRun} onCancel={cancelCountdown} />}
+      {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
       {pendingRun && <RunSummary run={pendingRun} onSave={handleSave} onDiscard={handleDiscard} />}
       {isActive && !pendingRun && (
