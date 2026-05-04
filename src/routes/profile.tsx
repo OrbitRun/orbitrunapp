@@ -529,7 +529,7 @@ function CountdownPickerRow({ value, offLabel, label, infoText, onChange }: Coun
         <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
           <Timer className="h-4 w-4" />
         </div>
-        <div className="flex items-center gap-1 flex-1 min-w-0">
+        <div className="relative z-10 flex items-center gap-1 flex-1 min-w-0">
           <div className="text-sm font-semibold truncate">{label}</div>
           <button
             type="button"
@@ -540,12 +540,12 @@ function CountdownPickerRow({ value, offLabel, label, infoText, onChange }: Coun
             <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
           </button>
         </div>
-        <div className="text-xs text-muted-foreground">{display}</div>
+        <div className="relative z-10 text-xs text-muted-foreground pointer-events-none">{display}</div>
         <select
           aria-label={label}
           value={value}
           onChange={(e) => onChange(Number(e.target.value) as CountdownSeconds)}
-          className="absolute inset-0 opacity-0 cursor-pointer"
+          className="absolute inset-0 opacity-0 cursor-pointer z-0"
         >
           {COUNTDOWN_OPTIONS.map((s) => (
             <option key={s} value={s}>
