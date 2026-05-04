@@ -6,25 +6,31 @@ const VISIBLE_MS = 1200;
 const FADE_MS = 300;
 
 export default function SplashScreen() {
-  const [mounted, setMounted] = useState(false);
+  const [mounted, setMounted] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return !sessionStorage.getItem(SESSION_KEY);
+    } catch {
+      return true;
+    }
+  });
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!mounted) return;
     try {
-      if (sessionStorage.getItem(SESSION_KEY)) return;
       sessionStorage.setItem(SESSION_KEY, "1");
     } catch {
       // ignore (private mode)
     }
-    setMounted(true);
     const t1 = window.setTimeout(() => setFading(true), VISIBLE_MS);
     const t2 = window.setTimeout(() => setMounted(false), VISIBLE_MS + FADE_MS);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
-  }, []);
+  }, [mounted]);
 
   if (!mounted) return null;
 
