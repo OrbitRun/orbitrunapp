@@ -3,6 +3,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import BottomNav from "@/components/BottomNav";
 import PrAchievement from "@/components/PrAchievement";
+import SplashScreen from "@/components/SplashScreen";
 import { I18nProvider } from "@/lib/i18n";
 
 function NotFoundComponent() {
