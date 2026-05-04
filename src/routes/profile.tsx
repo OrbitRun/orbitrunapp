@@ -512,3 +512,56 @@ function SettingRowWithInfo({ icon, label, valueText, infoText, infoBadge, onTog
   );
 }
 
+type CountdownPickerRowProps = {
+  value: CountdownSeconds;
+  offLabel: string;
+  label: string;
+  infoText: string;
+  onChange: (v: CountdownSeconds) => void;
+};
+
+function CountdownPickerRow({ value, offLabel, label, infoText, onChange }: CountdownPickerRowProps) {
+  const [open, setOpen] = useState(false);
+  const display = value === 0 ? offLabel : `${value} s`;
+  return (
+    <>
+      <div className="relative w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition cursor-pointer text-left">
+        <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+          <Timer className="h-4 w-4" />
+        </div>
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <div className="text-sm font-semibold truncate">{label}</div>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+            aria-label="Toggle info"
+            className="h-6 w-6 grid place-items-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition"
+          >
+            <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        <div className="text-xs text-muted-foreground">{display}</div>
+        <select
+          aria-label={label}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value) as CountdownSeconds)}
+          className="absolute inset-0 opacity-0 cursor-pointer"
+        >
+          {COUNTDOWN_OPTIONS.map((s) => (
+            <option key={s} value={s}>
+              {s === 0 ? offLabel : `${s} s`}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+        <div className="overflow-hidden">
+          <div className="px-4 py-3 bg-white/[0.02] border-l-2 border-neon/30">
+            <p className="text-[11px] leading-snug text-muted-foreground">{infoText}</p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
