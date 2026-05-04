@@ -93,6 +93,7 @@ function RootComponent() {
         <BottomNav />
         <PrAchievement />
       </div>
+      <SplashScreen />
     </I18nProvider>
   );
 }
