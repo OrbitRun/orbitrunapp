@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import logo from "@/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png";
 
 const SESSION_KEY = "orbit.splash.shown";
-const VISIBLE_MS = 1200;
+const VISIBLE_MS = 3000;
 const FADE_MS = 300;
 
 export default function SplashScreen() {
