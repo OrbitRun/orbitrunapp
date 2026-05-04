@@ -170,7 +170,7 @@ const en: Dict = {
   "profile.audio.value.500": "Every 500 m",
   "profile.audio.value.1000": "Every 1 km",
   "profile.countdown": "Pre-run countdown",
-  "profile.countdown.info": "How many seconds to count down before the run starts. Choose Off to start instantly.",
+  "profile.countdown.info": "Counts down out loud before your run begins, giving you time to put your phone away or get into position. Tap the value to pick how many seconds the countdown should last, or choose Off to start the run instantly.",
   "profile.countdown.off": "Off",
   "profile.music": "Music source",
   "profile.music.value": "Spotify (soon)",
