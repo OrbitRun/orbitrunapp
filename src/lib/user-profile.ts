@@ -4,6 +4,8 @@ export type ExperienceLevel = "beginner" | "expert";
 export type RunningGoal = "run5k" | "run10k" | "runFaster" | "weightLoss" | "halfMarathon" | "marathon";
 export type AudioCueMeters = 500 | 1000;
 export type WindUnit = "ms" | "kmh";
+export type CountdownSeconds = 0 | 3 | 5 | 10 | 15 | 20 | 30 | 45 | 60;
+export const COUNTDOWN_OPTIONS: CountdownSeconds[] = [0, 3, 5, 10, 15, 20, 30, 45, 60];
 
 export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
 export type CoachFrequency = "1-2" | "3-4" | "5+";
