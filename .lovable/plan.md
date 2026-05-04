@@ -1,26 +1,20 @@
-## Problem
+## Add a welcome splash screen with pulsing logo
 
-In the "Nedtælling før start" row on Profile, tapping the chevron arrow does not expand the explanation. The native `<select>` is absolutely positioned with `inset-0` over the entire row, sitting on top of the chevron button, so taps on the arrow open the picker instead of toggling the info panel.
+When the app first opens, show a full-screen loading splash featuring the round ORBIT RUN logo (the same one in the home screen's top-left corner) pulsing softly. It fades out after a brief moment, revealing the app.
 
-## Fix
+### Design
+- Full-viewport overlay using the app's existing dark background (`bg-background` + `--gradient-dark`) so it matches the rest of the app.
+- Centered round logo (`src/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png`), ~112px, with the same neon drop-shadow glow used in the header.
+- Soft neon pulse ring behind the logo (reuse the existing `pulse-ring` keyframe from `src/styles.css`) plus a gentle scale/opacity pulse on the logo itself.
+- Tiny `ORBIT RUN` wordmark in neon uppercase tracking below the logo, matching the brand label style already used in the header (`text-neon`, `uppercase`, `tracking-[0.3em]`).
+- No spinner text — clean, premium, on-brand.
 
-Edit `src/routes/profile.tsx` in the `CountdownPickerRow` component:
+### Behavior
+- Mounts once on app load inside `src/routes/__root.tsx` (so it covers any route a user lands on, including deep links).
+- Visible for ~1.2s, then fades out (300ms) and unmounts. Uses the existing `animate-fade-in` / fade-out utilities.
+- Session-scoped: shows on a fresh page load / app launch only (uses `sessionStorage` flag so client-side route changes within the session don't re-trigger it).
+- SSR-safe: renders nothing on the server / first hydration tick to avoid hydration mismatch (fixes the existing React #418 hydration warnings rather than adding to them).
 
-1. Wrap the label + chevron area in a container with `relative z-10` so it sits above the transparent `<select>` overlay.
-2. Keep the `<select>` as the row-wide tap target for value changes, but ensure the chevron button has higher stacking and its own click handler that toggles `open` (already present) — the z-index is what's missing.
-3. Also give the value text (`display`) `relative z-10 pointer-events-none` so layout is unaffected but the chevron remains clickable.
-
-No other files affected. This matches the working pattern used by `SettingRowWithInfo`.
-
-## Technical detail
-
-```tsx
-<div className="relative z-10 flex items-center gap-1 flex-1 min-w-0">
-  <div className="text-sm font-semibold truncate">{label}</div>
-  <button ...chevron toggle... />
-</div>
-<div className="relative z-10 text-xs text-muted-foreground pointer-events-none">{display}</div>
-<select className="absolute inset-0 opacity-0 cursor-pointer" ... />
-```
-
-The select still covers the icon and empty row areas so tapping the row opens the picker, while the chevron stays interactive.
+### Files
+- New: `src/components/SplashScreen.tsx` — the overlay component (logo + pulse + fade-out timer).
+- Edit: `src/routes/__root.tsx` — render `<SplashScreen />` inside `RootComponent` above `<Outlet />`.
