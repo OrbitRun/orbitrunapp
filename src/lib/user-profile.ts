@@ -36,6 +36,7 @@ export type UserProfile = {
   // Default ON. Continuously snapshot the active run to localStorage so a
   // crash, refresh, or connectivity drop never loses the data.
   flightRecorderEnabled?: boolean;
+  countdownSeconds?: CountdownSeconds;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
