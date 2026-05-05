@@ -1,29 +1,33 @@
 ## Goal
-Fix the Daily Status strip on the home screen so:
-1. The left score reads as `78/100` (not just `78`).
-2. "Klar til træning" (band label) always fits on one line next to the score.
-3. The redundant "Score 78/100." prefix is removed from the coach recommendation (now duplicated by the new `xx/100` on the left).
-4. The remaining recommendation text wraps onto multiple lines instead of being cut off with an ellipsis.
+In `DailyStatusStrip`, make `78/100` and `Klar til træning` render at the same font size with shared baseline alignment, taking the score number's size as the reference.
 
-## Changes
+## Change — `src/components/DailyStatusStrip.tsx`
 
-### `src/components/DailyStatusStrip.tsx`
-Restructure the right-hand text block:
+Currently:
+- Score number: `text-sm` (14px), bold display font
+- `/100` suffix: `text-[9px]`
+- Band label: `text-[10px]` muted
 
-- **Score**: render as `{r.score}` followed by a smaller `/100` suffix (e.g. `text-sm` for the number, `text-[9px] text-muted-foreground` for `/100`), all on the same baseline row as the band label.
-- **Band label**: add `whitespace-nowrap` so "Klar til træning" never wraps or truncates.
-- **Recommendation**: move to a second line below the score+band row. Remove `truncate` so it wraps freely (`text-[10px] leading-snug text-foreground/80`, no `· ` prefix).
-- Strip the leading `Score NN/100. ` prefix from the displayed recommendation with a regex (`recommendation.replace(/^Score\s+\d+\/100\.\s*/i, "")`) so the shared i18n strings used by `ReadinessPanel` stay untouched.
+Update the score+band row so all three pieces share the same size and baseline:
 
-No other files change. `ReadinessPanel` keeps the original full sentence including the score.
+- Wrap score+band in `flex items-baseline gap-2` (already baseline, just bump gap a touch).
+- Score number `{r.score}`: keep `font-display font-black tabular text-sm leading-none` (this is the reference size).
+- `/100` suffix: change from `text-[9px]` → `text-sm` so it matches the number; keep muted color and bold weight, drop the `ml-0.5` so it reads as one token. Remove `leading-none` mismatch.
+- Band label `{t(\`readiness.band.${r.band}\`)}`: change from `text-[10px]` → `text-sm`, keep `font-bold`, `whitespace-nowrap`, `leading-none`, muted color. This guarantees the label sits on the exact same baseline as the score on every device (iOS Safari + Android Chrome both honor `items-baseline` consistently when sizes match).
+
+Result row markup:
+```tsx
+<div className="mt-1 flex items-baseline gap-2">
+  <span className="font-display font-black tabular text-sm leading-none" style={{ color }}>
+    {r.score}<span className="text-sm text-muted-foreground font-bold">/100</span>
+  </span>
+  <span className="text-sm font-bold leading-none whitespace-nowrap text-muted-foreground">
+    {t(`readiness.band.${r.band}`)}
+  </span>
+</div>
+```
+
+No other files change. Recommendation line below remains unchanged.
 
 ## Result
-The compact strip becomes:
-
-```
-●  DAGENS STATUS
-   78/100  Klar til træning
-   Du er restitueret og klar — kør dagens pas som planlagt.
-```
-
-Long recommendations (e.g. heat-adjust copy) wrap to 2–3 lines instead of being clipped.
+`78/100  Klar til træning` renders at identical 14px size, sharing one baseline, on both iPhone and Android viewports (390px wide and up). The label still fits on one line thanks to `whitespace-nowrap`; the recommendation continues to wrap on its own line below.

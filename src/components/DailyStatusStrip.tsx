@@ -61,12 +61,11 @@ export default function DailyStatusStrip() {
         <div className="text-[9px] uppercase tracking-[0.22em] font-bold leading-none" style={{ color }}>
           {t("dailyStatus.eyebrow")}
         </div>
-        <div className="mt-1 flex items-baseline gap-1.5">
+        <div className="mt-1 flex items-baseline gap-2">
           <span className="font-display font-black tabular text-sm leading-none" style={{ color }}>
-            {r.score}
-            <span className="text-[9px] text-muted-foreground font-bold ml-0.5">/100</span>
+            {r.score}<span className="text-sm text-muted-foreground font-bold">/100</span>
           </span>
-          <span className="text-[10px] text-muted-foreground font-bold leading-none whitespace-nowrap">
+          <span className="text-sm font-bold leading-none whitespace-nowrap text-muted-foreground">
             {t(`readiness.band.${r.band}`)}
           </span>
         </div>
