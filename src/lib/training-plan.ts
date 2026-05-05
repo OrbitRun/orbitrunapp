@@ -212,8 +212,16 @@ export function buildPlan(
     if (phase === "peak") weekKm = Math.round(baseKm * 1.25);
     if (phase === "taper") weekKm = Math.round(baseKm * 0.6);
     if (isEstimated) weekKm = Math.round(weekKm * futureScale);
+    if (w === 1) weekKm = Math.max(2, Math.round(weekKm * week1Scale));
+    if (w === 2) weekKm = Math.max(2, Math.round(weekKm * week2Scale));
 
-    const types = phaseTypes(phase, weeklySessions);
+    let types = phaseTypes(phase, weeklySessions);
+    // First 2 weeks: if injuries or newbie, swap hard sessions to easy.
+    if ((w === 1 || w === 2) && (hasInjuries || newbie)) {
+      types = types.map((tp) =>
+        tp === "tempo" || tp === "intervals" ? (hasInjuries && newbie ? "walkRun" : "easy") : tp,
+      );
+    }
     const kms = distributeKm(types, weekKm);
     const weekStart = startWeek + (w - 1) * WEEK_MS;
 
@@ -229,10 +237,17 @@ export function buildPlan(
         titleKey: `plan.session.${type}`,
         distanceKm: kms[i],
         status: "upcoming",
+        adjustedReasonKey:
+          (w === 1 || w === 2) && earlyEase && date >= now ? earlyReason : undefined,
       };
+      if ((w === 1 || w === 2) && earlyEase && date >= now) {
+        s.status = "adjusted";
+      }
       if (!isEstimated) {
         const r = statusForPlanned(s, ctx.runs, now);
-        s = { ...s, status: r.status, matchedRunId: r.matchedRunId, adjustedReasonKey: r.reasonKey };
+        if (r.status !== "upcoming") {
+          s = { ...s, status: r.status, matchedRunId: r.matchedRunId, adjustedReasonKey: r.reasonKey ?? s.adjustedReasonKey };
+        }
       }
       // Current-week future days: apply stress override
       if (isCurrent && date > now && stress && (type === "tempo" || type === "intervals" || type === "long")) {
