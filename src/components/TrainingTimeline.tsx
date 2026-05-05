@@ -12,7 +12,7 @@ import { useVitals } from "@/hooks/use-vitals";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { computeTrimp } from "@/lib/readiness-engine";
 import { loadHrZones } from "@/lib/hr-zones-config";
-import { buildPlan, type PlannedSession, type SessionType } from "@/lib/training-plan";
+import { buildPlan, type PlannedSession } from "@/lib/training-plan";
 import { phaseLabel } from "@/lib/coach-plan";
 import GoalEditorSheet from "@/components/GoalEditorSheet";
 
