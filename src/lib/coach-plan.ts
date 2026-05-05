@@ -145,7 +145,12 @@ function buildMilestones(totalWeeks: number): Milestone[] {
 export function getCoachPlan(c: CoachConfig): CoachPlan {
   const totalWeeks = totalWeeksFor(c.goal, c.fasterDistance);
   const weeklySessions = weeklySessionsFor(c.frequency);
-  return { totalWeeks, weeklySessions, milestones: buildMilestones(totalWeeks) };
+  return {
+    totalWeeks,
+    weeklySessions,
+    milestones: buildMilestones(totalWeeks),
+    earlyAdjustments: buildEarlyAdjustments(c),
+  };
 }
 
 export function phaseLabel(phase: MilestonePhase, lang: "en" | "da"): string {
