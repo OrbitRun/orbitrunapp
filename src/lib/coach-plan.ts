@@ -13,11 +13,74 @@ export type Milestone = {
   phase: MilestonePhase;
 };
 
+export type WeekAdjustment = {
+  weekIndex: number;
+  sessionMultiplier: number;
+  intensityCap: "easy" | "moderate" | "any";
+  noteKey: string;
+};
+
 export type CoachPlan = {
   totalWeeks: number;
   weeklySessions: number;
   milestones: Milestone[];
+  earlyAdjustments: WeekAdjustment[];
 };
+
+function strictestCap(
+  a: "easy" | "moderate" | "any",
+  b: "easy" | "moderate" | "any"
+): "easy" | "moderate" | "any" {
+  const rank = { easy: 0, moderate: 1, any: 2 } as const;
+  return rank[a] <= rank[b] ? a : b;
+}
+
+function buildEarlyAdjustments(c: CoachConfig): WeekAdjustment[] {
+  // For each of the first 2 weeks, accumulate the strictest rule.
+  const weeks: { mult: number; cap: "easy" | "moderate" | "any"; noteKey: string }[] = [
+    { mult: 1, cap: "any", noteKey: "" },
+    { mult: 1, cap: "any", noteKey: "" },
+  ];
+  const apply = (idx: 0 | 1, mult: number, cap: "easy" | "moderate" | "any", noteKey: string) => {
+    const w = weeks[idx];
+    if (mult < w.mult) {
+      w.mult = mult;
+      w.noteKey = noteKey;
+    }
+    w.cap = strictestCap(w.cap, cap);
+    if (!w.noteKey) w.noteKey = noteKey;
+  };
+
+  if (c.injuryStatus === "current") {
+    apply(0, 0.4, "easy", "coach.adjust.note.injuryCurrent");
+    apply(1, 0.4, "easy", "coach.adjust.note.injuryCurrent");
+  } else if (c.injuryStatus === "past") {
+    apply(0, 0.6, "easy", "coach.adjust.note.injuryPast");
+    apply(1, 0.8, "moderate", "coach.adjust.note.injuryPast");
+  }
+
+  if (c.weeklyVolume === "0" || c.experience === "beginner") {
+    apply(0, 0.5, "easy", "coach.adjust.note.lowVolume");
+    apply(1, 0.7, "easy", "coach.adjust.note.lowVolume");
+  } else if (c.weeklyVolume === "0-10") {
+    apply(0, 0.7, "easy", "coach.adjust.note.lowVolume");
+    apply(1, 0.85, "moderate", "coach.adjust.note.lowVolume");
+  }
+
+  if ((c.sleepQuality && c.sleepQuality <= 2) || (c.stressLevel && c.stressLevel >= 4)) {
+    apply(0, weeks[0].mult * 0.9, strictestCap(weeks[0].cap, "moderate"), weeks[0].noteKey || "coach.adjust.note.lifestyle");
+    apply(1, weeks[1].mult * 0.9, strictestCap(weeks[1].cap, "moderate"), weeks[1].noteKey || "coach.adjust.note.lifestyle");
+  }
+
+  return weeks
+    .map((w, i) => ({
+      weekIndex: i + 1,
+      sessionMultiplier: w.mult,
+      intensityCap: w.cap,
+      noteKey: w.noteKey,
+    }))
+    .filter((w) => w.sessionMultiplier < 1 || w.intensityCap !== "any");
+}
 
 function weeklySessionsFor(freq: CoachConfig["frequency"]): number {
   switch (freq) {
