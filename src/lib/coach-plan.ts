@@ -217,3 +217,11 @@ export function getPlanProgress(
     complete: sessionsDone >= totalSessions,
   };
 }
+
+export function currentWeekAdjustment(
+  c: CoachConfig,
+  weekIndex: number
+): WeekAdjustment | null {
+  const plan = getCoachPlan(c);
+  return plan.earlyAdjustments.find((a) => a.weekIndex === weekIndex) ?? null;
+}
