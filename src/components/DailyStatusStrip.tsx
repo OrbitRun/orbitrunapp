@@ -64,13 +64,14 @@ export default function DailyStatusStrip() {
         <div className="mt-1 flex items-baseline gap-1.5">
           <span className="font-display font-black tabular text-sm leading-none" style={{ color }}>
             {r.score}
+            <span className="text-[9px] text-muted-foreground font-bold ml-0.5">/100</span>
           </span>
-          <span className="text-[10px] text-muted-foreground font-bold leading-none">
+          <span className="text-[10px] text-muted-foreground font-bold leading-none whitespace-nowrap">
             {t(`readiness.band.${r.band}`)}
           </span>
-          <span className="text-[10px] text-foreground/80 truncate leading-none">
-            · {recommendation}
-          </span>
+        </div>
+        <div className="mt-1 text-[10px] leading-snug text-foreground/80">
+          {recommendation}
         </div>
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
