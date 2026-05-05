@@ -12,6 +12,7 @@ import {
   type Scale1to5,
   type OnboardingData,
   goalLabel,
+  buildCoachFromOnboarding,
 } from "@/lib/user-profile";
 
 type StepKey =
