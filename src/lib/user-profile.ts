@@ -11,14 +11,72 @@ export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
 export type CoachFrequency = "1-2" | "3-4" | "5+";
 export type CoachGoal = "weightLoss" | "finish5k" | "finish10k" | "halfMarathon" | "marathon" | "runFaster";
 export type FasterDistance = "5k" | "10k" | "halfMarathon" | "marathon";
+export type WeeklyVolume = "0" | "0-10" | "10-25" | "25+";
+export type Experience = "beginner" | "recreational" | "experienced";
+export type InjuryStatus = "none" | "past" | "current";
+export type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type LifestyleScore = 1 | 2 | 3 | 4 | 5;
 
 export type CoachConfig = {
   level: CoachLevel;
   frequency: CoachFrequency;
   goal: CoachGoal;
   fasterDistance?: FasterDistance;
+  weeklyVolume?: WeeklyVolume;
+  experience?: Experience;
+  sleepQuality?: LifestyleScore;
+  stressLevel?: LifestyleScore;
+  injuryStatus?: InjuryStatus;
+  preferredDays?: WeekDay[];
   configuredAt: number;
 };
+
+export const WEEKLY_VOLUMES: WeeklyVolume[] = ["0", "0-10", "10-25", "25+"];
+export const EXPERIENCES: Experience[] = ["beginner", "recreational", "experienced"];
+export const INJURY_STATUSES: InjuryStatus[] = ["none", "past", "current"];
+export const WEEK_DAYS: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+export function weeklyVolumeLabel(v: WeeklyVolume): string {
+  return v === "0" ? "0 km" : v === "25+" ? "25+ km" : `${v} km`;
+}
+
+export function experienceLabel(e: Experience, lang: "en" | "da"): string {
+  const en: Record<Experience, string> = {
+    beginner: "Beginner",
+    recreational: "Recreational",
+    experienced: "Experienced",
+  };
+  const da: Record<Experience, string> = {
+    beginner: "Nybegynder",
+    recreational: "Motionist",
+    experienced: "Erfaren",
+  };
+  return (lang === "da" ? da : en)[e];
+}
+
+export function injuryStatusLabel(i: InjuryStatus, lang: "en" | "da"): string {
+  const en: Record<InjuryStatus, string> = {
+    none: "None",
+    past: "Past injuries",
+    current: "Current injury",
+  };
+  const da: Record<InjuryStatus, string> = {
+    none: "Ingen",
+    past: "Tidligere skader",
+    current: "Aktuelle skader",
+  };
+  return (lang === "da" ? da : en)[i];
+}
+
+export function weekDayLabel(d: WeekDay, lang: "en" | "da"): string {
+  const en: Record<WeekDay, string> = {
+    mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
+  };
+  const da: Record<WeekDay, string> = {
+    mon: "Man", tue: "Tir", wed: "Ons", thu: "Tor", fri: "Fre", sat: "Lør", sun: "Søn",
+  };
+  return (lang === "da" ? da : en)[d];
+}
 
 export type UserProfile = {
   name: string;
