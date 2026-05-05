@@ -23,6 +23,20 @@ export type CoachConfig = {
   ambition?: CoachAmbition;
 };
 
+export type WeeklyKm = "0" | "0-10" | "10-25" | "25+";
+export type ExperienceTier = "newbie" | "casual" | "regular" | "experienced";
+export type Scale1to5 = 1 | 2 | 3 | 4 | 5;
+
+export type OnboardingData = {
+  weeklyKm?: WeeklyKm;
+  experience?: ExperienceTier;
+  sleepQuality?: Scale1to5;
+  stressLevel?: Scale1to5;
+  hasInjuries?: boolean;
+  injuryNotes?: string;
+  preferredDays?: number[]; // 0=Mon..6=Sun
+};
+
 export type UserProfile = {
   name: string;
   goal: RunningGoal;
@@ -34,12 +48,10 @@ export type UserProfile = {
   onboarded: boolean;
   coach?: CoachConfig;
   coachEnabled?: boolean;
-  // Default ON. Pause tracking automatically when the runner stops moving.
   autoPauseEnabled?: boolean;
-  // Default ON. Continuously snapshot the active run to localStorage so a
-  // crash, refresh, or connectivity drop never loses the data.
   flightRecorderEnabled?: boolean;
   countdownSeconds?: CountdownSeconds;
+  onboardingData?: OnboardingData;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";

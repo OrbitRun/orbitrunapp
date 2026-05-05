@@ -1,5 +1,5 @@
 // Adaptive multi-week training plan derived from CoachConfig + recent runs.
-import type { CoachConfig, CoachAmbition } from "./user-profile";
+import type { CoachConfig, CoachAmbition, OnboardingData } from "./user-profile";
 import type { Run } from "./run-types";
 import { getCoachPlan, type MilestonePhase } from "./coach-plan";
 
@@ -133,7 +133,11 @@ function statusForPlanned(
   return { status: "adjusted", matchedRunId: match.id, reasonKey: "plan.reason.short" };
 }
 
-export function buildPlan(c: CoachConfig, ctx: AdaptiveContext): {
+export function buildPlan(
+  c: CoachConfig,
+  ctx: AdaptiveContext,
+  onboarding?: OnboardingData,
+): {
   weeks: PlannedWeek[];
   totalWeeks: number;
   weekIndex: number;
@@ -145,7 +149,14 @@ export function buildPlan(c: CoachConfig, ctx: AdaptiveContext): {
   const totalWeeks = recomputeTotalWeeks(c, baseplan.totalWeeks);
   const weeklySessions = baseplan.weeklySessions;
   const baseKm = baseWeeklyKm(c);
-  const days = dayPattern(weeklySessions);
+
+  // Apply preferred days when set, otherwise fall back to canonical pattern.
+  const preferred = onboarding?.preferredDays;
+  const days =
+    preferred && preferred.length >= weeklySessions
+      ? [...preferred].sort((a, b) => a - b).slice(0, weeklySessions)
+      : dayPattern(weeklySessions);
+
   const startWeek = startOfWeek(c.configuredAt);
   const now = Date.now();
   const currentWeekIndex = Math.min(
@@ -163,6 +174,19 @@ export function buildPlan(c: CoachConfig, ctx: AdaptiveContext): {
     if (ratio > 1.1) futureScale = 1.1;
     else if (ratio < 0.7) futureScale = 0.85;
   }
+
+  // Onboarding-driven first 2-week ramp-up: ease in if injuries or low volume.
+  const lowVolume = onboarding?.weeklyKm === "0" || onboarding?.weeklyKm === "0-10";
+  const hasInjuries = onboarding?.hasInjuries === true;
+  const newbie = onboarding?.experience === "newbie";
+  const earlyEase = lowVolume || hasInjuries || newbie;
+  const week1Scale = earlyEase ? (hasInjuries ? 0.5 : 0.6) : 1;
+  const week2Scale = earlyEase ? (hasInjuries ? 0.7 : 0.8) : 1;
+  const earlyReason = hasInjuries
+    ? "plan.reason.injury"
+    : lowVolume
+      ? "plan.reason.lowVolume"
+      : "plan.reason.newbie";
 
   // Current-week stress override
   const stress =
@@ -188,8 +212,16 @@ export function buildPlan(c: CoachConfig, ctx: AdaptiveContext): {
     if (phase === "peak") weekKm = Math.round(baseKm * 1.25);
     if (phase === "taper") weekKm = Math.round(baseKm * 0.6);
     if (isEstimated) weekKm = Math.round(weekKm * futureScale);
+    if (w === 1) weekKm = Math.max(2, Math.round(weekKm * week1Scale));
+    if (w === 2) weekKm = Math.max(2, Math.round(weekKm * week2Scale));
 
-    const types = phaseTypes(phase, weeklySessions);
+    let types = phaseTypes(phase, weeklySessions);
+    // First 2 weeks: if injuries or newbie, swap hard sessions to easy.
+    if ((w === 1 || w === 2) && (hasInjuries || newbie)) {
+      types = types.map((tp) =>
+        tp === "tempo" || tp === "intervals" ? (hasInjuries && newbie ? "walkRun" : "easy") : tp,
+      );
+    }
     const kms = distributeKm(types, weekKm);
     const weekStart = startWeek + (w - 1) * WEEK_MS;
 
@@ -205,10 +237,17 @@ export function buildPlan(c: CoachConfig, ctx: AdaptiveContext): {
         titleKey: `plan.session.${type}`,
         distanceKm: kms[i],
         status: "upcoming",
+        adjustedReasonKey:
+          (w === 1 || w === 2) && earlyEase && date >= now ? earlyReason : undefined,
       };
+      if ((w === 1 || w === 2) && earlyEase && date >= now) {
+        s.status = "adjusted";
+      }
       if (!isEstimated) {
         const r = statusForPlanned(s, ctx.runs, now);
-        s = { ...s, status: r.status, matchedRunId: r.matchedRunId, adjustedReasonKey: r.reasonKey };
+        if (r.status !== "upcoming") {
+          s = { ...s, status: r.status, matchedRunId: r.matchedRunId, adjustedReasonKey: r.reasonKey ?? s.adjustedReasonKey };
+        }
       }
       // Current-week future days: apply stress override
       if (isCurrent && date > now && stress && (type === "tempo" || type === "intervals" || type === "long")) {
