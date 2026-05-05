@@ -387,7 +387,7 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
       else session = c.frequency === "5+" && cap === "any" ? intervals(5, 600) : easy(scaleKm(Math.max(6, base)));
       break;
     case "runFaster":
-      if (cap === "easy") {
+      if ((cap as Cap) === "easy") {
         session = easy(scaleKm(base));
       } else {
         switch (c.fasterDistance) {
