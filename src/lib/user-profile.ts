@@ -11,14 +11,72 @@ export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
 export type CoachFrequency = "1-2" | "3-4" | "5+";
 export type CoachGoal = "weightLoss" | "finish5k" | "finish10k" | "halfMarathon" | "marathon" | "runFaster";
 export type FasterDistance = "5k" | "10k" | "halfMarathon" | "marathon";
+export type WeeklyVolume = "0" | "0-10" | "10-25" | "25+";
+export type Experience = "beginner" | "recreational" | "experienced";
+export type InjuryStatus = "none" | "past" | "current";
+export type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type LifestyleScore = 1 | 2 | 3 | 4 | 5;
 
 export type CoachConfig = {
   level: CoachLevel;
   frequency: CoachFrequency;
   goal: CoachGoal;
   fasterDistance?: FasterDistance;
+  weeklyVolume?: WeeklyVolume;
+  experience?: Experience;
+  sleepQuality?: LifestyleScore;
+  stressLevel?: LifestyleScore;
+  injuryStatus?: InjuryStatus;
+  preferredDays?: WeekDay[];
   configuredAt: number;
 };
+
+export const WEEKLY_VOLUMES: WeeklyVolume[] = ["0", "0-10", "10-25", "25+"];
+export const EXPERIENCES: Experience[] = ["beginner", "recreational", "experienced"];
+export const INJURY_STATUSES: InjuryStatus[] = ["none", "past", "current"];
+export const WEEK_DAYS: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+
+export function weeklyVolumeLabel(v: WeeklyVolume): string {
+  return v === "0" ? "0 km" : v === "25+" ? "25+ km" : `${v} km`;
+}
+
+export function experienceLabel(e: Experience, lang: "en" | "da"): string {
+  const en: Record<Experience, string> = {
+    beginner: "Beginner",
+    recreational: "Recreational",
+    experienced: "Experienced",
+  };
+  const da: Record<Experience, string> = {
+    beginner: "Nybegynder",
+    recreational: "Motionist",
+    experienced: "Erfaren",
+  };
+  return (lang === "da" ? da : en)[e];
+}
+
+export function injuryStatusLabel(i: InjuryStatus, lang: "en" | "da"): string {
+  const en: Record<InjuryStatus, string> = {
+    none: "None",
+    past: "Past injuries",
+    current: "Current injury",
+  };
+  const da: Record<InjuryStatus, string> = {
+    none: "Ingen",
+    past: "Tidligere skader",
+    current: "Aktuelle skader",
+  };
+  return (lang === "da" ? da : en)[i];
+}
+
+export function weekDayLabel(d: WeekDay, lang: "en" | "da"): string {
+  const en: Record<WeekDay, string> = {
+    mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
+  };
+  const da: Record<WeekDay, string> = {
+    mon: "Man", tue: "Tir", wed: "Ons", thu: "Tor", fri: "Fre", sat: "Lør", sun: "Søn",
+  };
+  return (lang === "da" ? da : en)[d];
+}
 
 export type UserProfile = {
   name: string;
@@ -284,31 +342,78 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
     descriptionKey: "coach.desc.walkRun",
   });
 
+  // Compute first-2-weeks adjustment inline (no import to avoid cycles).
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const elapsedWeeks = Math.floor((Date.now() - c.configuredAt) / weekMs);
+  const weekIdx = elapsedWeeks + 1; // 1-indexed
+  let mult = 1;
+  type Cap = "easy" | "moderate" | "any";
+  let cap: Cap = "any";
+  const setStrict = (m: number, cp: Cap) => {
+    mult = Math.min(mult, m);
+    const rank: Record<Cap, number> = { easy: 0, moderate: 1, any: 2 };
+    if (rank[cp] < rank[cap]) cap = cp;
+  };
+  if (weekIdx <= 2) {
+    if (c.injuryStatus === "current") setStrict(0.4, "easy");
+    else if (c.injuryStatus === "past") {
+      if (weekIdx === 1) setStrict(0.6, "easy");
+      else setStrict(0.8, "moderate");
+    }
+    if (c.weeklyVolume === "0" || c.experience === "beginner") {
+      if (weekIdx === 1) setStrict(0.5, "easy");
+      else setStrict(0.7, "easy");
+    } else if (c.weeklyVolume === "0-10") {
+      if (weekIdx === 1) setStrict(0.7, "easy");
+      else setStrict(0.85, "moderate");
+    }
+    if ((c.sleepQuality && c.sleepQuality <= 2) || (c.stressLevel && c.stressLevel >= 4)) {
+      setStrict(mult * 0.9, "moderate");
+    }
+  }
+  const scaleKm = (km: number) => Math.max(1, Math.round(km * mult));
+
+  let session: CoachSession;
   switch (c.goal) {
     case "weightLoss":
-      return c.frequency === "1-2" ? walkRun(30) : easy(base);
+      session = c.frequency === "1-2" ? walkRun(Math.max(10, Math.round(30 * mult))) : easy(scaleKm(base));
+      break;
     case "finish5k":
-      if (c.level === "0-2") return walkRun(25);
-      return c.frequency === "5+" ? intervals(5, 400) : easy(base);
+      if (c.level === "0-2") session = walkRun(Math.max(10, Math.round(25 * mult)));
+      else session = c.frequency === "5+" && cap === "any" ? intervals(5, 400) : easy(scaleKm(base));
+      break;
     case "finish10k":
-      if (c.level === "0-2") return walkRun(30);
-      return c.frequency === "5+" ? intervals(5, 600) : easy(Math.max(6, base));
+      if (c.level === "0-2") session = walkRun(Math.max(10, Math.round(30 * mult)));
+      else session = c.frequency === "5+" && cap === "any" ? intervals(5, 600) : easy(scaleKm(Math.max(6, base)));
+      break;
     case "runFaster":
-      switch (c.fasterDistance) {
-        case "5k":
-          return intervals(6, 400);
-        case "10k":
-          return intervals(5, 800);
-        case "halfMarathon":
-          return tempo(Math.max(6, base));
-        case "marathon":
-          return tempo(10);
-        default:
-          return tempo(Math.max(3, base - 1));
+      if ((cap as Cap) === "easy") {
+        session = easy(scaleKm(base));
+      } else {
+        switch (c.fasterDistance) {
+          case "5k":
+            session = intervals(6, 400);
+            break;
+          case "10k":
+            session = intervals(5, 800);
+            break;
+          case "halfMarathon":
+            session = tempo(scaleKm(Math.max(6, base)));
+            break;
+          case "marathon":
+            session = tempo(scaleKm(10));
+            break;
+          default:
+            session = tempo(scaleKm(Math.max(3, base - 1)));
+        }
       }
+      break;
     case "halfMarathon":
-      return long(longK);
+      session = long(scaleKm(longK));
+      break;
     case "marathon":
-      return long(Math.max(longK, 14));
+      session = long(Math.max(scaleKm(longK), Math.round(14 * mult)));
+      break;
   }
+  return session;
 }

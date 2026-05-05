@@ -9,7 +9,7 @@ import {
   type UserProfile,
 } from "@/lib/user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
-import { getPlanProgress } from "@/lib/coach-plan";
+import { getPlanProgress, currentWeekAdjustment } from "@/lib/coach-plan";
 import CoachOnboarding from "@/components/CoachOnboarding";
 
 type Props = { profile: UserProfile };
@@ -106,6 +106,15 @@ export default function CoachCard({ profile }: Props) {
           <TargetIcon className="h-3 w-3 text-neon/70 shrink-0" />
           <span className="leading-snug truncate">{contextLine}</span>
         </div>
+        {(() => {
+          const adj = currentWeekAdjustment(coach, progress.weekIndex);
+          if (!adj || !adj.noteKey) return null;
+          return (
+            <div className="mt-2 text-[10px] text-neon font-bold uppercase tracking-[0.12em]">
+              {t(adj.noteKey)}
+            </div>
+          );
+        })()}
 
         {z5Override && (
           <div className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
