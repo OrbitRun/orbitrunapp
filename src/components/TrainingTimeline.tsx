@@ -201,31 +201,7 @@ export default function TrainingTimeline() {
                 <AccordionContent className="pt-1 pb-3">
                   <ul className="space-y-1.5">
                     {w.sessions.map((s) => (
-                      <li
-                        key={s.id}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5"
-                      >
-                        <StatusIcon status={s.status} />
-                        <div className="w-9 text-[10px] uppercase tracking-[0.15em] font-black text-muted-foreground">
-                          {t(`trimp.day.${DAY_KEYS[s.dayIndex]}`)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold truncate">
-                            {t(s.titleKey)}
-                          </div>
-                          {s.adjustedReasonKey && (
-                            <div
-                              className="text-[10px] font-semibold truncate"
-                              style={{ color: "oklch(0.78 0.18 60)" }}
-                            >
-                              {t(s.adjustedReasonKey)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-[11px] font-black tabular text-foreground/80 shrink-0">
-                          {s.distanceKm} km
-                        </div>
-                      </li>
+                      <SessionRow key={s.id} s={s} />
                     ))}
                   </ul>
                 </AccordionContent>
