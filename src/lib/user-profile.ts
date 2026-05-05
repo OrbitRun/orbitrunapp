@@ -11,7 +11,6 @@ export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
 export type CoachFrequency = "1-2" | "3-4" | "5+";
 export type CoachGoal = "weightLoss" | "finish5k" | "finish10k" | "halfMarathon" | "marathon" | "runFaster";
 export type FasterDistance = "5k" | "10k" | "halfMarathon" | "marathon";
-export type CoachAmbition = "finish" | "pr" | "elite";
 
 export type CoachConfig = {
   level: CoachLevel;
@@ -19,22 +18,6 @@ export type CoachConfig = {
   goal: CoachGoal;
   fasterDistance?: FasterDistance;
   configuredAt: number;
-  targetDate?: string; // ISO yyyy-mm-dd
-  ambition?: CoachAmbition;
-};
-
-export type WeeklyKm = "0" | "0-10" | "10-25" | "25+";
-export type ExperienceTier = "newbie" | "casual" | "regular" | "experienced";
-export type Scale1to5 = 1 | 2 | 3 | 4 | 5;
-
-export type OnboardingData = {
-  weeklyKm?: WeeklyKm;
-  experience?: ExperienceTier;
-  sleepQuality?: Scale1to5;
-  stressLevel?: Scale1to5;
-  hasInjuries?: boolean;
-  injuryNotes?: string;
-  preferredDays?: number[]; // 0=Mon..6=Sun
 };
 
 export type UserProfile = {
@@ -48,10 +31,12 @@ export type UserProfile = {
   onboarded: boolean;
   coach?: CoachConfig;
   coachEnabled?: boolean;
+  // Default ON. Pause tracking automatically when the runner stops moving.
   autoPauseEnabled?: boolean;
+  // Default ON. Continuously snapshot the active run to localStorage so a
+  // crash, refresh, or connectivity drop never loses the data.
   flightRecorderEnabled?: boolean;
   countdownSeconds?: CountdownSeconds;
-  onboardingData?: OnboardingData;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -127,61 +112,6 @@ export function coachFrequencyLabel(f: CoachFrequency, lang: "en" | "da"): strin
   const en: Record<CoachFrequency, string> = { "1-2": "1–2 days", "3-4": "3–4 days", "5+": "5+ days" };
   const da: Record<CoachFrequency, string> = { "1-2": "1–2 dage", "3-4": "3–4 dage", "5+": "5+ dage" };
   return (lang === "da" ? da : en)[f];
-}
-
-export function buildCoachFromOnboarding(p: {
-  goal: RunningGoal;
-  level: ExperienceLevel;
-  onboardingData?: OnboardingData;
-}): CoachConfig {
-  const od = p.onboardingData;
-  const goal: CoachGoal =
-    p.goal === "run5k"
-      ? "finish5k"
-      : p.goal === "run10k"
-        ? "finish10k"
-        : p.goal === "halfMarathon"
-          ? "halfMarathon"
-          : p.goal === "marathon"
-            ? "marathon"
-            : p.goal === "weightLoss"
-              ? "weightLoss"
-              : "runFaster";
-  const fasterDistance: FasterDistance | undefined = goal === "runFaster" ? "5k" : undefined;
-
-  let level: CoachLevel;
-  switch (od?.weeklyKm) {
-    case "0":
-      level = "0-2";
-      break;
-    case "0-10":
-      level = "3-5";
-      break;
-    case "10-25":
-      level = "5-10";
-      break;
-    case "25+":
-      level = "10+";
-      break;
-    default:
-      level = p.level === "expert" ? "5-10" : "0-2";
-  }
-
-  const days = od?.preferredDays?.length ?? 3;
-  const frequency: CoachFrequency = days <= 2 ? "1-2" : days >= 5 ? "5+" : "3-4";
-
-  let ambition: CoachAmbition = "finish";
-  if (od?.experience === "regular") ambition = "pr";
-  else if (od?.experience === "experienced") ambition = "elite";
-
-  return {
-    goal,
-    fasterDistance,
-    level,
-    frequency,
-    ambition,
-    configuredAt: Date.now(),
-  };
 }
 
 export function coachToRunningGoal(c: CoachConfig): RunningGoal {

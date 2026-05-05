@@ -6,7 +6,6 @@ import { loadRuns, type Run } from "@/lib/run-types";
 import ReadinessPanel from "@/components/ReadinessPanel";
 import CoachCard from "@/components/CoachCard";
 import WeeklyTrimpBreakdown from "@/components/WeeklyTrimpBreakdown";
-import TrainingTimeline from "@/components/TrainingTimeline";
 
 export const Route = createFileRoute("/coach")({
   component: CoachPage,
@@ -40,7 +39,6 @@ function CoachPage() {
       <ReadinessPanel />
       <CoachCard profile={profile} />
       {runs.length > 0 && <WeeklyTrimpBreakdown runs={runs} />}
-      <TrainingTimeline />
     </main>
   );
 }
