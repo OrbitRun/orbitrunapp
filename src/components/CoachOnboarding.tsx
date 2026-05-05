@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, ArrowRight, Check, Sparkles, AlertTriangle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import {
   loadProfile,
@@ -8,10 +9,19 @@ import {
   coachFrequencyLabel,
   coachGoalLabel,
   coachToRunningGoal,
+  WEEKLY_VOLUMES,
+  EXPERIENCES,
+  INJURY_STATUSES,
+  WEEK_DAYS,
   type CoachLevel,
   type CoachFrequency,
   type CoachGoal,
   type FasterDistance,
+  type WeeklyVolume,
+  type Experience,
+  type InjuryStatus,
+  type WeekDay,
+  type LifestyleScore,
 } from "@/lib/user-profile";
 
 type Props = { onClose: () => void };
@@ -39,12 +49,29 @@ function fasterDistanceLabel(d: FasterDistance, lang: "en" | "da"): string {
 
 const RESUME_KEY = "orbit:coach-onboarding-progress";
 
+type StepKey =
+  | "level"
+  | "frequency"
+  | "goal"
+  | "fasterDistance"
+  | "weeklyVolume"
+  | "experience"
+  | "lifestyle"
+  | "injury"
+  | "preferredDays";
+
 type ResumeState = {
   step: number;
   level: CoachLevel;
   frequency: CoachFrequency;
   goal: CoachGoal;
   fasterDistance: FasterDistance;
+  weeklyVolume: WeeklyVolume;
+  experience: Experience;
+  sleepQuality: LifestyleScore;
+  stressLevel: LifestyleScore;
+  injuryStatus: InjuryStatus;
+  preferredDays: WeekDay[];
 };
 
 function loadResume(): Partial<ResumeState> | null {
@@ -66,9 +93,11 @@ function clearResume() {
 
 export default function CoachOnboarding({ onClose }: Props) {
   const { t, lang } = useI18n();
+  const navigate = useNavigate();
   const existing = loadProfile().coach;
   const resume = loadResume();
   const [step, setStep] = useState<number>(resume?.step ?? 0);
+  const [thinking, setThinking] = useState<"none" | "phaseA" | "phaseB">("none");
   const [level, setLevel] = useState<CoachLevel>(resume?.level ?? existing?.level ?? "3-5");
   const [frequency, setFrequency] = useState<CoachFrequency>(
     resume?.frequency ?? existing?.frequency ?? "3-4"
@@ -77,43 +106,115 @@ export default function CoachOnboarding({ onClose }: Props) {
   const [fasterDistance, setFasterDistance] = useState<FasterDistance>(
     resume?.fasterDistance ?? existing?.fasterDistance ?? "5k"
   );
+  const [weeklyVolume, setWeeklyVolume] = useState<WeeklyVolume>(
+    resume?.weeklyVolume ?? existing?.weeklyVolume ?? "0-10"
+  );
+  const [experience, setExperience] = useState<Experience>(
+    resume?.experience ?? existing?.experience ?? "recreational"
+  );
+  const [sleepQuality, setSleepQuality] = useState<LifestyleScore>(
+    resume?.sleepQuality ?? existing?.sleepQuality ?? 3
+  );
+  const [stressLevel, setStressLevel] = useState<LifestyleScore>(
+    resume?.stressLevel ?? existing?.stressLevel ?? 3
+  );
+  const [injuryStatus, setInjuryStatus] = useState<InjuryStatus>(
+    resume?.injuryStatus ?? existing?.injuryStatus ?? "none"
+  );
+  const [preferredDays, setPreferredDays] = useState<WeekDay[]>(
+    resume?.preferredDays ?? existing?.preferredDays ?? ["mon", "wed", "fri"]
+  );
 
   useEffect(() => {
     try {
       localStorage.setItem(
         RESUME_KEY,
-        JSON.stringify({ step, level, frequency, goal, fasterDistance } satisfies ResumeState)
+        JSON.stringify({
+          step,
+          level,
+          frequency,
+          goal,
+          fasterDistance,
+          weeklyVolume,
+          experience,
+          sleepQuality,
+          stressLevel,
+          injuryStatus,
+          preferredDays,
+        } satisfies ResumeState)
       );
     } catch {
       /* noop */
     }
-  }, [step, level, frequency, goal, fasterDistance]);
+  }, [
+    step,
+    level,
+    frequency,
+    goal,
+    fasterDistance,
+    weeklyVolume,
+    experience,
+    sleepQuality,
+    stressLevel,
+    injuryStatus,
+    preferredDays,
+  ]);
 
-  // Dynamic flow: insert "fasterDistance" step after goal step when needed.
-  const steps: Array<"level" | "frequency" | "goal" | "fasterDistance"> =
+  const steps: StepKey[] =
     goal === "runFaster"
-      ? ["level", "frequency", "goal", "fasterDistance"]
-      : ["level", "frequency", "goal"];
+      ? [
+          "level",
+          "frequency",
+          "goal",
+          "fasterDistance",
+          "weeklyVolume",
+          "experience",
+          "lifestyle",
+          "injury",
+          "preferredDays",
+        ]
+      : [
+          "level",
+          "frequency",
+          "goal",
+          "weeklyVolume",
+          "experience",
+          "lifestyle",
+          "injury",
+          "preferredDays",
+        ];
   const totalSteps = steps.length;
   const safeStep = Math.min(step, totalSteps - 1);
   const current = steps[safeStep];
   const isLast = safeStep === totalSteps - 1;
+  const canAdvance = current === "preferredDays" ? preferredDays.length > 0 : true;
 
-  const finish = () => {
+  const persist = () => {
     const p = loadProfile();
-    // Reset baseline if any coach setting changed (so progress restarts).
     const changed =
       !p.coach ||
       p.coach.level !== level ||
       p.coach.frequency !== frequency ||
       p.coach.goal !== goal ||
-      p.coach.fasterDistance !== (goal === "runFaster" ? fasterDistance : undefined);
+      p.coach.fasterDistance !== (goal === "runFaster" ? fasterDistance : undefined) ||
+      p.coach.weeklyVolume !== weeklyVolume ||
+      p.coach.experience !== experience ||
+      p.coach.sleepQuality !== sleepQuality ||
+      p.coach.stressLevel !== stressLevel ||
+      p.coach.injuryStatus !== injuryStatus ||
+      JSON.stringify(p.coach.preferredDays ?? []) !== JSON.stringify(preferredDays);
     const nextCoach = {
       level,
       frequency,
       goal,
       fasterDistance: goal === "runFaster" ? fasterDistance : undefined,
-      configuredAt: changed ? Date.now() : p.coach!.configuredAt,
+      weeklyVolume,
+      experience,
+      sleepQuality,
+      stressLevel,
+      injuryStatus,
+      preferredDays,
+      configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
     };
     saveProfile({
       ...p,
@@ -122,13 +223,77 @@ export default function CoachOnboarding({ onClose }: Props) {
       coachEnabled: p.coachEnabled === false ? false : true,
     });
     clearResume();
-    onClose();
   };
+
+  const enterThinking = () => {
+    persist();
+    setThinking("phaseA");
+  };
+
+  useEffect(() => {
+    if (thinking !== "phaseA") return;
+    const id = setTimeout(() => setThinking("phaseB"), 3000);
+    return () => clearTimeout(id);
+  }, [thinking]);
 
   const handleSkip = () => {
     clearResume();
     onClose();
   };
+
+  const goToCoach = () => {
+    onClose();
+    navigate({ to: "/coach" });
+  };
+
+  // ===== Thinking screen =====
+  if (thinking !== "none") {
+    const goalText = coachGoalLabel(goal, lang, goal === "runFaster" ? fasterDistance : undefined);
+    return (
+      <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5">
+        <div className="w-full max-w-md glass-strong rounded-3xl p-8 shadow-card text-center">
+          <div className="grid place-items-center my-6">
+            <div
+              className={`h-24 w-24 rounded-full bg-neon/15 grid place-items-center text-neon shadow-neon ${
+                thinking === "phaseA" ? "animate-pulse" : ""
+              }`}
+              style={
+                thinking === "phaseA"
+                  ? { animationDuration: "1.2s" }
+                  : undefined
+              }
+            >
+              <Sparkles className="h-10 w-10" />
+            </div>
+          </div>
+          {thinking === "phaseA" ? (
+            <p className="text-sm font-semibold text-muted-foreground">
+              {t("coach.thinking.analyzing")}
+            </p>
+          ) : (
+            <>
+              <p className="text-sm leading-snug">{t("coach.thinking.done")}</p>
+              <div className="mt-4 rounded-2xl border border-neon/30 bg-neon/5 p-4">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-neon font-bold mb-1">
+                  {t("coach.cardTitle")}
+                </div>
+                <p className="text-sm font-semibold leading-snug">
+                  {t("coach.thinking.goalPreview", { goal: goalText })}
+                </p>
+              </div>
+              <button
+                onClick={goToCoach}
+                className="mt-6 w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-neon text-primary-foreground text-sm font-black uppercase tracking-[0.15em] shadow-neon active:scale-[0.98] transition"
+              >
+                <Sparkles className="h-4 w-4" />
+                {t("coach.thinking.cta")}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5">
@@ -150,7 +315,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           ))}
         </div>
 
-        <div className="mt-6 min-h-[220px]">
+        <div className="mt-6 min-h-[260px]">
           {current === "level" && (
             <div>
               <label className="text-sm font-semibold">{t("coach.q.level")}</label>
@@ -234,6 +399,123 @@ export default function CoachOnboarding({ onClose }: Props) {
               </div>
             </div>
           )}
+
+          {current === "weeklyVolume" && (
+            <div>
+              <label className="text-sm font-semibold">{t("coach.q.weeklyVolume")}</label>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {WEEKLY_VOLUMES.map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setWeeklyVolume(v)}
+                    className={`h-14 rounded-2xl text-sm font-bold uppercase tracking-[0.12em] transition active:scale-95 ${
+                      weeklyVolume === v
+                        ? "bg-neon text-primary-foreground"
+                        : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+                    }`}
+                  >
+                    {t(`coach.opt.weeklyVolume.${v}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {current === "experience" && (
+            <div>
+              <label className="text-sm font-semibold">{t("coach.q.experience")}</label>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                {EXPERIENCES.map((e) => (
+                  <button
+                    key={e}
+                    onClick={() => setExperience(e)}
+                    className={`h-14 rounded-2xl text-sm font-bold uppercase tracking-[0.12em] transition active:scale-95 ${
+                      experience === e
+                        ? "bg-neon text-primary-foreground"
+                        : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+                    }`}
+                  >
+                    {t(`coach.opt.experience.${e}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {current === "lifestyle" && (
+            <div className="space-y-5">
+              <label className="text-sm font-semibold block">{t("coach.q.lifestyle")}</label>
+              <LifestyleScale
+                label={t("coach.q.lifestyle.sleep")}
+                lowLabel={t("coach.q.lifestyle.low")}
+                highLabel={t("coach.q.lifestyle.high")}
+                value={sleepQuality}
+                onChange={setSleepQuality}
+              />
+              <LifestyleScale
+                label={t("coach.q.lifestyle.stress")}
+                lowLabel={t("coach.q.lifestyle.low")}
+                highLabel={t("coach.q.lifestyle.high")}
+                value={stressLevel}
+                onChange={setStressLevel}
+              />
+            </div>
+          )}
+
+          {current === "injury" && (
+            <div>
+              <label className="text-sm font-semibold">{t("coach.q.injury")}</label>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                {INJURY_STATUSES.map((i) => (
+                  <button
+                    key={i}
+                    onClick={() => setInjuryStatus(i)}
+                    className={`h-14 rounded-2xl text-sm font-bold uppercase tracking-[0.12em] transition active:scale-95 ${
+                      injuryStatus === i
+                        ? "bg-neon text-primary-foreground"
+                        : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+                    }`}
+                  >
+                    {t(`coach.opt.injury.${i}`)}
+                  </button>
+                ))}
+              </div>
+              {injuryStatus === "current" && (
+                <div className="mt-3 flex gap-2 rounded-xl border border-destructive/40 bg-destructive/10 p-3">
+                  <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] leading-snug">{t("coach.injury.warning")}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {current === "preferredDays" && (
+            <div>
+              <label className="text-sm font-semibold">{t("coach.q.preferredDays")}</label>
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {WEEK_DAYS.map((d) => {
+                  const selected = preferredDays.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      onClick={() =>
+                        setPreferredDays((cur) =>
+                          cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]
+                        )
+                      }
+                      className={`h-12 rounded-xl text-xs font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
+                        selected
+                          ? "bg-neon text-primary-foreground"
+                          : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+                      }`}
+                    >
+                      {t(`coach.opt.day.${d}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-2">
@@ -252,22 +534,64 @@ export default function CoachOnboarding({ onClose }: Props) {
           </button>
           {!isLast ? (
             <button
-              onClick={() => setStep(safeStep + 1)}
-              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5"
+              onClick={() => canAdvance && setStep(safeStep + 1)}
+              disabled={!canAdvance}
+              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5 disabled:opacity-40 disabled:active:scale-100"
             >
               {t("onb.next")}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           ) : (
             <button
-              onClick={finish}
-              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5"
+              onClick={() => canAdvance && enterThinking()}
+              disabled={!canAdvance}
+              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5 disabled:opacity-40 disabled:active:scale-100"
             >
               <Check className="h-3.5 w-3.5" />
               {t("coach.save")}
             </button>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LifestyleScale({
+  label,
+  lowLabel,
+  highLabel,
+  value,
+  onChange,
+}: {
+  label: string;
+  lowLabel: string;
+  highLabel: string;
+  value: LifestyleScore;
+  onChange: (v: LifestyleScore) => void;
+}) {
+  const values: LifestyleScore[] = [1, 2, 3, 4, 5];
+  return (
+    <div>
+      <div className="text-xs font-semibold mb-2">{label}</div>
+      <div className="grid grid-cols-5 gap-1.5">
+        {values.map((v) => (
+          <button
+            key={v}
+            onClick={() => onChange(v)}
+            className={`h-11 rounded-xl text-sm font-black tabular transition active:scale-95 ${
+              value === v
+                ? "bg-neon text-primary-foreground"
+                : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+            }`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[9px] uppercase tracking-[0.15em] text-muted-foreground font-bold">
+        <span>{lowLabel}</span>
+        <span>{highLabel}</span>
       </div>
     </div>
   );
