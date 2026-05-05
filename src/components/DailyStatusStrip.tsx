@@ -43,7 +43,8 @@ export default function DailyStatusStrip() {
     [runs, vitals, hrZones, env],
   );
   const color = bandColor(r.band);
-  const recommendation = t(r.recommendationKey, r.recommendationParams as Record<string, string>);
+  const recommendation = t(r.recommendationKey, r.recommendationParams as Record<string, string>)
+    .replace(/^Score\s+\d+\/100\.\s*/i, "");
 
   return (
     <Link
