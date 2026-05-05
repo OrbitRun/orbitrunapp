@@ -1240,6 +1240,35 @@ const da: Dict = {
   "legal.terms.3.title": "Sikkerhed",
   "legal.terms.3.body":
     "Vær altid opmærksom på dine omgivelser under løb. Orbit Run er ikke ansvarlig for ulykker eller skader opstået under brug af appen.",
+  "plan.title": "Mit træningsforløb",
+  "plan.weekOf": "Uge {current} af {total}",
+  "plan.weekShort": "Uge",
+  "plan.sessions": "pas gennemført",
+  "plan.now": "Nu",
+  "plan.estimated": "Estimeret",
+  "plan.editGoal": "Rediger mål",
+  "plan.session.easy": "Roligt løb",
+  "plan.session.long": "Langtur",
+  "plan.session.tempo": "Tempoløb",
+  "plan.session.intervals": "Intervaller",
+  "plan.session.walkRun": "Gå/løb",
+  "plan.session.rest": "Hviledag",
+  "plan.reason.short": "Justeret af AI · kortere end planlagt",
+  "plan.reason.highLoad": "Justeret af AI · høj træningsbelastning",
+  "plan.reason.lowHrv": "Justeret af AI · lav HRV-restitution",
+  "plan.editor.eyebrow": "Tilpas din plan",
+  "plan.editor.title": "Rediger mål",
+  "plan.editor.distance": "Distance",
+  "plan.editor.targetDate": "Måldato",
+  "plan.editor.ambition": "Ambitionsniveau",
+  "plan.editor.save": "Gem & generer",
+  "plan.dist.5k": "5 km",
+  "plan.dist.10k": "10 km",
+  "plan.dist.half": "Halvmaraton",
+  "plan.dist.marathon": "Maraton",
+  "plan.amb.finish": "Gennemfør",
+  "plan.amb.pr": "Personlig rekord",
+  "plan.amb.elite": "Elite",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
@@ -1288,36 +1317,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       if (getSavedLang() === null) {
         setLangState(detectOSLang());
       }
-  "plan.title": "Mit træningsforløb",
-  "plan.weekOf": "Uge {current} af {total}",
-  "plan.weekShort": "Uge",
-  "plan.sessions": "pas gennemført",
-  "plan.now": "Nu",
-  "plan.estimated": "Estimeret",
-  "plan.editGoal": "Rediger mål",
-  "plan.session.easy": "Roligt løb",
-  "plan.session.long": "Langtur",
-  "plan.session.tempo": "Tempoløb",
-  "plan.session.intervals": "Intervaller",
-  "plan.session.walkRun": "Gå/løb",
-  "plan.session.rest": "Hviledag",
-  "plan.reason.short": "Justeret af AI · kortere end planlagt",
-  "plan.reason.highLoad": "Justeret af AI · høj træningsbelastning",
-  "plan.reason.lowHrv": "Justeret af AI · lav HRV-restitution",
-  "plan.editor.eyebrow": "Tilpas din plan",
-  "plan.editor.title": "Rediger mål",
-  "plan.editor.distance": "Distance",
-  "plan.editor.targetDate": "Måldato",
-  "plan.editor.ambition": "Ambitionsniveau",
-  "plan.editor.save": "Gem & generer",
-  "plan.dist.5k": "5 km",
-  "plan.dist.10k": "10 km",
-  "plan.dist.half": "Halvmaraton",
-  "plan.dist.marathon": "Maraton",
-  "plan.amb.finish": "Gennemfør",
-  "plan.amb.pr": "Personlig rekord",
-  "plan.amb.elite": "Elite",
-};
+    };
     window.addEventListener("languagechange", onLangChange);
     return () => window.removeEventListener("languagechange", onLangChange);
   }, []);
