@@ -80,8 +80,8 @@ export default function TrainingTimeline() {
         hrvDropPct = ((vitals.hrvMs - avg) / avg) * 100;
       }
     }
-    return buildPlan(profile.coach, { runs, load7dRatio, hrvDropPct });
-  }, [profile.coach, runs, vitals]);
+    return buildPlan(profile.coach, { runs, load7dRatio, hrvDropPct }, profile.onboardingData);
+  }, [profile.coach, profile.onboardingData, runs, vitals]);
 
   if (!plan || !profile.coach) return null;
 
