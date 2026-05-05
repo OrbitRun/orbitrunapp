@@ -347,7 +347,7 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
   const elapsedWeeks = Math.floor((Date.now() - c.configuredAt) / weekMs);
   const weekIdx = elapsedWeeks + 1; // 1-indexed
   let mult = 1;
-  let cap: "easy" | "moderate" | "any" = "any";
+  let cap: string = "any";
   const setStrict = (m: number, cp: "easy" | "moderate" | "any") => {
     mult = Math.min(mult, m);
     const rank = { easy: 0, moderate: 1, any: 2 } as const;
