@@ -11,6 +11,7 @@ export type CoachLevel = "0-2" | "3-5" | "5-10" | "10+";
 export type CoachFrequency = "1-2" | "3-4" | "5+";
 export type CoachGoal = "weightLoss" | "finish5k" | "finish10k" | "halfMarathon" | "marathon" | "runFaster";
 export type FasterDistance = "5k" | "10k" | "halfMarathon" | "marathon";
+export type CoachAmbition = "finish" | "pr" | "elite";
 
 export type CoachConfig = {
   level: CoachLevel;
@@ -18,6 +19,8 @@ export type CoachConfig = {
   goal: CoachGoal;
   fasterDistance?: FasterDistance;
   configuredAt: number;
+  targetDate?: string; // ISO yyyy-mm-dd
+  ambition?: CoachAmbition;
 };
 
 export type UserProfile = {
