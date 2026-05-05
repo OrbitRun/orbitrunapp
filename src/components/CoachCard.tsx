@@ -9,7 +9,7 @@ import {
   type UserProfile,
 } from "@/lib/user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
-import { getPlanProgress } from "@/lib/coach-plan";
+import { getPlanProgress, currentWeekAdjustment } from "@/lib/coach-plan";
 import CoachOnboarding from "@/components/CoachOnboarding";
 
 type Props = { profile: UserProfile };
