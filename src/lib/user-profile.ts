@@ -129,6 +129,61 @@ export function coachFrequencyLabel(f: CoachFrequency, lang: "en" | "da"): strin
   return (lang === "da" ? da : en)[f];
 }
 
+export function buildCoachFromOnboarding(p: {
+  goal: RunningGoal;
+  level: ExperienceLevel;
+  onboardingData?: OnboardingData;
+}): CoachConfig {
+  const od = p.onboardingData;
+  const goal: CoachGoal =
+    p.goal === "run5k"
+      ? "finish5k"
+      : p.goal === "run10k"
+        ? "finish10k"
+        : p.goal === "halfMarathon"
+          ? "halfMarathon"
+          : p.goal === "marathon"
+            ? "marathon"
+            : p.goal === "weightLoss"
+              ? "weightLoss"
+              : "runFaster";
+  const fasterDistance: FasterDistance | undefined = goal === "runFaster" ? "5k" : undefined;
+
+  let level: CoachLevel;
+  switch (od?.weeklyKm) {
+    case "0":
+      level = "0-2";
+      break;
+    case "0-10":
+      level = "3-5";
+      break;
+    case "10-25":
+      level = "5-10";
+      break;
+    case "25+":
+      level = "10+";
+      break;
+    default:
+      level = p.level === "expert" ? "5-10" : "0-2";
+  }
+
+  const days = od?.preferredDays?.length ?? 3;
+  const frequency: CoachFrequency = days <= 2 ? "1-2" : days >= 5 ? "5+" : "3-4";
+
+  let ambition: CoachAmbition = "finish";
+  if (od?.experience === "regular") ambition = "pr";
+  else if (od?.experience === "experienced") ambition = "elite";
+
+  return {
+    goal,
+    fasterDistance,
+    level,
+    frequency,
+    ambition,
+    configuredAt: Date.now(),
+  };
+}
+
 export function coachToRunningGoal(c: CoachConfig): RunningGoal {
   switch (c.goal) {
     case "finish5k":

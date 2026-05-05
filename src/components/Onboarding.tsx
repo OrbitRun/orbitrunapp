@@ -12,6 +12,7 @@ import {
   type Scale1to5,
   type OnboardingData,
   goalLabel,
+  buildCoachFromOnboarding,
 } from "@/lib/user-profile";
 
 type StepKey =
@@ -85,6 +86,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const totalSteps = STEPS.length;
 
   const persistAll = (extra?: Partial<UserProfile>) => {
+    const coach = buildCoachFromOnboarding({ goal, level, onboardingData: data });
     const profile: UserProfile = {
       name: name.trim(),
       goal,
@@ -95,6 +97,8 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
       windUnit: "ms",
       onboarded: true,
       onboardingData: data,
+      coach,
+      coachEnabled: true,
       ...extra,
     };
     saveProfile(profile);

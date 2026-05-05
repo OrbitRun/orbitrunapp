@@ -5,14 +5,24 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CheckCircle2, Circle, Pencil, Sparkles, XCircle, CalendarDays } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Pencil,
+  Sparkles,
+  XCircle,
+  CalendarDays,
+  ChevronDown,
+  Play,
+} from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useI18n } from "@/lib/i18n";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useVitals } from "@/hooks/use-vitals";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { computeTrimp } from "@/lib/readiness-engine";
 import { loadHrZones } from "@/lib/hr-zones-config";
-import { buildPlan, type PlannedSession } from "@/lib/training-plan";
+import { buildPlan, type PlannedSession, type SessionType } from "@/lib/training-plan";
 import { phaseLabel } from "@/lib/coach-plan";
 import GoalEditorSheet from "@/components/GoalEditorSheet";
 
@@ -191,31 +201,7 @@ export default function TrainingTimeline() {
                 <AccordionContent className="pt-1 pb-3">
                   <ul className="space-y-1.5">
                     {w.sessions.map((s) => (
-                      <li
-                        key={s.id}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5"
-                      >
-                        <StatusIcon status={s.status} />
-                        <div className="w-9 text-[10px] uppercase tracking-[0.15em] font-black text-muted-foreground">
-                          {t(`trimp.day.${DAY_KEYS[s.dayIndex]}`)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-bold truncate">
-                            {t(s.titleKey)}
-                          </div>
-                          {s.adjustedReasonKey && (
-                            <div
-                              className="text-[10px] font-semibold truncate"
-                              style={{ color: "oklch(0.78 0.18 60)" }}
-                            >
-                              {t(s.adjustedReasonKey)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-[11px] font-black tabular text-foreground/80 shrink-0">
-                          {s.distanceKm} km
-                        </div>
-                      </li>
+                      <SessionRow key={s.id} s={s} />
                     ))}
                   </ul>
                 </AccordionContent>
@@ -227,4 +213,88 @@ export default function TrainingTimeline() {
       {editing && <GoalEditorSheet onClose={() => setEditing(false)} />}
     </>
   );
+}
+
+function SessionRow({ s }: { s: PlannedSession }) {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const zoneKey = `plan.session.zone.${s.type}` as const;
+  const descKey = `${s.titleKey}.desc`;
+  return (
+    <li className="rounded-xl bg-white/5 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-white/[0.03] transition"
+      >
+        <StatusIcon status={s.status} />
+        <div className="w-9 text-[10px] uppercase tracking-[0.15em] font-black text-muted-foreground">
+          {t(`trimp.day.${DAY_KEYS[s.dayIndex]}`)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-bold truncate">{t(s.titleKey)}</div>
+          {s.adjustedReasonKey && (
+            <div
+              className="text-[10px] font-semibold truncate"
+              style={{ color: "oklch(0.78 0.18 60)" }}
+            >
+              {t(s.adjustedReasonKey)}
+            </div>
+          )}
+        </div>
+        <div className="text-[11px] font-black tabular text-foreground/80 shrink-0">
+          {s.distanceKm} km
+        </div>
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && (
+        <div className="px-3 pb-3 pt-1 border-t border-white/5">
+          <div className="text-[9px] uppercase tracking-[0.2em] text-neon font-black mt-2">
+            {t("plan.session.pace")}
+          </div>
+          <div className="mt-0.5 text-[12px] font-bold text-foreground/90">
+            {t(zoneKey)}
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground leading-snug">
+            {t(descKey)}
+          </p>
+          <div className="mt-2 flex items-center gap-3 text-[10px] font-semibold text-muted-foreground">
+            <span>
+              {t("plan.session.duration")}: {Math.max(15, Math.round(s.distanceKm * estimatedMinPerKm(s.type)))} min
+            </span>
+            <span className="tabular">{s.distanceKm} km</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/" })}
+            className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-neon text-primary-foreground text-[11px] font-black uppercase tracking-[0.15em] active:scale-[0.98] transition"
+          >
+            <Play className="h-3 w-3" />
+            {t("plan.session.startCta")}
+          </button>
+        </div>
+      )}
+    </li>
+  );
+}
+
+function estimatedMinPerKm(type: SessionType): number {
+  switch (type) {
+    case "intervals":
+      return 5.5;
+    case "tempo":
+      return 5;
+    case "long":
+      return 6.5;
+    case "walkRun":
+      return 8;
+    case "rest":
+      return 0;
+    default:
+      return 6;
+  }
 }
