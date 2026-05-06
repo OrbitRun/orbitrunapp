@@ -145,6 +145,9 @@ export default function CoachOnboarding({ onClose }: Props) {
         ? String(profileExisting.coach.vo2maxKnown)
         : "")
   );
+  const [preferKnownVo2max, setPreferKnownVo2max] = useState<boolean>(
+    resume?.preferKnownVo2max ?? profileExisting.coach?.preferKnownVo2max ?? false
+  );
 
   useEffect(() => {
     try {
@@ -165,6 +168,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           age,
           gender,
           vo2maxKnown,
+          preferKnownVo2max,
         } satisfies ResumeState)
       );
     } catch {
@@ -185,6 +189,7 @@ export default function CoachOnboarding({ onClose }: Props) {
     age,
     gender,
     vo2maxKnown,
+    preferKnownVo2max,
   ]);
 
   const steps: StepKey[] =
