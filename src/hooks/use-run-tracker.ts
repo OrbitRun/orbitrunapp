@@ -333,8 +333,8 @@ export function useRunTracker() {
           // Movement threshold: only record a new coordinate when the runner
           // has moved more than 3m since the last fix. Prevents cluster points
           // when standing still. Scales up with poor accuracy.
-          const noiseFloor = Math.max(3, acc * 0.4);
-          if (rawDist < noiseFloor) return prev;
+          const noiseFloor = Math.max(5, acc * 0.4);
+          if (rawDist < noiseFloor) return { ...prev, gpsAccuracyM: acc, gpsReady };
 
           // Speed sanity: anything faster than ~10 m/s (~36 km/h) over a short
           // GPS gap is almost certainly a jump from a re-acquired fix, not a
