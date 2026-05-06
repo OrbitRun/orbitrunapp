@@ -99,6 +99,7 @@ const en: Dict = {
   "music.reconnectForPlaylists": "Reconnect Spotify",
   "music.premiumPlaylistHint": "Premium required to auto-start playlist. Open Spotify manually — skip/play still work.",
   "music.willPlay": "Will play",
+  "music.playPlaylistNow": "Play playlist now",
   "music.clearSelection": "Clear selection",
   "gps.searching": "Finding signal…",
   "gps.locked": "GPS ready",
