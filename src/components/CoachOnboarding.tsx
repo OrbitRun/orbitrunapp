@@ -58,7 +58,8 @@ type StepKey =
   | "experience"
   | "lifestyle"
   | "injury"
-  | "preferredDays";
+  | "preferredDays"
+  | "vo2max";
 
 type ResumeState = {
   step: number;
@@ -72,6 +73,9 @@ type ResumeState = {
   stressLevel: LifestyleScore;
   injuryStatus: InjuryStatus;
   preferredDays: WeekDay[];
+  age: string;
+  gender: "male" | "female" | "other";
+  vo2maxKnown: string;
 };
 
 function loadResume(): Partial<ResumeState> | null {
