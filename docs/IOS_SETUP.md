@@ -52,8 +52,29 @@ In Xcode:
    ```
    `NSBluetoothAlwaysUsageDescription` is required by Apple — without it iOS
    terminates the app the first time it tries to scan for a BLE sensor.
-3. Build & run on a real device (HealthKit and BLE are unavailable in the
-   simulator).
+3. **Add Background GPS** — still in `Info.plist`, add:
+   ```xml
+   <key>NSLocationWhenInUseUsageDescription</key>
+   <string>Orbit uses your location to track your run route, distance and pace.</string>
+   <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+   <string>Orbit keeps tracking your run when the screen is locked or you switch apps, so your route stays accurate.</string>
+   <key>UIBackgroundModes</key>
+   <array>
+     <string>location</string>
+     <string>audio</string>
+   </array>
+   ```
+   - `location` background mode is what allows
+     `kCLLocationAccuracyBestForNavigation` to keep streaming when the screen
+     is locked. Without it iOS suspends the app within seconds.
+   - `audio` is already used by the silent-loop trick in `audio-cues.ts` to
+     keep voice cues firing — keep it alongside `location`.
+   - In **Signing & Capabilities** also add the **Background Modes**
+     capability and tick **Location updates** + **Audio, AirPlay, and
+     Picture in Picture**. The plist keys above are equivalent but Xcode
+     will mirror them into the entitlements when ticked.
+4. Build & run on a real device (HealthKit, BLE and background GPS are all
+   unavailable in the simulator).
 
 ## 4. Update flow after web changes
 
