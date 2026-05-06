@@ -100,6 +100,8 @@ const en: Dict = {
   "music.premiumPlaylistHint": "Premium required to auto-start playlist. Open Spotify manually — skip/play still work.",
   "music.willPlay": "Will play",
   "music.clearSelection": "Clear selection",
+  "gps.searching": "Finding signal…",
+  "gps.locked": "GPS ready",
 
   // Nav
   "nav.run": "Run",
