@@ -64,14 +64,14 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="glass-strong w-full sm:max-w-md max-h-[80vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden"
+        className="w-full sm:max-w-md max-h-[80vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden bg-background border border-white/10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div className="font-display font-black">{t("music.choosePlaylist")}</div>
-          <button onClick={onClose} className="h-8 w-8 grid place-items-center rounded-full hover:bg-white/5">
+          <button onClick={onClose} className="h-8 w-8 grid place-items-center rounded-full hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -102,7 +102,7 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
                 <li>
                   <button
                     onClick={handleClear}
-                    className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg text-left"
+                    className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg text-left"
                   >
                     <div className="h-10 w-10 rounded-md bg-white/5 grid place-items-center text-muted-foreground">
                       <X className="h-4 w-4" />
@@ -117,7 +117,7 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
                   <li key={p.id}>
                     <button
                       onClick={() => handleSelect(p)}
-                      className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg text-left"
+                      className="w-full flex items-center gap-3 p-2 hover:bg-muted rounded-lg text-left"
                     >
                       <div className="h-10 w-10 rounded-md bg-white/5 overflow-hidden flex-shrink-0 grid place-items-center text-muted-foreground">
                         {p.imageUrl ? (
