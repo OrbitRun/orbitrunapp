@@ -545,6 +545,28 @@ export function useRunTracker() {
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
+    // Native path (Capacitor iOS/Android) — uses kCLLocationAccuracyBestForNavigation
+    // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
+    // when the iOS shell declares the `location` background mode.
+    if (isNativeGeolocationAvailable()) {
+      if (nativeWatchIdRef.current != null) return;
+      void (async () => {
+        const perm = await requestNativeGeolocationPermission();
+        if (perm !== "granted") {
+          setState((p) => ({ ...p, permissionError: "Location permission denied." }));
+          return;
+        }
+        // Immediate single-shot fix for a fast first callback.
+        const first = await nativeGetCurrentPosition();
+        if (first) handlePosition(toBrowserPosition(first));
+        const id = await nativeWatchPosition(
+          (pos) => handlePosition(toBrowserPosition(pos)),
+          (err) => handleError({ message: err.message } as GeolocationPositionError),
+        );
+        nativeWatchIdRef.current = id;
+      })();
+      return;
+    }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState((p) => ({ ...p, permissionError: "Geolocation not supported in this browser." }));
       return;
@@ -572,6 +594,12 @@ export function useRunTracker() {
   // Idempotent variant used to warm GPS as soon as the app opens, so that the
   // first fix is already cached when the user taps Start.
   const warmGps = useCallback(() => {
+    // Native: just call armGps — the plugin handles permission state.
+    if (isNativeGeolocationAvailable()) {
+      if (nativeWatchIdRef.current != null) return;
+      armGps();
+      return;
+    }
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
     if (watchIdRef.current != null) return;
     if (typeof navigator.permissions?.query === "function") {
