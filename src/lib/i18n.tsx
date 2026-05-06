@@ -773,6 +773,8 @@ const da: Dict = {
   "music.premiumPlaylistHint": "Premium kræves for at starte playliste automatisk. Åbn Spotify manuelt — skip/play virker stadig.",
   "music.willPlay": "Afspiller",
   "music.clearSelection": "Fjern valg",
+  "gps.searching": "Finder signal…",
+  "gps.locked": "GPS klar",
 
   "nav.run": "Løb",
   "nav.coach": "Coach",
