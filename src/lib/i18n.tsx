@@ -454,6 +454,8 @@ const en: Dict = {
   "readiness.metric.restingHr": "Resting HR",
   "readiness.metric.hrv": "HRV",
   "readiness.metric.trimp7d": "7-day TRIMP",
+  "info.hrv": "HRV shows the time variation between your heartbeats. High HRV = good recovery. Low HRV = sign of stress or fatigue.",
+  "info.trimp": "TRIMP expresses the total load of your training based on heart rate and time. It helps you avoid overtraining.",
   "readiness.metric.trend": "Trend",
   "readiness.metric.weather": "Weather",
   "readiness.metric.load": "Load",
