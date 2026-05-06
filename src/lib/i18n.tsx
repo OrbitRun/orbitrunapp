@@ -434,6 +434,11 @@ const en: Dict = {
   "vo2max.band.good": "Good",
   "vo2max.band.excellent": "Excellent",
   "vo2max.band.elite": "Elite",
+  "vo2max.info": "VO2 max estimates how much oxygen your body can use during hard effort — a key marker of aerobic fitness. Orbit calculates it from each run: when heart-rate data is available we use the HRmax/HRrest ratio (Uth–Sørensen). Without HR we fall back to a pace-based model (Daniels/ACSM) that derives VO2 max from your average speed and duration.",
+  "vo2max.source.hr": "HR-based",
+  "vo2max.source.pace": "Pace-based",
+  "vo2max.source.estimate": "Estimate",
+  "vo2max.run.label": "VO2 max this run",
 
   // RPE
   "rpe.eyebrow": "Effort score",
