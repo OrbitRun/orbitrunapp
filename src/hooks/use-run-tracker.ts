@@ -719,8 +719,8 @@ export function useRunTracker() {
       shoeId: primaryShoe?.id,
       ...hrAggregates,
     };
-    const vo2 = estimateVo2Max(baseRun);
-    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2 } : baseRun;
+    const vo2 = bestEstimateVo2MaxWithSource(baseRun);
+    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2.value, vo2maxSource: vo2.source } : baseRun;
 
     // --- Heart-rate recovery capture ----------------------------------------
     // Keep BT + Health subscribers active for ~75s after stop so we can sample
