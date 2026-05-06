@@ -64,9 +64,9 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="glass-strong w-full sm:max-w-md max-h-[80vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden"
+        className="w-full sm:max-w-md max-h-[80vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden bg-background border border-white/10 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
