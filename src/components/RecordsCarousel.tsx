@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Ghost } from "lucide-react";
+import { Activity, Ghost } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -13,6 +13,8 @@ import {
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { loadRuns } from "@/lib/run-types";
 import { selectGhost } from "@/lib/ghost-runner";
+import { bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 function formatValue(category: PrCategory, value: number): string {
   if (category === "longest") return `${formatDistance(value)} km`;
