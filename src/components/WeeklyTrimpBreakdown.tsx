@@ -92,6 +92,7 @@ export default function WeeklyTrimpBreakdown({ runs }: { runs: Run[] }) {
           <div className="text-[10px] uppercase tracking-[0.25em] text-neon font-bold flex items-center gap-1.5">
             <Activity className="h-3 w-3" />
             {t("trimp.weeklyTitle")}
+            <InfoHint label="TRIMP" text={t("info.trimp")} />
           </div>
           <div className="font-display font-black text-xl tabular leading-tight mt-0.5">
             {weekTotal} <span className="text-xs text-muted-foreground">TRIMP</span>
