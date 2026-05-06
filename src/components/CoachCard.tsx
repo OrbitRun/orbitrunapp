@@ -219,19 +219,22 @@ function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
     value: number | null;
     source: "user" | "hr" | "pace" | null;
   }>(() => {
-    if (coach?.vo2maxKnown && coach.vo2maxKnown > 0) {
+    if (coach?.preferKnownVo2max && coach.vo2maxKnown && coach.vo2maxKnown > 0) {
       return { value: coach.vo2maxKnown, source: "user" };
     }
     const best = bestVo2MaxFromRuns(runs);
     if (best) {
       const r = runs.find((x) => x.id === best.runId);
-      const src = (r?.vo2maxSource as "hr" | "pace" | undefined) ?? "pace";
+      const src = (r?.vo2maxSource as "hr" | "pace" | "user" | undefined) ?? "pace";
       return { value: best.value, source: src };
+    }
+    if (coach?.vo2maxKnown && coach.vo2maxKnown > 0) {
+      return { value: coach.vo2maxKnown, source: "user" };
     }
     const latest = runs.length > 0 ? [...runs].sort((a, b) => b.startedAt - a.startedAt)[0] : null;
     const est = latest ? bestEstimateVo2MaxWithSource(latest) : null;
     return est ? { value: est.value, source: est.source } : { value: null, source: null };
-  }, [coach?.vo2maxKnown, runs]);
+  }, [coach?.vo2maxKnown, coach?.preferKnownVo2max, runs]);
 
   const band = value != null ? classifyFitnessByProfile(value, coach?.age, coach?.gender) : null;
   const sourceLabel =
