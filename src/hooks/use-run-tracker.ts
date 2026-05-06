@@ -340,7 +340,7 @@ export function useRunTracker() {
           // GPS gap is almost certainly a jump from a re-acquired fix, not a
           // real sprint. Drop those samples entirely.
           const speedOk = dt > 0 && rawDist / dt <= 10;
-          if (!speedOk) return prev;
+          if (!speedOk) return { ...prev, gpsAccuracyM: acc, gpsReady };
           addDist = rawDist;
 
           // Elevation: use a per-sample EMA + minimum delta to suppress the
