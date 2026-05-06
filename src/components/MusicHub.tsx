@@ -320,8 +320,34 @@ export default function MusicHub() {
         </div>
       )}
 
+      {/* Active workout playlist row */}
+      <button
+        onClick={() => setPickerOpen(true)}
+        className="mt-2 w-full flex items-center gap-2 text-[11px] px-2 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition text-left"
+      >
+        <ListMusic className="h-3.5 w-3.5 text-neon flex-shrink-0" />
+        {activePlaylist ? (
+          <>
+            <span className="text-muted-foreground flex-shrink-0">{t("music.willPlay")}:</span>
+            <span className="font-semibold truncate">{activePlaylist.name}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">{t("music.choosePlaylist")}</span>
+        )}
+      </button>
+
       {showMenu && (
         <div className="absolute left-3 top-16 z-20 glass-strong rounded-xl p-1 shadow-lg">
+          <button
+            onClick={() => {
+              setShowMenu(false);
+              setPickerOpen(true);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg hover:bg-white/5 transition w-full"
+          >
+            <ListMusic className="h-3.5 w-3.5" />
+            {t("music.changePlaylist")}
+          </button>
           <button
             onClick={handleDisconnect}
             className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg hover:bg-white/5 transition w-full"
@@ -331,6 +357,12 @@ export default function MusicHub() {
           </button>
         </div>
       )}
+
+      <SpotifyPlaylistPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onChange={() => setActivePlaylist(getActiveWorkoutPlaylist())}
+      />
     </div>
   );
 }
