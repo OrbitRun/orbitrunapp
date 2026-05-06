@@ -23,6 +23,7 @@ import {
   type WeekDay,
   type LifestyleScore,
 } from "@/lib/user-profile";
+import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
 
 type Props = { onClose: () => void };
 
