@@ -254,6 +254,11 @@ function RunPage() {
             }
           />
         </div>
+        {!t.gpsReady && (
+          <div className="absolute top-3 left-3 pointer-events-none">
+            <GpsSignalChip accuracyM={t.gpsAccuracyM} />
+          </div>
+        )}
         {t.points.length === 0 && (
           <div className="absolute inset-0 grid place-items-center pointer-events-none">
             <div className="glass-strong rounded-2xl px-4 py-2 text-xs text-muted-foreground">
