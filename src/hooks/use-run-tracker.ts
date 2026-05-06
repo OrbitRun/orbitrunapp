@@ -10,7 +10,7 @@ import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import { hrrDrop60s, timeFractionInZone5, DEFAULT_MAX_HR } from "@/lib/hr-analysis";
-import { estimateVo2Max } from "@/lib/vo2max";
+import { bestEstimateVo2Max as estimateVo2Max } from "@/lib/vo2max";
 import { classifyHrrGrade } from "@/lib/hr-zones";
 import { loadHrZones } from "@/lib/hr-zones-config";
 import { computeTrimp } from "@/lib/readiness-engine";
