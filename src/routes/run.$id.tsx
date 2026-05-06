@@ -260,6 +260,42 @@ function RunDetailPage() {
       <HrAnalyticsCard run={run} onScrub={(p) => setScrubLatLng(p?.coord ?? null)} />
       <HrZoneBar series={run.hrSeries} />
 
+      {(() => {
+        const stored =
+          run.vo2maxEst != null
+            ? { value: run.vo2maxEst, source: (run.vo2maxSource ?? "pace") as "hr" | "pace" | "user" }
+            : null;
+        const fallback = !stored ? bestEstimateVo2MaxWithSource(run) : null;
+        const v = stored ?? fallback;
+        if (!v) return null;
+        const srcLabel =
+          v.source === "hr"
+            ? t("vo2max.source.hr")
+            : v.source === "user"
+              ? t("vo2max.source.user")
+              : t("vo2max.source.pace");
+        return (
+          <section className="mt-3 glass rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
+                  {t("vo2max.run.label")}
+                </div>
+                <InfoHint label={t("vo2max.label")} text={t("vo2max.info")} />
+              </div>
+              <span className="text-[9px] uppercase tracking-[0.18em] font-bold text-neon">
+                {srcLabel}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-display font-black text-3xl tabular text-neon leading-none">
+                {v.value.toFixed(1)}
+              </span>
+              <span className="text-[11px] text-muted-foreground font-bold">{t("vo2max.unit")}</span>
+            </div>
+          </section>
+        );
+      })()}
 
       {(() => {
         const snapshot = computeRunMetrics(run);
