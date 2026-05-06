@@ -33,6 +33,14 @@ import {
   type FlightSnapshot,
 } from "@/lib/flight-recorder";
 import TimerWorker from "@/workers/timer.worker.ts?worker";
+import {
+  isNativeGeolocationAvailable,
+  nativeClearWatch,
+  nativeGetCurrentPosition,
+  nativeWatchPosition,
+  requestNativeGeolocationPermission,
+  toBrowserPosition,
+} from "@/lib/geolocation-native";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
