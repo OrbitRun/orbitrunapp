@@ -28,6 +28,11 @@ export type CoachConfig = {
   stressLevel?: LifestyleScore;
   injuryStatus?: InjuryStatus;
   preferredDays?: WeekDay[];
+  // Optional self-reported VO2 max (e.g. from a Garmin/Apple Watch).
+  // When present, the app prefers it over its own estimates.
+  vo2maxKnown?: number;
+  age?: number;
+  gender?: "male" | "female" | "other";
   configuredAt: number;
 };
 

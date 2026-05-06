@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Ghost } from "lucide-react";
+import { Activity, Ghost } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -13,6 +13,8 @@ import {
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { loadRuns } from "@/lib/run-types";
 import { selectGhost } from "@/lib/ghost-runner";
+import { bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 function formatValue(category: PrCategory, value: number): string {
   if (category === "longest") return `${formatDistance(value)} km`;
@@ -31,18 +33,24 @@ function formatDateShort(ts: number, lang: string): string {
 export default function RecordsCarousel() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
+  const profile = useUserProfile();
   const [prs, setPrs] = useState<PrMap>({});
+  const [vo2Best, setVo2Best] = useState<{ value: number; achievedAt: number } | null>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", dragFree: false, loop: false });
   const [selected, setSelected] = useState(0);
 
   useEffect(() => {
     setPrs(recomputeAllPrs());
-    const onUpdate = () => setPrs(loadPrs());
-    window.addEventListener("orbit:new-pr", onUpdate);
-    window.addEventListener("orbit:run-updated", onUpdate);
+    const refresh = () => {
+      setPrs(loadPrs());
+      setVo2Best(bestVo2MaxFromRuns(loadRuns()));
+    };
+    refresh();
+    window.addEventListener("orbit:new-pr", refresh);
+    window.addEventListener("orbit:run-updated", refresh);
     return () => {
-      window.removeEventListener("orbit:new-pr", onUpdate);
-      window.removeEventListener("orbit:run-updated", onUpdate);
+      window.removeEventListener("orbit:new-pr", refresh);
+      window.removeEventListener("orbit:run-updated", refresh);
     };
   }, []);
 
@@ -106,6 +114,38 @@ export default function RecordsCarousel() {
               </div>
             );
           })}
+          {(() => {
+            const band = vo2Best
+              ? classifyFitnessByProfile(vo2Best.value, profile.coach?.age, profile.coach?.gender)
+              : null;
+            return (
+              <div className="glass rounded-2xl px-4 py-4 min-w-0 shrink-0 grow-0 basis-[85%]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-display font-black text-lg tracking-tight">
+                    <Activity className="h-4 w-4 text-neon" />
+                    {t("vo2max.label")}
+                  </div>
+                  <div className="font-mono font-bold text-xl text-neon tabular">
+                    {vo2Best ? vo2Best.value.toFixed(1) : (
+                      <span className="text-muted-foreground/60 font-display">—</span>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="text-[11px] text-muted-foreground/80 truncate">
+                    {vo2Best
+                      ? t("pr.dateSet", { date: formatDateShort(vo2Best.achievedAt, lang) })
+                      : t("pr.notDone")}
+                  </div>
+                  {band && (
+                    <div className="text-[10px] uppercase tracking-[0.18em] font-black text-neon">
+                      {t(`vo2max.band.${band}`)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
       <div className="mt-2 flex items-center justify-center gap-1.5">

@@ -58,7 +58,8 @@ type StepKey =
   | "experience"
   | "lifestyle"
   | "injury"
-  | "preferredDays";
+  | "preferredDays"
+  | "vo2max";
 
 type ResumeState = {
   step: number;
@@ -72,6 +73,9 @@ type ResumeState = {
   stressLevel: LifestyleScore;
   injuryStatus: InjuryStatus;
   preferredDays: WeekDay[];
+  age: string;
+  gender: "male" | "female" | "other";
+  vo2maxKnown: string;
 };
 
 function loadResume(): Partial<ResumeState> | null {
@@ -125,6 +129,20 @@ export default function CoachOnboarding({ onClose }: Props) {
     resume?.preferredDays ?? existing?.preferredDays ?? ["mon", "wed", "fri"]
   );
 
+  const profileExisting = loadProfile();
+  const [age, setAge] = useState<string>(
+    resume?.age ?? (profileExisting.coach?.age != null ? String(profileExisting.coach.age) : "")
+  );
+  const [gender, setGender] = useState<"male" | "female" | "other">(
+    resume?.gender ?? profileExisting.coach?.gender ?? "other"
+  );
+  const [vo2maxKnown, setVo2maxKnown] = useState<string>(
+    resume?.vo2maxKnown ??
+      (profileExisting.coach?.vo2maxKnown != null
+        ? String(profileExisting.coach.vo2maxKnown)
+        : "")
+  );
+
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -141,6 +159,9 @@ export default function CoachOnboarding({ onClose }: Props) {
           stressLevel,
           injuryStatus,
           preferredDays,
+          age,
+          gender,
+          vo2maxKnown,
         } satisfies ResumeState)
       );
     } catch {
@@ -158,6 +179,9 @@ export default function CoachOnboarding({ onClose }: Props) {
     stressLevel,
     injuryStatus,
     preferredDays,
+    age,
+    gender,
+    vo2maxKnown,
   ]);
 
   const steps: StepKey[] =
@@ -172,6 +196,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "vo2max",
         ]
       : [
           "level",
@@ -182,6 +207,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "vo2max",
         ];
   const totalSteps = steps.length;
   const safeStep = Math.min(step, totalSteps - 1);
@@ -191,6 +217,10 @@ export default function CoachOnboarding({ onClose }: Props) {
 
   const persist = () => {
     const p = loadProfile();
+    const ageNum = age.trim() ? Math.max(10, Math.min(99, parseInt(age, 10))) : undefined;
+    const vo2Num = vo2maxKnown.trim()
+      ? Math.max(20, Math.min(90, parseFloat(vo2maxKnown.replace(",", "."))))
+      : undefined;
     const changed =
       !p.coach ||
       p.coach.level !== level ||
@@ -214,6 +244,9 @@ export default function CoachOnboarding({ onClose }: Props) {
       stressLevel,
       injuryStatus,
       preferredDays,
+      age: ageNum && Number.isFinite(ageNum) ? ageNum : undefined,
+      gender,
+      vo2maxKnown: vo2Num && Number.isFinite(vo2Num) ? vo2Num : undefined,
       configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
     };
     saveProfile({
@@ -514,6 +547,69 @@ export default function CoachOnboarding({ onClose }: Props) {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {current === "vo2max" && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold block">{t("coach.q.vo2max")}</label>
+                <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
+                  {t("coach.q.vo2max.help")}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.age")}
+                  </div>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+                    placeholder="—"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.vo2maxKnown")}
+                  </div>
+                  <input
+                    inputMode="decimal"
+                    value={vo2maxKnown}
+                    onChange={(e) =>
+                      setVo2maxKnown(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 5))
+                    }
+                    placeholder="—"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                  {t("coach.q.gender")}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["male", "female", "other"] as const).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setGender(g)}
+                      className={`h-12 rounded-xl text-xs font-bold uppercase tracking-[0.12em] transition active:scale-95 ${
+                        gender === g
+                          ? "bg-neon text-primary-foreground"
+                          : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+                      }`}
+                    >
+                      {t(`coach.opt.gender.${g}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                {t("coach.q.vo2max.fallback")}
+              </p>
             </div>
           )}
         </div>
