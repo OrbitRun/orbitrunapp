@@ -324,20 +324,33 @@ export default function MusicHub() {
       )}
 
       {/* Active workout playlist row */}
-      <button
-        onClick={() => setPickerOpen(true)}
-        className="mt-2 w-full flex items-center gap-2 text-[11px] px-2 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition text-left"
-      >
-        <ListMusic className="h-3.5 w-3.5 text-neon flex-shrink-0" />
-        {activePlaylist ? (
-          <>
-            <span className="text-muted-foreground flex-shrink-0">{t("music.willPlay")}:</span>
-            <span className="font-semibold truncate">{activePlaylist.name}</span>
-          </>
-        ) : (
-          <span className="text-muted-foreground">{t("music.choosePlaylist")}</span>
+      <div className="mt-2 w-full flex items-center gap-1">
+        <button
+          onClick={() => setPickerOpen(true)}
+          className="flex-1 min-w-0 flex items-center gap-2 text-[11px] px-2 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition text-left"
+        >
+          <ListMusic className="h-3.5 w-3.5 text-neon flex-shrink-0" />
+          {activePlaylist ? (
+            <>
+              <span className="text-muted-foreground flex-shrink-0">{t("music.willPlay")}:</span>
+              <span className="font-semibold truncate">{activePlaylist.name}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">{t("music.choosePlaylist")}</span>
+          )}
+        </button>
+        {activePlaylist && (
+          <button
+            onClick={() => runControl(startActivePlaylist)}
+            disabled={busy}
+            aria-label={t("music.playPlaylistNow")}
+            title={t("music.playPlaylistNow")}
+            className="h-8 w-8 grid place-items-center rounded-lg bg-neon text-primary-foreground hover:opacity-90 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
+          >
+            <Play className="h-3.5 w-3.5 ml-0.5" />
+          </button>
         )}
-      </button>
+      </div>
 
       {showMenu && (
         <div className="absolute left-3 top-16 z-20 glass-strong rounded-xl p-1 shadow-lg">
