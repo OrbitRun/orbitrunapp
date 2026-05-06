@@ -41,12 +41,16 @@ export default function RecordsCarousel() {
 
   useEffect(() => {
     setPrs(recomputeAllPrs());
-    const onUpdate = () => setPrs(loadPrs());
-    window.addEventListener("orbit:new-pr", onUpdate);
-    window.addEventListener("orbit:run-updated", onUpdate);
+    const refresh = () => {
+      setPrs(loadPrs());
+      setVo2Best(bestVo2MaxFromRuns(loadRuns()));
+    };
+    refresh();
+    window.addEventListener("orbit:new-pr", refresh);
+    window.addEventListener("orbit:run-updated", refresh);
     return () => {
-      window.removeEventListener("orbit:new-pr", onUpdate);
-      window.removeEventListener("orbit:run-updated", onUpdate);
+      window.removeEventListener("orbit:new-pr", refresh);
+      window.removeEventListener("orbit:run-updated", refresh);
     };
   }, []);
 
