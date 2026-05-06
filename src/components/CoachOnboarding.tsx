@@ -204,6 +204,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "bio",
           "vo2max",
         ]
       : [
@@ -215,13 +216,21 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "bio",
           "vo2max",
         ];
   const totalSteps = steps.length;
   const safeStep = Math.min(step, totalSteps - 1);
   const current = steps[safeStep];
   const isLast = safeStep === totalSteps - 1;
-  const canAdvance = current === "preferredDays" ? preferredDays.length > 0 : true;
+  const ageNumLive = age.trim() ? parseInt(age, 10) : NaN;
+  const ageValid = Number.isFinite(ageNumLive) && ageNumLive >= 10 && ageNumLive <= 99;
+  const canAdvance =
+    current === "preferredDays"
+      ? preferredDays.length > 0
+      : current === "bio"
+        ? ageValid
+        : true;
 
   const persist = () => {
     const p = loadProfile();
@@ -255,6 +264,7 @@ export default function CoachOnboarding({ onClose }: Props) {
       age: ageNum && Number.isFinite(ageNum) ? ageNum : undefined,
       gender,
       vo2maxKnown: vo2Num && Number.isFinite(vo2Num) ? vo2Num : undefined,
+      preferKnownVo2max: vo2Num != null ? preferKnownVo2max : false,
       configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
     };
     saveProfile({
@@ -263,6 +273,12 @@ export default function CoachOnboarding({ onClose }: Props) {
       goal: coachToRunningGoal(nextCoach),
       coachEnabled: p.coachEnabled === false ? false : true,
     });
+    // Recalibrate HR zones from new age (preserves existing restingHr if set).
+    if (ageNum != null) {
+      const existing = loadHrZones();
+      const restingHr = existing?.restingHr ?? 60;
+      saveHrZones(defaultConfig(ageNum, restingHr));
+    }
     clearResume();
   };
 
