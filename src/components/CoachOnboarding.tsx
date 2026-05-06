@@ -129,6 +129,20 @@ export default function CoachOnboarding({ onClose }: Props) {
     resume?.preferredDays ?? existing?.preferredDays ?? ["mon", "wed", "fri"]
   );
 
+  const profileExisting = loadProfile();
+  const [age, setAge] = useState<string>(
+    resume?.age ?? (profileExisting.coach?.age != null ? String(profileExisting.coach.age) : "")
+  );
+  const [gender, setGender] = useState<"male" | "female" | "other">(
+    resume?.gender ?? profileExisting.coach?.gender ?? "other"
+  );
+  const [vo2maxKnown, setVo2maxKnown] = useState<string>(
+    resume?.vo2maxKnown ??
+      (profileExisting.coach?.vo2maxKnown != null
+        ? String(profileExisting.coach.vo2maxKnown)
+        : "")
+  );
+
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -145,6 +159,9 @@ export default function CoachOnboarding({ onClose }: Props) {
           stressLevel,
           injuryStatus,
           preferredDays,
+          age,
+          gender,
+          vo2maxKnown,
         } satisfies ResumeState)
       );
     } catch {
@@ -162,6 +179,9 @@ export default function CoachOnboarding({ onClose }: Props) {
     stressLevel,
     injuryStatus,
     preferredDays,
+    age,
+    gender,
+    vo2maxKnown,
   ]);
 
   const steps: StepKey[] =
