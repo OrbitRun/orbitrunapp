@@ -87,8 +87,30 @@ npx cap sync ios
 
 Then re-archive in Xcode and ship via TestFlight / App Store.
 
-## How the bridge works
+## How the bridges work
 
-`src/lib/health.ts` dynamically imports `@capacitor-community/health` and
-checks `Capacitor.isNativePlatform()` + `getPlatform() === "ios"`. On the web
-every call is a safe no-op, so nothing breaks when the plugin is absent.
+- `src/lib/health.ts` dynamically imports `@capacitor-community/health` and
+  checks `Capacitor.isNativePlatform()` + `getPlatform() === "ios"`. On the web
+  every call is a safe no-op, so nothing breaks when the plugin is absent.
+- `src/lib/geolocation-native.ts` does the same for `@capacitor/geolocation`.
+  On native it requests location permission, runs `getCurrentPosition` for an
+  immediate fix and `watchPosition` with `enableHighAccuracy: true` (which
+  iOS maps to `kCLLocationAccuracyBestForNavigation` and Android to
+  `PRIORITY_HIGH_ACCURACY`). The run tracker (`use-run-tracker.ts`)
+  automatically prefers the native bridge when running inside Capacitor and
+  falls back to `navigator.geolocation` in the browser.
+
+### Why background tracking works
+
+On iOS, `kCLLocationAccuracyBestForNavigation` only continues to deliver
+fixes while the app is backgrounded if **both** of these are true:
+
+1. The user has granted **"Always"** location permission (the system shows
+   the upgrade prompt the second time the app starts in the background).
+2. The app declares the `location` value in `UIBackgroundModes`.
+
+Both are configured by the Info.plist snippet above. The first time a run
+starts, iOS will ask for "When In Use"; after the run ends iOS will (within
+a few minutes) prompt the user to allow "Always" so future runs keep
+tracking when the screen is locked.
+
