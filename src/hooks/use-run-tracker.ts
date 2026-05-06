@@ -73,6 +73,8 @@ const initial: State = {
   points: [],
   splits: [],
   permissionError: null,
+  gpsAccuracyM: null,
+  gpsReady: false,
   ghostDeltaMs: null,
   ghost: null,
   hrBpm: null,
