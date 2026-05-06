@@ -91,28 +91,31 @@ export default function MusicHub() {
     };
   }, [authed, refresh]);
 
+  // Start the user's chosen workout playlist (or plain resume if none).
+  const startActivePlaylist = useCallback(async () => {
+    const playlist = getActiveWorkoutPlaylist();
+    if (!playlist) {
+      await spPlay();
+      return;
+    }
+    const devices = await getDevices();
+    let deviceId = devices.find((d) => d.is_active)?.id;
+    if (!deviceId && devices[0]) {
+      deviceId = devices[0].id;
+      await transferPlayback(deviceId, false);
+    }
+    if (!deviceId) {
+      toast.error(t("music.noDevice"));
+      return;
+    }
+    await playContext(playlist.uri, deviceId);
+  }, [t]);
+
   // Auto play/pause with run lifecycle.
   useEffect(() => {
     const onStart = () => {
       if (!isAuthed()) return;
-      const playlist = getActiveWorkoutPlaylist();
-      if (!playlist) {
-        void runControl(spPlay);
-        return;
-      }
-      void runControl(async () => {
-        const devices = await getDevices();
-        let deviceId = devices.find((d) => d.is_active)?.id;
-        if (!deviceId && devices[0]) {
-          deviceId = devices[0].id;
-          await transferPlayback(deviceId, false);
-        }
-        if (!deviceId) {
-          toast.error(t("music.noDevice"));
-          return;
-        }
-        await playContext(playlist.uri, deviceId);
-      });
+      void runControl(startActivePlaylist);
     };
     const onStop = () => {
       if (isAuthed()) void runControl(spPause);
@@ -124,7 +127,7 @@ export default function MusicHub() {
       window.removeEventListener("orbit:run-stop", onStop);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startActivePlaylist]);
 
   const handleSpotifyError = useCallback(
     (err: unknown) => {
