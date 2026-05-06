@@ -296,14 +296,23 @@ export function useRunTracker() {
         }
       }
       setState((prev) => {
-        if (prev.status !== "running") return prev;
+        const acc = pos.coords.accuracy ?? 999;
+        const gpsReady = acc <= 20;
+        // Always reflect latest GPS quality, even before the run starts, so
+        // the "Finder signal…" chip can disappear as soon as a usable fix
+        // arrives during the warm-up phase.
+        if (prev.status !== "running") {
+          if (prev.gpsAccuracyM === acc && prev.gpsReady === gpsReady) return prev;
+          return { ...prev, gpsAccuracyM: acc, gpsReady };
+        }
 
         // ---- GPS quality gate -------------------------------------------------
         // Strict accuracy gate: reject any sample with reported accuracy
         // worse than 20m to prevent zig-zagging on the map. The first valid
         // sample is always accepted to seed the trace.
-        const acc = pos.coords.accuracy ?? 999;
-        if (acc > 20 && prev.points.length > 0) return prev;
+        if (acc > 20 && prev.points.length > 0) {
+          return { ...prev, gpsAccuracyM: acc, gpsReady };
+        }
 
         didUpdate = true;
         const np: GeoPoint = {
