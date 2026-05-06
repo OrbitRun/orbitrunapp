@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, SkipBack, SkipForward, Music2, LogOut } from "lucide-react";
+import { Pause, Play, SkipBack, SkipForward, Music2, LogOut, ListMusic } from "lucide-react";
 import OrbitSpinner from "@/components/OrbitSpinner";
 import { toast } from "sonner";
 import Marquee from "@/components/Marquee";
+import SpotifyPlaylistPicker from "@/components/SpotifyPlaylistPicker";
 import { useI18n } from "@/lib/i18n";
 import {
   beginAuth,
+  getActiveWorkoutPlaylist,
+  getDevices,
   getNowPlaying,
   isAuthed,
   isConfigured,
@@ -13,8 +16,11 @@ import {
   next as spNext,
   pause as spPause,
   play as spPlay,
+  playContext,
   previous as spPrevious,
+  transferPlayback,
   transferToFirstDevice,
+  type ActiveWorkoutPlaylist,
   type NowPlaying,
 } from "@/lib/spotify";
 
