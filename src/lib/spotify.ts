@@ -245,15 +245,77 @@ export async function previous() {
   await api("/me/player/previous", { method: "POST" });
 }
 
-export async function transferToFirstDevice(): Promise<boolean> {
+export type SpotifyDevice = { id: string; name: string; is_active: boolean; type: string };
+
+export async function getDevices(): Promise<SpotifyDevice[]> {
   const res = await api("/me/player/devices");
-  if (!res.ok) return false;
+  if (!res.ok) return [];
   const data = await res.json();
-  const device = data.devices?.[0];
-  if (!device) return false;
+  return data.devices ?? [];
+}
+
+export async function transferPlayback(deviceId: string, play = false): Promise<void> {
   await api("/me/player", {
     method: "PUT",
-    body: JSON.stringify({ device_ids: [device.id], play: false }),
+    body: JSON.stringify({ device_ids: [deviceId], play }),
   });
+}
+
+export async function transferToFirstDevice(): Promise<boolean> {
+  const devices = await getDevices();
+  const device = devices[0];
+  if (!device) return false;
+  await transferPlayback(device.id, false);
   return true;
 }
+
+export async function playContext(contextUri: string, deviceId?: string): Promise<void> {
+  const path = deviceId ? `/me/player/play?device_id=${encodeURIComponent(deviceId)}` : "/me/player/play";
+  const res = await api(path, {
+    method: "PUT",
+    body: JSON.stringify({ context_uri: contextUri }),
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`Spotify error ${res.status}`);
+  }
+}
+
+export type SpotifyPlaylist = {
+  id: string;
+  name: string;
+  uri: string;
+  imageUrl: string | null;
+  ownerName: string;
+  trackCount: number;
+};
+
+export async function getMyPlaylists(): Promise<SpotifyPlaylist[]> {
+  const out: SpotifyPlaylist[] = [];
+  let url: string | null = "/me/playlists?limit=50";
+  while (url) {
+    const res = await api(url);
+    if (!res.ok) throw new Error(`Spotify error ${res.status}`);
+    const data = await res.json();
+    for (const item of data.items ?? []) {
+      if (!item) continue;
+      out.push({
+        id: item.id,
+        name: item.name,
+        uri: item.uri,
+        imageUrl: item.images?.[0]?.url ?? null,
+        ownerName: item.owner?.display_name ?? "",
+        trackCount: item.tracks?.total ?? 0,
+      });
+    }
+    if (data.next) {
+      const u = new URL(data.next);
+      url = u.pathname.replace(/^\/v1/, "") + u.search;
+    } else {
+      url = null;
+    }
+  }
+  return out;
+}
+
+// Also patch play() so it doesn't silently swallow errors at call sites that need them.
+
