@@ -94,7 +94,25 @@ export default function MusicHub() {
   // Auto play/pause with run lifecycle.
   useEffect(() => {
     const onStart = () => {
-      if (isAuthed()) void runControl(spPlay);
+      if (!isAuthed()) return;
+      const playlist = getActiveWorkoutPlaylist();
+      if (!playlist) {
+        void runControl(spPlay);
+        return;
+      }
+      void runControl(async () => {
+        const devices = await getDevices();
+        let deviceId = devices.find((d) => d.is_active)?.id;
+        if (!deviceId && devices[0]) {
+          deviceId = devices[0].id;
+          await transferPlayback(deviceId, false);
+        }
+        if (!deviceId) {
+          toast.error(t("music.noDevice"));
+          return;
+        }
+        await playContext(playlist.uri, deviceId);
+      });
     };
     const onStop = () => {
       if (isAuthed()) void runControl(spPause);
