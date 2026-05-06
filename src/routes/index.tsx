@@ -12,6 +12,7 @@ import Onboarding from "@/components/Onboarding";
 import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
+import GpsSignalChip from "@/components/GpsSignalChip";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -91,6 +92,13 @@ function RunPage() {
     const onChange = () => setArmedGhost(loadGhost());
     window.addEventListener(GHOST_CHANGED_EVENT, onChange);
     return () => window.removeEventListener(GHOST_CHANGED_EVENT, onChange);
+  }, []);
+
+  // Warm GPS as soon as the page mounts (only if permission already granted),
+  // so the first fix is cached when the user taps Start.
+  useEffect(() => {
+    t.warmGps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isActive = t.status === "running" || t.status === "paused";
@@ -246,6 +254,11 @@ function RunPage() {
             }
           />
         </div>
+        {!t.gpsReady && (
+          <div className="absolute top-3 left-3 pointer-events-none">
+            <GpsSignalChip accuracyM={t.gpsAccuracyM} />
+          </div>
+        )}
         {t.points.length === 0 && (
           <div className="absolute inset-0 grid place-items-center pointer-events-none">
             <div className="glass-strong rounded-2xl px-4 py-2 text-xs text-muted-foreground">

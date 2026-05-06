@@ -48,6 +48,8 @@ type State = {
   points: GeoPoint[];
   splits: Split[];
   permissionError: string | null;
+  gpsAccuracyM: number | null;
+  gpsReady: boolean;
   ghostDeltaMs: number | null;
   ghost: GhostRef | null;
   hrBpm: number | null;
@@ -71,6 +73,8 @@ const initial: State = {
   points: [],
   splits: [],
   permissionError: null,
+  gpsAccuracyM: null,
+  gpsReady: false,
   ghostDeltaMs: null,
   ghost: null,
   hrBpm: null,
@@ -292,14 +296,23 @@ export function useRunTracker() {
         }
       }
       setState((prev) => {
-        if (prev.status !== "running") return prev;
+        const acc = pos.coords.accuracy ?? 999;
+        const gpsReady = acc <= 20;
+        // Always reflect latest GPS quality, even before the run starts, so
+        // the "Finder signal…" chip can disappear as soon as a usable fix
+        // arrives during the warm-up phase.
+        if (prev.status !== "running") {
+          if (prev.gpsAccuracyM === acc && prev.gpsReady === gpsReady) return prev;
+          return { ...prev, gpsAccuracyM: acc, gpsReady };
+        }
 
         // ---- GPS quality gate -------------------------------------------------
         // Strict accuracy gate: reject any sample with reported accuracy
         // worse than 20m to prevent zig-zagging on the map. The first valid
         // sample is always accepted to seed the trace.
-        const acc = pos.coords.accuracy ?? 999;
-        if (acc > 20 && prev.points.length > 0) return prev;
+        if (acc > 20 && prev.points.length > 0) {
+          return { ...prev, gpsAccuracyM: acc, gpsReady };
+        }
 
         didUpdate = true;
         const np: GeoPoint = {
@@ -320,14 +333,14 @@ export function useRunTracker() {
           // Movement threshold: only record a new coordinate when the runner
           // has moved more than 3m since the last fix. Prevents cluster points
           // when standing still. Scales up with poor accuracy.
-          const noiseFloor = Math.max(3, acc * 0.4);
-          if (rawDist < noiseFloor) return prev;
+          const noiseFloor = Math.max(5, acc * 0.4);
+          if (rawDist < noiseFloor) return { ...prev, gpsAccuracyM: acc, gpsReady };
 
           // Speed sanity: anything faster than ~10 m/s (~36 km/h) over a short
           // GPS gap is almost certainly a jump from a re-acquired fix, not a
           // real sprint. Drop those samples entirely.
           const speedOk = dt > 0 && rawDist / dt <= 10;
-          if (!speedOk) return prev;
+          if (!speedOk) return { ...prev, gpsAccuracyM: acc, gpsReady };
           addDist = rawDist;
 
           // Elevation: use a per-sample EMA + minimum delta to suppress the
@@ -506,6 +519,8 @@ export function useRunTracker() {
           cadenceSpm: cad,
           splits: newSplits,
           ghostDeltaMs: ghostDelta,
+          gpsAccuracyM: acc,
+          gpsReady,
         };
       });
       if (didUpdate) haptic(15);
@@ -524,6 +539,13 @@ export function useRunTracker() {
       return;
     }
     if (watchIdRef.current != null) return;
+    // Trigger an immediate fix so the first callback arrives faster than
+    // waiting for watchPosition's first tick (especially on iOS Safari).
+    navigator.geolocation.getCurrentPosition(handlePosition, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 8000,
+    });
     // High-precision tracking — request fresh fixes (maximumAge: 0) and a
     // tight 5s timeout so we never paint a stale position on the map.
     // Tracking continues while the tab is backgrounded thanks to the silent
@@ -535,6 +557,23 @@ export function useRunTracker() {
       timeout: 5000,
     });
   }, [handlePosition, handleError]);
+
+  // Idempotent variant used to warm GPS as soon as the app opens, so that the
+  // first fix is already cached when the user taps Start.
+  const warmGps = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (watchIdRef.current != null) return;
+    if (typeof navigator.permissions?.query === "function") {
+      navigator.permissions
+        .query({ name: "geolocation" as PermissionName })
+        .then((p) => {
+          if (p.state === "granted") armGps();
+        })
+        .catch(() => {});
+      return;
+    }
+    // No Permissions API — skip silent warm-up to avoid an unexpected prompt.
+  }, [armGps]);
 
   const start = useCallback(() => {
     haptic(40);
@@ -945,5 +984,5 @@ export function useRunTracker() {
     };
   }, []);
 
-  return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps };
+  return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps, warmGps };
 }
