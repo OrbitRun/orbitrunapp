@@ -60,6 +60,7 @@ type StepKey =
   | "lifestyle"
   | "injury"
   | "preferredDays"
+  | "bio"
   | "vo2max";
 
 type ResumeState = {
@@ -77,6 +78,7 @@ type ResumeState = {
   age: string;
   gender: "male" | "female" | "other";
   vo2maxKnown: string;
+  preferKnownVo2max: boolean;
 };
 
 function loadResume(): Partial<ResumeState> | null {
