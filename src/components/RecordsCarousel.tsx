@@ -33,7 +33,9 @@ function formatDateShort(ts: number, lang: string): string {
 export default function RecordsCarousel() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
+  const profile = useUserProfile();
   const [prs, setPrs] = useState<PrMap>({});
+  const [vo2Best, setVo2Best] = useState<{ value: number; achievedAt: number } | null>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", dragFree: false, loop: false });
   const [selected, setSelected] = useState(0);
 
