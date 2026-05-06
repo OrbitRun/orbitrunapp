@@ -10,7 +10,7 @@ import { getPrimaryShoe } from "@/lib/shoes";
 import { startHeartRatePolling, stopHeartRatePolling } from "@/lib/health";
 import { subscribeBtHr, type BtHrState } from "@/lib/heart-rate-bt";
 import { hrrDrop60s, timeFractionInZone5, DEFAULT_MAX_HR } from "@/lib/hr-analysis";
-import { bestEstimateVo2Max as estimateVo2Max } from "@/lib/vo2max";
+import { bestEstimateVo2MaxWithSource } from "@/lib/vo2max";
 import { classifyHrrGrade } from "@/lib/hr-zones";
 import { loadHrZones } from "@/lib/hr-zones-config";
 import { computeTrimp } from "@/lib/readiness-engine";
@@ -719,8 +719,8 @@ export function useRunTracker() {
       shoeId: primaryShoe?.id,
       ...hrAggregates,
     };
-    const vo2 = estimateVo2Max(baseRun);
-    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2 } : baseRun;
+    const vo2 = bestEstimateVo2MaxWithSource(baseRun);
+    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2.value, vo2maxSource: vo2.source } : baseRun;
 
     // --- Heart-rate recovery capture ----------------------------------------
     // Keep BT + Health subscribers active for ~75s after stop so we can sample

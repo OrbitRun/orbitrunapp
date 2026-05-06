@@ -10,8 +10,9 @@ import {
 } from "@/lib/user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { getPlanProgress, currentWeekAdjustment } from "@/lib/coach-plan";
-import { bestEstimateVo2Max, bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
+import { bestEstimateVo2MaxWithSource, bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
 import CoachOnboarding from "@/components/CoachOnboarding";
+import InfoHint from "@/components/InfoHint";
 
 type Props = { profile: UserProfile };
 
@@ -214,15 +215,33 @@ export default function CoachCard({ profile }: Props) {
 function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
   const { t } = useI18n();
   const coach = profile.coach;
-  const value = useMemo(() => {
-    if (coach?.vo2maxKnown && coach.vo2maxKnown > 0) return coach.vo2maxKnown;
+  const { value, source } = useMemo<{
+    value: number | null;
+    source: "user" | "hr" | "pace" | null;
+  }>(() => {
+    if (coach?.vo2maxKnown && coach.vo2maxKnown > 0) {
+      return { value: coach.vo2maxKnown, source: "user" };
+    }
     const best = bestVo2MaxFromRuns(runs);
-    if (best) return best.value;
+    if (best) {
+      const r = runs.find((x) => x.id === best.runId);
+      const src = (r?.vo2maxSource as "hr" | "pace" | undefined) ?? "pace";
+      return { value: best.value, source: src };
+    }
     const latest = runs.length > 0 ? [...runs].sort((a, b) => b.startedAt - a.startedAt)[0] : null;
-    return latest ? bestEstimateVo2Max(latest) : null;
+    const est = latest ? bestEstimateVo2MaxWithSource(latest) : null;
+    return est ? { value: est.value, source: est.source } : { value: null, source: null };
   }, [coach?.vo2maxKnown, runs]);
 
   const band = value != null ? classifyFitnessByProfile(value, coach?.age, coach?.gender) : null;
+  const sourceLabel =
+    source === "user"
+      ? t("vo2max.source.user")
+      : source === "hr"
+        ? t("vo2max.source.hr")
+        : source === "pace"
+          ? t("vo2max.source.pace")
+          : null;
 
   return (
     <div className="mt-4 pt-3 border-t border-white/5">
@@ -232,6 +251,7 @@ function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
             {t("vo2max.label")}
           </div>
+          <InfoHint label={t("vo2max.label")} text={t("vo2max.info")} />
         </div>
         {band && (
           <div className="text-[10px] uppercase tracking-[0.18em] font-black text-neon">
@@ -244,9 +264,9 @@ function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
           {value != null ? value.toFixed(1) : "—"}
         </span>
         <span className="text-[11px] text-muted-foreground font-bold">{t("vo2max.unit")}</span>
-        {coach?.vo2maxKnown && coach.vo2maxKnown > 0 && (
+        {sourceLabel && (
           <span className="ml-auto text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
-            {t("vo2max.source.user")}
+            {sourceLabel}
           </span>
         )}
       </div>
