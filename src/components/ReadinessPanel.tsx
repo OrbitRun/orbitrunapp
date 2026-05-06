@@ -159,18 +159,21 @@ function MiniStat({
   value,
   unit,
   extra,
+  info,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   unit?: string;
   extra?: React.ReactNode;
+  info?: React.ReactNode;
 }) {
   return (
     <div className="rounded-xl bg-white/5 px-2.5 py-2">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         {icon}
         <span className="text-[9px] uppercase tracking-[0.18em] font-bold truncate">{label}</span>
+        {info}
         {extra}
       </div>
       <div className="mt-1 flex items-baseline gap-1">
