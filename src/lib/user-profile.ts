@@ -31,6 +31,8 @@ export type CoachConfig = {
   // Optional self-reported VO2 max (e.g. from a Garmin/Apple Watch).
   // When present, the app prefers it over its own estimates.
   vo2maxKnown?: number;
+  // When true, treat `vo2maxKnown` as the source of truth and skip estimation.
+  preferKnownVo2max?: boolean;
   age?: number;
   gender?: "male" | "female" | "other";
   configuredAt: number;

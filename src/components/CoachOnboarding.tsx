@@ -23,6 +23,7 @@ import {
   type WeekDay,
   type LifestyleScore,
 } from "@/lib/user-profile";
+import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
 
 type Props = { onClose: () => void };
 
@@ -59,6 +60,7 @@ type StepKey =
   | "lifestyle"
   | "injury"
   | "preferredDays"
+  | "bio"
   | "vo2max";
 
 type ResumeState = {
@@ -76,6 +78,7 @@ type ResumeState = {
   age: string;
   gender: "male" | "female" | "other";
   vo2maxKnown: string;
+  preferKnownVo2max: boolean;
 };
 
 function loadResume(): Partial<ResumeState> | null {
@@ -142,6 +145,9 @@ export default function CoachOnboarding({ onClose }: Props) {
         ? String(profileExisting.coach.vo2maxKnown)
         : "")
   );
+  const [preferKnownVo2max, setPreferKnownVo2max] = useState<boolean>(
+    resume?.preferKnownVo2max ?? profileExisting.coach?.preferKnownVo2max ?? false
+  );
 
   useEffect(() => {
     try {
@@ -162,6 +168,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           age,
           gender,
           vo2maxKnown,
+          preferKnownVo2max,
         } satisfies ResumeState)
       );
     } catch {
@@ -182,6 +189,7 @@ export default function CoachOnboarding({ onClose }: Props) {
     age,
     gender,
     vo2maxKnown,
+    preferKnownVo2max,
   ]);
 
   const steps: StepKey[] =
@@ -196,6 +204,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "bio",
           "vo2max",
         ]
       : [
@@ -207,13 +216,21 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "bio",
           "vo2max",
         ];
   const totalSteps = steps.length;
   const safeStep = Math.min(step, totalSteps - 1);
   const current = steps[safeStep];
   const isLast = safeStep === totalSteps - 1;
-  const canAdvance = current === "preferredDays" ? preferredDays.length > 0 : true;
+  const ageNumLive = age.trim() ? parseInt(age, 10) : NaN;
+  const ageValid = Number.isFinite(ageNumLive) && ageNumLive >= 10 && ageNumLive <= 99;
+  const canAdvance =
+    current === "preferredDays"
+      ? preferredDays.length > 0
+      : current === "bio"
+        ? ageValid
+        : true;
 
   const persist = () => {
     const p = loadProfile();
@@ -247,6 +264,7 @@ export default function CoachOnboarding({ onClose }: Props) {
       age: ageNum && Number.isFinite(ageNum) ? ageNum : undefined,
       gender,
       vo2maxKnown: vo2Num && Number.isFinite(vo2Num) ? vo2Num : undefined,
+      preferKnownVo2max: vo2Num != null ? preferKnownVo2max : false,
       configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
     };
     saveProfile({
@@ -255,6 +273,12 @@ export default function CoachOnboarding({ onClose }: Props) {
       goal: coachToRunningGoal(nextCoach),
       coachEnabled: p.coachEnabled === false ? false : true,
     });
+    // Recalibrate HR zones from new age (preserves existing restingHr if set).
+    if (ageNum != null) {
+      const existing = loadHrZones();
+      const restingHr = existing?.restingHr ?? 60;
+      saveHrZones(defaultConfig(ageNum, restingHr));
+    }
     clearResume();
   };
 
@@ -550,42 +574,13 @@ export default function CoachOnboarding({ onClose }: Props) {
             </div>
           )}
 
-          {current === "vo2max" && (
+          {current === "bio" && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-semibold block">{t("coach.q.vo2max")}</label>
+                <label className="text-sm font-semibold block">{t("coach.q.bio")}</label>
                 <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
-                  {t("coach.q.vo2max.help")}
+                  {t("coach.q.bio.help")}
                 </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
-                    {t("coach.q.age")}
-                  </div>
-                  <input
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
-                    placeholder="—"
-                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
-                  />
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
-                    {t("coach.q.vo2maxKnown")}
-                  </div>
-                  <input
-                    inputMode="decimal"
-                    value={vo2maxKnown}
-                    onChange={(e) =>
-                      setVo2maxKnown(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 5))
-                    }
-                    placeholder="—"
-                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
-                  />
-                </div>
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
@@ -607,6 +602,72 @@ export default function CoachOnboarding({ onClose }: Props) {
                   ))}
                 </div>
               </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                  {t("coach.q.age")}
+                </div>
+                <input
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+                  placeholder="—"
+                  className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {current === "vo2max" && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold block">{t("coach.q.vo2max")}</label>
+                <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
+                  {t("coach.q.vo2max.help")}
+                </p>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                  {t("coach.q.vo2maxKnown")}
+                </div>
+                <input
+                  inputMode="decimal"
+                  value={vo2maxKnown}
+                  onChange={(e) =>
+                    setVo2maxKnown(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 5))
+                  }
+                  placeholder="—"
+                  className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => vo2maxKnown.trim() && setPreferKnownVo2max((v) => !v)}
+                disabled={!vo2maxKnown.trim()}
+                className={`w-full flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left transition disabled:opacity-40 ${
+                  preferKnownVo2max && vo2maxKnown.trim()
+                    ? "border-neon/50 bg-neon/10"
+                    : "border-white/10 bg-white/5 hover:bg-white/10"
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold">{t("coach.q.preferKnown")}</div>
+                  <div className="text-[10px] text-muted-foreground leading-snug mt-0.5">
+                    {t("coach.q.preferKnown.help")}
+                  </div>
+                </div>
+                <div
+                  className={`relative h-6 w-10 rounded-full transition flex-shrink-0 ${
+                    preferKnownVo2max && vo2maxKnown.trim() ? "bg-neon" : "bg-white/15"
+                  }`}
+                >
+                  <div
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-background transition ${
+                      preferKnownVo2max && vo2maxKnown.trim() ? "left-[18px]" : "left-0.5"
+                    }`}
+                  />
+                </div>
+              </button>
               <p className="text-[10px] text-muted-foreground leading-snug">
                 {t("coach.q.vo2max.fallback")}
               </p>
