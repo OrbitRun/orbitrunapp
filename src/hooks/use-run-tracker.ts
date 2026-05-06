@@ -719,8 +719,15 @@ export function useRunTracker() {
       shoeId: primaryShoe?.id,
       ...hrAggregates,
     };
-    const vo2 = bestEstimateVo2MaxWithSource(baseRun);
-    const run: Run = vo2 != null ? { ...baseRun, vo2maxEst: vo2.value, vo2maxSource: vo2.source } : baseRun;
+    const profileForVo2 = loadProfile();
+    const coachForVo2 = profileForVo2.coach;
+    let run: Run = baseRun;
+    if (coachForVo2?.preferKnownVo2max && coachForVo2.vo2maxKnown && coachForVo2.vo2maxKnown > 0) {
+      run = { ...baseRun, vo2maxEst: coachForVo2.vo2maxKnown, vo2maxSource: "user" };
+    } else {
+      const vo2 = bestEstimateVo2MaxWithSource(baseRun);
+      if (vo2 != null) run = { ...baseRun, vo2maxEst: vo2.value, vo2maxSource: vo2.source };
+    }
 
     // --- Heart-rate recovery capture ----------------------------------------
     // Keep BT + Health subscribers active for ~75s after stop so we can sample
