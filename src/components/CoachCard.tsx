@@ -10,8 +10,9 @@ import {
 } from "@/lib/user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { getPlanProgress, currentWeekAdjustment } from "@/lib/coach-plan";
-import { bestEstimateVo2Max, bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
+import { bestEstimateVo2MaxWithSource, bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
 import CoachOnboarding from "@/components/CoachOnboarding";
+import InfoHint from "@/components/InfoHint";
 
 type Props = { profile: UserProfile };
 
