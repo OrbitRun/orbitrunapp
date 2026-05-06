@@ -12,6 +12,7 @@ import Onboarding from "@/components/Onboarding";
 import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
+import GpsSignalChip from "@/components/GpsSignalChip";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
