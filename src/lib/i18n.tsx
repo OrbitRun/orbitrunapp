@@ -773,6 +773,7 @@ const da: Dict = {
   "music.reconnectForPlaylists": "Genforbind Spotify",
   "music.premiumPlaylistHint": "Premium kræves for at starte playliste automatisk. Åbn Spotify manuelt — skip/play virker stadig.",
   "music.willPlay": "Afspiller",
+  "music.playPlaylistNow": "Afspil playliste nu",
   "music.clearSelection": "Fjern valg",
   "gps.searching": "Finder signal…",
   "gps.locked": "GPS klar",
