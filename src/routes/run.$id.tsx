@@ -12,10 +12,12 @@ import ShareSheet from "@/components/ShareSheet";
 import BioInsightCard from "@/components/BioInsightCard";
 import HrZoneBar from "@/components/HrZoneBar";
 import HrAnalyticsCard from "@/components/HrAnalyticsCard";
+import InfoHint from "@/components/InfoHint";
 import { getShoeById, reassignRunDistance } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
 import { bestTimeForPoints, loadPrs, PR_ORDER, type PrCategory } from "@/lib/personal-records";
+import { bestEstimateVo2MaxWithSource } from "@/lib/vo2max";
 
 export const Route = createFileRoute("/run/$id")({
   component: RunDetailPage,
