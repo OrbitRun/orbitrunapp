@@ -1013,6 +1013,7 @@ export function useRunTracker() {
   useEffect(() => {
     return () => {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
