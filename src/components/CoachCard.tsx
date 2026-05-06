@@ -250,8 +250,6 @@ function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
           </span>
         )}
       </div>
-      </section>
-      {onboarding && <CoachOnboarding onClose={() => setOnboarding(false)} />}
-    </>
+    </div>
   );
 }
