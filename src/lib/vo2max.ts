@@ -72,6 +72,18 @@ export function bestEstimateVo2Max(
   return estimateVo2Max(run) ?? estimateVo2MaxFromPace(run);
 }
 
+// Same as bestEstimateVo2Max but also reports which estimator succeeded.
+export type Vo2MaxSource = "hr" | "pace";
+export function bestEstimateVo2MaxWithSource(
+  run: Pick<Run, "durationMs" | "distanceM" | "avgPaceSecPerKm" | "avgHrBpm" | "maxHrBpm">,
+): { value: number; source: Vo2MaxSource } | null {
+  const hr = estimateVo2Max(run);
+  if (hr != null) return { value: hr, source: "hr" };
+  const pace = estimateVo2MaxFromPace(run);
+  if (pace != null) return { value: pace, source: "pace" };
+  return null;
+}
+
 // All-time best across a run history. Returns the run id and value or null.
 export function bestVo2MaxFromRuns(
   runs: Pick<Run, "id" | "endedAt" | "durationMs" | "distanceM" | "avgPaceSecPerKm" | "avgHrBpm" | "maxHrBpm" | "vo2maxEst">[],
