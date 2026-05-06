@@ -5,6 +5,7 @@ import { computeTrimp } from "@/lib/readiness-engine";
 import { loadHrZones } from "@/lib/hr-zones-config";
 import { useI18n } from "@/lib/i18n";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
+import InfoHint from "@/components/InfoHint";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
