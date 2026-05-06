@@ -1103,6 +1103,8 @@ const da: Dict = {
   "readiness.metric.restingHr": "Hvilepuls",
   "readiness.metric.hrv": "HRV",
   "readiness.metric.trimp7d": "7-dages TRIMP",
+  "info.hrv": "HRV viser tidsforskellen mellem dine hjerteslag. Høj HRV = god restitution. Lav HRV = tegn på stress/træthed.",
+  "info.trimp": "TRIMP er et udtryk for den samlede belastning af din træning baseret på puls og tid. Hjælper dig med at undgå overtræning.",
   "readiness.metric.trend": "Tendens",
   "readiness.metric.weather": "Vejr",
   "readiness.metric.load": "Belastning",
