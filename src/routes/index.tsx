@@ -94,7 +94,12 @@ function RunPage() {
     return () => window.removeEventListener(GHOST_CHANGED_EVENT, onChange);
   }, []);
 
-  const isActive = t.status === "running" || t.status === "paused";
+  // Warm GPS as soon as the page mounts (only if permission already granted),
+  // so the first fix is cached when the user taps Start.
+  useEffect(() => {
+    t.warmGps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const beginCountdown = useCallback(() => {
     setPressed("start");
