@@ -33,11 +33,14 @@ export default function MusicHub() {
   const [now, setNow] = useState<NowPlaying | null>(null);
   const [busy, setBusy] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [activePlaylist, setActivePlaylist] = useState<ActiveWorkoutPlaylist | null>(null);
   const premiumWarned = useRef(false);
 
   // Hydrate auth state on mount (avoids SSR localStorage access).
   useEffect(() => {
     setAuthed(isAuthed());
+    setActivePlaylist(getActiveWorkoutPlaylist());
   }, []);
 
   const refresh = useCallback(async () => {
