@@ -105,6 +105,7 @@ export default function ReadinessPanel() {
           label={t("readiness.metric.hrv")}
           value={vitals.hrvMs ? String(vitals.hrvMs) : "—"}
           unit={vitals.hrvMs ? t("readiness.unit.ms") : ""}
+          info={<InfoHint label={t("readiness.metric.hrv")} text={t("info.hrv")} />}
         />
         <MiniStat
           icon={<Activity className="h-3 w-3" />}
@@ -115,6 +116,7 @@ export default function ReadinessPanel() {
               ? `${r.loadTrendPct > 0 ? "+" : ""}${r.loadTrendPct}%`
               : ""
           }
+          info={<InfoHint label="TRIMP" text={t("info.trimp")} />}
         />
         <MiniStat
           icon={<Thermometer className="h-3 w-3" />}
