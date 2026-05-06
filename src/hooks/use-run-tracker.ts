@@ -160,6 +160,9 @@ export function useRunTracker() {
   stateRef.current = state;
 
   const watchIdRef = useRef<number | null>(null);
+  // When running inside a Capacitor native shell, we use the native plugin
+  // instead of `navigator.geolocation`. The native watch id is a string.
+  const nativeWatchIdRef = useRef<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const lastSplitKmRef = useRef(0);
   const pauseAccumRef = useRef(0);
