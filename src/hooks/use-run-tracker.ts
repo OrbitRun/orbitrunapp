@@ -984,5 +984,5 @@ export function useRunTracker() {
     };
   }, []);
 
-  return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps };
+  return { ...state, start, pause, resume, stop, commitRun, discardRun, reset, armGps, warmGps };
 }
