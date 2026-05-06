@@ -101,7 +101,9 @@ function RunPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const beginCountdown = useCallback(() => {
+  const isActive = t.status === "running" || t.status === "paused";
+
+
     setPressed("start");
     primeAudio();
     void wakeLock.request();
