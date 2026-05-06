@@ -114,6 +114,38 @@ export default function RecordsCarousel() {
               </div>
             );
           })}
+          {(() => {
+            const band = vo2Best
+              ? classifyFitnessByProfile(vo2Best.value, profile.coach?.age, profile.coach?.gender)
+              : null;
+            return (
+              <div className="glass rounded-2xl px-4 py-4 min-w-0 shrink-0 grow-0 basis-[85%]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-display font-black text-lg tracking-tight">
+                    <Activity className="h-4 w-4 text-neon" />
+                    {t("vo2max.label")}
+                  </div>
+                  <div className="font-mono font-bold text-xl text-neon tabular">
+                    {vo2Best ? vo2Best.value.toFixed(1) : (
+                      <span className="text-muted-foreground/60 font-display">—</span>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <div className="text-[11px] text-muted-foreground/80 truncate">
+                    {vo2Best
+                      ? t("pr.dateSet", { date: formatDateShort(vo2Best.achievedAt, lang) })
+                      : t("pr.notDone")}
+                  </div>
+                  {band && (
+                    <div className="text-[10px] uppercase tracking-[0.18em] font-black text-neon">
+                      {t(`vo2max.band.${band}`)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
       <div className="mt-2 flex items-center justify-center gap-1.5">
