@@ -90,6 +90,16 @@ const en: Dict = {
   "music.premiumRequired": "Spotify Premium is required for playback control",
   "music.nothingPlaying": "Nothing playing",
   "music.live": "live",
+  "music.choosePlaylist": "Choose workout playlist",
+  "music.changePlaylist": "Change playlist",
+  "music.noPlaylistSelected": "No playlist selected",
+  "music.loadingPlaylists": "Loading playlists…",
+  "music.noPlaylists": "No playlists found",
+  "music.playlistLoadError": "Could not load playlists. Reconnect Spotify to grant playlist access.",
+  "music.reconnectForPlaylists": "Reconnect Spotify",
+  "music.premiumPlaylistHint": "Premium required to auto-start playlist. Open Spotify manually — skip/play still work.",
+  "music.willPlay": "Will play",
+  "music.clearSelection": "Clear selection",
 
   // Nav
   "nav.run": "Run",
