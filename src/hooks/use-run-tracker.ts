@@ -519,6 +519,8 @@ export function useRunTracker() {
           cadenceSpm: cad,
           splits: newSplits,
           ghostDeltaMs: ghostDelta,
+          gpsAccuracyM: acc,
+          gpsReady,
         };
       });
       if (didUpdate) haptic(15);
