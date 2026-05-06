@@ -287,7 +287,7 @@ export default function MusicHub() {
           </button>
           <button
             aria-label={playing ? "Pause" : "Play"}
-            onClick={() => runControl(playing ? spPause : spPlay)}
+            onClick={() => runControl(playing ? spPause : startActivePlaylist)}
             disabled={busy}
             className="h-10 w-10 rounded-full grid place-items-center bg-neon text-primary-foreground hover:opacity-90 transition active:scale-95 disabled:opacity-50"
           >
