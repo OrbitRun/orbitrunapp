@@ -549,6 +549,69 @@ export default function CoachOnboarding({ onClose }: Props) {
               </div>
             </div>
           )}
+
+          {current === "vo2max" && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-semibold block">{t("coach.q.vo2max")}</label>
+                <p className="mt-1 text-[11px] text-muted-foreground leading-snug">
+                  {t("coach.q.vo2max.help")}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.age")}
+                  </div>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+                    placeholder="—"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.vo2maxKnown")}
+                  </div>
+                  <input
+                    inputMode="decimal"
+                    value={vo2maxKnown}
+                    onChange={(e) =>
+                      setVo2maxKnown(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 5))
+                    }
+                    placeholder="—"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                  {t("coach.q.gender")}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["male", "female", "other"] as const).map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => setGender(g)}
+                      className={`h-12 rounded-xl text-xs font-bold uppercase tracking-[0.12em] transition active:scale-95 ${
+                        gender === g
+                          ? "bg-neon text-primary-foreground"
+                          : "bg-white/5 border border-white/10 text-foreground/80 hover:bg-white/10"
+                      }`}
+                    >
+                      {t(`coach.opt.gender.${g}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                {t("coach.q.vo2max.fallback")}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-2">
