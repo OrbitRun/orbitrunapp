@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, SkipBack, SkipForward, Music2, LogOut } from "lucide-react";
+import { Pause, Play, SkipBack, SkipForward, Music2, LogOut, ListMusic } from "lucide-react";
 import OrbitSpinner from "@/components/OrbitSpinner";
 import { toast } from "sonner";
 import Marquee from "@/components/Marquee";
+import SpotifyPlaylistPicker from "@/components/SpotifyPlaylistPicker";
 import { useI18n } from "@/lib/i18n";
 import {
   beginAuth,
+  getActiveWorkoutPlaylist,
+  getDevices,
   getNowPlaying,
   isAuthed,
   isConfigured,
@@ -13,8 +16,11 @@ import {
   next as spNext,
   pause as spPause,
   play as spPlay,
+  playContext,
   previous as spPrevious,
+  transferPlayback,
   transferToFirstDevice,
+  type ActiveWorkoutPlaylist,
   type NowPlaying,
 } from "@/lib/spotify";
 
@@ -27,11 +33,14 @@ export default function MusicHub() {
   const [now, setNow] = useState<NowPlaying | null>(null);
   const [busy, setBusy] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [activePlaylist, setActivePlaylist] = useState<ActiveWorkoutPlaylist | null>(null);
   const premiumWarned = useRef(false);
 
   // Hydrate auth state on mount (avoids SSR localStorage access).
   useEffect(() => {
     setAuthed(isAuthed());
+    setActivePlaylist(getActiveWorkoutPlaylist());
   }, []);
 
   const refresh = useCallback(async () => {
@@ -85,7 +94,25 @@ export default function MusicHub() {
   // Auto play/pause with run lifecycle.
   useEffect(() => {
     const onStart = () => {
-      if (isAuthed()) void runControl(spPlay);
+      if (!isAuthed()) return;
+      const playlist = getActiveWorkoutPlaylist();
+      if (!playlist) {
+        void runControl(spPlay);
+        return;
+      }
+      void runControl(async () => {
+        const devices = await getDevices();
+        let deviceId = devices.find((d) => d.is_active)?.id;
+        if (!deviceId && devices[0]) {
+          deviceId = devices[0].id;
+          await transferPlayback(deviceId, false);
+        }
+        if (!deviceId) {
+          toast.error(t("music.noDevice"));
+          return;
+        }
+        await playContext(playlist.uri, deviceId);
+      });
     };
     const onStop = () => {
       if (isAuthed()) void runControl(spPause);
@@ -293,8 +320,34 @@ export default function MusicHub() {
         </div>
       )}
 
+      {/* Active workout playlist row */}
+      <button
+        onClick={() => setPickerOpen(true)}
+        className="mt-2 w-full flex items-center gap-2 text-[11px] px-2 h-8 rounded-lg bg-white/5 hover:bg-white/10 transition text-left"
+      >
+        <ListMusic className="h-3.5 w-3.5 text-neon flex-shrink-0" />
+        {activePlaylist ? (
+          <>
+            <span className="text-muted-foreground flex-shrink-0">{t("music.willPlay")}:</span>
+            <span className="font-semibold truncate">{activePlaylist.name}</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">{t("music.choosePlaylist")}</span>
+        )}
+      </button>
+
       {showMenu && (
         <div className="absolute left-3 top-16 z-20 glass-strong rounded-xl p-1 shadow-lg">
+          <button
+            onClick={() => {
+              setShowMenu(false);
+              setPickerOpen(true);
+            }}
+            className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg hover:bg-white/5 transition w-full"
+          >
+            <ListMusic className="h-3.5 w-3.5" />
+            {t("music.changePlaylist")}
+          </button>
           <button
             onClick={handleDisconnect}
             className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg hover:bg-white/5 transition w-full"
@@ -304,6 +357,12 @@ export default function MusicHub() {
           </button>
         </div>
       )}
+
+      <SpotifyPlaylistPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onChange={() => setActivePlaylist(getActiveWorkoutPlaylist())}
+      />
     </div>
   );
 }
