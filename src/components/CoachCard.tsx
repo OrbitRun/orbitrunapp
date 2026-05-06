@@ -203,6 +203,53 @@ export default function CoachCard({ profile }: Props) {
             {progress.sessionsDone} / {progress.sessionsPlanned} {t("goal.plan.sessions")}
           </div>
         </div>
+
+        <Vo2MaxTile profile={profile} runs={runs} />
+      </section>
+      {onboarding && <CoachOnboarding onClose={() => setOnboarding(false)} />}
+    </>
+  );
+}
+
+function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
+  const { t } = useI18n();
+  const coach = profile.coach;
+  const value = useMemo(() => {
+    if (coach?.vo2maxKnown && coach.vo2maxKnown > 0) return coach.vo2maxKnown;
+    const best = bestVo2MaxFromRuns(runs);
+    if (best) return best.value;
+    const latest = runs.length > 0 ? [...runs].sort((a, b) => b.startedAt - a.startedAt)[0] : null;
+    return latest ? bestEstimateVo2Max(latest) : null;
+  }, [coach?.vo2maxKnown, runs]);
+
+  const band = value != null ? classifyFitnessByProfile(value, coach?.age, coach?.gender) : null;
+
+  return (
+    <div className="mt-4 pt-3 border-t border-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Activity className="h-3.5 w-3.5 text-neon" />
+          <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+            {t("vo2max.label")}
+          </div>
+        </div>
+        {band && (
+          <div className="text-[10px] uppercase tracking-[0.18em] font-black text-neon">
+            {t(`vo2max.band.${band}`)}
+          </div>
+        )}
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="font-display font-black text-3xl tabular text-neon leading-none">
+          {value != null ? value.toFixed(1) : "—"}
+        </span>
+        <span className="text-[11px] text-muted-foreground font-bold">{t("vo2max.unit")}</span>
+        {coach?.vo2maxKnown && coach.vo2maxKnown > 0 && (
+          <span className="ml-auto text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">
+            {t("vo2max.source.user")}
+          </span>
+        )}
+      </div>
       </section>
       {onboarding && <CoachOnboarding onClose={() => setOnboarding(false)} />}
     </>
