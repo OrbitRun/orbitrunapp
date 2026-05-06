@@ -758,6 +758,11 @@ export function useRunTracker() {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    if (nativeWatchIdRef.current != null) {
+      const id = nativeWatchIdRef.current;
+      nativeWatchIdRef.current = null;
+      void nativeClearWatch(id);
+    }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     const s = stateRef.current;
