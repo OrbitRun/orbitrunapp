@@ -103,7 +103,7 @@ function RunPage() {
 
   const isActive = t.status === "running" || t.status === "paused";
 
-
+  const beginCountdown = useCallback(() => {
     setPressed("start");
     primeAudio();
     void wakeLock.request();
