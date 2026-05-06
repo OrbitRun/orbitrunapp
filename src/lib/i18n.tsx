@@ -1088,6 +1088,11 @@ const da: Dict = {
   "vo2max.band.good": "Godt",
   "vo2max.band.excellent": "Excellent",
   "vo2max.band.elite": "Elite",
+  "vo2max.info": "VO2-max estimerer hvor meget ilt din krop kan udnytte ved hård indsats — en central indikator for konditionen. Orbit beregner den ud fra hvert løb: når der er pulsdata bruger vi forholdet HRmax/HRhvile (Uth–Sørensen). Uden puls falder vi tilbage på en tempo-baseret model (Daniels/ACSM), der udleder VO2-max fra din gennemsnitsfart og varighed.",
+  "vo2max.source.hr": "Puls-baseret",
+  "vo2max.source.pace": "Tempo-baseret",
+  "vo2max.source.estimate": "Estimat",
+  "vo2max.run.label": "VO2-max for denne tur",
 
   // RPE
   "rpe.eyebrow": "Anstrengelses-score",
