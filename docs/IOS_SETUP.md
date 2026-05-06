@@ -10,9 +10,15 @@ In a local clone of the project (Capacitor cannot run in the Cloudflare
 Worker bundle, so these are NOT added to the web `package.json`):
 
 ```bash
-bun add @capacitor/core @capacitor/ios @capacitor-community/health @capacitor-community/bluetooth-le
+bun add @capacitor/core @capacitor/ios @capacitor/geolocation \
+  @capacitor-community/health @capacitor-community/bluetooth-le
 bun add -d @capacitor/cli
 ```
+
+> `@capacitor/geolocation` enables true high-accuracy background GPS on iOS
+> (`kCLLocationAccuracyBestForNavigation`) and Android (`PRIORITY_HIGH_ACCURACY`).
+> The web app automatically falls back to `navigator.geolocation` in the
+> browser — see `src/lib/geolocation-native.ts`.
 
 > The Bluetooth LE plugin powers direct pairing with standard BLE heart-rate
 > straps (e.g. iGPSPORT HR50, Polar H10, Garmin HRM-Pro). On iOS Safari the
