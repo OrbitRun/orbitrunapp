@@ -48,6 +48,8 @@ type State = {
   points: GeoPoint[];
   splits: Split[];
   permissionError: string | null;
+  gpsAccuracyM: number | null;
+  gpsReady: boolean;
   ghostDeltaMs: number | null;
   ghost: GhostRef | null;
   hrBpm: number | null;
