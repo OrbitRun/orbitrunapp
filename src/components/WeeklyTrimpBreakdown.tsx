@@ -5,6 +5,7 @@ import { computeTrimp } from "@/lib/readiness-engine";
 import { loadHrZones } from "@/lib/hr-zones-config";
 import { useI18n } from "@/lib/i18n";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
+import InfoHint from "@/components/InfoHint";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -91,6 +92,7 @@ export default function WeeklyTrimpBreakdown({ runs }: { runs: Run[] }) {
           <div className="text-[10px] uppercase tracking-[0.25em] text-neon font-bold flex items-center gap-1.5">
             <Activity className="h-3 w-3" />
             {t("trimp.weeklyTitle")}
+            <InfoHint label="TRIMP" text={t("info.trimp")} />
           </div>
           <div className="font-display font-black text-xl tabular leading-tight mt-0.5">
             {weekTotal} <span className="text-xs text-muted-foreground">TRIMP</span>

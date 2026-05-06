@@ -7,6 +7,7 @@ import { useVitals } from "@/hooks/use-vitals";
 import { useHrZones } from "@/hooks/use-hr-zones";
 import { useCurrentEnv } from "@/hooks/use-current-env";
 import { computeReadiness, type ReadinessResult } from "@/lib/readiness-engine";
+import InfoHint from "@/components/InfoHint";
 
 function bandColor(band: ReadinessResult["band"]): string {
   switch (band) {
@@ -104,6 +105,7 @@ export default function ReadinessPanel() {
           label={t("readiness.metric.hrv")}
           value={vitals.hrvMs ? String(vitals.hrvMs) : "—"}
           unit={vitals.hrvMs ? t("readiness.unit.ms") : ""}
+          info={<InfoHint label={t("readiness.metric.hrv")} text={t("info.hrv")} />}
         />
         <MiniStat
           icon={<Activity className="h-3 w-3" />}
@@ -114,6 +116,7 @@ export default function ReadinessPanel() {
               ? `${r.loadTrendPct > 0 ? "+" : ""}${r.loadTrendPct}%`
               : ""
           }
+          info={<InfoHint label="TRIMP" text={t("info.trimp")} />}
         />
         <MiniStat
           icon={<Thermometer className="h-3 w-3" />}
@@ -156,18 +159,21 @@ function MiniStat({
   value,
   unit,
   extra,
+  info,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   unit?: string;
   extra?: React.ReactNode;
+  info?: React.ReactNode;
 }) {
   return (
     <div className="rounded-xl bg-white/5 px-2.5 py-2">
       <div className="flex items-center gap-1.5 text-muted-foreground">
         {icon}
         <span className="text-[9px] uppercase tracking-[0.18em] font-bold truncate">{label}</span>
+        {info}
         {extra}
       </div>
       <div className="mt-1 flex items-baseline gap-1">
