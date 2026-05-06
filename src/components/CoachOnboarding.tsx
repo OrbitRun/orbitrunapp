@@ -196,6 +196,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "vo2max",
         ]
       : [
           "level",
@@ -206,6 +207,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           "lifestyle",
           "injury",
           "preferredDays",
+          "vo2max",
         ];
   const totalSteps = steps.length;
   const safeStep = Math.min(step, totalSteps - 1);
@@ -215,6 +217,10 @@ export default function CoachOnboarding({ onClose }: Props) {
 
   const persist = () => {
     const p = loadProfile();
+    const ageNum = age.trim() ? Math.max(10, Math.min(99, parseInt(age, 10))) : undefined;
+    const vo2Num = vo2maxKnown.trim()
+      ? Math.max(20, Math.min(90, parseFloat(vo2maxKnown.replace(",", "."))))
+      : undefined;
     const changed =
       !p.coach ||
       p.coach.level !== level ||
@@ -238,6 +244,9 @@ export default function CoachOnboarding({ onClose }: Props) {
       stressLevel,
       injuryStatus,
       preferredDays,
+      age: ageNum && Number.isFinite(ageNum) ? ageNum : undefined,
+      gender,
+      vo2maxKnown: vo2Num && Number.isFinite(vo2Num) ? vo2Num : undefined,
       configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
     };
     saveProfile({
