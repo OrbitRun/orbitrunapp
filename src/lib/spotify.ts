@@ -14,10 +14,40 @@ export const SPOTIFY_SCOPES = [
   "streaming",
   "user-read-email",
   "user-read-private",
+  "playlist-read-private",
+  "playlist-read-collaborative",
 ].join(" ");
 
 const TOKEN_KEY = "pulse.spotify.token";
 const VERIFIER_KEY = "pulse.spotify.verifier";
+const PLAYLIST_KEY = "pulse.spotify.active_workout_playlist";
+
+export type ActiveWorkoutPlaylist = {
+  uri: string;
+  name: string;
+  imageUrl: string | null;
+};
+
+export function getActiveWorkoutPlaylist(): ActiveWorkoutPlaylist | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PLAYLIST_KEY);
+    return raw ? (JSON.parse(raw) as ActiveWorkoutPlaylist) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setActiveWorkoutPlaylist(p: ActiveWorkoutPlaylist | null) {
+  if (typeof window === "undefined") return;
+  if (!p) localStorage.removeItem(PLAYLIST_KEY);
+  else localStorage.setItem(PLAYLIST_KEY, JSON.stringify(p));
+}
+
+export function hasPlaylistScope(): boolean {
+  const tok = getStoredToken();
+  return !!tok?.scope?.includes("playlist-read-private");
+}
 
 export type SpotifyToken = {
   access_token: string;
