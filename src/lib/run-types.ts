@@ -49,6 +49,8 @@ export type Run = {
   zone5PctTime?: number;
   // Orbit Fitness Score — VO2 Max estimate via Uth–Sørensen–Overgaard–Pedersen.
   vo2maxEst?: number;
+  // How the VO2 max estimate was derived: "hr" (HRmax/HRrest), "pace" (Daniels/ACSM), or "user".
+  vo2maxSource?: "hr" | "pace" | "user";
   // 60s heart-rate-recovery grade derived from `hrrDrop60s`.
   recoveryGrade?: "poor" | "fair" | "good" | "excellent" | "elite";
   // Banister TRIMP score for this run (training impulse / load).
