@@ -7,6 +7,7 @@ import { useVitals } from "@/hooks/use-vitals";
 import { useHrZones } from "@/hooks/use-hr-zones";
 import { useCurrentEnv } from "@/hooks/use-current-env";
 import { computeReadiness, type ReadinessResult } from "@/lib/readiness-engine";
+import InfoHint from "@/components/InfoHint";
 
 function bandColor(band: ReadinessResult["band"]): string {
   switch (band) {
