@@ -194,6 +194,31 @@ function ProfilePage() {
         </div>
       </section>
 
+      <MyProfileSection
+        coach={profile.coach}
+        onUpdate={(patch: Partial<CoachConfig>) => {
+          const cur = profile.coach;
+          const nextCoach: CoachConfig = {
+            level: cur?.level ?? "3-5",
+            frequency: cur?.frequency ?? "3-4",
+            goal: cur?.goal ?? "finish5k",
+            ...cur,
+            ...patch,
+            configuredAt: cur?.configuredAt ?? Date.now(),
+          };
+          const next = { ...profile, coach: nextCoach };
+          setProfile(next);
+          saveProfile(next);
+          if (patch.maxHrKnown !== undefined || patch.age !== undefined) {
+            const eff = effectiveMaxHr(nextCoach);
+            const z = loadHrZones();
+            const restingHr = z?.restingHr ?? 60;
+            const age = nextCoach.age ?? (eff ? 220 - eff : 35);
+            saveHrZones(defaultConfig(age, restingHr));
+          }
+        }}
+      />
+
       {/* Orbit Coach */}
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <button
