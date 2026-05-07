@@ -808,7 +808,18 @@ export function useRunTracker() {
     if (coachForVo2?.preferKnownVo2max && coachForVo2.vo2maxKnown && coachForVo2.vo2maxKnown > 0) {
       run = { ...baseRun, vo2maxEst: coachForVo2.vo2maxKnown, vo2maxSource: "user" };
     } else {
-      const vo2 = bestEstimateVo2MaxWithSource(baseRun);
+      const restHrForVo2 = (() => {
+        try {
+          // Read latest vitals from storage to seed VO2 calc with personal RHR.
+          const raw = typeof window !== "undefined" ? window.localStorage.getItem("orbit:vitals:v1") : null;
+          if (!raw) return undefined;
+          const v = JSON.parse(raw) as { restingHr?: number };
+          return v?.restingHr && v.restingHr > 0 ? v.restingHr : undefined;
+        } catch {
+          return undefined;
+        }
+      })();
+      const vo2 = bestEstimateVo2MaxWithSource(baseRun, { coach: coachForVo2, restHr: restHrForVo2 });
       if (vo2 != null) run = { ...baseRun, vo2maxEst: vo2.value, vo2maxSource: vo2.source };
     }
 
