@@ -15,6 +15,7 @@
 
 import type { Run } from "@/lib/run-types";
 import { DEFAULT_MAX_HR } from "@/lib/hr-analysis";
+import { effectiveMaxHr, type CoachConfig } from "@/lib/user-profile";
 
 const DEFAULT_REST_HR = 60;
 const MIN_DURATION_MS = 10 * 60_000; // 10 minutes
@@ -23,14 +24,16 @@ const MIN_PACE_DISTANCE_M = 1500;
 
 export function estimateVo2Max(
   run: Pick<Run, "durationMs" | "avgHrBpm" | "maxHrBpm">,
-  opts: { restHr?: number } = {},
+  opts: { restHr?: number; maxHr?: number } = {},
 ): number | null {
   if (run.durationMs < MIN_DURATION_MS) return null;
   if (!run.avgHrBpm || run.avgHrBpm <= 0) return null;
-  const maxHr = run.maxHrBpm && run.maxHrBpm > 0 ? run.maxHrBpm : DEFAULT_MAX_HR;
+  const maxHr =
+    (run.maxHrBpm && run.maxHrBpm > 0 ? run.maxHrBpm : undefined) ??
+    opts.maxHr ??
+    DEFAULT_MAX_HR;
   const rest = opts.restHr ?? DEFAULT_REST_HR;
   if (rest <= 0) return null;
-  // Require at least 60% of HRmax avg to ensure the user actually elevated HR.
   if (run.avgHrBpm < maxHr * 0.6) return null;
   const v = 15.3 * (maxHr / rest);
   if (!Number.isFinite(v) || v <= 0) return null;
@@ -68,16 +71,22 @@ export function estimateVo2MaxFromPace(
 // Best-effort estimate combining HR-based and pace-based methods.
 export function bestEstimateVo2Max(
   run: Pick<Run, "durationMs" | "distanceM" | "avgPaceSecPerKm" | "avgHrBpm" | "maxHrBpm">,
+  opts: { restHr?: number; coach?: CoachConfig } = {},
 ): number | null {
-  return estimateVo2Max(run) ?? estimateVo2MaxFromPace(run);
+  const maxHr = effectiveMaxHr(opts.coach);
+  return (
+    estimateVo2Max(run, { restHr: opts.restHr, maxHr }) ?? estimateVo2MaxFromPace(run)
+  );
 }
 
 // Same as bestEstimateVo2Max but also reports which estimator succeeded.
 export type Vo2MaxSource = "hr" | "pace";
 export function bestEstimateVo2MaxWithSource(
   run: Pick<Run, "durationMs" | "distanceM" | "avgPaceSecPerKm" | "avgHrBpm" | "maxHrBpm">,
+  opts: { restHr?: number; coach?: CoachConfig } = {},
 ): { value: number; source: Vo2MaxSource } | null {
-  const hr = estimateVo2Max(run);
+  const maxHr = effectiveMaxHr(opts.coach);
+  const hr = estimateVo2Max(run, { restHr: opts.restHr, maxHr });
   if (hr != null) return { value: hr, source: "hr" };
   const pace = estimateVo2MaxFromPace(run);
   if (pace != null) return { value: pace, source: "pace" };
@@ -87,10 +96,11 @@ export function bestEstimateVo2MaxWithSource(
 // All-time best across a run history. Returns the run id and value or null.
 export function bestVo2MaxFromRuns(
   runs: Pick<Run, "id" | "endedAt" | "durationMs" | "distanceM" | "avgPaceSecPerKm" | "avgHrBpm" | "maxHrBpm" | "vo2maxEst">[],
+  opts: { restHr?: number; coach?: CoachConfig } = {},
 ): { value: number; runId: string; achievedAt: number } | null {
   let best: { value: number; runId: string; achievedAt: number } | null = null;
   for (const r of runs) {
-    const v = r.vo2maxEst ?? bestEstimateVo2Max(r);
+    const v = r.vo2maxEst ?? bestEstimateVo2Max(r, opts);
     if (v == null) continue;
     if (!best || v > best.value) {
       best = { value: v, runId: r.id, achievedAt: r.endedAt };

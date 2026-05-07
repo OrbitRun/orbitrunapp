@@ -35,8 +35,27 @@ export type CoachConfig = {
   preferKnownVo2max?: boolean;
   age?: number;
   gender?: "male" | "female" | "other";
+  // Body metrics — used for VO2-max calibration and calorie estimation.
+  weightKg?: number;
+  heightCm?: number;
+  // Optional self-reported max heart rate (e.g. from a lab test or watch).
+  // When absent we fall back to 220 − age.
+  maxHrKnown?: number;
   configuredAt: number;
 };
+
+// Derive the user's effective max HR. Prefers a self-reported value, then
+// falls back to the classic 220 − age formula. Returns undefined if neither
+// piece of data is available.
+export function effectiveMaxHr(c?: CoachConfig): number | undefined {
+  if (c?.maxHrKnown && c.maxHrKnown > 0) return c.maxHrKnown;
+  if (c?.age && c.age > 0) return 220 - c.age;
+  return undefined;
+}
+
+export function effectiveWeightKg(c?: CoachConfig): number | undefined {
+  return c?.weightKg && c.weightKg > 0 ? c.weightKg : undefined;
+}
 
 export const WEEKLY_VOLUMES: WeeklyVolume[] = ["0", "0-10", "10-25", "25+"];
 export const EXPERIENCES: Experience[] = ["beginner", "recreational", "experienced"];

@@ -5,6 +5,7 @@ import BottomNav from "@/components/BottomNav";
 import PrAchievement from "@/components/PrAchievement";
 import SplashScreen from "@/components/SplashScreen";
 import { I18nProvider } from "@/lib/i18n";
+import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 
 function NotFoundComponent() {
   return (
@@ -86,6 +87,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useHealthAutoSync();
   return (
     <I18nProvider>
       <div className="min-h-screen pb-24 mb-[30px]">

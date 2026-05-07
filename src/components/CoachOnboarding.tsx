@@ -77,6 +77,9 @@ type ResumeState = {
   preferredDays: WeekDay[];
   age: string;
   gender: "male" | "female" | "other";
+  weightKg: string;
+  heightCm: string;
+  maxHrKnown: string;
   vo2maxKnown: string;
   preferKnownVo2max: boolean;
 };
@@ -148,6 +151,18 @@ export default function CoachOnboarding({ onClose }: Props) {
   const [preferKnownVo2max, setPreferKnownVo2max] = useState<boolean>(
     resume?.preferKnownVo2max ?? profileExisting.coach?.preferKnownVo2max ?? false
   );
+  const [weightKg, setWeightKg] = useState<string>(
+    resume?.weightKg ??
+      (profileExisting.coach?.weightKg != null ? String(profileExisting.coach.weightKg) : "")
+  );
+  const [heightCm, setHeightCm] = useState<string>(
+    resume?.heightCm ??
+      (profileExisting.coach?.heightCm != null ? String(profileExisting.coach.heightCm) : "")
+  );
+  const [maxHrKnown, setMaxHrKnown] = useState<string>(
+    resume?.maxHrKnown ??
+      (profileExisting.coach?.maxHrKnown != null ? String(profileExisting.coach.maxHrKnown) : "")
+  );
 
   useEffect(() => {
     try {
@@ -167,6 +182,9 @@ export default function CoachOnboarding({ onClose }: Props) {
           preferredDays,
           age,
           gender,
+          weightKg,
+          heightCm,
+          maxHrKnown,
           vo2maxKnown,
           preferKnownVo2max,
         } satisfies ResumeState)
@@ -188,6 +206,9 @@ export default function CoachOnboarding({ onClose }: Props) {
     preferredDays,
     age,
     gender,
+    weightKg,
+    heightCm,
+    maxHrKnown,
     vo2maxKnown,
     preferKnownVo2max,
   ]);
@@ -238,6 +259,15 @@ export default function CoachOnboarding({ onClose }: Props) {
     const vo2Num = vo2maxKnown.trim()
       ? Math.max(20, Math.min(90, parseFloat(vo2maxKnown.replace(",", "."))))
       : undefined;
+    const weightNum = weightKg.trim()
+      ? Math.max(30, Math.min(250, parseFloat(weightKg.replace(",", "."))))
+      : undefined;
+    const heightNum = heightCm.trim()
+      ? Math.max(100, Math.min(230, parseInt(heightCm, 10)))
+      : undefined;
+    const maxHrNum = maxHrKnown.trim()
+      ? Math.max(120, Math.min(230, parseInt(maxHrKnown, 10)))
+      : undefined;
     const changed =
       !p.coach ||
       p.coach.level !== level ||
@@ -263,6 +293,9 @@ export default function CoachOnboarding({ onClose }: Props) {
       preferredDays,
       age: ageNum && Number.isFinite(ageNum) ? ageNum : undefined,
       gender,
+      weightKg: weightNum && Number.isFinite(weightNum) ? weightNum : undefined,
+      heightCm: heightNum && Number.isFinite(heightNum) ? heightNum : undefined,
+      maxHrKnown: maxHrNum && Number.isFinite(maxHrNum) ? maxHrNum : undefined,
       vo2maxKnown: vo2Num && Number.isFinite(vo2Num) ? vo2Num : undefined,
       preferKnownVo2max: vo2Num != null ? preferKnownVo2max : false,
       configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
@@ -602,18 +635,63 @@ export default function CoachOnboarding({ onClose }: Props) {
                   ))}
                 </div>
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.age")}
+                  </div>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+                    placeholder="—"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.weight")}
+                  </div>
+                  <input
+                    inputMode="decimal"
+                    value={weightKg}
+                    onChange={(e) =>
+                      setWeightKg(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 5))
+                    }
+                    placeholder="kg"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.height")}
+                  </div>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={heightCm}
+                    onChange={(e) => setHeightCm(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                    placeholder="cm"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+              </div>
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
-                  {t("coach.q.age")}
+                  {t("coach.q.maxHr")}
                 </div>
                 <input
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
-                  placeholder="—"
+                  value={maxHrKnown}
+                  onChange={(e) => setMaxHrKnown(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                  placeholder="bpm"
                   className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
                 />
+                <p className="mt-1.5 text-[10px] text-muted-foreground leading-snug">
+                  {t("coach.q.maxHr.hint")}
+                </p>
               </div>
             </div>
           )}

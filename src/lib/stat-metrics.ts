@@ -3,7 +3,7 @@
 
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import type { Run } from "@/lib/run-types";
-import type { ExperienceLevel } from "@/lib/user-profile";
+import { effectiveWeightKg, loadProfile, type ExperienceLevel } from "@/lib/user-profile";
 
 export type MetricId =
   | "distance"
@@ -43,8 +43,23 @@ export type MetricDef = {
 };
 
 // Default body weight (kg) used for calorie / sweat estimates when the user
-// profile doesn't capture weight. Keeps formulas simple and stable.
+// hasn't entered their weight in the coach profile.
 const DEFAULT_WEIGHT_KG = 70;
+
+// Resolve the runner's weight + gender from their profile. Reads lazily so a
+// weight update flows into the next metric tick without re-instantiating the
+// metric registry.
+function userBody(): { weightKg: number; gender?: "male" | "female" | "other" } {
+  try {
+    const p = loadProfile();
+    return {
+      weightKg: effectiveWeightKg(p.coach) ?? DEFAULT_WEIGHT_KG,
+      gender: p.coach?.gender,
+    };
+  } catch {
+    return { weightKg: DEFAULT_WEIGHT_KG };
+  }
+}
 
 // Speed (m/s) derived from current pace, falling back to average pace.
 function speedMs(s: LiveStats): number {
@@ -54,19 +69,22 @@ function speedMs(s: LiveStats): number {
 }
 
 // kcal estimate: MET-based. Running MET ≈ 1.035 × speed(km/h).
-// kcal = MET × weight(kg) × hours.
+// kcal = MET × weight(kg) × hours, with a small downward adjustment for
+// female runners (~5 %) reflecting lower average lean-mass energy cost.
 function estimateCalories(s: LiveStats): number {
   const hours = s.elapsedMs / 3_600_000;
   if (hours <= 0) return 0;
+  const { weightKg, gender } = userBody();
+  const genderFactor = gender === "female" ? 0.95 : 1;
   const avgSpeedKmh = s.avgPaceSecPerKm > 0 ? 3600 / s.avgPaceSecPerKm : 0;
   if (avgSpeedKmh <= 0) {
     const km = s.distanceM / 1000;
     if (km <= 0) return 0;
     const met = 1.035 * (km / hours);
-    return Math.round(met * DEFAULT_WEIGHT_KG * hours);
+    return Math.round(met * weightKg * hours * genderFactor);
   }
   const met = 1.035 * avgSpeedKmh;
-  return Math.round(met * DEFAULT_WEIGHT_KG * hours);
+  return Math.round(met * weightKg * hours * genderFactor);
 }
 
 // Stride length (m) = (speed × 120) / cadence — two steps per stride.
