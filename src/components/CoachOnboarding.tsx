@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Check, Sparkles, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import {
   loadProfile,
@@ -23,6 +23,7 @@ import {
   type WeekDay,
   type LifestyleScore,
 } from "@/lib/user-profile";
+import { displayName, loadProfile as loadFullProfile } from "@/lib/user-profile";
 import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
 
 type Props = { onClose: () => void };
