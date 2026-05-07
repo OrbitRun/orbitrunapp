@@ -11,6 +11,7 @@ import {
 import { loadRuns, type Run } from "@/lib/run-types";
 import { getPlanProgress, currentWeekAdjustment } from "@/lib/coach-plan";
 import { bestEstimateVo2MaxWithSource, bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
+import { useVitals } from "@/hooks/use-vitals";
 import CoachOnboarding from "@/components/CoachOnboarding";
 import InfoHint from "@/components/InfoHint";
 
