@@ -336,7 +336,11 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
     };
   }
 
-  const base = c.level === "0-2" ? 2 : c.level === "3-5" ? 4 : c.level === "5-10" ? 7 : 12;
+  const eliteBoost = c.experience === "elite" ? 1.25 : 1;
+  const base = Math.max(
+    1,
+    Math.round((c.level === "0-2" ? 2 : c.level === "3-5" ? 4 : c.level === "5-10" ? 7 : 12) * eliteBoost),
+  );
   const longK = Math.max(base + 2, Math.round(base * 1.4));
 
   const easy = (km: number): CoachSession => ({
