@@ -14,7 +14,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [goal, setGoal] = useState<RunningGoal>("run5k");
-  const [level, setLevel] = useState<ExperienceLevel>("beginner");
+  const [level, setLevel] = useState<ExperienceLevel>("novice");
 
   const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
 
@@ -23,7 +23,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
       name: name.trim(),
       goal,
       level,
-      audioCueMeters: level === "beginner" ? 500 : 1000,
+      audioCueMeters: level === "novice" ? 500 : 1000,
       hapticEnabled: true,
       prVoiceEnabled: true,
       windUnit: "ms",
@@ -97,12 +97,12 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           {step === 2 && (
             <div>
               <label className="text-sm font-semibold">{t("onb.step.level")}</label>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {(["beginner", "expert"] as ExperienceLevel[]).map((lv) => (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(["novice", "beginner", "expert"] as ExperienceLevel[]).map((lv) => (
                   <button
                     key={lv}
                     onClick={() => setLevel(lv)}
-                    className={`p-4 rounded-2xl text-left transition active:scale-95 ${
+                    className={`p-3 rounded-2xl text-left transition active:scale-95 ${
                       level === lv
                         ? "bg-neon text-primary-foreground"
                         : "bg-white/5 border-2 border-white/10 hover:bg-white/10"

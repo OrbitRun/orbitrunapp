@@ -253,6 +253,10 @@ export type StatLayout = {
 };
 
 export const LEVEL_LAYOUTS: Record<ExperienceLevel, StatLayout> = {
+  novice: {
+    hero: ["distance", "duration"],
+    secondary: ["pace", "avgPace", "calories"],
+  },
   beginner: {
     hero: ["distance", "duration"],
     secondary: ["pace", "avgPace", "calories"],
