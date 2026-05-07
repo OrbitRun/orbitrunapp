@@ -1,7 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Timer, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { toast } from "sonner";
+import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { wipeAllAppData } from "@/lib/wipe-data";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -53,6 +65,7 @@ function ProfilePage() {
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
   const [coachInfoOpen, setCoachInfoOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleOpenCoachOnboarding = () => {
     setCoachInfoOpen(false);
@@ -401,6 +414,28 @@ function ProfilePage() {
         </button>
       </section>
 
+      {/* Danger zone */}
+      <section className="mt-6 glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {t("profile.section.dangerZone")}
+        </div>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="h-9 w-9 rounded-xl bg-destructive/10 grid place-items-center text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold">{t("profile.deleteAll.title")}</div>
+            <div className="text-xs text-muted-foreground">{t("profile.deleteAll.description")}</div>
+          </div>
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-destructive/15 text-destructive hover:bg-destructive/25 transition"
+          >
+            {t("profile.deleteAll.button")}
+          </button>
+        </div>
+      </section>
+
       <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
         Orbit Run · v1.0
       </p>
@@ -420,6 +455,27 @@ function ProfilePage() {
         onClose={() => setCoachInfoOpen(false)}
         onNavigateToSettings={handleOpenCoachOnboarding}
       />
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("profile.deleteAll.confirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("profile.deleteAll.confirmBody")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("profile.deleteAll.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                wipeAllAppData();
+                toast.success(t("profile.deleteAll.toast"));
+                setTimeout(() => window.location.assign("/"), 400);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("profile.deleteAll.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

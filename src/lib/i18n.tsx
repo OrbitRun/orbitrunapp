@@ -685,6 +685,17 @@ const en: Dict = {
   "recover.save": "Save run",
   "recover.discard": "Discard",
 
+  // Danger zone
+  "profile.section.dangerZone": "Danger zone",
+  "profile.deleteAll.title": "Delete all data",
+  "profile.deleteAll.description": "Permanently remove runs, profile, and settings from this device.",
+  "profile.deleteAll.button": "Delete",
+  "profile.deleteAll.confirmTitle": "Delete all data?",
+  "profile.deleteAll.confirmBody": "This will erase every run, personal record, shoe, and setting stored on this device. This cannot be undone.",
+  "profile.deleteAll.cancel": "Cancel",
+  "profile.deleteAll.confirm": "Delete everything",
+  "profile.deleteAll.toast": "All data deleted",
+
   // Legal
   "legal.section": "Legal",
   "legal.privacy.row": "Privacy Policy",
@@ -1440,6 +1451,17 @@ const da: Dict = {
   "recover.body": "Vi gemte dit løb løbende. Gem det nu eller kassér.",
   "recover.save": "Gem løb",
   "recover.discard": "Kassér",
+
+  // Danger zone
+  "profile.section.dangerZone": "Farezone",
+  "profile.deleteAll.title": "Slet alle data",
+  "profile.deleteAll.description": "Fjern løb, profil og indstillinger permanent fra denne enhed.",
+  "profile.deleteAll.button": "Slet",
+  "profile.deleteAll.confirmTitle": "Slet alle data?",
+  "profile.deleteAll.confirmBody": "Dette sletter alle løb, rekorder, sko og indstillinger på denne enhed. Det kan ikke fortrydes.",
+  "profile.deleteAll.cancel": "Annuller",
+  "profile.deleteAll.confirm": "Slet alt",
+  "profile.deleteAll.toast": "Alle data slettet",
 
   // Legal
   "legal.section": "Juridisk",
