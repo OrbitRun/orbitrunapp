@@ -20,6 +20,7 @@ import {
   previous as spPrevious,
   transferPlayback,
   transferToFirstDevice,
+  waitForActiveDevice,
   type ActiveWorkoutPlaylist,
   type NowPlaying,
 } from "@/lib/spotify";
