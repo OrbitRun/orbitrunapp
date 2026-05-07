@@ -15,6 +15,7 @@ import { loadRuns } from "@/lib/run-types";
 import { selectGhost } from "@/lib/ghost-runner";
 import { bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { useVitals } from "@/hooks/use-vitals";
 
 function formatValue(category: PrCategory, value: number): string {
   if (category === "longest") return `${formatDistance(value)} km`;
