@@ -3,7 +3,7 @@
 
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import type { Run } from "@/lib/run-types";
-import type { ExperienceLevel } from "@/lib/user-profile";
+import { effectiveWeightKg, loadProfile, type ExperienceLevel } from "@/lib/user-profile";
 
 export type MetricId =
   | "distance"
