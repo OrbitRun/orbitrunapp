@@ -686,6 +686,14 @@ const en: Dict = {
   "legal.terms.3.title": "Safety",
   "legal.terms.3.body":
     "Always stay aware of your surroundings while running. Orbit Run is not responsible for accidents or injuries sustained while using the app.",
+  "replay.title": "Replay",
+  "replay.play": "Play",
+  "replay.pause": "Pause",
+  "replay.speed": "Speed",
+  "replay.legend.fast": "Fast",
+  "replay.legend.slow": "Slow",
+  "replay.elevation": "Elevation",
+  "replay.speed.label": "Speed",
 };
 
 const da: Dict = {
