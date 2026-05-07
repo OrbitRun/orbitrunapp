@@ -183,23 +183,23 @@ function ProfilePage() {
           </div>
           <div className="flex-1 text-sm font-semibold">{t("profile.level")}</div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 auto-rows-fr">
           {(["novice", "beginner", "expert", "elite"] as ExperienceLevel[]).map((lv) => (
             <button
               key={lv}
               onClick={() => update({ level: lv })}
-              className={`p-3 rounded-xl text-left transition active:scale-95 ${
+              className={`p-3 rounded-xl text-left transition active:scale-95 flex flex-col ${
                 profile.level === lv
                   ? "bg-neon text-primary-foreground"
                   : "bg-white/5 border-2 border-white/10 hover:bg-white/10"
               }`}
             >
               <div
-                className={`text-xs font-black uppercase tracking-[0.12em] ${profile.level === lv ? "text-primary-foreground" : ""}`}
+                className={`text-xs font-black uppercase tracking-[0.12em] min-h-[1rem] ${profile.level === lv ? "text-primary-foreground" : ""}`}
               >
                 {t(`profile.level.${lv}`)}
               </div>
-              <div className={`mt-1 text-[10px] leading-tight ${profile.level === lv ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+              <div className={`mt-1 text-[10px] leading-tight min-h-[2.25rem] ${profile.level === lv ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                 {t(`profile.level.${lv}Hint`)}
               </div>
             </button>
