@@ -265,6 +265,10 @@ export const LEVEL_LAYOUTS: Record<ExperienceLevel, StatLayout> = {
     hero: ["distance", "pace"],
     secondary: ["duration", "cadence", "hrBpm"],
   },
+  elite: {
+    hero: ["distance", "pace"],
+    secondary: ["duration", "cadence", "hrBpm"],
+  },
 };
 
 // Backwards-compat: beginner preset.

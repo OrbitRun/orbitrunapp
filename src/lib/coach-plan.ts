@@ -36,6 +36,8 @@ function strictestCap(
 }
 
 function buildEarlyAdjustments(c: CoachConfig): WeekAdjustment[] {
+  // Elite runners start at full volume immediately — no deload.
+  if (c.experience === "elite") return [];
   // For each of the first 2 weeks, accumulate the strictest rule.
   const weeks: { mult: number; cap: "easy" | "moderate" | "any"; noteKey: string }[] = [
     { mult: 1, cap: "any", noteKey: "" },
@@ -144,7 +146,11 @@ function buildMilestones(totalWeeks: number): Milestone[] {
 
 export function getCoachPlan(c: CoachConfig): CoachPlan {
   const totalWeeks = totalWeeksFor(c.goal, c.fasterDistance);
-  const weeklySessions = weeklySessionsFor(c.frequency);
+  // Elite runners get one extra session per week (capped at 6).
+  const baseWeeklySessions = weeklySessionsFor(c.frequency);
+  const weeklySessions = c.experience === "elite"
+    ? Math.min(6, baseWeeklySessions + 1)
+    : baseWeeklySessions;
   return {
     totalWeeks,
     weeklySessions,

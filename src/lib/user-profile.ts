@@ -1,6 +1,6 @@
 // User profile: name, goal, experience level. Persisted in localStorage.
 
-export type ExperienceLevel = "novice" | "beginner" | "expert";
+export type ExperienceLevel = "novice" | "beginner" | "expert" | "elite";
 export type RunningGoal = "run5k" | "run10k" | "runFaster" | "weightLoss" | "halfMarathon" | "marathon";
 export type AudioCueMeters = 500 | 1000;
 export type WindUnit = "ms" | "kmh";
@@ -12,7 +12,7 @@ export type CoachFrequency = "1-2" | "3-4" | "5+";
 export type CoachGoal = "weightLoss" | "finish5k" | "finish10k" | "halfMarathon" | "marathon" | "runFaster";
 export type FasterDistance = "5k" | "10k" | "halfMarathon" | "marathon";
 export type WeeklyVolume = "0" | "0-10" | "10-25" | "25+";
-export type Experience = "beginner" | "recreational" | "experienced";
+export type Experience = "beginner" | "recreational" | "experienced" | "elite";
 export type InjuryStatus = "none" | "past" | "current";
 export type WeekDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 export type LifestyleScore = 1 | 2 | 3 | 4 | 5;
@@ -58,7 +58,7 @@ export function effectiveWeightKg(c?: CoachConfig): number | undefined {
 }
 
 export const WEEKLY_VOLUMES: WeeklyVolume[] = ["0", "0-10", "10-25", "25+"];
-export const EXPERIENCES: Experience[] = ["beginner", "recreational", "experienced"];
+export const EXPERIENCES: Experience[] = ["beginner", "recreational", "experienced", "elite"];
 export const INJURY_STATUSES: InjuryStatus[] = ["none", "past", "current"];
 export const WEEK_DAYS: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
@@ -71,11 +71,13 @@ export function experienceLabel(e: Experience, lang: "en" | "da"): string {
     beginner: "Beginner",
     recreational: "Recreational",
     experienced: "Experienced",
+    elite: "Elite",
   };
   const da: Record<Experience, string> = {
     beginner: "Nybegynder",
     recreational: "Motionist",
     experienced: "Erfaren",
+    elite: "Elite",
   };
   return (lang === "da" ? da : en)[e];
 }
@@ -334,7 +336,11 @@ export function nextCoachSession(p: UserProfile, lang: "en" | "da"): CoachSessio
     };
   }
 
-  const base = c.level === "0-2" ? 2 : c.level === "3-5" ? 4 : c.level === "5-10" ? 7 : 12;
+  const eliteBoost = c.experience === "elite" ? 1.25 : 1;
+  const base = Math.max(
+    1,
+    Math.round((c.level === "0-2" ? 2 : c.level === "3-5" ? 4 : c.level === "5-10" ? 7 : 12) * eliteBoost),
+  );
   const longK = Math.max(base + 2, Math.round(base * 1.4));
 
   const easy = (km: number): CoachSession => ({
