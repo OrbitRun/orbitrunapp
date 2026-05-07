@@ -5,11 +5,15 @@ import { useI18n } from "@/lib/i18n";
 import {
   beginAuth,
   getActiveWorkoutPlaylist,
+  getDevices,
   getMyPlaylists,
   hasPlaylistScope,
+  playContext,
   setActiveWorkoutPlaylist,
+  transferPlayback,
   type SpotifyPlaylist,
 } from "@/lib/spotify";
+import { toast } from "sonner";
 
 type Props = {
   open: boolean;
