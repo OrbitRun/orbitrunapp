@@ -285,32 +285,7 @@ function ProfilePage() {
 
       <SensorsSection />
 
-      {/* Apple Health */}
-      <section className="mt-4 glass rounded-2xl divide-y divide-border">
-        <button
-          onClick={async () => {
-            if (!healthAvailable) return;
-            const r = await requestHeartRatePermission();
-            setHealthStatus(r);
-          }}
-          disabled={!healthAvailable}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left disabled:opacity-60"
-        >
-          <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
-            <Activity className="h-4 w-4" />
-          </div>
-          <div className="flex-1 text-sm font-semibold">Apple Health</div>
-          <div className="text-xs text-muted-foreground">
-            {!healthAvailable
-              ? "iOS only"
-              : healthStatus === "granted"
-                ? "Connected"
-                : healthStatus === "denied"
-                  ? "Tap to allow"
-                  : "Unavailable"}
-          </div>
-        </button>
-      </section>
+      <IntegrationsSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <SettingRowWithInfo
