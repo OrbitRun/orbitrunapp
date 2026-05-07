@@ -15,6 +15,7 @@
 
 import type { Run } from "@/lib/run-types";
 import { DEFAULT_MAX_HR } from "@/lib/hr-analysis";
+import { effectiveMaxHr, type CoachConfig } from "@/lib/user-profile";
 
 const DEFAULT_REST_HR = 60;
 const MIN_DURATION_MS = 10 * 60_000; // 10 minutes
@@ -23,14 +24,16 @@ const MIN_PACE_DISTANCE_M = 1500;
 
 export function estimateVo2Max(
   run: Pick<Run, "durationMs" | "avgHrBpm" | "maxHrBpm">,
-  opts: { restHr?: number } = {},
+  opts: { restHr?: number; maxHr?: number } = {},
 ): number | null {
   if (run.durationMs < MIN_DURATION_MS) return null;
   if (!run.avgHrBpm || run.avgHrBpm <= 0) return null;
-  const maxHr = run.maxHrBpm && run.maxHrBpm > 0 ? run.maxHrBpm : DEFAULT_MAX_HR;
+  const maxHr =
+    (run.maxHrBpm && run.maxHrBpm > 0 ? run.maxHrBpm : undefined) ??
+    opts.maxHr ??
+    DEFAULT_MAX_HR;
   const rest = opts.restHr ?? DEFAULT_REST_HR;
   if (rest <= 0) return null;
-  // Require at least 60% of HRmax avg to ensure the user actually elevated HR.
   if (run.avgHrBpm < maxHr * 0.6) return null;
   const v = 15.3 * (maxHr / rest);
   if (!Number.isFinite(v) || v <= 0) return null;
