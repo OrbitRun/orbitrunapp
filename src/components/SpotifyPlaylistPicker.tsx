@@ -51,11 +51,30 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
       .finally(() => setLoading(false));
   }, [open, t]);
 
-  const handleSelect = (p: SpotifyPlaylist) => {
+  const handleSelect = async (p: SpotifyPlaylist) => {
     setActiveWorkoutPlaylist({ uri: p.uri, name: p.name, imageUrl: p.imageUrl });
     setActiveUri(p.uri);
     onChange?.();
     onClose();
+    // Immediately start playback on the user's active (or first available) device.
+    try {
+      const devices = await getDevices();
+      let deviceId = devices.find((d) => d.is_active)?.id;
+      if (!deviceId && devices[0]) {
+        deviceId = devices[0].id;
+        await transferPlayback(deviceId, false);
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      if (!deviceId) {
+        toast.error(t("music.noDevice"));
+        return;
+      }
+      await playContext(p.uri, deviceId);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("403")) toast.error(t("music.premiumRequired"));
+      else if (msg.includes("404")) toast.error(t("music.noDevice"));
+    }
   };
 
   const handleClear = () => {
