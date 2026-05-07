@@ -41,10 +41,10 @@ export default function IntegrationsSection() {
 
   return (
     <section className="mt-4">
-      <div className="mb-2 px-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-        {t("integrations.title")}
-      </div>
       <div className="glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {t("integrations.title")}
+        </div>
         {rows.map(({ key, label, Icon, active }) => {
           const isHealth = key === "appleHealth";
           const stateText = isHealth
