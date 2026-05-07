@@ -161,7 +161,7 @@ function ProfilePage() {
 
       <MyProfileSection
         coach={profile.coach}
-        onUpdate={(patch) => {
+        onUpdate={(patch: Partial<CoachConfig>) => {
           const cur = profile.coach;
           const nextCoach: CoachConfig = {
             level: cur?.level ?? "3-5",
@@ -174,6 +174,14 @@ function ProfilePage() {
           const next = { ...profile, coach: nextCoach };
           setProfile(next);
           saveProfile(next);
+          // Recalibrate HR zones if max HR or age changed
+          if (patch.maxHrKnown !== undefined || patch.age !== undefined) {
+            const eff = effectiveMaxHr(nextCoach);
+            const z = loadHrZones();
+            const restingHr = z?.restingHr ?? 60;
+            const age = nextCoach.age ?? (eff ? 220 - eff : 35);
+            saveHrZones(defaultConfig(age, restingHr));
+          }
         }}
       />
 
