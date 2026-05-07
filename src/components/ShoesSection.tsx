@@ -80,14 +80,12 @@ export default function ShoesSection() {
   };
 
   return (
-    <section className="mt-4">
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2">
-          <Footprints className="h-4 w-4 text-neon" />
-          <h2 className="font-display font-black text-sm uppercase tracking-[0.2em]">
-            {t("shoes.title")}
-          </h2>
+    <section className="mt-4 glass rounded-2xl p-4">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+          <Footprints className="h-4 w-4" />
         </div>
+        <div className="flex-1 text-sm font-semibold">{t("shoes.title")}</div>
         <button
           onClick={() => setAddOpen(true)}
           className="h-8 px-3 rounded-full bg-neon text-primary-foreground text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1 active:scale-95 transition shadow-neon"
