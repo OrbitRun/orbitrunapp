@@ -123,7 +123,8 @@ function RunMapInner({
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
             "line-width": 4,
-            "line-color": neon,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            "line-color": (heatmap ? (["coalesce", ["get", "color"], neon] as any) : neon),
             "line-opacity": 1,
           },
         });
@@ -146,7 +147,7 @@ function RunMapInner({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [interactive]);
+  }, [interactive, heatmap]);
 
   // Scrubber highlight marker — pulsing neon dot at the synced HR sample.
   useEffect(() => {
@@ -232,25 +233,43 @@ function RunMapInner({
       return;
     }
 
-    // Smooth the raw GPS trace, then interpolate with a Catmull-Rom spline so
-    // the rendered polyline reads as smooth curves rather than jagged lines.
-    const smoothed = smoothCoordinates(points, 0.45);
-    const curve = catmullRomSpline(smoothed, 10);
-    const coords = curve.map((p) => [p.lng, p.lat]);
+    if (heatmap) {
+      const segments = buildPaceSegmentsFromPoints(points);
+      const features = segments.length
+        ? segments.map((seg) => ({
+            type: "Feature" as const,
+            properties: { color: seg.color },
+            geometry: {
+              type: "LineString" as const,
+              coordinates: [
+                [seg.from.lng, seg.from.lat],
+                [seg.to.lng, seg.to.lat],
+              ],
+            },
+          }))
+        : [];
+      src.setData({ type: "FeatureCollection", features });
+    } else {
+      // Smooth the raw GPS trace, then interpolate with a Catmull-Rom spline so
+      // the rendered polyline reads as smooth curves rather than jagged lines.
+      const smoothed = smoothCoordinates(points, 0.45);
+      const curve = catmullRomSpline(smoothed, 10);
+      const coords = curve.map((p) => [p.lng, p.lat]);
 
-    src.setData({
-      type: "FeatureCollection",
-      features:
-        coords.length >= 2
-          ? [
-              {
-                type: "Feature",
-                properties: {},
-                geometry: { type: "LineString", coordinates: coords },
-              },
-            ]
-          : [],
-    });
+      src.setData({
+        type: "FeatureCollection",
+        features:
+          coords.length >= 2
+            ? [
+                {
+                  type: "Feature",
+                  properties: {},
+                  geometry: { type: "LineString", coordinates: coords },
+                },
+              ]
+            : [],
+      });
+    }
 
     // Clean white start dot
     const first = points[0];
