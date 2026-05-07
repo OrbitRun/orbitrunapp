@@ -635,18 +635,63 @@ export default function CoachOnboarding({ onClose }: Props) {
                   ))}
                 </div>
               </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.age")}
+                  </div>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={age}
+                    onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
+                    placeholder="—"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.weight")}
+                  </div>
+                  <input
+                    inputMode="decimal"
+                    value={weightKg}
+                    onChange={(e) =>
+                      setWeightKg(e.target.value.replace(/[^0-9.,]/g, "").slice(0, 5))
+                    }
+                    placeholder="kg"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
+                    {t("coach.q.height")}
+                  </div>
+                  <input
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={heightCm}
+                    onChange={(e) => setHeightCm(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                    placeholder="cm"
+                    className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
+                  />
+                </div>
+              </div>
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold mb-1.5">
-                  {t("coach.q.age")}
+                  {t("coach.q.maxHr")}
                 </div>
                 <input
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))}
-                  placeholder="—"
+                  value={maxHrKnown}
+                  onChange={(e) => setMaxHrKnown(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                  placeholder="bpm"
                   className="w-full h-12 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-base font-bold tabular focus:border-neon outline-none"
                 />
+                <p className="mt-1.5 text-[10px] text-muted-foreground leading-snug">
+                  {t("coach.q.maxHr.hint")}
+                </p>
               </div>
             </div>
           )}
