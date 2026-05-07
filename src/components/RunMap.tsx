@@ -306,7 +306,7 @@ function RunMapInner({
       // Smoothly follow the runner's current position — no abrupt jumps.
       map.easeTo({ center: [last.lng, last.lat], duration: 800 });
     }
-  }, [points, follow, ready, userMoved]);
+  }, [points, follow, ready, userMoved, heatmap]);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -329,18 +329,34 @@ function RunMapInner({
   }, [points]);
 
   const showRecenter = interactive && userMoved && points.length > 0;
+  const legend = heatmap && showLegend && points.length >= 2;
   return (
-    <div ref={containerRef} className={`relative ${className ?? ""}`}>
-      {showRecenter && (
-        <button
-          type="button"
-          onClick={recenter}
-          aria-label="Recenter on location"
-          className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
-        >
-          <Crosshair className="h-4 w-4" />
-        </button>
+    <>
+      <div ref={containerRef} className={`relative ${className ?? ""}`}>
+        {showRecenter && (
+          <button
+            type="button"
+            onClick={recenter}
+            aria-label="Recenter on location"
+            className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
+          >
+            <Crosshair className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      {legend && (
+        <div className="mt-3 flex items-center gap-2 px-1 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+          <span>{t("replay.legend.fast")}</span>
+          <div
+            className="h-1.5 flex-1 rounded-full"
+            style={{
+              background:
+                "linear-gradient(to right, oklch(0.92 0.21 130), oklch(0.85 0.17 85), oklch(0.65 0.22 25))",
+            }}
+          />
+          <span>{t("replay.legend.slow")}</span>
+        </div>
       )}
-    </div>
+    </>
   );
 }
