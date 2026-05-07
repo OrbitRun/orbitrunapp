@@ -193,6 +193,12 @@ export function buildReplaySeries(
   };
 }
 
+/** Lightweight wrapper: build heatmap segments directly from raw GeoPoints. */
+export function buildPaceSegmentsFromPoints(points: GeoPoint[]): ReplaySegment[] {
+  if (!points || points.length < 2) return [];
+  return buildReplaySeries({ points, startedAt: points[0].t }).segments;
+}
+
 /** Linear interpolate the series at a given elapsed-ms position. */
 export function sampleAtMs(series: ReplaySeries, ms: number): ReplaySample | null {
   const arr = series.samples;

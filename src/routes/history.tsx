@@ -143,7 +143,7 @@ function ExpandableRunCard({ run, prCategories, onDelete }: ExpandableRunCardPro
           params={{ id: run.id }}
           className="block h-full active:scale-[0.99] transition"
         >
-          <RunMap points={run.points} className="h-full w-full" interactive={false} follow={false} />
+          <RunMap points={run.points} className="h-full w-full" interactive={false} follow={false} heatmap />
           <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent pointer-events-none" />
           <button
             onClick={(e) => {

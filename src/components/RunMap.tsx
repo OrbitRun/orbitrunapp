@@ -5,6 +5,8 @@ import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
+import { useI18n } from "@/lib/i18n";
 
 type Props = {
   points: GeoPoint[];
@@ -14,6 +16,10 @@ type Props = {
   ghost?: { path: { lat: number; lng: number; t: number }[]; elapsedMs: number } | null;
   /** Optional pulsing highlight marker (e.g. driven by the HR scrubber). */
   highlight?: { lat: number; lng: number } | null;
+  /** Render the route as a pace heatmap (fast→slow color ramp). */
+  heatmap?: boolean;
+  /** Show a fast/slow legend below the map (only when heatmap is on). */
+  showLegend?: boolean;
 };
 
 export default function RunMap(props: Props) {
@@ -39,7 +45,10 @@ function RunMapInner({
   interactive = true,
   ghost = null,
   highlight = null,
+  heatmap = false,
+  showLegend = false,
 }: Props) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
   const MRef = useRef<typeof MapboxNS | null>(null);
@@ -114,7 +123,8 @@ function RunMapInner({
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
             "line-width": 4,
-            "line-color": neon,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            "line-color": (heatmap ? (["coalesce", ["get", "color"], neon] as any) : neon),
             "line-opacity": 1,
           },
         });
@@ -137,7 +147,7 @@ function RunMapInner({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [interactive]);
+  }, [interactive, heatmap]);
 
   // Scrubber highlight marker — pulsing neon dot at the synced HR sample.
   useEffect(() => {
@@ -223,25 +233,43 @@ function RunMapInner({
       return;
     }
 
-    // Smooth the raw GPS trace, then interpolate with a Catmull-Rom spline so
-    // the rendered polyline reads as smooth curves rather than jagged lines.
-    const smoothed = smoothCoordinates(points, 0.45);
-    const curve = catmullRomSpline(smoothed, 10);
-    const coords = curve.map((p) => [p.lng, p.lat]);
+    if (heatmap) {
+      const segments = buildPaceSegmentsFromPoints(points);
+      const features = segments.length
+        ? segments.map((seg) => ({
+            type: "Feature" as const,
+            properties: { color: seg.color },
+            geometry: {
+              type: "LineString" as const,
+              coordinates: [
+                [seg.from.lng, seg.from.lat],
+                [seg.to.lng, seg.to.lat],
+              ],
+            },
+          }))
+        : [];
+      src.setData({ type: "FeatureCollection", features });
+    } else {
+      // Smooth the raw GPS trace, then interpolate with a Catmull-Rom spline so
+      // the rendered polyline reads as smooth curves rather than jagged lines.
+      const smoothed = smoothCoordinates(points, 0.45);
+      const curve = catmullRomSpline(smoothed, 10);
+      const coords = curve.map((p) => [p.lng, p.lat]);
 
-    src.setData({
-      type: "FeatureCollection",
-      features:
-        coords.length >= 2
-          ? [
-              {
-                type: "Feature",
-                properties: {},
-                geometry: { type: "LineString", coordinates: coords },
-              },
-            ]
-          : [],
-    });
+      src.setData({
+        type: "FeatureCollection",
+        features:
+          coords.length >= 2
+            ? [
+                {
+                  type: "Feature",
+                  properties: {},
+                  geometry: { type: "LineString", coordinates: coords },
+                },
+              ]
+            : [],
+      });
+    }
 
     // Clean white start dot
     const first = points[0];
@@ -278,7 +306,7 @@ function RunMapInner({
       // Smoothly follow the runner's current position — no abrupt jumps.
       map.easeTo({ center: [last.lng, last.lat], duration: 800 });
     }
-  }, [points, follow, ready, userMoved]);
+  }, [points, follow, ready, userMoved, heatmap]);
 
   useEffect(() => {
     if (points.length === 0) {
@@ -301,18 +329,34 @@ function RunMapInner({
   }, [points]);
 
   const showRecenter = interactive && userMoved && points.length > 0;
+  const legend = heatmap && showLegend && points.length >= 2;
   return (
-    <div ref={containerRef} className={`relative ${className ?? ""}`}>
-      {showRecenter && (
-        <button
-          type="button"
-          onClick={recenter}
-          aria-label="Recenter on location"
-          className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
-        >
-          <Crosshair className="h-4 w-4" />
-        </button>
+    <>
+      <div ref={containerRef} className={`relative ${className ?? ""}`}>
+        {showRecenter && (
+          <button
+            type="button"
+            onClick={recenter}
+            aria-label="Recenter on location"
+            className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
+          >
+            <Crosshair className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      {legend && (
+        <div className="mt-3 flex items-center gap-2 px-1 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+          <span>{t("replay.legend.fast")}</span>
+          <div
+            className="h-1.5 flex-1 rounded-full"
+            style={{
+              background:
+                "linear-gradient(to right, oklch(0.92 0.21 130), oklch(0.85 0.17 85), oklch(0.65 0.22 25))",
+            }}
+          />
+          <span>{t("replay.legend.slow")}</span>
+        </div>
       )}
-    </div>
+    </>
   );
 }

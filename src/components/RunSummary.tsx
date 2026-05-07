@@ -71,8 +71,19 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </header>
 
         <section className="rounded-3xl overflow-hidden border border-border shadow-card mt-2">
-          <RunMap points={run.points} className="h-[240px] w-full" interactive={true} follow={false} />
+          <RunMap points={run.points} className="h-[240px] w-full" interactive={true} follow={false} heatmap />
         </section>
+        <div className="mt-3 flex items-center gap-2 px-1 text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground">
+          <span>{t("replay.legend.fast")}</span>
+          <div
+            className="h-1.5 flex-1 rounded-full"
+            style={{
+              background:
+                "linear-gradient(to right, oklch(0.92 0.21 130), oklch(0.85 0.17 85), oklch(0.65 0.22 25))",
+            }}
+          />
+          <span>{t("replay.legend.slow")}</span>
+        </div>
 
         <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
           <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
