@@ -593,3 +593,80 @@ function CountdownPickerRow({ value, offLabel, label, infoText, onChange }: Coun
   );
 }
 
+
+function MyProfileSection({
+  coach,
+  onUpdate,
+}: {
+  coach?: CoachConfig;
+  onUpdate: (patch: Partial<CoachConfig>) => void;
+}) {
+  const { t } = useI18n();
+  const derivedMaxHr = effectiveMaxHr(coach);
+  const showDerived = !coach?.maxHrKnown && derivedMaxHr != null;
+
+  const numField = (
+    label: string,
+    value: number | undefined,
+    onCommit: (v: number | undefined) => void,
+    placeholder: string,
+    inputMode: "decimal" | "numeric" = "numeric",
+  ) => (
+    <label className="flex items-center gap-3 px-4 py-3">
+      <div className="flex-1 text-sm font-semibold">{label}</div>
+      <input
+        inputMode={inputMode}
+        defaultValue={value != null ? String(value) : ""}
+        onBlur={(e) => {
+          const raw = e.target.value.replace(",", ".").trim();
+          if (!raw) return onCommit(undefined);
+          const n = parseFloat(raw);
+          onCommit(Number.isFinite(n) ? n : undefined);
+        }}
+        placeholder={placeholder}
+        className="w-24 h-10 rounded-xl bg-white/5 border border-white/10 px-3 text-center text-sm font-bold tabular focus:border-neon outline-none"
+      />
+    </label>
+  );
+
+  return (
+    <>
+      <div className="mt-6 mb-2 px-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+        {t("profile.section.myProfile")}
+      </div>
+      <section className="glass rounded-2xl divide-y divide-border">
+        {numField(
+          t("profile.weight"),
+          coach?.weightKg,
+          (v) => onUpdate({ weightKg: v != null ? Math.max(30, Math.min(250, v)) : undefined }),
+          "kg",
+          "decimal",
+        )}
+        {numField(
+          t("profile.height"),
+          coach?.heightCm,
+          (v) =>
+            onUpdate({ heightCm: v != null ? Math.max(100, Math.min(230, Math.round(v))) : undefined }),
+          "cm",
+        )}
+        <div>
+          {numField(
+            t("profile.maxHr"),
+            coach?.maxHrKnown,
+            (v) =>
+              onUpdate({
+                maxHrKnown:
+                  v != null ? Math.max(120, Math.min(230, Math.round(v))) : undefined,
+              }),
+            t("profile.maxHr.placeholder"),
+          )}
+          {showDerived && (
+            <p className="px-4 pb-3 -mt-1 text-[10px] text-muted-foreground">
+              {t("profile.maxHr.derived", { value: derivedMaxHr })}
+            </p>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
