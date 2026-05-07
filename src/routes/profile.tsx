@@ -159,7 +159,24 @@ function ProfilePage() {
         </div>
       </section>
 
-      <RecoveryStatus />
+      <MyProfileSection
+        coach={profile.coach}
+        onUpdate={(patch) => {
+          const cur = profile.coach;
+          const nextCoach: CoachConfig = {
+            level: cur?.level ?? "3-5",
+            frequency: cur?.frequency ?? "3-4",
+            goal: cur?.goal ?? "finish5k",
+            ...cur,
+            ...patch,
+            configuredAt: cur?.configuredAt ?? Date.now(),
+          };
+          const next = { ...profile, coach: nextCoach };
+          setProfile(next);
+          saveProfile(next);
+        }}
+      />
+
 
       <ShoesSection />
 
