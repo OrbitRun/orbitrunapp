@@ -686,7 +686,7 @@ const en: Dict = {
   "recover.discard": "Discard",
 
   // Danger zone
-  "profile.section.dangerZone": "Danger zone",
+  "profile.section.dangerZone": "Reset app",
   "profile.deleteAll.title": "Delete all data",
   "profile.deleteAll.description": "Permanently remove runs, profile, and settings from this device.",
   "profile.deleteAll.button": "Delete",
@@ -1453,7 +1453,7 @@ const da: Dict = {
   "recover.discard": "Kassér",
 
   // Danger zone
-  "profile.section.dangerZone": "Farezone",
+  "profile.section.dangerZone": "Nulstil app",
   "profile.deleteAll.title": "Slet alle data",
   "profile.deleteAll.description": "Fjern løb, profil og indstillinger permanent fra denne enhed.",
   "profile.deleteAll.button": "Slet",
