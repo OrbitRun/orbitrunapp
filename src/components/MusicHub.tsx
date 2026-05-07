@@ -113,23 +113,30 @@ export default function MusicHub() {
   }, [authed, refresh]);
 
   // Start the user's chosen workout playlist (or plain resume if none).
+  // Auto-activates an available device (e.g. iPhone) if none is currently active.
   const startActivePlaylist = useCallback(async () => {
     const playlist = getActiveWorkoutPlaylist();
-    if (!playlist) {
-      await spPlay();
-      return;
-    }
     const devices = await getDevices();
     let deviceId = devices.find((d) => d.is_active)?.id;
+    let needsTransfer = false;
     if (!deviceId && devices[0]) {
       deviceId = devices[0].id;
-      await transferPlayback(deviceId, false);
+      needsTransfer = true;
     }
     if (!deviceId) {
       toast.error(t("music.noDevice"));
       return;
     }
-    await playContext(playlist.uri, deviceId);
+    if (needsTransfer) {
+      // Wake the device first so the subsequent play call has an active target.
+      await transferPlayback(deviceId, false);
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    if (playlist) {
+      await playContext(playlist.uri, deviceId);
+    } else {
+      await spPlay();
+    }
   }, [t]);
 
   // Auto play/pause with run lifecycle.
