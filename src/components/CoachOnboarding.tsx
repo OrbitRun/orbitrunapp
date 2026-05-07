@@ -151,6 +151,18 @@ export default function CoachOnboarding({ onClose }: Props) {
   const [preferKnownVo2max, setPreferKnownVo2max] = useState<boolean>(
     resume?.preferKnownVo2max ?? profileExisting.coach?.preferKnownVo2max ?? false
   );
+  const [weightKg, setWeightKg] = useState<string>(
+    resume?.weightKg ??
+      (profileExisting.coach?.weightKg != null ? String(profileExisting.coach.weightKg) : "")
+  );
+  const [heightCm, setHeightCm] = useState<string>(
+    resume?.heightCm ??
+      (profileExisting.coach?.heightCm != null ? String(profileExisting.coach.heightCm) : "")
+  );
+  const [maxHrKnown, setMaxHrKnown] = useState<string>(
+    resume?.maxHrKnown ??
+      (profileExisting.coach?.maxHrKnown != null ? String(profileExisting.coach.maxHrKnown) : "")
+  );
 
   useEffect(() => {
     try {
