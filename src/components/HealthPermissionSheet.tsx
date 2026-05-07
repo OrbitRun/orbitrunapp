@@ -66,10 +66,11 @@ export default function HealthPermissionSheet({ open, onOpenChange, onResult }: 
               Connect Apple Health
             </h2>
             <p className="mt-1 text-sm text-muted-foreground leading-snug">
-              Orbit reads your heart rate and resting heart rate from Apple
-              Health to power live BPM and "Today's Form". Garmin users: enable
-              "Health Sync" in the Garmin Connect app to share your data with
-              Apple Health, and Orbit will pick it up automatically.
+              Orbit reads your heart rate, resting heart rate, HRV, steps and
+              running workouts from Apple Health to power live BPM, "Today's
+              Form" and recovery insights. Garmin users: enable "Health Sync"
+              in the Garmin Connect app to share data with Apple Health, and
+              Orbit will pick it up automatically.
             </p>
           </div>
           <button

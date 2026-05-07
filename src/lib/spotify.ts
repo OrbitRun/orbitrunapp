@@ -269,6 +269,28 @@ export async function transferToFirstDevice(): Promise<boolean> {
   return true;
 }
 
+/**
+ * Polls /me/player/devices until a device reports `is_active: true` (or any
+ * device with the given id is active). Returns true when an active device is
+ * detected, false on timeout. Used after `transferPlayback` to avoid the
+ * race condition where Spotify hasn't yet promoted the target device.
+ */
+export async function waitForActiveDevice(
+  deviceId?: string,
+  timeoutMs = 1500,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const devices = await getDevices();
+    const ok = deviceId
+      ? devices.some((d) => d.id === deviceId && d.is_active)
+      : devices.some((d) => d.is_active);
+    if (ok) return true;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  return false;
+}
+
 export async function playContext(contextUri: string, deviceId?: string): Promise<void> {
   const path = deviceId ? `/me/player/play?device_id=${encodeURIComponent(deviceId)}` : "/me/player/play";
   const res = await api(path, {

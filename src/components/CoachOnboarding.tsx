@@ -318,6 +318,28 @@ export default function CoachOnboarding({ onClose }: Props) {
   const enterThinking = () => {
     persist();
     setThinking("phaseA");
+    // Fire-and-forget HealthKit prompt on iOS so the user grants permissions
+    // immediately after onboarding instead of after the first run. Web/Android
+    // is a no-op (`isHealthAvailable()` returns false inside the helper).
+    void (async () => {
+      try {
+        const mod = await import("@/lib/health");
+        if (!mod.isHealthAvailable()) return;
+        const status = await mod.requestHealthPermissions();
+        if (status === "granted") {
+          const v = await mod.syncVitalsFromHealth();
+          if (v.restingHr != null || v.hrvMs != null) {
+            const { saveVitals } = await import("@/lib/vitals");
+            saveVitals({
+              restingHr: v.restingHr ?? undefined,
+              hrvMs: v.hrvMs ?? undefined,
+            });
+          }
+        }
+      } catch {
+        /* noop */
+      }
+    })();
   };
 
   useEffect(() => {

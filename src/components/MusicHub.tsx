@@ -20,6 +20,7 @@ import {
   previous as spPrevious,
   transferPlayback,
   transferToFirstDevice,
+  waitForActiveDevice,
   type ActiveWorkoutPlaylist,
   type NowPlaying,
 } from "@/lib/spotify";
@@ -124,13 +125,18 @@ export default function MusicHub() {
       needsTransfer = true;
     }
     if (!deviceId) {
-      toast.error(t("music.noDevice"));
+      toast.error(t("music.openSpotifyHint"));
       return;
     }
     if (needsTransfer) {
-      // Wake the device first so the subsequent play call has an active target.
+      // Wake the device, then poll until Spotify confirms it is active —
+      // avoids race where playContext lands before transfer is registered.
       await transferPlayback(deviceId, false);
-      await new Promise((r) => setTimeout(r, 250));
+      const ready = await waitForActiveDevice(deviceId, 1500);
+      if (!ready) {
+        toast.error(t("music.openSpotifyHint"));
+        return;
+      }
     }
     if (playlist) {
       await playContext(playlist.uri, deviceId);
