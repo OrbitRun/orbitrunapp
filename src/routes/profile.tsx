@@ -287,6 +287,9 @@ function ProfilePage() {
       <IntegrationsSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {t("profile.section.general")}
+        </div>
         <SettingRowWithInfo
           icon={<Volume2 className="h-4 w-4" />}
           label={t("profile.audio")}
@@ -372,10 +375,10 @@ function ProfilePage() {
       </section>
 
       {/* Legal */}
-      <div className="mt-6 mb-2 px-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-        {t("legal.section")}
-      </div>
-      <section className="glass rounded-2xl divide-y divide-border">
+      <section className="mt-6 glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {t("legal.section")}
+        </div>
         <button
           onClick={() => setLegalOpen("privacy")}
           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition text-left"

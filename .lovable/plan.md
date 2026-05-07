@@ -1,25 +1,23 @@
-## Move section headers inside the box for Integrations & My Profile
+## Add in-card header to General Settings + move Legal header in-card
 
-Match the Sensors layout, where the "SENSORS" label sits inside the same `glass rounded-2xl` card (top row, `px-4 pt-3 pb-2`, small uppercase muted label) instead of floating above it.
+Match the Sensors / Integrations pattern (small uppercase muted label as the first row inside the `glass rounded-2xl` card).
 
 ### Changes
 
-**`src/components/IntegrationsSection.tsx`**
-- Remove the outer `<div className="mb-2 px-1 ...">{t("integrations.title")}</div>` that lives above the card.
-- Inside the existing `<div className="glass rounded-2xl divide-y divide-border">`, prepend a header row matching Sensors:
+**`src/routes/profile.tsx`**
+- General settings section (currently starts at line 289, the unlabeled `glass rounded-2xl divide-y divide-border` containing audio cues, PR voice, countdown, auto-pause, flight recorder, haptic, wind unit, GPS, language): prepend an in-card header row:
   ```
   <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-    {t("integrations.title")}
+    {t("profile.section.general")}
   </div>
   ```
-- Keep all integration rows untouched. The `divide-y` will draw a separator between the new header and the first row, identical to Sensors.
+- Legal section (lines 374–399): remove the floating `<div className="mt-6 mb-2 px-1 ...">{t("legal.section")}</div>`, add `mt-6` to the `<section>`, and prepend the same in-card header row using `t("legal.section")`.
 
-**`src/routes/profile.tsx` (`MyProfileSection`)**
-- Remove the floating `<div className="mt-6 mb-2 px-1 ...">{t("profile.section.myProfile")}</div>` above the card.
-- Add `mt-6` (to preserve top spacing) to the `<section className="glass rounded-2xl divide-y divide-border">`.
-- Prepend the same in-card header row used by Sensors/Integrations with `t("profile.section.myProfile")`.
+**`src/lib/i18n.tsx`**
+- Add new key `profile.section.general`:
+  - EN: `"General"`
+  - DA: `"Generelt"`
 
 ### Out of scope
-- No changes to row content, fields, or behavior.
-- No copy/translation changes.
-- Sensors section itself is unchanged (it's the reference).
+- No row reorganization or behavior changes.
+- Existing `legal.section` translation is reused as-is.
