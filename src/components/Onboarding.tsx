@@ -97,8 +97,8 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           {step === 2 && (
             <div>
               <label className="text-sm font-semibold">{t("onb.step.level")}</label>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {(["novice", "beginner", "expert"] as ExperienceLevel[]).map((lv) => (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {(["novice", "beginner", "expert", "elite"] as ExperienceLevel[]).map((lv) => (
                   <button
                     key={lv}
                     onClick={() => setLevel(lv)}

@@ -565,7 +565,7 @@ export default function CoachOnboarding({ onClose }: Props) {
           {current === "experience" && (
             <div>
               <label className="text-sm font-semibold">{t("coach.q.experience")}</label>
-              <div className="mt-3 grid grid-cols-1 gap-2">
+              <div className="mt-3 grid grid-cols-2 gap-2">
                 {EXPERIENCES.map((e) => (
                   <button
                     key={e}

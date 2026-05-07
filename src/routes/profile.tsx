@@ -197,8 +197,8 @@ function ProfilePage() {
           </div>
           <div className="flex-1 text-sm font-semibold">{t("profile.level")}</div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {(["novice", "beginner", "expert"] as ExperienceLevel[]).map((lv) => (
+        <div className="grid grid-cols-2 gap-2">
+          {(["novice", "beginner", "expert", "elite"] as ExperienceLevel[]).map((lv) => (
             <button
               key={lv}
               onClick={() => update({ level: lv })}
