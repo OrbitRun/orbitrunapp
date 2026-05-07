@@ -22,8 +22,8 @@ import {
   type InjuryStatus,
   type WeekDay,
   type LifestyleScore,
+  displayName,
 } from "@/lib/user-profile";
-import { displayName, loadProfile as loadFullProfile } from "@/lib/user-profile";
 import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
 
 type Props = { onClose: () => void };
