@@ -160,7 +160,7 @@ export async function syncVitalsFromHealth(): Promise<VitalsSyncResult> {
   if (!isHealthAvailable()) {
     return { status: "unavailable", restingHr: null, hrvMs: null };
   }
-  const status = await requestHeartRatePermission();
+  const status = await requestHealthPermissions();
   if (status !== "granted") {
     return { status, restingHr: null, hrvMs: null };
   }
