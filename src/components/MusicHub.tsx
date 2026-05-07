@@ -367,17 +367,6 @@ export default function MusicHub() {
             <span className="text-muted-foreground">{t("music.choosePlaylist")}</span>
           )}
         </button>
-        {activePlaylist && (
-          <button
-            onClick={() => runControl(startActivePlaylist)}
-            disabled={busy}
-            aria-label={t("music.playPlaylistNow")}
-            title={t("music.playPlaylistNow")}
-            className="h-8 w-8 grid place-items-center rounded-lg bg-neon text-primary-foreground hover:opacity-90 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
-          >
-            <Play className="h-3.5 w-3.5 ml-0.5" />
-          </button>
-        )}
       </div>
 
       {showMenu && (
