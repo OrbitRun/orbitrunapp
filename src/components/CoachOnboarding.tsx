@@ -77,6 +77,9 @@ type ResumeState = {
   preferredDays: WeekDay[];
   age: string;
   gender: "male" | "female" | "other";
+  weightKg: string;
+  heightCm: string;
+  maxHrKnown: string;
   vo2maxKnown: string;
   preferKnownVo2max: boolean;
 };
