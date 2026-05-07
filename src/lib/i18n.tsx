@@ -1365,6 +1365,14 @@ const da: Dict = {
   "legal.terms.3.title": "Sikkerhed",
   "legal.terms.3.body":
     "Vær altid opmærksom på dine omgivelser under løb. Orbit Run er ikke ansvarlig for ulykker eller skader opstået under brug af appen.",
+  "replay.title": "Replay",
+  "replay.play": "Afspil",
+  "replay.pause": "Pause",
+  "replay.speed": "Hastighed",
+  "replay.legend.fast": "Hurtig",
+  "replay.legend.slow": "Langsom",
+  "replay.elevation": "Højde",
+  "replay.speed.label": "Fart",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };
