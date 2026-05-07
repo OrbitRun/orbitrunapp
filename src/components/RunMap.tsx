@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { Crosshair } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
+import { useI18n } from "@/lib/i18n";
 
 type Props = {
   points: GeoPoint[];
@@ -14,6 +16,10 @@ type Props = {
   ghost?: { path: { lat: number; lng: number; t: number }[]; elapsedMs: number } | null;
   /** Optional pulsing highlight marker (e.g. driven by the HR scrubber). */
   highlight?: { lat: number; lng: number } | null;
+  /** Render the route as a pace heatmap (fast→slow color ramp). */
+  heatmap?: boolean;
+  /** Show a fast/slow legend below the map (only when heatmap is on). */
+  showLegend?: boolean;
 };
 
 export default function RunMap(props: Props) {
@@ -39,7 +45,10 @@ function RunMapInner({
   interactive = true,
   ghost = null,
   highlight = null,
+  heatmap = false,
+  showLegend = false,
 }: Props) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapboxNS.Map | null>(null);
   const MRef = useRef<typeof MapboxNS | null>(null);
