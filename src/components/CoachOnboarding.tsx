@@ -182,6 +182,9 @@ export default function CoachOnboarding({ onClose }: Props) {
           preferredDays,
           age,
           gender,
+          weightKg,
+          heightCm,
+          maxHrKnown,
           vo2maxKnown,
           preferKnownVo2max,
         } satisfies ResumeState)
@@ -203,6 +206,9 @@ export default function CoachOnboarding({ onClose }: Props) {
     preferredDays,
     age,
     gender,
+    weightKg,
+    heightCm,
+    maxHrKnown,
     vo2maxKnown,
     preferKnownVo2max,
   ]);
