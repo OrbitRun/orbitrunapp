@@ -298,6 +298,21 @@ export async function playContext(contextUri: string, deviceId?: string): Promis
     body: JSON.stringify({ context_uri: contextUri }),
   });
   if (!res.ok && res.status !== 204) {
+    // 404 = device went to sleep between transfer and play. Wake it once
+    // more and retry — the most common cause of "music didn't start" on
+    // physical iPhones after the screen has been off for a while.
+    if (res.status === 404 && deviceId) {
+      await transferPlayback(deviceId, false);
+      const ready = await waitForActiveDevice(deviceId, 1500);
+      if (ready) {
+        const retry = await api(path, {
+          method: "PUT",
+          body: JSON.stringify({ context_uri: contextUri }),
+        });
+        if (retry.ok || retry.status === 204) return;
+        throw new Error(`Spotify error ${retry.status}`);
+      }
+    }
     throw new Error(`Spotify error ${res.status}`);
   }
 }

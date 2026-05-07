@@ -45,7 +45,9 @@ export default function MusicHub() {
   }, []);
 
   // Auto-wake: when authed, ensure a Spotify device is active in the background
-  // so the very first Play tap on the run screen starts instantly.
+  // so the very first Play tap on the run screen starts instantly. We also
+  // poll until Spotify confirms the device is active — without this, the
+  // device list still says is_active:false when the user taps START.
   useEffect(() => {
     if (!authed) return;
     let cancelled = false;
@@ -54,7 +56,12 @@ export default function MusicHub() {
         const np = await getNowPlaying();
         if (cancelled) return;
         if (!np?.hasActiveDevice) {
-          await transferToFirstDevice();
+          const devices = await getDevices();
+          const target = devices[0];
+          if (target) {
+            await transferPlayback(target.id, false);
+            await waitForActiveDevice(target.id, 1500);
+          }
         }
       } catch {
         /* silent — warm-up only */
