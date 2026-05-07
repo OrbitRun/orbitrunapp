@@ -71,7 +71,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         </header>
 
         <section className="rounded-3xl overflow-hidden border border-border shadow-card mt-2">
-          <RunMap points={run.points} className="h-[240px] w-full" interactive={true} follow={false} />
+          <RunMap points={run.points} className="h-[240px] w-full" interactive={true} follow={false} heatmap showLegend />
         </section>
 
         <section className="mt-4 glass-strong rounded-3xl p-5 text-center">
