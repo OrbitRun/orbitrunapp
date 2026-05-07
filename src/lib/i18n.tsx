@@ -210,11 +210,13 @@ const en: Dict = {
   "profile.goal": "Primary goal",
   "profile.level": "Experience level",
   "profile.level.novice": "Beginner",
-  "profile.level.beginner": "Recreational",
-  "profile.level.expert": "Pro",
+  "profile.level.beginner": "Jogger",
+  "profile.level.expert": "Expert",
+  "profile.level.elite": "Elite",
   "profile.level.noviceHint": "Essential stats · voice cue every 500 m",
   "profile.level.beginnerHint": "Essential stats · voice cue every 1 km",
   "profile.level.expertHint": "Advanced metrics · minimal voice cues",
+  "profile.level.eliteHint": "Advanced metrics · ambitious training plan",
   "profile.memberCard": "Member Card",
 
   // Greeting
