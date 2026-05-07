@@ -43,6 +43,27 @@ export default function MusicHub() {
     setActivePlaylist(getActiveWorkoutPlaylist());
   }, []);
 
+  // Auto-wake: when authed, ensure a Spotify device is active in the background
+  // so the very first Play tap on the run screen starts instantly.
+  useEffect(() => {
+    if (!authed) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const np = await getNowPlaying();
+        if (cancelled) return;
+        if (!np?.hasActiveDevice) {
+          await transferToFirstDevice();
+        }
+      } catch {
+        /* silent — warm-up only */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authed]);
+
   const refresh = useCallback(async () => {
     if (!isAuthed()) return;
     try {
