@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronRight, Footprints, Pencil, Share2, Trophy } from "lucide-react";
 import { loadRuns, updateRun, type Run, type RunWeather } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
-import RunMap from "@/components/RunMap";
 import RunReplay from "@/components/RunReplay";
 import StatTile from "@/components/StatTile";
 import WeatherBadge from "@/components/WeatherBadge";
