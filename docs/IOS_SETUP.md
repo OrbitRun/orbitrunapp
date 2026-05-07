@@ -46,7 +46,11 @@ In Xcode:
 2. Open `ios/App/App/Info.plist` and add:
    ```xml
    <key>NSHealthShareUsageDescription</key>
-   <string>Orbit reads your heart rate during runs to show live BPM and save it alongside your route.</string>
+   <string>Orbit reads your heart rate, resting heart rate, HRV, steps and running workouts from Apple Health to power live BPM, "Today's Form" and recovery insights.</string>
+   <key>NSHealthUpdateUsageDescription</key>
+   <string>Orbit can write completed runs back to Apple Health so they appear in your Activity rings.</string>
+   <key>NSMotionUsageDescription</key>
+   <string>Orbit uses motion sensors to improve step count and cadence accuracy.</string>
    <key>NSBluetoothAlwaysUsageDescription</key>
    <string>Orbit connects to your heart rate strap to show live BPM during runs.</string>
    ```
