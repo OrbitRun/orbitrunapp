@@ -47,7 +47,7 @@ async function loadPlugin(): Promise<unknown | null> {
   }
 }
 
-export async function requestHeartRatePermission(): Promise<HealthPermissionStatus> {
+export async function requestHealthPermissions(): Promise<HealthPermissionStatus> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plugin: any = await loadPlugin();
   if (!plugin) return "unavailable";
@@ -57,12 +57,62 @@ export async function requestHeartRatePermission(): Promise<HealthPermissionStat
         "HKQuantityTypeIdentifierHeartRate",
         "HKQuantityTypeIdentifierRestingHeartRate",
         "HKQuantityTypeIdentifierHeartRateVariabilitySDNN",
+        "HKQuantityTypeIdentifierStepCount",
+        "HKQuantityTypeIdentifierDistanceWalkingRunning",
+        "HKQuantityTypeIdentifierActiveEnergyBurned",
+        "HKWorkoutTypeIdentifier",
       ],
       write: [],
     });
     return "granted";
   } catch {
     return "denied";
+  }
+}
+
+// Backwards-compatible alias — older call sites still import this name.
+export const requestHeartRatePermission = requestHealthPermissions;
+
+export async function getTodaySteps(): Promise<number | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugin: any = await loadPlugin();
+  if (!plugin) return null;
+  try {
+    const end = new Date();
+    const start = new Date(end);
+    start.setHours(0, 0, 0, 0);
+    const res = await plugin.queryHKitSampleType?.({
+      sampleName: "HKQuantityTypeIdentifierStepCount",
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      limit: 1000,
+    });
+    const samples: Array<{ value?: number }> = res?.resultData ?? res ?? [];
+    return samples.reduce((a, s) => a + (typeof s?.value === "number" ? s.value : 0), 0);
+  } catch {
+    return null;
+  }
+}
+
+export type HealthWorkout = { startDate: string; endDate: string; distance?: number; energy?: number };
+
+export async function getRecentRunningWorkouts(days = 14): Promise<HealthWorkout[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugin: any = await loadPlugin();
+  if (!plugin) return [];
+  try {
+    const end = new Date();
+    const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000);
+    const res = await plugin.queryHKitSampleType?.({
+      sampleName: "HKWorkoutTypeIdentifier",
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+      limit: 100,
+    });
+    const samples: HealthWorkout[] = res?.resultData ?? res ?? [];
+    return samples;
+  } catch {
+    return [];
   }
 }
 
