@@ -605,10 +605,10 @@ function MyProfileSection({
 
   return (
     <>
-      <div className="mt-6 mb-2 px-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-        {t("profile.section.myProfile")}
-      </div>
-      <section className="glass rounded-2xl divide-y divide-border">
+      <section className="mt-6 glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {t("profile.section.myProfile")}
+        </div>
         {numField(
           t("profile.weight"),
           coach?.weightKg,
