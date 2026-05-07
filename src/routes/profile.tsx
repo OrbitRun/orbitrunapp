@@ -1,7 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Timer, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { toast } from "sonner";
+import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { wipeAllAppData } from "@/lib/wipe-data";
 import { loadRuns } from "@/lib/run-types";
 import { formatDistance, formatDuration } from "@/lib/run-utils";
 import { useI18n, type Lang } from "@/lib/i18n";
@@ -53,6 +65,7 @@ function ProfilePage() {
   const hrZones = useHrZones();
   const [legalOpen, setLegalOpen] = useState<"privacy" | "terms" | null>(null);
   const [coachInfoOpen, setCoachInfoOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleOpenCoachOnboarding = () => {
     setCoachInfoOpen(false);
