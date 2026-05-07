@@ -2,6 +2,13 @@
 // shell (see docs/IOS_SETUP.md). Has no effect on the web build.
 // `@capacitor/cli` is intentionally not in the web package.json — install it
 // locally before running `npx cap` commands.
+//
+// Final export checklist (run locally before opening Xcode):
+//   bun install
+//   bun run build         # produces dist/client (matches webDir)
+//   npx cap add ios       # first time only
+//   npx cap sync ios      # every time the web app changes
+//   npx cap open ios      # Archive → TestFlight
 type CapacitorConfig = {
   appId: string;
   appName: string;
