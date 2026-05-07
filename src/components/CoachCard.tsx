@@ -216,6 +216,7 @@ export default function CoachCard({ profile }: Props) {
 function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
   const { t } = useI18n();
   const coach = profile.coach;
+  const vitals = useVitals();
   const { value, source } = useMemo<{
     value: number | null;
     source: "user" | "hr" | "pace" | null;
