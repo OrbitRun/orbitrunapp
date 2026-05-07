@@ -259,6 +259,15 @@ export default function CoachOnboarding({ onClose }: Props) {
     const vo2Num = vo2maxKnown.trim()
       ? Math.max(20, Math.min(90, parseFloat(vo2maxKnown.replace(",", "."))))
       : undefined;
+    const weightNum = weightKg.trim()
+      ? Math.max(30, Math.min(250, parseFloat(weightKg.replace(",", "."))))
+      : undefined;
+    const heightNum = heightCm.trim()
+      ? Math.max(100, Math.min(230, parseInt(heightCm, 10)))
+      : undefined;
+    const maxHrNum = maxHrKnown.trim()
+      ? Math.max(120, Math.min(230, parseInt(maxHrKnown, 10)))
+      : undefined;
     const changed =
       !p.coach ||
       p.coach.level !== level ||
@@ -284,6 +293,9 @@ export default function CoachOnboarding({ onClose }: Props) {
       preferredDays,
       age: ageNum && Number.isFinite(ageNum) ? ageNum : undefined,
       gender,
+      weightKg: weightNum && Number.isFinite(weightNum) ? weightNum : undefined,
+      heightCm: heightNum && Number.isFinite(heightNum) ? heightNum : undefined,
+      maxHrKnown: maxHrNum && Number.isFinite(maxHrNum) ? maxHrNum : undefined,
       vo2maxKnown: vo2Num && Number.isFinite(vo2Num) ? vo2Num : undefined,
       preferKnownVo2max: vo2Num != null ? preferKnownVo2max : false,
       configuredAt: changed || !p.coach ? Date.now() : p.coach.configuredAt,
