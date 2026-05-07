@@ -24,12 +24,15 @@ import {
   coachFrequencyLabel,
   coachGoalLabel,
   COUNTDOWN_OPTIONS,
+  effectiveMaxHr,
   type AudioCueMeters,
+  type CoachConfig,
   type CountdownSeconds,
   type ExperienceLevel,
   type UserProfile,
   type WindUnit,
 } from "@/lib/user-profile";
+import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
