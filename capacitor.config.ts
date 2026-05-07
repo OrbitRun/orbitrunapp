@@ -17,16 +17,15 @@ type CapacitorConfig = {
 };
 
 const config: CapacitorConfig = {
-  appId: "app.lovable.orbit",
-  appName: "Orbit Lab",
+  appId: "com.orbitrun.app",
+  appName: "Orbit Run",
+  // TanStack Start's Vite build outputs to dist/client — do NOT change to "dist".
   webDir: "dist/client",
   ios: {
     contentInset: "always",
-    // NSHealthShareUsageDescription must be set in ios/App/App/Info.plist
-    // — Capacitor cannot inject Info.plist keys from this file.
-    // Suggested copy:
-    //   "Orbit reads your heart rate during runs to show live BPM and
-    //    save it alongside your route."
+    // Purpose strings live in ios/App/App/Info.plist — Capacitor cannot
+    // inject Info.plist keys from this file. See docs/IOS_SETUP.md for the
+    // full list (Health, Location, Motion, Bluetooth + UIBackgroundModes).
   },
 };
 
