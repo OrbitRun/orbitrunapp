@@ -362,17 +362,6 @@ export default function CoachOnboarding({ onClose }: Props) {
   // ===== Thinking screen =====
   if (thinking !== "none") {
     const goalText = coachGoalLabel(goal, lang, goal === "runFaster" ? fasterDistance : undefined);
-    const name = displayName(loadProfile(), lang);
-    const weightNum = weightKg.trim() ? parseFloat(weightKg.replace(",", ".")) : NaN;
-    const heightNum = heightCm.trim() ? parseInt(heightCm, 10) : NaN;
-    const hasBody = Number.isFinite(weightNum) && Number.isFinite(heightNum);
-    const welcome = hasBody
-      ? t("coach.welcome.personal", {
-          name,
-          weight: String(Math.round(weightNum)),
-          height: String(Math.round(heightNum)),
-        })
-      : t("coach.welcome.personalNoBody", { name });
     return (
       <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5">
         <div className="w-full max-w-md glass-strong rounded-3xl p-8 shadow-card text-center">
@@ -412,8 +401,7 @@ export default function CoachOnboarding({ onClose }: Props) {
               <p className="text-base font-bold leading-snug">
                 {t("coach.welcome.highFive")}
               </p>
-              <p className="mt-2 text-sm leading-snug text-muted-foreground">{welcome}</p>
-              <p className="mt-3 text-sm leading-snug">{t("coach.thinking.done")}</p>
+              <p className="mt-3 text-sm leading-snug whitespace-pre-line">{t("coach.thinking.done")}</p>
               <div className="mt-4 rounded-2xl border border-neon/30 bg-neon/5 p-4">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-neon font-bold mb-1">
                   {t("coach.cardTitle")}

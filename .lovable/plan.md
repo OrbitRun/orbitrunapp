@@ -1,11 +1,24 @@
-## Move "My Profile" (weight / height / max HR) section
+## Trim coach onboarding completion text
 
-Currently `<MyProfileSection />` renders at line 163 in `src/routes/profile.tsx`, above the Experience-level card. Move it to render directly between the Experience-level section (ends ~line 222) and the Orbit Coach section (starts ~line 224).
+### Changes
 
-### Change
-- `src/routes/profile.tsx`: cut the `<MyProfileSection coach={…} onUpdate={…} />` block and its surrounding spacing from its current position and re-insert it immediately after the Experience-level `</section>` and before the `{/* Orbit Coach */}` comment.
-- Keep all props, helpers, and the `MyProfileSection` component definition unchanged.
+**`src/lib/i18n.tsx`** — update strings (both EN + DA):
+- `coach.thinking.done`:
+  - DA: `"Jeg har analyseret din profil.\nLad os tage en uge ad gangen."`
+  - EN: `"I have analyzed your profile.\nLet's take it one week at a time."`
+- `coach.thinking.goalPreview`:
+  - DA: `"Jeg er nu klar til at hjælpe dig mod dit mål: {goal}."`
+  - EN: `"I'm now ready to help you toward your goal: {goal}."`
+
+**`src/components/CoachOnboarding.tsx`** (lines ~410-416):
+- Remove the welcome paragraph (`{welcome}`) entirely so the personalized "Velkommen Løber! ..." sentence no longer appears. Also remove the now-unused `welcome`/`hasBody`/`weightNum`/`heightNum`/`name` locals related to it.
+- Add `whitespace-pre-line` to the `coach.thinking.done` paragraph so the `\n` renders as a line break.
+
+### Result
+- "High Five! Du er klar." → kept.
+- "Velkommen Løber!..." → removed.
+- "Tak!" prefix removed; remaining text on two lines.
+- Orbit Coach box uses `:` instead of `om`.
 
 ### Out of scope
-- No styling, copy, or behaviour changes.
-- No changes to other sections' order.
+Layout, styling, other copy, other languages/strings.
