@@ -1,6 +1,6 @@
 // User profile: name, goal, experience level. Persisted in localStorage.
 
-export type ExperienceLevel = "beginner" | "expert";
+export type ExperienceLevel = "novice" | "beginner" | "expert";
 export type RunningGoal = "run5k" | "run10k" | "runFaster" | "weightLoss" | "halfMarathon" | "marathon";
 export type AudioCueMeters = 500 | 1000;
 export type WindUnit = "ms" | "kmh";

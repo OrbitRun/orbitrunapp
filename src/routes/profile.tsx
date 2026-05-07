@@ -74,7 +74,7 @@ function ProfilePage() {
     const next = { ...profile, ...patch, onboarded: true };
     // Sync audio cue interval with experience level when level changes
     if (patch.level && patch.audioCueMeters === undefined) {
-      next.audioCueMeters = patch.level === "beginner" ? 500 : 1000;
+      next.audioCueMeters = patch.level === "novice" ? 500 : 1000;
     }
     setProfile(next);
     saveProfile(next);
@@ -197,8 +197,8 @@ function ProfilePage() {
           </div>
           <div className="flex-1 text-sm font-semibold">{t("profile.level")}</div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {(["beginner", "expert"] as ExperienceLevel[]).map((lv) => (
+        <div className="grid grid-cols-3 gap-2">
+          {(["novice", "beginner", "expert"] as ExperienceLevel[]).map((lv) => (
             <button
               key={lv}
               onClick={() => update({ level: lv })}
