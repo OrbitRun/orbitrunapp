@@ -87,6 +87,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useHealthAutoSync();
   return (
     <I18nProvider>
       <div className="min-h-screen pb-24 mb-[30px]">
