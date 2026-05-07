@@ -1,96 +1,112 @@
-# Mere præcis Orbit Coach: vægt, højde, max-puls & RHR-sync
+# Færdiggør iOS-broen til fysisk Xcode-test
 
-## 1. Datamodel (`src/lib/user-profile.ts`)
+Målet er at gøre Orbit Run klar til at køre på en rigtig iPhone via Capacitor + Xcode, så Apple Health er den primære datakilde, Spotify starter automatisk på iPhonen, og Settings viser hvilke andre kilder der kommer.
 
-Udvid `CoachConfig` med tre valgfri felter:
+---
 
-- `weightKg?: number` (30–250)
-- `heightCm?: number` (100–230)
-- `maxHrKnown?: number` (120–230) — valgfri "kendt max-puls"
+## 1. Apple HealthKit "warm-up" (udvidede rettigheder)
 
-Behold `age` så fallback `220 - age` stadig virker når `maxHrKnown` mangler. Tilføj hjælper:
+I dag spørger `requestHeartRatePermission()` kun om HR, hvile-puls og HRV. Vi udvider den til også at dække skridt og løbe-aktiviteter, og prompter brugeren med det samme i onboarding (ikke først efter første kørsel).
 
-```ts
-export function effectiveMaxHr(c?: CoachConfig): number | undefined {
-  if (c?.maxHrKnown && c.maxHrKnown > 0) return c.maxHrKnown;
-  if (c?.age && c.age > 0) return 220 - c.age;
-  return undefined;
-}
-export function effectiveWeightKg(c?: CoachConfig): number | undefined {
-  return c?.weightKg && c.weightKg > 0 ? c.weightKg : undefined;
-}
-```
+**`src/lib/health.ts`**
+- Omdøb internt til `requestHealthPermissions()` (behold `requestHeartRatePermission` som alias for bagudkompatibilitet) og udvid `read`-listen:
+  - `HKQuantityTypeIdentifierHeartRate`
+  - `HKQuantityTypeIdentifierRestingHeartRate`
+  - `HKQuantityTypeIdentifierHeartRateVariabilitySDNN`
+  - `HKQuantityTypeIdentifierStepCount`
+  - `HKQuantityTypeIdentifierDistanceWalkingRunning`
+  - `HKQuantityTypeIdentifierActiveEnergyBurned`
+  - `HKWorkoutTypeIdentifier` (løbe-/gå-workouts)
+- Tilføj små helpers `getTodaySteps()` og `getRecentRunningWorkouts(days)` (læser via `queryHKitSampleType`) — bruges senere, men eksporteres allerede nu så datakilden er klar.
 
-## 2. Coach onboarding (`src/components/CoachOnboarding.tsx`)
+**`src/components/CoachOnboarding.tsx`**
+- I sidste onboarding-step: hvis `isHealthAvailable()` er sand, vis HealthKit-prompten automatisk (genbrug `HealthPermissionSheet` eller kald `requestHealthPermissions()` direkte ved "Færdig").
+- Efter `granted`: kald `syncVitalsFromHealth()` straks så Dagens Form har data fra første sekund.
 
-Udvid det eksisterende **"bio"**-trin (alder/køn) med tre nye inputs i samme skærm — ingen ekstra steps for at holde flowet kort:
+**`src/components/HealthPermissionSheet.tsx`**
+- Opdater teksten så den nævner: puls, hvile-puls, HRV, skridt og løbe-aktiviteter.
 
-- Vægt (kg) — number input, valgfri
-- Højde (cm) — number input, valgfri
-- "Kender du din max-puls?" — number input, valgfri, med hint "Lader vi feltet stå tomt, bruger vi 220 − alder"
+---
 
-Persistér via samme `persist()` (parse + clamp), tilføj felterne til `ResumeState` og localStorage-resume.
+## 2. Spotify "Active Device" verifikation
 
-## 3. Profilside (`src/routes/profile.tsx`)
+`MusicHub` har allerede en auto-wake (linje 46-65) og `startActivePlaylist` (linje 117-140) der finder første device hvis intet er aktivt. Vi forstærker den så START-knappen 100% pålideligt vækker iPhonen:
 
-Tilføj en ny **"Min Profil"**-sektion (lige under Premium Member Card eller før Orbit Coach), så brugeren let kan opdatere vægt løbende uden at gå gennem hele coach-onboardingen igen:
+**`src/components/MusicHub.tsx`**
+- I `startActivePlaylist`: efter `transferPlayback(deviceId, false)` poll `getDevices()` op til 3× med 200 ms mellemrum indtil `is_active === true` før vi kalder `playContext`. Forhindrer race condition hvor Spotify endnu ikke har registreret transferren.
+- Hvis intet device dukker op efter retry, vis toast med en handling: "Åbn Spotify én gang for at vække enheden".
 
-- Vægt (kg) — inline editor
-- Højde (cm) — inline editor
-- Max-puls (bpm) — inline editor + lille undertekst der viser den brugte værdi (kendt eller `220 − alder`)
+**`src/lib/spotify.ts`** (kun hvis nødvendigt)
+- Tilføj `waitForActiveDevice(timeoutMs = 800)` helper som indkapsler poll-logikken, så `MusicHub` forbliver læseligt.
 
-Skriver direkte til `profile.coach` via `saveProfile`. Genberegn HR-zoner når max-puls eller alder ændres (samme mønster som eksisterende `defaultConfig(age, restingHr)` kald).
+**`orbit:run-start` event**
+- Verificér at `useRunTracker` dispatcher `orbit:run-start` *før* GPS-kaldet (så musikken starter samtidig). Hvis rækkefølgen er omvendt i dag, byttes den om.
 
-## 4. VO2-max & kalorie-beregning
+---
 
-**`src/lib/vo2max.ts`** — `estimateVo2Max` bruger allerede HRmax/RHR (Uth–Sørensen formel der er ml/kg/min uafhængig af vægt). Tilføj en variant der tager `coach`-config:
+## 3. "Kommer snart"-integrationer i Settings
 
-```ts
-export function bestEstimateVo2MaxForUser(run, coach?: CoachConfig, restHr?: number)
-```
+Tilføj en ny sektion på `/profile` som viser at appen vokser, men endnu kun har Apple Health + Spotify aktive.
 
-…som bruger `effectiveMaxHr(coach)` i stedet for default 190 og videresender `restHr` (fra vitals/Health). Erstat eksisterende kald i `RunSummary`, `ReadinessPanel`, `bestVo2MaxFromRuns` med den nye signatur.
+**Ny komponent `src/components/IntegrationsSection.tsx`**
+- Kort med titel "Integrationer".
+- Liste med 4 rækker:
+  1. **Apple Health** — aktiv, grønt check-ikon, undertekst "Tilsluttet" / "Tryk for at give adgang".
+  2. **Garmin Connect** — disabled, gråtonet, badge "Kommer snart".
+  3. **Strava** — disabled, gråtonet, badge "Kommer snart".
+  4. **Fitbit** — disabled, gråtonet, badge "Kommer snart".
+- Brug eksisterende design tokens (`bg-white/5`, `text-muted-foreground`, neon-accent for aktiv).
 
-**`src/lib/stat-metrics.ts`** — fjern `DEFAULT_WEIGHT_KG = 70` som hardcoded, og lav `estimateCalories` parameteriseret:
+**`src/routes/profile.tsx`**
+- Mount `<IntegrationsSection />` lige under "Min Profil"-blokken.
 
-```ts
-function estimateCalories(s: LiveStats, weightKg = 70, gender?: Gender): number
-```
+**`src/lib/i18n.tsx`**
+- Nye nøgler: `integrations.title`, `integrations.comingSoon`, `integrations.connected`, `integrations.appleHealth`, `integrations.garmin`, `integrations.strava`, `integrations.fitbit` (DA + EN).
 
-MET-formlen ganges med `weightKg`. Køns-justering: ~5 % lavere for "female" (Harris–Benedict-inspireret korrigering for løb). Hent værdier via `loadProfile().coach` der hvor metric-tabellen instantieres (live-tracker + run summary).
+---
 
-## 5. Resting HR fra Apple Health / Garmin
+## 4. Xcode / Capacitor eksport-klargøring
 
-**`src/lib/health.ts`** har allerede `getLatestRestingHeartRate()` og `syncVitalsFromHealth()`. Tilføj en auto-sync trigger:
+Der er endnu ingen `ios/`-mappe i projektet (forventet — Capacitor-platforme genereres lokalt af brugeren, ikke i Cloudflare-bundlet). Vi opdaterer derfor *opskriften* så `npx cap add ios` + `npx cap sync ios` producerer en korrekt Info.plist første gang, og brugeren slipper for manuelle Xcode-rettelser.
 
-- Ved app-start (i `src/routes/__root.tsx` eller en ny `useHealthAutoSync` hook): kald `syncVitalsFromHealth()` hvis `isHealthAvailable()` og permission allerede er granted, og skriv resultatet via `saveVitals({ restingHr, hrvMs })`.
-- Kør igen efter et færdigt løb (lyt på `orbit:run-stop`).
-- Resultatet føder allerede ind i `readiness-engine.ts` der laver "Dagens Form".
+**`docs/IOS_SETUP.md`** (opdater)
+- Udvid Info.plist-snippet med alle nye Purpose Strings:
+  - `NSHealthShareUsageDescription` (udvid: nævner puls, hvile-puls, HRV, skridt, løb)
+  - `NSHealthUpdateUsageDescription` (tom-ish — kun hvis vi senere skriver workouts tilbage)
+  - `NSMotionUsageDescription` ("Orbit bruger bevægelsessensorer til at forbedre skridttælling og kadence.")
+  - Eksisterende GPS- og Bluetooth-keys uændrede.
+- Tilføj kort sektion "Endelig eksport-tjekliste" med præcis sekvens:
+  ```text
+  bun install
+  bun run build         # producerer dist/client (matcher webDir)
+  npx cap add ios       # første gang
+  npx cap sync ios      # hver gang web ændres
+  npx cap open ios      # åbn i Xcode → Archive → TestFlight
+  ```
 
-For Garmin: ingen native plugin tilgængelig endnu — vi støtter dem indirekte ved at Garmin-brugere typisk synkroniserer til Apple Health. Tilføj en kort UI-note i `HealthPermissionSheet` om at Garmin-data kommer ind via Apple Health → Connect-app.
+**`capacitor.config.ts`**
+- Tilføj kommentar-blok øverst med samme tjekliste, så fremtidige agents ikke gætter.
+- Tilføj `server: { iosScheme: "https" }` (forbedrer cookie/CORS-adfærd for Spotify OAuth callback inde i Capacitor WebView). Kun hvis det ikke bryder eksisterende setup — verificér først med Spotify redirect URI.
 
-## 6. i18n (`src/lib/i18n.tsx`)
+> Note: Selve `npm run build` køres automatisk af Lovable build-pipelinen, så jeg behøver ikke køre den manuelt — men jeg verificérer at build-output stadig er i `dist/client` (matcher `webDir`).
 
-Nye nøgler (en + da):
-
-- `coach.q.weight`, `coach.q.height`, `coach.q.maxHr`, `coach.q.maxHr.hint`
-- `profile.section.myProfile`, `profile.weight`, `profile.height`, `profile.maxHr`, `profile.maxHr.derived`
-
-## Tekniske noter
-
-- Alle nye felter er valgfri — brugere som springer dem over får uændret default-adfærd (70 kg, 220−alder).
-- Vægt gemmes kun i `coach.weightKg` (ikke ny kolonne) for at undgå migrering — `loadProfile` returnerer eksisterende profiler uændret.
-- HR-zoner opdateres reaktivt når `effectiveMaxHr` ændres (genbrug `defaultConfig`).
-- Ingen DB-ændringer; alt lever i localStorage som resten af profilen.
+---
 
 ## Filer der røres
 
-- `src/lib/user-profile.ts` (edit)
-- `src/components/CoachOnboarding.tsx` (edit — udvid bio-step)
-- `src/routes/profile.tsx` (edit — ny "Min Profil" sektion)
-- `src/lib/vo2max.ts` (edit — accepter coach + restHr)
-- `src/lib/stat-metrics.ts` (edit — vægt/køn-aware kalorier)
-- `src/lib/health.ts` (lille tilføjelse — auto-sync helper)
-- `src/routes/__root.tsx` eller ny `src/hooks/use-health-auto-sync.ts` (auto-sync på mount + run-stop)
-- `src/components/HealthPermissionSheet.tsx` (Garmin-note)
-- `src/lib/i18n.tsx` (nye nøgler)
+- `src/lib/health.ts` (udvidede rettigheder + helpers)
+- `src/components/HealthPermissionSheet.tsx` (tekst)
+- `src/components/CoachOnboarding.tsx` (auto-prompt sidste step)
+- `src/components/MusicHub.tsx` (poll for active device)
+- `src/lib/spotify.ts` (`waitForActiveDevice` helper)
+- `src/components/IntegrationsSection.tsx` *(ny)*
+- `src/routes/profile.tsx` (mount sektion)
+- `src/lib/i18n.tsx` (nye nøgler DA/EN)
+- `docs/IOS_SETUP.md` (Purpose Strings + tjekliste)
+- `capacitor.config.ts` (kommentar + evt. iosScheme)
+
+## Ud af scope
+
+- Faktisk Garmin/Strava/Fitbit OAuth-implementering (kun placeholder).
+- Skrivning af workouts tilbage til HealthKit (kun læseadgang nu).
+- Generering af `ios/`-mappen (sker lokalt hos dig via `npx cap add ios`).
