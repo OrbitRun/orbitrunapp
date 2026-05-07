@@ -13,7 +13,7 @@ import LegalSheet from "@/components/LegalSheet";
 import CoachInfoModal from "@/components/CoachInfoModal";
 import SensorsSection from "@/components/SensorsSection";
 import IntegrationsSection from "@/components/IntegrationsSection";
-import { isHealthAvailable, requestHeartRatePermission, type HealthPermissionStatus } from "@/lib/health";
+import { isHealthAvailable, type HealthPermissionStatus } from "@/lib/health";
 import { useHrZones } from "@/hooks/use-hr-zones";
 
 import {
