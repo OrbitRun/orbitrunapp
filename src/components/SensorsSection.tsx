@@ -13,6 +13,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import {
   clearLastDevice,
   connectBtHeartRate,
@@ -29,10 +30,9 @@ import {
 
 /**
  * Sensors row + guided pairing modal for a Bluetooth heart-rate strap.
- * Includes a 3-step prep guide, animated scanning state, troubleshooting tips
- * after 10s, and a connected card with battery + live BPM "Test" view.
  */
 export default function SensorsSection() {
+  const { t } = useI18n();
   const [bt, setBt] = useState<BtHrState>(getBtHrState());
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -49,8 +49,6 @@ export default function SensorsSection() {
   const busy = bt.status === "scanning" || bt.status === "connecting";
   const hasLastDevice = !!bt.lastDeviceName && !connected && !busy;
 
-  // Auto-reconnect silently when the app regains focus, if a device was
-  // previously paired and is currently disconnected.
   useEffect(() => {
     if (!supported) return;
     const onFocus = () => {
@@ -59,7 +57,6 @@ export default function SensorsSection() {
         void tryReconnectLastDevice();
       }
     };
-    // Try once on mount as well.
     onFocus();
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onFocus);
@@ -69,7 +66,6 @@ export default function SensorsSection() {
     };
   }, [supported]);
 
-  // Surface troubleshooting tips after 10s of scanning
   useEffect(() => {
     if (busy) {
       troubleTimer.current = setTimeout(() => setShowTrouble(true), 10000);
@@ -82,7 +78,6 @@ export default function SensorsSection() {
     };
   }, [busy, bt.status]);
 
-  // When pairing completes, jump to step 3 (success view)
   useEffect(() => {
     if (open && connected) setStep(3);
   }, [open, connected]);
@@ -115,22 +110,19 @@ export default function SensorsSection() {
     clearLastDevice();
   };
 
-  // When only Apple Health is available (iOS Safari, no Web BT, no native shell)
-  // we route the row tap to the Health fallback instead of the BT pairing modal.
   const healthOnly = !webBtSupported && healthFallback;
 
-  const rowStatus =
-    !supported
-      ? "Open in Orbit app to pair"
-      : connected
-        ? `Connected: ${bt.deviceName ?? "Heart Rate"}`
-        : busy
-          ? "Searching…"
-          : bt.status === "disconnected"
-            ? "Disconnected"
-            : healthOnly
-              ? "Tap to use Apple Health"
-              : "Tap to pair";
+  const rowStatus = !supported
+    ? t("sensors.row.openInApp")
+    : connected
+      ? t("sensors.row.connected", { name: bt.deviceName ?? t("sensors.row.title") })
+      : busy
+        ? t("sensors.row.searching")
+        : bt.status === "disconnected"
+          ? t("sensors.row.disconnected")
+          : healthOnly
+            ? t("sensors.row.useHealth")
+            : t("sensors.row.tapToPair");
 
   const onRowClick = () => {
     if (!supported) return;
@@ -146,7 +138,7 @@ export default function SensorsSection() {
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
           <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-            Sensors
+            {t("sensors.title")}
           </div>
           {connected && bt.bpm != null && (
             <div className="flex items-center gap-1 text-[11px] font-mono tabular-nums text-neon">
@@ -175,7 +167,7 @@ export default function SensorsSection() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold flex items-center gap-2">
-              Heart rate strap
+              {t("sensors.row.title")}
               {connected && bt.battery != null && (
                 <span className="inline-flex items-center gap-0.5 text-[10px] font-mono text-muted-foreground">
                   {bt.battery <= 20 ? (
@@ -186,20 +178,24 @@ export default function SensorsSection() {
                   {bt.battery}%
                 </span>
               )}
-              {connected && bt.signal != null && (
-                <SignalChip quality={bt.signal} />
-              )}
+              {connected && bt.signal != null && <SignalChip quality={bt.signal} />}
             </div>
             <div className="text-[11px] text-muted-foreground truncate">
               {bt.error
                 ? bt.error
                 : connected && bt.poorContact
-                  ? "Dårlig kontakt — fugt sensoren"
+                  ? t("sensors.row.poorContact")
                   : rowStatus}
             </div>
           </div>
           <div className="text-xs font-bold uppercase tracking-wider text-foreground/80">
-            {connected ? "Manage" : !supported ? "—" : healthOnly ? "Health" : "Search"}
+            {connected
+              ? t("sensors.row.manage")
+              : !supported
+                ? "—"
+                : healthOnly
+                  ? t("sensors.row.health")
+                  : t("sensors.row.search")}
           </div>
         </button>
         {hasLastDevice && (
@@ -210,15 +206,15 @@ export default function SensorsSection() {
               onClick={onQuickReconnect}
               className="flex-1 text-left text-[12px] font-semibold truncate hover:text-neon transition"
             >
-              Genforbind til {bt.lastDeviceName}
+              {t("sensors.reconnect", { name: bt.lastDeviceName ?? "" })}
             </button>
             <button
               type="button"
               onClick={onForgetDevice}
               className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground transition"
-              aria-label="Glem enhed"
+              aria-label={t("sensors.forget.aria")}
             >
-              Glem
+              {t("sensors.forget")}
             </button>
           </div>
         )}
@@ -289,26 +285,26 @@ function PairingModal({
   onDisconnect,
   onRescan,
 }: ModalProps) {
+  const { t } = useI18n();
   return (
     <div className="fixed inset-0 z-50 grid place-items-end sm:place-items-center bg-black/70 backdrop-blur-sm animate-fade-in">
       <div className="w-full sm:max-w-md max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-border bg-background p-5 shadow-card animate-scale-in">
         <header className="flex items-center justify-between mb-4">
           <div>
             <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-              Pair sensor
+              {t("sensors.modal.eyebrow")}
             </div>
-            <h2 className="font-display font-black text-2xl tracking-tight">Heart rate strap</h2>
+            <h2 className="font-display font-black text-2xl tracking-tight">{t("sensors.modal.title")}</h2>
           </div>
           <button
             onClick={onClose}
             className="h-9 w-9 rounded-full bg-white/5 grid place-items-center hover:bg-white/10 transition"
-            aria-label="Close"
+            aria-label={t("sensors.modal.close")}
           >
             <X className="h-4 w-4" />
           </button>
         </header>
 
-        {/* Stepper dots */}
         <div className="flex items-center gap-2 mb-5">
           {[1, 2, 3].map((n) => (
             <div key={n} className="flex-1 flex items-center gap-2">
@@ -346,6 +342,7 @@ function PairingModal({
 /* ================================ Steps ================================== */
 
 function StepStrap({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   return (
     <div>
       <div className="rounded-2xl bg-white/5 p-5 grid place-items-center mb-4">
@@ -354,23 +351,24 @@ function StepStrap({ onNext }: { onNext: () => void }) {
         </div>
       </div>
       <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold mb-1">
-        Step 1 · Strap on
+        {t("sensors.step1.eyebrow")}
       </div>
-      <h3 className="font-display font-black text-xl mb-2">Put on your strap</h3>
+      <h3 className="font-display font-black text-xl mb-2">{t("sensors.step1.title")}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-        Tag dit pulsbælte på. Fugt gerne sensorerne med lidt vand for bedre kontakt med huden.
+        {t("sensors.step1.body")}
       </p>
       <button
         onClick={onNext}
         className="w-full h-12 rounded-xl bg-neon text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-[0.98] transition"
       >
-        Næste
+        {t("sensors.step1.next")}
       </button>
     </div>
   );
 }
 
 function StepBluetooth({ onBack, onNext }: { onBack: () => void; onNext: () => void | Promise<void> }) {
+  const { t } = useI18n();
   return (
     <div>
       <div className="rounded-2xl bg-white/5 p-5 grid place-items-center mb-4">
@@ -379,24 +377,24 @@ function StepBluetooth({ onBack, onNext }: { onBack: () => void; onNext: () => v
         </div>
       </div>
       <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold mb-1">
-        Step 2 · Bluetooth
+        {t("sensors.step2.eyebrow")}
       </div>
-      <h3 className="font-display font-black text-xl mb-2">Slå Bluetooth til</h3>
+      <h3 className="font-display font-black text-xl mb-2">{t("sensors.step2.title")}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-        Sørg for, at Bluetooth er slået til på din telefon, og at bæltet ikke er forbundet til en anden app.
+        {t("sensors.step2.body")}
       </p>
       <div className="grid grid-cols-2 gap-2">
         <button
           onClick={onBack}
           className="h-12 rounded-xl bg-white/5 hover:bg-white/10 font-bold uppercase tracking-wider text-sm transition"
         >
-          Tilbage
+          {t("sensors.step2.back")}
         </button>
         <button
           onClick={onNext}
           className="h-12 rounded-xl bg-neon text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-[0.98] transition"
         >
-          Søg
+          {t("sensors.step2.search")}
         </button>
       </div>
     </div>
@@ -428,17 +426,13 @@ function StepScan({
   healthFallback: boolean;
   onUseHealth: () => void | Promise<void>;
 }) {
+  const { t } = useI18n();
   return (
     <div>
-      {/* Visual */}
       <div className="relative rounded-2xl bg-white/5 p-6 grid place-items-center mb-4 h-48 overflow-hidden">
-        {/* Radar rings while busy */}
         {busy && (
           <>
-            <span
-              aria-hidden
-              className="absolute h-20 w-20 rounded-full border border-neon/60 animate-hr-radar"
-            />
+            <span aria-hidden className="absolute h-20 w-20 rounded-full border border-neon/60 animate-hr-radar" />
             <span
               aria-hidden
               className="absolute h-20 w-20 rounded-full border border-neon/40 animate-hr-radar"
@@ -451,51 +445,44 @@ function StepScan({
             />
           </>
         )}
-        {/* Connected: thumping heart */}
         <div
           className={`relative h-16 w-16 rounded-full grid place-items-center ${
             connected ? "bg-neon text-primary-foreground" : "bg-neon/10 text-neon"
           }`}
         >
-          <Heart
-            className={`h-8 w-8 fill-current ${connected ? "animate-heart-thump" : ""}`}
-          />
+          <Heart className={`h-8 w-8 fill-current ${connected ? "animate-heart-thump" : ""}`} />
         </div>
       </div>
 
-      {/* Status block */}
       {connected ? (
         <ConnectedCard bt={bt} testing={testing} setTesting={setTesting} />
       ) : (
         <div className="text-center mb-4">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold mb-1">
-            {busy ? "Step 3 · Searching" : "Step 3 · Choose device"}
+            {busy ? t("sensors.step3.searching.eyebrow") : t("sensors.step3.choose.eyebrow")}
           </div>
           <h3 className="font-display font-black text-xl mb-2">
-            {busy ? "Searching for sensors…" : "Vælg din enhed"}
+            {busy ? t("sensors.step3.searching.title") : t("sensors.step3.choose.title")}
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
             {bt.error
               ? bt.error
               : busy
-                ? "Bekræft enheden i browserens dialog når den dukker op."
-                : "Tryk Søg for at åbne enhedsvælgeren igen."}
+                ? t("sensors.step3.searching.body")
+                : t("sensors.step3.choose.body")}
           </p>
         </div>
       )}
 
-      {/* Troubleshooting */}
       {showTrouble && !connected && (
         <div className="mt-3 mb-4 rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 text-[12px] leading-relaxed text-amber-100/90">
           <strong className="block text-amber-300 mb-1 uppercase tracking-wider text-[10px]">
-            Ingen enheder fundet?
+            {t("sensors.trouble.title")}
           </strong>
-          Prøv at tage bæltet af og på igen, eller tjek om det er forbundet til en anden app
-          (f.eks. Strava eller Garmin) — Bluetooth kan ofte kun forbinde til én app ad gangen.
+          {t("sensors.trouble.body")}
         </div>
       )}
 
-      {/* Apple Health fallback */}
       {healthFallback && !connected && (
         <button
           onClick={onUseHealth}
@@ -503,13 +490,12 @@ function StepScan({
           className="mt-3 w-full rounded-xl border border-neon/30 bg-neon/5 px-3 py-2.5 text-[12px] leading-snug text-foreground/90 hover:bg-neon/10 active:scale-[0.99] transition disabled:opacity-50"
         >
           <span className="block text-[10px] uppercase tracking-wider text-neon font-bold mb-0.5">
-            Kan ikke finde dit bælte?
+            {t("sensors.health.title")}
           </span>
-          Brug Apple Health i stedet (kræver at bæltet er parret med iPhone)
+          {t("sensors.health.body")}
         </button>
       )}
 
-      {/* Actions */}
       <div className="grid grid-cols-2 gap-2 mt-4">
         {connected ? (
           <>
@@ -517,13 +503,13 @@ function StepScan({
               onClick={onDisconnect}
               className="h-12 rounded-xl bg-white/5 hover:bg-white/10 font-bold uppercase tracking-wider text-sm text-destructive transition"
             >
-              Disconnect
+              {t("sensors.action.disconnect")}
             </button>
             <button
               onClick={onClose}
               className="h-12 rounded-xl bg-neon text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-[0.98] transition"
             >
-              Færdig
+              {t("sensors.action.done")}
             </button>
           </>
         ) : (
@@ -532,14 +518,14 @@ function StepScan({
               onClick={onClose}
               className="h-12 rounded-xl bg-white/5 hover:bg-white/10 font-bold uppercase tracking-wider text-sm transition"
             >
-              Luk
+              {t("sensors.action.close")}
             </button>
             <button
               onClick={onRescan}
               disabled={busy}
               className="h-12 rounded-xl bg-neon text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-[0.98] transition disabled:opacity-60"
             >
-              {busy ? "Søger…" : "Søg igen"}
+              {busy ? t("sensors.action.searching") : t("sensors.action.searchAgain")}
             </button>
           </>
         )}
@@ -557,6 +543,7 @@ function ConnectedCard({
   testing: boolean;
   setTesting: (b: boolean) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/5 p-4 mb-1">
       <div className="flex items-center gap-3">
@@ -565,10 +552,10 @@ function ConnectedCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-[10px] uppercase tracking-[0.25em] text-emerald-300 font-bold">
-            Forbundet
+            {t("sensors.connected.label")}
           </div>
           <div className="font-display font-black text-lg leading-tight truncate">
-            {bt.deviceName ?? "Heart Rate"}
+            {bt.deviceName ?? t("sensors.row.title")}
           </div>
         </div>
         {bt.battery != null && (
@@ -583,7 +570,6 @@ function ConnectedCard({
         )}
       </div>
 
-      {/* Signal quality */}
       {bt.signal != null && (
         <div className="mt-3 flex items-center gap-2">
           <Signal className={`h-3.5 w-3.5 ${signalColor(bt.signal)}`} />
@@ -599,13 +585,12 @@ function ConnectedCard({
         </div>
       )}
 
-      {/* Poor contact warning */}
       {bt.poorContact && (
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-[11px] leading-snug text-amber-100/90">
           <TriangleAlert className="h-3.5 w-3.5 text-amber-300 mt-0.5 shrink-0" />
           <span>
-            <strong className="text-amber-300">Dårlig kontakt.</strong>{" "}
-            Fugt sensoren med lidt vand og sørg for, at bæltet sidder tæt mod huden.
+            <strong className="text-amber-300">{t("sensors.connected.poorTitle")}</strong>{" "}
+            {t("sensors.connected.poorBody")}
           </span>
         </div>
       )}
@@ -614,7 +599,7 @@ function ConnectedCard({
         <div className="mt-4 rounded-xl bg-background/60 border border-border p-4 flex items-center justify-between">
           <div>
             <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
-              Live puls
+              {t("sensors.connected.liveHr")}
             </div>
             <div className="font-display font-black text-4xl text-neon tabular-nums leading-none mt-1">
               {bt.bpm ?? "—"}
@@ -628,7 +613,7 @@ function ConnectedCard({
           onClick={() => setTesting(true)}
           className="mt-3 w-full h-10 rounded-xl bg-white/5 hover:bg-white/10 font-bold uppercase tracking-wider text-xs transition"
         >
-          Test puls
+          {t("sensors.connected.testHr")}
         </button>
       )}
     </div>
