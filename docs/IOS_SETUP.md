@@ -46,22 +46,22 @@ In Xcode:
 2. Open `ios/App/App/Info.plist` and add:
    ```xml
    <key>NSHealthShareUsageDescription</key>
-   <string>Orbit reads your heart rate, resting heart rate, HRV, steps and running workouts from Apple Health to power live BPM, "Today's Form" and recovery insights.</string>
+   <string>Orbit Run bruger dine sundhedsdata (puls, søvn og HRV) til at lade Orbit Coach beregne din daglige form og optimere din træning.</string>
    <key>NSHealthUpdateUsageDescription</key>
-   <string>Orbit can write completed runs back to Apple Health so they appear in your Activity rings.</string>
+   <string>Orbit Run gemmer dine løbeture i Apple Health.</string>
    <key>NSMotionUsageDescription</key>
-   <string>Orbit uses motion sensors to improve step count and cadence accuracy.</string>
+   <string>Orbit Run bruger bevægelsessensorer til at forbedre nøjagtigheden af skridt og kadence.</string>
    <key>NSBluetoothAlwaysUsageDescription</key>
-   <string>Orbit connects to your heart rate strap to show live BPM during runs.</string>
+   <string>Orbit Run forbinder til dit pulsbælte for at vise live BPM under løb.</string>
    ```
    `NSBluetoothAlwaysUsageDescription` is required by Apple — without it iOS
    terminates the app the first time it tries to scan for a BLE sensor.
 3. **Add Background GPS** — still in `Info.plist`, add:
    ```xml
    <key>NSLocationWhenInUseUsageDescription</key>
-   <string>Orbit uses your location to track your run route, distance and pace.</string>
+   <string>Orbit Run bruger GPS til at måle din distance og rute præcist under løb.</string>
    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-   <string>Orbit keeps tracking your run when the screen is locked or you switch apps, so your route stays accurate.</string>
+   <string>Orbit Run fortsætter med at tracke din løbetur når skærmen er låst eller du skifter app, så ruten forbliver præcis.</string>
    <key>UIBackgroundModes</key>
    <array>
      <string>location</string>

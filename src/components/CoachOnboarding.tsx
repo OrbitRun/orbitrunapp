@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Check, Sparkles, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Sparkles, AlertTriangle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import {
   loadProfile,
@@ -22,6 +22,7 @@ import {
   type InjuryStatus,
   type WeekDay,
   type LifestyleScore,
+  displayName,
 } from "@/lib/user-profile";
 import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
 
@@ -361,22 +362,46 @@ export default function CoachOnboarding({ onClose }: Props) {
   // ===== Thinking screen =====
   if (thinking !== "none") {
     const goalText = coachGoalLabel(goal, lang, goal === "runFaster" ? fasterDistance : undefined);
+    const name = displayName(loadProfile(), lang);
+    const weightNum = weightKg.trim() ? parseFloat(weightKg.replace(",", ".")) : NaN;
+    const heightNum = heightCm.trim() ? parseInt(heightCm, 10) : NaN;
+    const hasBody = Number.isFinite(weightNum) && Number.isFinite(heightNum);
+    const welcome = hasBody
+      ? t("coach.welcome.personal", {
+          name,
+          weight: String(Math.round(weightNum)),
+          height: String(Math.round(heightNum)),
+        })
+      : t("coach.welcome.personalNoBody", { name });
     return (
       <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5">
         <div className="w-full max-w-md glass-strong rounded-3xl p-8 shadow-card text-center">
-          <div className="grid place-items-center my-6">
-            <div
-              className={`h-24 w-24 rounded-full bg-neon/15 grid place-items-center text-neon shadow-neon ${
-                thinking === "phaseA" ? "animate-pulse" : ""
-              }`}
-              style={
-                thinking === "phaseA"
-                  ? { animationDuration: "1.2s" }
-                  : undefined
-              }
-            >
-              <Sparkles className="h-10 w-10" />
-            </div>
+          <div className="grid place-items-center my-6 relative">
+            {thinking === "phaseA" ? (
+              <div
+                className="h-24 w-24 rounded-full bg-neon/15 grid place-items-center text-neon shadow-neon animate-pulse"
+                style={{ animationDuration: "1.2s" }}
+              >
+                <Sparkles className="h-10 w-10" />
+              </div>
+            ) : (
+              <div className="relative h-28 w-28 grid place-items-center">
+                {/* Confetti dots */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="confetti-dot"
+                    style={{
+                      transform: `rotate(${i * 45}deg) translateY(-46px)`,
+                      animationDelay: `${i * 40}ms`,
+                    }}
+                  />
+                ))}
+                <div className="h-24 w-24 rounded-full bg-neon/15 grid place-items-center text-neon shadow-neon animate-high-five">
+                  <CheckCircle2 className="h-12 w-12" strokeWidth={2.5} />
+                </div>
+              </div>
+            )}
           </div>
           {thinking === "phaseA" ? (
             <p className="text-sm font-semibold text-muted-foreground">
@@ -384,7 +409,11 @@ export default function CoachOnboarding({ onClose }: Props) {
             </p>
           ) : (
             <>
-              <p className="text-sm leading-snug">{t("coach.thinking.done")}</p>
+              <p className="text-base font-bold leading-snug">
+                {t("coach.welcome.highFive")}
+              </p>
+              <p className="mt-2 text-sm leading-snug text-muted-foreground">{welcome}</p>
+              <p className="mt-3 text-sm leading-snug">{t("coach.thinking.done")}</p>
               <div className="mt-4 rounded-2xl border border-neon/30 bg-neon/5 p-4">
                 <div className="text-[10px] uppercase tracking-[0.2em] text-neon font-bold mb-1">
                   {t("coach.cardTitle")}
