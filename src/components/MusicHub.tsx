@@ -43,6 +43,27 @@ export default function MusicHub() {
     setActivePlaylist(getActiveWorkoutPlaylist());
   }, []);
 
+  // Auto-wake: when authed, ensure a Spotify device is active in the background
+  // so the very first Play tap on the run screen starts instantly.
+  useEffect(() => {
+    if (!authed) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const np = await getNowPlaying();
+        if (cancelled) return;
+        if (!np?.hasActiveDevice) {
+          await transferToFirstDevice();
+        }
+      } catch {
+        /* silent — warm-up only */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authed]);
+
   const refresh = useCallback(async () => {
     if (!isAuthed()) return;
     try {
@@ -92,23 +113,30 @@ export default function MusicHub() {
   }, [authed, refresh]);
 
   // Start the user's chosen workout playlist (or plain resume if none).
+  // Auto-activates an available device (e.g. iPhone) if none is currently active.
   const startActivePlaylist = useCallback(async () => {
     const playlist = getActiveWorkoutPlaylist();
-    if (!playlist) {
-      await spPlay();
-      return;
-    }
     const devices = await getDevices();
     let deviceId = devices.find((d) => d.is_active)?.id;
+    let needsTransfer = false;
     if (!deviceId && devices[0]) {
       deviceId = devices[0].id;
-      await transferPlayback(deviceId, false);
+      needsTransfer = true;
     }
     if (!deviceId) {
       toast.error(t("music.noDevice"));
       return;
     }
-    await playContext(playlist.uri, deviceId);
+    if (needsTransfer) {
+      // Wake the device first so the subsequent play call has an active target.
+      await transferPlayback(deviceId, false);
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    if (playlist) {
+      await playContext(playlist.uri, deviceId);
+    } else {
+      await spPlay();
+    }
   }, [t]);
 
   // Auto play/pause with run lifecycle.
@@ -339,17 +367,6 @@ export default function MusicHub() {
             <span className="text-muted-foreground">{t("music.choosePlaylist")}</span>
           )}
         </button>
-        {activePlaylist && (
-          <button
-            onClick={() => runControl(startActivePlaylist)}
-            disabled={busy}
-            aria-label={t("music.playPlaylistNow")}
-            title={t("music.playPlaylistNow")}
-            className="h-8 w-8 grid place-items-center rounded-lg bg-neon text-primary-foreground hover:opacity-90 transition active:scale-95 disabled:opacity-50 flex-shrink-0"
-          >
-            <Play className="h-3.5 w-3.5 ml-0.5" />
-          </button>
-        )}
       </div>
 
       {showMenu && (
