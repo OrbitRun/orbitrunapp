@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronRight, Footprints, Pencil, Share2, Trophy } from "lucide-react";
 import { loadRuns, updateRun, type Run, type RunWeather } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
-import RunMap from "@/components/RunMap";
+import RunReplay from "@/components/RunReplay";
 import StatTile from "@/components/StatTile";
 import WeatherBadge from "@/components/WeatherBadge";
 import WeatherEditor from "@/components/WeatherEditor";
@@ -109,10 +109,10 @@ function RunDetailPage() {
         <div className="w-9" />
       </header>
 
-      <section className="rounded-3xl overflow-hidden border border-border shadow-card relative">
-        <RunMap points={run.points} className="h-[280px] w-full" interactive={true} follow={false} highlight={scrubLatLng} />
+      <section className="relative">
+        <RunReplay run={run} />
         {run.weather && (
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 z-10">
             <WeatherBadge weather={run.weather} />
           </div>
         )}
