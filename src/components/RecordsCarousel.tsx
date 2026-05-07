@@ -35,6 +35,7 @@ export default function RecordsCarousel() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
   const profile = useUserProfile();
+  const vitals = useVitals();
   const [prs, setPrs] = useState<PrMap>({});
   const [vo2Best, setVo2Best] = useState<{ value: number; achievedAt: number } | null>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", dragFree: false, loop: false });
@@ -44,7 +45,9 @@ export default function RecordsCarousel() {
     setPrs(recomputeAllPrs());
     const refresh = () => {
       setPrs(loadPrs());
-      setVo2Best(bestVo2MaxFromRuns(loadRuns()));
+      setVo2Best(
+        bestVo2MaxFromRuns(loadRuns(), { coach: profile.coach, restHr: vitals.restingHr }),
+      );
     };
     refresh();
     window.addEventListener("orbit:new-pr", refresh);
@@ -53,7 +56,7 @@ export default function RecordsCarousel() {
       window.removeEventListener("orbit:new-pr", refresh);
       window.removeEventListener("orbit:run-updated", refresh);
     };
-  }, []);
+  }, [profile.coach, vitals.restingHr]);
 
   useEffect(() => {
     if (!emblaApi) return;
