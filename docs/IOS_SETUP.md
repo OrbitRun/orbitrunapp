@@ -118,3 +118,19 @@ starts, iOS will ask for "When In Use"; after the run ends iOS will (within
 a few minutes) prompt the user to allow "Always" so future runs keep
 tracking when the screen is locked.
 
+
+## Final export checklist
+
+Run locally (Cloudflare Worker can't host the iOS shell):
+
+```bash
+bun install
+bun run build         # produces dist/client (matches webDir)
+npx cap add ios       # first time only
+npx cap sync ios      # every time the web app changes
+npx cap open ios      # Archive → TestFlight
+```
+
+After `cap sync`, double-check `ios/App/App/Info.plist` contains every
+purpose string listed above — Capacitor merges keys but won't add ones it
+doesn't know about.
