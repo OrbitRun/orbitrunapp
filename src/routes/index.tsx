@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { Check, Ghost, Pause, Pencil, Play, Square, X } from "lucide-react";
 import RunMap from "@/components/RunMap";
-import MusicHub from "@/components/MusicHub";
+import MusicHubMini from "@/components/MusicHubMini";
 import CountdownOverlay from "@/components/CountdownOverlay";
 import RunSummary from "@/components/RunSummary";
 import EditableStat from "@/components/EditableStat";
@@ -421,7 +421,7 @@ function RunPage() {
       )}
 
       <section className="mt-3">
-        <MusicHub />
+        <MusicHubMini />
       </section>
 
       <section className="mt-5 mb-6 flex items-center justify-center gap-4">

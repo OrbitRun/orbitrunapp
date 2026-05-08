@@ -25,6 +25,7 @@ import LegalSheet from "@/components/LegalSheet";
 import CoachInfoModal from "@/components/CoachInfoModal";
 import SensorsSection from "@/components/SensorsSection";
 import IntegrationsSection from "@/components/IntegrationsSection";
+import MusicIntegrationSection from "@/components/MusicIntegrationSection";
 import { isHealthAvailable, type HealthPermissionStatus } from "@/lib/health";
 import { useHrZones } from "@/hooks/use-hr-zones";
 
@@ -298,6 +299,7 @@ function ProfilePage() {
       <SensorsSection />
 
       <IntegrationsSection />
+      <MusicIntegrationSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">

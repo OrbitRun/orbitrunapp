@@ -7,6 +7,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 import { useGpsWarmup } from "@/hooks/use-gps-warmup";
+import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
 
 function NotFoundComponent() {
   return (
@@ -90,6 +91,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useHealthAutoSync();
   useGpsWarmup();
+  useSpotifyRunControl();
   return (
     <I18nProvider>
       <div className="min-h-screen pb-24 mb-[30px]">
