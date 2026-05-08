@@ -419,11 +419,6 @@ function RunPage() {
           </div>
         </section>
       )}
-
-      <section className="mt-3">
-        <MusicHubMini />
-      </section>
-
       <section className="mt-5 mb-6 flex items-center justify-center gap-4">
         {t.status === "idle" || t.status === "finished" ? (
           <button
