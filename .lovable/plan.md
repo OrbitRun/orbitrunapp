@@ -1,44 +1,24 @@
-## Changes
+## Change
 
-### 1. Profile page — reorder sections
-In `src/routes/profile.tsx`:
-- Move `<MusicIntegrationSection />` to render **directly after the Premium Member Card** and **before `<ShoesSection />`** (around line 176–177).
-- Remove the existing `<MusicIntegrationSection />` placement after `<IntegrationsSection />` (line 302).
+Replace the large round Start button on the run page (`src/routes/index.tsx`, the idle/finished state inside the bottom controls section, ~lines 427–438) with a slim full-width pill button styled like the "Vis dagens pas" CTA in `CoachCard.tsx`:
 
-New order at top of profile:
 ```
-Member Card
-MusicIntegrationSection   ← moved here
-ShoesSection
-Experience level
-…
-IntegrationsSection       ← MusicIntegrationSection no longer here
-General settings
-…
+className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl
+           bg-neon/10 border border-neon/30 text-neon text-xs font-black
+           uppercase tracking-[0.15em] hover:bg-neon/15 active:scale-[0.98] transition"
 ```
 
-### 2. Run screen (`/`) — remove the mini Spotify widget
-In `src/routes/index.tsx`:
-- Remove the `import MusicHubMini from "@/components/MusicHubMini"` line.
-- Remove the `<section className="mt-3"><MusicHubMini /></section>` block (lines 423–425).
+- Icon: `Play` (h-3.5 w-3.5), label from i18n key.
+- Keeps existing `beginCountdown` handler.
+- Drops the absolute-positioned label underneath (no longer needed on a pill).
+- Pause / Resume / Stop buttons (running state) stay unchanged.
 
-### 3. Focus/Run-in-progress screen — restore the richer "old" Spotify player
-The previous full `MusicHub` component was deleted in the last refactor. Recreate it as `src/components/MusicHubFull.tsx` matching the prior in-run experience:
-- Larger album artwork (≈56×56)
-- Track title (Marquee) + artist
-- Progress bar with elapsed / total time
-- Prev / Play-Pause / Next controls
-- Spotify green (#1DB954) accent on the play button
-- No playlist selector, no login button (config lives on Profile). If not authed, show a small hint linking to Profile.
+### i18n
+Add new key `ctrl.start.run`:
+- en: "Start run"
+- da: "Start løb"
 
-In `src/components/FocusRunView.tsx`:
-- Replace `import MusicHubMini` with `import MusicHubFull`.
-- Replace `<MusicHubMini />` (line 297) with `<MusicHubFull />` in the row below the map.
-
-`MusicHubMini.tsx` remains in the codebase only if used elsewhere; otherwise delete it (it is currently only imported by `index.tsx` and `FocusRunView.tsx`, both of which will stop using it — so delete the file).
+(Keep existing `ctrl.start` since it's used as `aria-label` elsewhere; the new pill uses the new key for its visible label and `aria-label`.)
 
 ### Verification
-- Profile: Member card → Music integration (green) → Shoes → Level …
-- Home `/`: no Spotify widget visible in idle state.
-- Start a run → FocusRunView shows full-size Spotify player with artwork, title, progress bar and prev/play/next controls; tapping play/pause/next controls Spotify on iPhone.
-- Auto-start of saved playlist on run start still works (handled by `useSpotifyRunControl`, untouched).
+On `/` in idle state, the bottom shows a slim neon-outline pill "START LØB" / "START RUN" matching the Coach CTA. Tapping it still triggers the countdown → run start flow.

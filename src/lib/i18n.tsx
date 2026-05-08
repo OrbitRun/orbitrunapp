@@ -62,6 +62,7 @@ const en: Dict = {
 
   // Controls
   "ctrl.start": "Start",
+  "ctrl.start.run": "Start run",
   "ctrl.pause": "Pause",
   "ctrl.resume": "Resume",
   "ctrl.stop": "Finish run",
@@ -842,6 +843,7 @@ const da: Dict = {
   "splits.km": "KM",
 
   "ctrl.start": "Start",
+  "ctrl.start.run": "Start løb",
   "ctrl.pause": "Pause",
   "ctrl.resume": "Fortsæt",
   "ctrl.stop": "Afslut løb",
