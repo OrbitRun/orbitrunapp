@@ -174,6 +174,8 @@ function ProfilePage() {
         </div>
       </section>
 
+      <MusicIntegrationSection />
+
       <ShoesSection />
 
       {/* Experience level */}
@@ -299,7 +301,6 @@ function ProfilePage() {
       <SensorsSection />
 
       <IntegrationsSection />
-      <MusicIntegrationSection />
 
       <section className="mt-4 glass rounded-2xl divide-y divide-border">
         <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
