@@ -1,34 +1,70 @@
-## Problem
+# Flyt Spotify-konfiguration væk fra løbeskærmen
 
-Auto-pause is enabled in settings but the timer keeps running when the user stops. The "stops" detection never fires because of a dependency-tracking bug in the auto-pause effect.
+## Mål
+Få Coach/Løbe-skærmen renere ved at flytte al Spotify-opsætning (login + valg af standard-playliste) til en dedikeret sektion under Profil. Selve afspilleren på løbeskærmen reduceres til en lille, diskret widget. START-knappen starter automatisk standard-playlisten.
 
-## Root cause
+## Ændringer
 
-In `src/hooks/use-run-tracker.ts` (lines 927–981), the auto-pause / auto-resume reactor is a `useEffect` whose dependencies are:
+### 1. Ny komponent: `MusicIntegrationSection` (under Profil)
+Ny fil `src/components/MusicIntegrationSection.tsx` – placeres på `/profile` lige under den eksisterende `IntegrationsSection`.
 
-```
-[state.status, state.distanceM, state.currentPaceSecPerKm, doPause, doResume]
-```
+Indhold:
+- Titel: "Musik-integration" / "Music integration".
+- Spotify-grøn (#1DB954) som accent (knapper, ikoner, "valgt"-markering, divider-glow). Implementeres som en lokal token på selve komponenten (ingen ændring af globalt design system).
+- Hvis ikke logget ind: "Forbind Spotify"-knap (bruger `beginAuth`).
+- Hvis logget ind:
+  - Spotify-logo + kontostatus + "Frakobl"-knap.
+  - "Standard-playliste for Orbit Run":
+    - Viser nuværende valg (cover + navn + ejer) eller "Ingen valgt".
+    - Knap "Vælg playliste" der åbner den eksisterende `SpotifyPlaylistPicker`.
+    - Lille "Ryd valg"-link når noget er valgt.
+  - Tydeligt label: "Denne playliste afspilles automatisk når du starter en løbetur."
 
-When the runner stops moving:
-- GPS positions still arrive, but `state.distanceM` stops changing (no new distance accumulated).
-- `state.currentPaceSecPerKm` is set to 0 only after pause, not before.
-- So the effect never re-runs while the user is standing still — exactly when it needs to fire `doPause(true)`.
+### 2. Skrumpet løbeskærm-widget: `MusicHubMini`
+Erstatter den fulde `MusicHub` på `/` (`src/routes/index.tsx`) og i `FocusRunView`.
 
-Symmetrically, while auto-paused, distance is frozen, so the auto-resume branch also rarely re-evaluates.
+Mini-widget viser kun:
+- Lille artwork-thumbnail (32–40 px).
+- Sangtitel + kunstner (én linje hver, truncate / marquee for titel).
+- Play/Pause, Forrige, Næste – kompakte runde knapper.
+- Ingen "skift playliste"-knap, ingen menu, ingen "Use this device"-række, ingen progress-bar (eller meget tynd 1 px hvis ønsket).
+- Hvis ikke logget ind: lille hint "Forbind Spotify under Profil → Musik" (link til `/profile`). Ingen connect-knap her.
 
-The timer worker already ticks `state.elapsedMs` every 250 ms (line 279). Adding `state.elapsedMs` to the effect's deps makes the reactor run on a steady cadence, so the 10‑second movement-window check actually executes when the user has stopped.
+Den eksisterende `MusicHub` kan enten:
+- Slettes til fordel for `MusicHubMini` + auto-start-logikken flyttet til en lille hook `useSpotifyRunControl()` (foretrukket), eller
+- Beholdes kun internt brugt af mini-versionen.
 
-## Change
+Foretrukket: udtræk auto-start/auto-pause `useEffect` (linje 156–171 i `MusicHub.tsx`) til ny hook `src/hooks/use-spotify-run-control.ts`, der monteres én gang i `__root.tsx`. Så er logikken uafhængig af om widget'en er synlig.
 
-**`src/hooks/use-run-tracker.ts`** — single edit to the auto-pause effect's dependency array:
+### 3. Start-logik
+Allerede i dag fyrer løbe-tracker eventet `orbit:run-start`, som `MusicHub` lytter på og kalder `startActivePlaylist()`. Vi flytter den lytter til den nye `useSpotifyRunControl`-hook (samme kode, samme `playContext` + device-wake), så afspilning starter selv når widget'en ikke er mountet.
 
-- Add `state.elapsedMs` so the effect re-runs on each timer tick (~4 Hz), allowing the stopped-movement check to fire even when GPS distance is no longer changing.
+Bekræftelse af "starter med det samme på iPhone": vi beholder den eksisterende `transferPlayback` + `waitForActiveDevice`-warm-up, som også flyttes til hook'en og kører så snart brugeren er authed (uafhængigt af skærm).
 
-No logic changes — the heuristic itself (distance < 5 m and speed < 0.5 m/s over a 10 s window) already works; it just wasn't being evaluated on stop.
+### 4. i18n
+Tilføj nøgler i `src/lib/i18n.tsx` (en + da):
+- `profile.musicIntegration` ("Music integration" / "Musik-integration")
+- `profile.musicIntegrationHint` ("Connect Spotify and choose your default workout playlist." / "Forbind Spotify og vælg din standard-løbeplayliste.")
+- `music.defaultPlaylist` ("Default for Orbit Run" / "Standard for Orbit Run")
+- `music.willAutoPlay` ("Plays automatically when you start a run." / "Afspilles automatisk når du starter en løbetur.")
+- `music.connectSpotifyInProfile` ("Connect Spotify under Profile → Music" / "Forbind Spotify under Profil → Musik")
 
-## Verification
+### 5. Filer der ændres
+- `src/components/MusicIntegrationSection.tsx` – ny.
+- `src/components/MusicHubMini.tsx` – ny (lille afspiller).
+- `src/hooks/use-spotify-run-control.ts` – ny (auto-start/-pause + warm-up).
+- `src/routes/__root.tsx` – mount hook'en globalt.
+- `src/routes/profile.tsx` – tilføj `<MusicIntegrationSection />`.
+- `src/routes/index.tsx` – udskift `<MusicHub />` med `<MusicHubMini />`.
+- `src/components/FocusRunView.tsx` – udskift `<MusicHub />` med `<MusicHubMini />`.
+- `src/components/MusicHub.tsx` – slettes (logik flyttet til hook + mini).
+- `src/lib/i18n.tsx` – nye nøgler.
 
-- Start a run, walk a few meters, then stand still: auto-pause indicator should appear within ~10 s and the timer should freeze.
-- Resume walking >1.2 m/s for 3 s: should auto-resume.
-- Manual pause should still NOT auto-resume (gated by `autoPausedRef`).
+## Spotify-grøn
+Kun anvendt lokalt i `MusicIntegrationSection` (Tailwind arbitrary values: `bg-[#1DB954]`, `text-[#1DB954]`). Resten af appen beholder eksisterende neon-accent.
+
+## Verifikation
+- Profil-side viser ny "Musik-integration"-sektion med grøn accent; kan logge ind/ud og vælge playliste.
+- Coach/Løbe-skærm viser kun den lille widget – ingen playliste-vælger.
+- Tryk på START → standard-playliste begynder at spille på iPhone inden for ~1 s.
+- Tryk på STOP → musikken pauser.
