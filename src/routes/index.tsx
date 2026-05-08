@@ -424,7 +424,7 @@ function RunPage() {
           <button
             onClick={beginCountdown}
             aria-label={tr("ctrl.start.run")}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon/10 border border-neon/30 text-neon text-xs font-black uppercase tracking-[0.15em] hover:bg-neon/15 active:scale-[0.98] transition ${pressed === "start" ? "press-anim" : ""}`}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] hover:bg-neon/90 active:scale-[0.98] transition ${pressed === "start" ? "press-anim" : ""}`}
           >
             <Play className="h-3.5 w-3.5" />
             {tr("ctrl.start.run")}
