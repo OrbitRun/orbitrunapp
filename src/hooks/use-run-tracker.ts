@@ -978,7 +978,7 @@ export function useRunTracker() {
         autoResumeMovingSinceRef.current = null;
       }
     }
-  }, [state.status, state.distanceM, state.currentPaceSecPerKm, doPause, doResume]);
+  }, [state.status, state.distanceM, state.currentPaceSecPerKm, state.elapsedMs, doPause, doResume]);
 
   // ---- Flight recorder snapshot writer ----------------------------------
   // Mirrors the live run state into localStorage on every meaningful change.
