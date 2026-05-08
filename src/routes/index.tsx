@@ -423,13 +423,11 @@ function RunPage() {
         {t.status === "idle" || t.status === "finished" ? (
           <button
             onClick={beginCountdown}
-            className={`relative h-24 w-24 rounded-full bg-neon text-primary-foreground grid place-items-center shadow-neon active:scale-95 transition ${pressed === "start" ? "press-anim" : ""}`}
-            aria-label={tr("ctrl.start")}
+            aria-label={tr("ctrl.start.run")}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-neon/10 border border-neon/30 text-neon text-xs font-black uppercase tracking-[0.15em] hover:bg-neon/15 active:scale-[0.98] transition ${pressed === "start" ? "press-anim" : ""}`}
           >
-            <Play className="h-9 w-9 ml-1" />
-            <span className="absolute -bottom-7 text-[10px] uppercase tracking-[0.25em] font-bold text-foreground">
-              {tr("ctrl.start")}
-            </span>
+            <Play className="h-3.5 w-3.5" />
+            {tr("ctrl.start.run")}
           </button>
         ) : (
           <>
