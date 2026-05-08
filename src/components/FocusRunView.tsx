@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
-import MusicHub from "@/components/MusicHub";
+import MusicHubMini from "@/components/MusicHubMini";
 import ZonePacingChip from "@/components/ZonePacingChip";
 import { useI18n } from "@/lib/i18n";
 import { resetZoneCueState, speakPacingCue, speakZoneEntered } from "@/lib/audio-cues";
@@ -292,9 +292,9 @@ export default function FocusRunView({
         />
       </div>
 
-      {/* Spotify hub — own row below map */}
+      {/* Spotify mini player — own row below map */}
       <div className="px-3 pt-2">
-        <MusicHub />
+        <MusicHubMini />
       </div>
 
       {/* Hero stats */}
