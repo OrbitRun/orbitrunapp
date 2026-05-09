@@ -7,6 +7,13 @@ import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
 import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
+import {
+  isNativeGeolocationAvailable,
+  nativeClearWatch,
+  nativeGetCurrentPosition,
+  nativeWatchPosition,
+  toBrowserPosition,
+} from "@/lib/geolocation-native";
 
 type Props = {
   points: GeoPoint[];
