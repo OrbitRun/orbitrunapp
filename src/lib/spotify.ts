@@ -60,7 +60,7 @@ export type SpotifyToken = {
 // Custom URL scheme used inside the Capacitor iOS shell. Must match the
 // CFBundleURLTypes entry in ios/App/App/Info.plist AND the Redirect URI
 // registered in the Spotify Developer Dashboard.
-export const NATIVE_REDIRECT_URI = "com.lovable.orbitrun://callback";
+export const NATIVE_REDIRECT_URI = "capacitor://localhost/";
 
 function isCapacitorNative(): boolean {
   if (typeof window === "undefined") return false;
