@@ -57,8 +57,20 @@ export type SpotifyToken = {
   scope: string;
 };
 
+// Custom URL scheme used inside the Capacitor iOS shell. Must match the
+// CFBundleURLTypes entry in ios/App/App/Info.plist AND the Redirect URI
+// registered in the Spotify Developer Dashboard.
+export const NATIVE_REDIRECT_URI = "com.lovable.orbitrun://callback";
+
+function isCapacitorNative(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } };
+  return !!w.Capacitor?.isNativePlatform?.();
+}
+
 export function getRedirectUri(): string {
   if (typeof window === "undefined") return "";
+  if (isCapacitorNative()) return NATIVE_REDIRECT_URI;
   return `${window.location.origin}/spotify/callback`;
 }
 
@@ -116,7 +128,90 @@ export async function beginAuth(): Promise<void> {
     code_challenge: challenge,
     scope: SPOTIFY_SCOPES,
   });
-  window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+  const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+  if (isCapacitorNative()) {
+    // Open the Spotify auth page in an in-app browser. The user logs in,
+    // Spotify redirects to com.lovable.orbitrun://callback, iOS routes that
+    // back into the app via `appUrlOpen` (see initSpotifyDeepLinkListener).
+    try {
+      const specifier = "@capacitor/browser";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mod: any = await (Function(
+        "s",
+        "return import(s)",
+      ) as (s: string) => Promise<unknown>)(specifier);
+      const Browser = mod?.Browser ?? mod?.default?.Browser ?? mod?.default;
+      if (Browser?.open) {
+        await Browser.open({ url: authUrl, presentationStyle: "popover" });
+        return;
+      }
+    } catch {
+      /* fall through to location.href */
+    }
+  }
+  window.location.href = authUrl;
+}
+
+/**
+ * Capacitor-only: listen for the Spotify OAuth redirect that comes back via
+ * the custom URL scheme (com.lovable.orbitrun://callback?code=...). Exchanges
+ * the code for a token, closes the in-app browser, and dispatches
+ * `orbit:spotify-authed`. No-op on web (the /spotify/callback route handles it).
+ *
+ * Returns a teardown function.
+ */
+export function initSpotifyDeepLinkListener(): () => void {
+  if (!isCapacitorNative()) return () => {};
+  let removeListener: (() => void) | null = null;
+  let cancelled = false;
+  (async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dynImport = Function("s", "return import(s)") as (s: string) => Promise<unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const appMod: any = await dynImport("@capacitor/app");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const browserMod: any = await dynImport("@capacitor/browser").catch(() => null);
+      const App = appMod?.App ?? appMod?.default?.App ?? appMod?.default;
+      const Browser = browserMod?.Browser ?? browserMod?.default?.Browser ?? browserMod?.default;
+      if (!App?.addListener || cancelled) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const handle: any = await App.addListener("appUrlOpen", async (event: { url: string }) => {
+        if (!event?.url || !event.url.startsWith("com.lovable.orbitrun://callback")) return;
+        try {
+          // URL parses fine even with a custom scheme.
+          const parsed = new URL(event.url);
+          const code = parsed.searchParams.get("code");
+          const err = parsed.searchParams.get("error");
+          if (Browser?.close) {
+            try { await Browser.close(); } catch { /* noop */ }
+          }
+          if (err) {
+            window.dispatchEvent(new CustomEvent("orbit:spotify-auth-error", { detail: err }));
+            return;
+          }
+          if (!code) return;
+          await exchangeCode(code);
+          window.dispatchEvent(new CustomEvent("orbit:spotify-authed"));
+        } catch (e) {
+          window.dispatchEvent(
+            new CustomEvent("orbit:spotify-auth-error", {
+              detail: e instanceof Error ? e.message : String(e),
+            }),
+          );
+        }
+      });
+      removeListener = () => {
+        try { handle?.remove?.(); } catch { /* noop */ }
+      };
+    } catch {
+      /* native plugin not available — silently no-op */
+    }
+  })();
+  return () => {
+    cancelled = true;
+    removeListener?.();
+  };
 }
 
 export async function exchangeCode(code: string): Promise<SpotifyToken> {

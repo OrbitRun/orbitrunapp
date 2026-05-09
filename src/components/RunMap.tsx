@@ -12,6 +12,7 @@ import {
   nativeClearWatch,
   nativeGetCurrentPosition,
   nativeWatchPosition,
+  requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
 
@@ -180,6 +181,10 @@ function RunMapInner({
 
     (async () => {
       if (isNativeGeolocationAvailable()) {
+        // Trigger the iOS permission prompt explicitly when the map mounts —
+        // covers the case where the user dismissed the app-start warmup prompt.
+        const status = await requestNativeGeolocationPermission();
+        if (cancelled || status !== "granted") return;
         const first = await nativeGetCurrentPosition();
         if (first && !cancelled) {
           const b = toBrowserPosition(first);

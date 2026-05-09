@@ -11,9 +11,15 @@ Worker bundle, so these are NOT added to the web `package.json`):
 
 ```bash
 bun add @capacitor/core @capacitor/ios @capacitor/geolocation \
+  @capacitor/app @capacitor/browser \
   @capacitor-community/health @capacitor-community/bluetooth-le
 bun add -d @capacitor/cli
 ```
+
+> `@capacitor/app` + `@capacitor/browser` are required for the Spotify
+> OAuth flow on iOS — the auth page opens in an in-app browser and the
+> redirect comes back via the `com.lovable.orbitrun://callback` URL scheme
+> (see section 5 below).
 
 > `@capacitor/geolocation` enables true high-accuracy background GPS on iOS
 > (`kCLLocationAccuracyBestForNavigation`) and Android (`PRIORITY_HIGH_ACCURACY`).
@@ -80,12 +86,47 @@ In Xcode:
 4. Build & run on a real device (HealthKit, BLE and background GPS are all
    unavailable in the simulator).
 
-## 4. Update flow after web changes
+## 5. Spotify OAuth — custom URL scheme
+
+Inside the iOS shell the web origin (`capacitor://localhost`) is not a valid
+Spotify Redirect URI. The app uses a custom URL scheme instead:
+`com.lovable.orbitrun://callback`.
+
+**a) Register the scheme in `ios/App/App/Info.plist`:**
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLName</key>
+    <string>com.lovable.orbitrun</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>com.lovable.orbitrun</string>
+    </array>
+  </dict>
+</array>
+```
+
+**b) Add the same Redirect URI in the Spotify Developer Dashboard**
+(`https://developer.spotify.com/dashboard` → your app → Edit Settings →
+Redirect URIs):
+```
+com.lovable.orbitrun://callback
+```
+Keep your existing web URI (`https://orbitrunapp.lovable.app/spotify/callback`)
+alongside it so the web build still works.
+
+The app handles the callback automatically: `beginAuth()` opens Spotify in an
+in-app browser via `@capacitor/browser`, and `initSpotifyDeepLinkListener()`
+(mounted in `__root.tsx`) listens for `appUrlOpen`, exchanges the code, and
+closes the browser.
+
+## 6. Update flow after web changes
 
 Whenever the web app is updated:
 
 ```bash
-bun run build
+bun run build:ios
 npx cap sync ios
 ```
 

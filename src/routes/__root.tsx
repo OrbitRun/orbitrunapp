@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import BottomNav from "@/components/BottomNav";
@@ -8,6 +9,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 import { useGpsWarmup } from "@/hooks/use-gps-warmup";
 import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
+import { initSpotifyDeepLinkListener } from "@/lib/spotify";
 
 function NotFoundComponent() {
   return (
@@ -92,6 +94,7 @@ function RootComponent() {
   useHealthAutoSync();
   useGpsWarmup();
   useSpotifyRunControl();
+  useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
     <I18nProvider>
       <div className="min-h-screen pb-24 mb-[30px]">
