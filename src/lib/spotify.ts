@@ -60,7 +60,7 @@ export type SpotifyToken = {
 // Custom URL scheme used inside the Capacitor iOS shell. Must match the
 // CFBundleURLTypes entry in ios/App/App/Info.plist AND the Redirect URI
 // registered in the Spotify Developer Dashboard.
-export const NATIVE_REDIRECT_URI = "orbitrunapp://callback";
+export const NATIVE_REDIRECT_URI = "jonas-orbitrun-app://callback";
 
 function isCapacitorNative(): boolean {
   if (typeof window === "undefined") return false;
@@ -131,7 +131,7 @@ export async function beginAuth(): Promise<void> {
   const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
   if (isCapacitorNative()) {
     // Open the Spotify auth page in an in-app browser. The user logs in,
-    // Spotify redirects to com.lovable.orbitrun://callback, iOS routes that
+    // Spotify redirects to jonas-orbitrun-app://callback, iOS routes that
     // back into the app via `appUrlOpen` (see initSpotifyDeepLinkListener).
     try {
       const specifier = "@capacitor/browser";
@@ -154,7 +154,7 @@ export async function beginAuth(): Promise<void> {
 
 /**
  * Capacitor-only: listen for the Spotify OAuth redirect that comes back via
- * the custom URL scheme (com.lovable.orbitrun://callback?code=...). Exchanges
+ * the custom URL scheme (jonas-orbitrun-app://callback?code=...). Exchanges
  * the code for a token, closes the in-app browser, and dispatches
  * `orbit:spotify-authed`. No-op on web (the /spotify/callback route handles it).
  *
@@ -177,7 +177,7 @@ export function initSpotifyDeepLinkListener(): () => void {
       if (!App?.addListener || cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const handle: any = await App.addListener("appUrlOpen", async (event: { url: string }) => {
-        if (!event?.url || !event.url.startsWith("orbitrunapp://")) return;
+        if (!event?.url || !event.url.startsWith("jonas-orbitrun-app://")) return;
         try {
           // URL parses fine even with a custom scheme.
           const parsed = new URL(event.url);
