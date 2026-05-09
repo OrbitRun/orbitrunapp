@@ -13,7 +13,10 @@ type CapacitorConfig = {
   appId: string;
   appName: string;
   webDir: string;
-  ios?: { contentInset?: "always" | "automatic" | "never" | "scrollableAxes" };
+  ios?: {
+    contentInset?: "always" | "automatic" | "never" | "scrollableAxes";
+    scrollEnabled?: boolean;
+  };
 };
 
 const config: CapacitorConfig = {
@@ -23,6 +26,10 @@ const config: CapacitorConfig = {
   webDir: "dist/client",
   ios: {
     contentInset: "always",
+    // Disable WKWebView rubber-banding/overscroll so the user can't drag
+    // the page down and reveal the native background. Internal scrollable
+    // containers (`.app-scroll`) still scroll normally.
+    scrollEnabled: false,
     // Purpose strings live in ios/App/App/Info.plist — Capacitor cannot
     // inject Info.plist keys from this file. See docs/IOS_SETUP.md for the
     // full list (Health, Location, Motion, Bluetooth + UIBackgroundModes).
