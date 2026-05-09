@@ -177,7 +177,7 @@ export function initSpotifyDeepLinkListener(): () => void {
       if (!App?.addListener || cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const handle: any = await App.addListener("appUrlOpen", async (event: { url: string }) => {
-        if (!event?.url || !event.url.startsWith("com.lovable.orbitrun://callback")) return;
+        if (!event?.url || !event.url.startsWith("capacitor://localhost/")) return;
         try {
           // URL parses fine even with a custom scheme.
           const parsed = new URL(event.url);
