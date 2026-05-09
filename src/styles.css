@@ -335,6 +335,12 @@ html {
   100% { transform: scale(2.4); opacity: 0; }
 }
 
+/* Pulsating user-location warm-up dot on the live map */
+@keyframes user-loc-pulse {
+  0%   { transform: scale(0.6); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
 /* Coach onboarding "High Five" celebration */
 @keyframes high-five {
   0%   { transform: scale(0.6) rotate(-12deg); opacity: 0; }
