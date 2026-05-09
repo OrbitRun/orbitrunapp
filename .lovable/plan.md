@@ -1,61 +1,90 @@
-# Fix GPS & Spotify i Capacitor iOS
+## Mål
 
-## Hvad der er galt nu
-
-**GPS:** Koden i `src/lib/geolocation-native.ts` og `src/hooks/use-gps-warmup.ts` *kalder allerede* `@capacitor/geolocation`-pluginnet via dynamisk import — men pakken er **ikke installeret** (mangler i `package.json`). Den dynamiske import fejler stille, og koden falder tilbage til `navigator.geolocation`, som på iOS WKWebView ikke får vist iOS-tilladelsesdialogen → "Location permission denied".
-
-Derudover mangler `Info.plist` purpose-strings og `UIBackgroundModes: location` (ikke noget vi kan ændre i Lovable — beskrives i `docs/IOS_SETUP.md`).
-
-**Spotify:** På iOS peger `getRedirectUri()` på `window.location.origin/spotify/callback`, som inde i WKWebView bliver `capacitor://localhost/spotify/callback` (eller en anden intern URL). Spotify accepterer ikke det format → "URL fejl". Vi skal bruge en custom URL scheme `com.lovable.orbitrun://callback`, åbne login i in-app browser og fange tilbagekaldet via `appUrlOpen`.
+Færdiggør iOS/Capacitor-build af Orbit Run: rigtigt Spotify URL-scheme, ægte BLE pulsbælte, baggrunds-GPS og lås overscroll på iOS.
 
 ## Ændringer
 
-### 1. Installér Capacitor-plugins
-Tilføj til `package.json` (og `bun install`):
-- `@capacitor/geolocation` — GPS-bro
-- `@capacitor/app` — `appUrlOpen` deep-link event
-- `@capacitor/browser` — in-app browser til OAuth
+### 1. Spotify — nyt scheme `jonas-orbit-run://callback`
 
-(De er stadig dynamisk importerede i koden, så web-build forbliver upåvirket.)
+`src/lib/spotify.ts`
+- `NATIVE_REDIRECT_URI` → `"jonas-orbit-run://callback"`
+- `appUrlOpen`-listeneren matcher `event.url.startsWith("jonas-orbit-run://")`
 
-### 2. GPS — sikre at warmup kører på rigtige tidspunkter
-- `useGpsWarmup` (allerede i root) kører ved app-start. Bekræft den er mountet i `src/routes/__root.tsx`. Hvis ikke, mount den.
-- Tilføj samme `requestNativeGeolocationPermission()` + warmup-call ved mount af `src/components/RunMap.tsx`, så tilladelsen også spørges når kortet vises (sikkerhedsnet hvis brugeren afviste ved start).
-- Ingen ændring til `geolocation-native.ts` — den er allerede korrekt.
+`capacitor.config.ts` + `docs/IOS_SETUP.md`
+- Opdater kommentarer + Info.plist `CFBundleURLTypes` snippet til scheme `jonas-orbit-run`
+- Note om at registrere `jonas-orbit-run://callback` i Spotify Developer Dashboard
 
-### 3. Spotify — native OAuth flow
+Listeneren i `src/routes/__root.tsx` er allerede mountet via `initSpotifyDeepLinkListener()` — uændret.
 
-**`src/lib/spotify.ts`:**
-- `getRedirectUri()` → returnér `com.lovable.orbitrun://callback` når `Capacitor.isNativePlatform()`, ellers nuværende web-URL.
-- `beginAuth()` → på native: åbn auth-URL via `@capacitor/browser` (`Browser.open({ url, presentationStyle: 'popover' })`). På web: behold `window.location.href = ...`.
-- Ny eksport `initSpotifyDeepLinkListener()`:
-  - Kun på native. Lytter på `App.addListener('appUrlOpen', ...)`.
-  - Når URL starter med `com.lovable.orbitrun://callback`, parse `code`, kald `exchangeCode(code)`, luk `Browser`, og dispatch et `orbit:spotify-authed` event (eller redirect via router til `/profile`).
+### 2. Bluetooth pulsbælte — installér plugin + ny direkte-knap
 
-**`src/routes/__root.tsx`** (eller en ny mount-once hook): kald `initSpotifyDeepLinkListener()` i en `useEffect`.
+Pakke
+- `bun add @capacitor-community/bluetooth-le` (dynamisk import findes allerede i `src/lib/heart-rate-ble-native.ts`; pakken mangler bare i `package.json`)
 
-**`src/routes/spotify.callback.tsx`:** uændret — bruges stadig på web.
+`src/lib/heart-rate-bt.ts` (façade)
+- Tilføj `connectBleDirect()`-eksport som tvinger `connectNativeBleHeartRate()` (springer transport-picker over) så knappen altid scanner via BLE på iOS i stedet for at falde tilbage til Apple Health.
 
-### 4. Capacitor-konfiguration (informativ — kræver lokal handling)
-- Brugeren skal tilføje i Spotify Developer Dashboard:  
-  Redirect URI: `com.lovable.orbitrun://callback`
-- `ios/App/App/Info.plist` skal have `CFBundleURLTypes` med scheme `com.lovable.orbitrun`. Opdatér `docs/IOS_SETUP.md` med snippet + instruks.
+`src/components/SensorsSection.tsx`
+- Tilføj en primær "Forbind pulsmåler"-CTA øverst i sensors-kortet, der kalder `connectBleDirect()`. Knappen vises både når der ingen device er, og når sidste forsøg fejlede. Eksisterende step-modal og Apple Health fallback bevares.
 
-### 5. Dokumentation
-Opdatér `docs/IOS_SETUP.md`:
-- Plugin-install (`bun add @capacitor/geolocation @capacitor/app @capacitor/browser`)
-- Info.plist purpose-strings (NSLocationWhenInUse..., UIBackgroundModes)
-- `CFBundleURLTypes` block til Spotify-callback
-- Ny redirect URI i Spotify Dashboard
+Heart Rate Service (UUID `0000180d-...`) bruges allerede i `heart-rate-ble-native.ts`.
+
+### 3. GPS — baggrunds-tracking via `@capacitor-community/background-geolocation`
+
+Pakke
+- `bun add @capacitor-community/background-geolocation`
+
+Ny fil `src/lib/background-geolocation.ts`
+- Web-safe wrapper, dynamisk import (samme mønster som `geolocation-native.ts`)
+- Eksporter:
+  - `isBackgroundGeolocationAvailable()`
+  - `startBackgroundWatch(onPos, onError)` → returnerer en `watcherId`
+  - `stopBackgroundWatch(id)`
+- Konfigurerer `backgroundMessage`, `backgroundTitle`, `requestPermissions: true`, `stale: false`, `distanceFilter: 5`.
+
+`src/hooks/use-run-tracker.ts`
+- Brug `startBackgroundWatch` i stedet for `nativeWatchPosition` når pluginnet er tilgængeligt og status er `running`. Falder tilbage til eksisterende `nativeWatchPosition` / `navigator.geolocation` ellers.
+- `stop()` / `pause()` rydder watcheren.
+
+`src/hooks/use-wake-lock.ts` er allerede aktiv — uændret.
+
+`docs/IOS_SETUP.md`
+- Tilføj `UIBackgroundModes: location` + `NSLocationAlwaysAndWhenInUseUsageDescription` instruks samt note om at acceptere "Always" på iOS-prompten.
+
+### 4. UI Lock — ingen rubber-banding/overscroll
+
+`src/styles.css`
+- Tilføj global regel:
+  ```css
+  html, body { overscroll-behavior: none; overflow-x: hidden; }
+  body { position: fixed; inset: 0; overflow: hidden; }
+  #root, .app-scroll { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+  ```
+  (Tilpasses så det ikke knækker eksisterende fixed `BottomNav` — vi pakker root-`<Outlet/>` containeren med en scroll-wrapper i `__root.tsx`.)
+
+`src/routes/__root.tsx`
+- Wrap eksisterende `<div className="min-h-screen pb-24 ...">` i en `app-scroll`-container så scroll sker indenfor — ikke på `body`.
+
+`capacitor.config.ts`
+- Sæt `ios.scrollEnabled: false` for at deaktivere WKWebView's bounce på selve roden (intern scroll fungerer stadig).
 
 ## Filer der ændres
-- `package.json` (deps)
+- `package.json` (3 nye deps)
 - `src/lib/spotify.ts`
-- `src/components/RunMap.tsx` (permission-request på mount)
-- `src/routes/__root.tsx` (mount deep-link listener — eller ny hook `use-spotify-deep-link.ts`)
+- `src/lib/heart-rate-bt.ts`
+- `src/components/SensorsSection.tsx`
+- `src/hooks/use-run-tracker.ts`
+- `src/lib/background-geolocation.ts` (ny)
+- `src/styles.css`
+- `src/routes/__root.tsx`
+- `capacitor.config.ts`
 - `docs/IOS_SETUP.md`
 
-## Tekniske noter
-- Alle Capacitor-imports forbliver dynamiske/lazy så web/SSR-build ikke bryder.
-- Vi rører ikke ved `geolocation-native.ts` — den fejlede kun fordi pluginnet manglede i bundle.
-- `vite.config.ios.ts` behøver ingen ændring; SPA-bundlen vil nu inkludere de tre Capacitor-pakker.
+## Brugerens manuelle steps efter bygning
+1. Spotify Dashboard → tilføj redirect URI `jonas-orbit-run://callback`
+2. Xcode → `Info.plist`:
+   - `CFBundleURLTypes` med scheme `jonas-orbit-run`
+   - `NSBluetoothAlwaysUsageDescription`
+   - `NSLocationAlwaysAndWhenInUseUsageDescription`
+   - `UIBackgroundModes` → `location`, `bluetooth-central`
+3. `bun install && bun run build:ios && npx cap sync ios`
