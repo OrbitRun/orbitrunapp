@@ -41,6 +41,11 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
+import {
+  isBackgroundGeolocationAvailable,
+  startBackgroundWatch,
+  stopBackgroundWatch,
+} from "@/lib/background-geolocation";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -163,6 +168,9 @@ export function useRunTracker() {
   // When running inside a Capacitor native shell, we use the native plugin
   // instead of `navigator.geolocation`. The native watch id is a string.
   const nativeWatchIdRef = useRef<string | null>(null);
+  // Background-geolocation plugin watcher id (iOS/Android, runs while screen
+  // is locked / app in background — requires UIBackgroundModes=location).
+  const bgWatchIdRef = useRef<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const lastSplitKmRef = useRef(0);
   const pauseAccumRef = useRef(0);
@@ -549,7 +557,7 @@ export function useRunTracker() {
     // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
     // when the iOS shell declares the `location` background mode.
     if (isNativeGeolocationAvailable()) {
-      if (nativeWatchIdRef.current != null) return;
+      if (nativeWatchIdRef.current != null || bgWatchIdRef.current != null) return;
       void (async () => {
         const perm = await requestNativeGeolocationPermission();
         if (perm !== "granted") {
@@ -559,6 +567,19 @@ export function useRunTracker() {
         // Immediate single-shot fix for a fast first callback.
         const first = await nativeGetCurrentPosition();
         if (first) handlePosition(toBrowserPosition(first));
+        // Prefer the background-geolocation plugin so tracking continues
+        // when the screen locks or the app is backgrounded. Falls back to
+        // the foreground-only @capacitor/geolocation watcher if unavailable.
+        if (isBackgroundGeolocationAvailable()) {
+          const bgId = await startBackgroundWatch(
+            (pos) => handlePosition(toBrowserPosition(pos)),
+            (err) => handleError({ message: err.message } as GeolocationPositionError),
+          );
+          if (bgId) {
+            bgWatchIdRef.current = bgId;
+            return;
+          }
+        }
         const id = await nativeWatchPosition(
           (pos) => handlePosition(toBrowserPosition(pos)),
           (err) => handleError({ message: err.message } as GeolocationPositionError),
@@ -762,6 +783,11 @@ export function useRunTracker() {
       const id = nativeWatchIdRef.current;
       nativeWatchIdRef.current = null;
       void nativeClearWatch(id);
+    }
+    if (bgWatchIdRef.current != null) {
+      const id = bgWatchIdRef.current;
+      bgWatchIdRef.current = null;
+      void stopBackgroundWatch(id);
     }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
