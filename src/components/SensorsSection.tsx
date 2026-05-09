@@ -16,6 +16,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import {
   clearLastDevice,
+  connectBleDirect,
   connectBtHeartRate,
   connectViaAppleHealth,
   disconnectBtHeartRate,
@@ -215,6 +216,19 @@ export default function SensorsSection() {
               aria-label={t("sensors.forget.aria")}
             >
               {t("sensors.forget")}
+            </button>
+          </div>
+        )}
+        {!connected && supported && (
+          <div className="px-4 py-3">
+            <button
+              type="button"
+              onClick={() => void connectBleDirect()}
+              disabled={busy}
+              className="w-full h-11 rounded-xl bg-neon text-primary-foreground font-black uppercase tracking-wider text-sm active:scale-[0.98] transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              <Bluetooth className="h-4 w-4" />
+              {busy ? t("sensors.row.searching") : "Forbind pulsmåler"}
             </button>
           </div>
         )}
