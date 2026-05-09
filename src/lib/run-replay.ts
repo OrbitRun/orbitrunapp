@@ -35,33 +35,34 @@ export type ReplaySeries = {
 const PACE_WINDOW_MS = 10_000;
 const ALT_EMA_ALPHA = 0.25;
 
-// Color stops in oklch (neon -> amber -> red).
-const C_FAST = "oklch(0.92 0.21 130)";
-const C_MID = "oklch(0.85 0.17 85)";
-const C_SLOW = "oklch(0.65 0.22 25)";
+// Color stops as hex (Mapbox GL cannot parse oklch()).
+// neon (fast) -> amber (mid) -> red (slow).
+const C_FAST = "#C6F432";
+const C_MID = "#F5C242";
+const C_SLOW = "#E5484D";
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-// Parse "oklch(L C H)" to numbers.
-function parseOklch(s: string): [number, number, number] {
-  const m = s.match(/oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\)/);
-  if (!m) return [0.85, 0.18, 90];
-  return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])];
+function parseHex(s: string): [number, number, number] {
+  const h = s.replace("#", "");
+  return [
+    parseInt(h.slice(0, 2), 16),
+    parseInt(h.slice(2, 4), 16),
+    parseInt(h.slice(4, 6), 16),
+  ];
 }
 
-function mixOklch(a: string, b: string, t: number): string {
-  const [la, ca, ha] = parseOklch(a);
-  const [lb, cb, hb] = parseOklch(b);
-  // Shortest hue path
-  let dh = hb - ha;
-  if (dh > 180) dh -= 360;
-  if (dh < -180) dh += 360;
-  const L = lerp(la, lb, t);
-  const C = lerp(ca, cb, t);
-  const H = (ha + dh * t + 360) % 360;
-  return `oklch(${L.toFixed(3)} ${C.toFixed(3)} ${H.toFixed(2)})`;
+function toHex(n: number): string {
+  const v = Math.max(0, Math.min(255, Math.round(n)));
+  return v.toString(16).padStart(2, "0");
+}
+
+function mixHex(a: string, b: string, t: number): string {
+  const [ar, ag, ab] = parseHex(a);
+  const [br, bg, bb] = parseHex(b);
+  return `#${toHex(lerp(ar, br, t))}${toHex(lerp(ag, bg, t))}${toHex(lerp(ab, bb, t))}`;
 }
 
 /** Map pace (sec/km) to a color along fast→mid→slow. Lower pace = faster. */
@@ -72,8 +73,8 @@ export function paceColor(
 ): string {
   if (!Number.isFinite(pace) || paceMax <= paceMin) return C_MID;
   const t = Math.max(0, Math.min(1, (pace - paceMin) / (paceMax - paceMin)));
-  if (t < 0.5) return mixOklch(C_FAST, C_MID, t / 0.5);
-  return mixOklch(C_MID, C_SLOW, (t - 0.5) / 0.5);
+  if (t < 0.5) return mixHex(C_FAST, C_MID, t / 0.5);
+  return mixHex(C_MID, C_SLOW, (t - 0.5) / 0.5);
 }
 
 function percentile(sorted: number[], p: number): number {
