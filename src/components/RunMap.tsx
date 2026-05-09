@@ -103,26 +103,28 @@ function RunMapInner({
           type: "geojson",
           data: { type: "FeatureCollection", features: [] },
         });
-        // Subtle 1px dark border underneath the neon line for high contrast
-        // against the dark map background. Strictly no glow.
-        map.addLayer({
-          id: "run-line-border",
-          type: "line",
-          source: "run-line",
-          layout: { "line-cap": "round", "line-join": "round" },
-          paint: {
-            "line-width": 6,
-            "line-color": "#000",
-            "line-opacity": 0.55,
-          },
-        });
+        if (!heatmap) {
+          // Live mode: neon glow underlay for clear visibility on the dark map.
+          map.addLayer({
+            id: "run-line-glow",
+            type: "line",
+            source: "run-line",
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: {
+              "line-width": 14,
+              "line-color": neon,
+              "line-opacity": 0.35,
+              "line-blur": 8,
+            },
+          });
+        }
         map.addLayer({
           id: "run-line-main",
           type: "line",
           source: "run-line",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
-            "line-width": 4,
+            "line-width": 5,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "line-color": (heatmap ? (["coalesce", ["get", "color"], neon] as any) : neon),
             "line-opacity": 1,
