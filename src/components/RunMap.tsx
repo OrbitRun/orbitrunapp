@@ -12,6 +12,7 @@ import {
   nativeClearWatch,
   nativeGetCurrentPosition,
   nativeWatchPosition,
+  requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
 
