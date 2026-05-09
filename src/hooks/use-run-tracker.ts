@@ -617,7 +617,7 @@ export function useRunTracker() {
   const warmGps = useCallback(() => {
     // Native: just call armGps — the plugin handles permission state.
     if (isNativeGeolocationAvailable()) {
-      if (nativeWatchIdRef.current != null) return;
+      if (nativeWatchIdRef.current != null || bgWatchIdRef.current != null) return;
       armGps();
       return;
     }
