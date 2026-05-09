@@ -63,9 +63,12 @@ function RunMapInner({
   const headRef = useRef<MapboxNS.Marker | null>(null);
   const ghostMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const highlightMarkerRef = useRef<MapboxNS.Marker | null>(null);
+  const userLocMarkerRef = useRef<MapboxNS.Marker | null>(null);
+  const userLocCenteredRef = useRef(false);
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
