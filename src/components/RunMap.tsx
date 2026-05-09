@@ -156,10 +156,97 @@ function RunMapInner({
       ghostMarkerRef.current = null;
       highlightMarkerRef.current?.remove();
       highlightMarkerRef.current = null;
+      userLocMarkerRef.current?.remove();
+      userLocMarkerRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
     };
   }, [interactive, heatmap]);
+
+  // GPS warm-up: subscribe to user location before a run starts so the map
+  // can center immediately and we keep the GPS chip warm for an accurate
+  // first fix when the runner taps Start.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (points.length > 0) return; // run started — tracker takes over
+    let cancelled = false;
+    let webWatchId: number | null = null;
+    let nativeId: string | null = null;
+
+    const onPos = (lat: number, lng: number) => {
+      if (cancelled) return;
+      setUserLoc({ lat, lng });
+    };
+
+    (async () => {
+      if (isNativeGeolocationAvailable()) {
+        const first = await nativeGetCurrentPosition();
+        if (first && !cancelled) {
+          const b = toBrowserPosition(first);
+          onPos(b.coords.latitude, b.coords.longitude);
+        }
+        nativeId = await nativeWatchPosition(
+          (p) => {
+            const b = toBrowserPosition(p);
+            onPos(b.coords.latitude, b.coords.longitude);
+          },
+          () => {},
+        );
+      } else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (p) => onPos(p.coords.latitude, p.coords.longitude),
+          () => {},
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 },
+        );
+        webWatchId = navigator.geolocation.watchPosition(
+          (p) => onPos(p.coords.latitude, p.coords.longitude),
+          () => {},
+          { enableHighAccuracy: true, maximumAge: 2000 },
+        );
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (webWatchId != null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(webWatchId);
+      }
+      if (nativeId) void nativeClearWatch(nativeId);
+    };
+  }, [points.length]);
+
+  // Render pulsating neon user-location marker (only before a run).
+  useEffect(() => {
+    const map = mapRef.current;
+    const M = MRef.current;
+    if (!map || !M || !ready) return;
+    if (points.length > 0 || !userLoc) {
+      userLocMarkerRef.current?.remove();
+      userLocMarkerRef.current = null;
+      return;
+    }
+    if (!userLocMarkerRef.current) {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "position:relative;width:14px;height:14px;border-radius:9999px;background:#C6F432;border:2px solid #0a0a0a;box-shadow:0 0 10px #C6F432;";
+      const halo = document.createElement("div");
+      halo.style.cssText =
+        "position:absolute;inset:-6px;border-radius:9999px;background:#C6F432;opacity:0.35;animation:user-loc-pulse 1.6s ease-out infinite;";
+      el.appendChild(halo);
+      userLocMarkerRef.current = new M.Marker({ element: el })
+        .setLngLat([userLoc.lng, userLoc.lat])
+        .addTo(map);
+    } else {
+      userLocMarkerRef.current.setLngLat([userLoc.lng, userLoc.lat]);
+    }
+    // Center on the very first user fix; afterwards follow if user hasn't panned.
+    if (!userLocCenteredRef.current) {
+      userLocCenteredRef.current = true;
+      map.easeTo({ center: [userLoc.lng, userLoc.lat], zoom: 16, duration: 600 });
+    } else if (follow && !userMoved) {
+      map.easeTo({ center: [userLoc.lng, userLoc.lat], duration: 800 });
+    }
+  }, [userLoc, ready, points.length, follow, userMoved]);
 
   // Scrubber highlight marker — pulsing neon dot at the synced HR sample.
   useEffect(() => {
