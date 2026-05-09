@@ -32,10 +32,10 @@ export default function RunMap(props: Props) {
 
 // Resolve the neon green primary token at runtime so the path matches the
 // rest of the Orbit Run aesthetic without hard-coding hex values.
+// Mapbox GL's color parser does not handle oklch() — return a hex equivalent
+// of the neon token so layers render correctly instead of falling back to black.
 function readNeonColor(): string {
-  if (typeof window === "undefined") return "#9aff1f";
-  const v = getComputedStyle(document.documentElement).getPropertyValue("--neon").trim();
-  return v || "oklch(0.92 0.21 130)";
+  return "#C6F432";
 }
 
 function RunMapInner({
