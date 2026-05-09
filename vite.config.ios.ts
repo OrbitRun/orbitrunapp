@@ -19,9 +19,10 @@ export default defineConfig({
     spa: {
       enabled: true,
       prerender: {
-        // Generér kun shell index.html — ingen crawl af loaders/server fns.
+        // Generér en statisk index.html (SPA shell) — ingen crawl af loaders.
         enabled: true,
-        outputPath: "/",
+        outputPath: "/index",
+        autoSubfolderIndex: false,
         crawlLinks: false,
       },
     },
