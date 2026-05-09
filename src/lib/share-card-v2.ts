@@ -105,7 +105,7 @@ function drawFallbackRoute(ctx: CanvasRenderingContext2D, run: Run) {
     y: offY + (maxLat - p.lat) * scale,
   }));
   ctx.strokeStyle = NEON;
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   ctx.beginPath();

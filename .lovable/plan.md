@@ -1,24 +1,41 @@
-## Change
+## Goal
 
-Replace the large round Start button on the run page (`src/routes/index.tsx`, the idle/finished state inside the bottom controls section, ~lines 427–438) with a slim full-width pill button styled like the "Vis dagens pas" CTA in `CoachCard.tsx`:
+Gøre løberuter visuelt konsistente: tempo-farvet i historikken, neongrøn med glød under live-løb, og ensartet stregtykkelse på tværs af live, historik og share-billeder.
 
-```
-className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl
-           bg-neon/10 border border-neon/30 text-neon text-xs font-black
-           uppercase tracking-[0.15em] hover:bg-neon/15 active:scale-[0.98] transition"
-```
+## Changes
 
-- Icon: `Play` (h-3.5 w-3.5), label from i18n key.
-- Keeps existing `beginCountdown` handler.
-- Drops the absolute-positioned label underneath (no longer needed on a pill).
-- Pause / Resume / Stop buttons (running state) stay unchanged.
+### 1. `src/components/RunMap.tsx` — fjern den dominerende sorte border + tilføj glød
 
-### i18n
-Add new key `ctrl.start.run`:
-- en: "Start run"
-- da: "Start løb"
+Den nuværende opsætning lægger en 6px helt sort linje under en 4px farvet linje. Det betyder at:
+- I **heatmap-mode** (historik) bliver tempo-farverne visuelt overdøvet af den sorte ramme — det er det, der får ruten til at se "sort" ud.
+- I **live-mode** ses neonen ikke som neon, fordi den sorte ramme stjæler kontrasten.
 
-(Keep existing `ctrl.start` since it's used as `aria-label` elsewhere; the new pill uses the new key for its visible label and `aria-label`.)
+Opdater `map.on("load", …)` blokken (lines 99–132):
 
-### Verification
-On `/` in idle state, the bottom shows a slim neon-outline pill "START LØB" / "START RUN" matching the Coach CTA. Tapping it still triggers the countdown → run start flow.
+- **Heatmap-mode (historik):** drop den sorte border helt. Render kun det farvede segment-lag (`line-width: 5`, `line-cap/join: round`, `line-color` fra `properties.color`). Farvegradienten fra `buildPaceSegmentsFromPoints` (neon → amber → rød) er allerede den samme skala som legenden under kortet.
+- **Live-mode (ikke-heatmap):** erstat den sorte border med et neon glow-lag, og hold hovedlinjen neongrøn:
+  - Glow-lag: `line-width: 14`, `line-color: <neon>`, `line-opacity: 0.35`, `line-blur: 8`.
+  - Hovedlinje: `line-width: 5`, `line-color: <neon>`, `line-opacity: 1`.
+- Begge modes: brug `line-cap: round`, `line-join: round`.
+
+Logikken splittes pænt ved at branchge på `heatmap`-prop'en når lagene tilføjes (eller via `paint`-betingede expressions). Holder eksisterende `readNeonColor()`-helper.
+
+### 2. `src/lib/share-card-v2.ts` — ensartet stregtykkelse
+
+Ændr `ctx.lineWidth = 8` (line 108) til `ctx.lineWidth = 5` for at matche kort-stregen. Glow er ikke nødvendigt på share-card (statisk billede), men `strokeStyle = NEON` beholdes.
+
+### 3. Ingen ændringer i opkaldssites
+`history.tsx` og `RunSummary.tsx` bruger allerede `heatmap`-prop'en korrekt; `FocusRunView.tsx` bruger live-mode (uden heatmap). Ingen call-site ændringer.
+
+## Visuelt resultat
+
+- **Historik & run-summary:** ruten skinner i tempo-farver fra neon (hurtig) → rød (langsom), perfekt matchet med legenden under kortet. Ingen sort overlay.
+- **Live-løb:** klar neongrøn streg med blød glød oven på det mørke Mapbox-tema — meget mere "alive".
+- **Share-kort:** samme neon, samme 5px tykkelse → konsistent brand-look.
+
+## Verifikation
+
+1. `/` → start et løb → kortet viser neongrøn streg med glow.
+2. `/history` → kortene viser farvede ruter (ikke sorte) der matcher fast/slow legenden.
+3. Åbn et historisk løb → samme tempo-heatmap i `RunSummary`.
+4. Trigger share-card export → PNG'en har 5px neon-rute uden synlig sort kant.
