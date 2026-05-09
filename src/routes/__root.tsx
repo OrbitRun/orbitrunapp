@@ -97,12 +97,10 @@ function RootComponent() {
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
     <I18nProvider>
-      <div className="app-scroll">
-        <div className="min-h-screen pb-24 mb-[30px]">
-          <Outlet />
-          <BottomNav />
-          <PrAchievement />
-        </div>
+      <div className="min-h-screen pb-24 mb-[30px]">
+        <Outlet />
+        <BottomNav />
+        <PrAchievement />
       </div>
       <SplashScreen />
     </I18nProvider>
