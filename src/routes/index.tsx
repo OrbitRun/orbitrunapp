@@ -259,10 +259,10 @@ function RunPage() {
             <GpsSignalChip accuracyM={t.gpsAccuracyM} />
           </div>
         )}
-        {t.points.length === 0 && (
-          <div className="absolute inset-0 grid place-items-center pointer-events-none">
-            <div className="glass-strong rounded-2xl px-4 py-2 text-xs text-muted-foreground">
-              {t.permissionError ?? tr("map.placeholder")}
+        {t.points.length === 0 && t.permissionError && (
+          <div className="absolute inset-x-3 top-3 pointer-events-none">
+            <div className="glass-strong rounded-xl px-3 py-1.5 text-[11px] text-destructive text-center">
+              {t.permissionError}
             </div>
           </div>
         )}
