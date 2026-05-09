@@ -11,9 +11,15 @@ Worker bundle, so these are NOT added to the web `package.json`):
 
 ```bash
 bun add @capacitor/core @capacitor/ios @capacitor/geolocation \
+  @capacitor/app @capacitor/browser \
   @capacitor-community/health @capacitor-community/bluetooth-le
 bun add -d @capacitor/cli
 ```
+
+> `@capacitor/app` + `@capacitor/browser` are required for the Spotify
+> OAuth flow on iOS — the auth page opens in an in-app browser and the
+> redirect comes back via the `com.lovable.orbitrun://callback` URL scheme
+> (see section 5 below).
 
 > `@capacitor/geolocation` enables true high-accuracy background GPS on iOS
 > (`kCLLocationAccuracyBestForNavigation`) and Android (`PRIORITY_HIGH_ACCURACY`).
