@@ -463,6 +463,28 @@ export async function connectBtHeartRate(): Promise<BtHrState> {
   return state;
 }
 
+/**
+ * Force a direct BLE pairing flow on iOS/Android (skips Apple Health
+ * fallback). Used by the "Forbind pulsmåler" CTA so users always get the
+ * native chooser even when Apple Health would otherwise be picked.
+ */
+export async function connectBleDirect(): Promise<BtHrState> {
+  teardownTransport();
+  if (isNativeBleAvailable()) {
+    activeTransport = "native";
+    bridgeNativeState();
+    const s = await connectNativeBleHeartRate();
+    setState({ ...s });
+    return state;
+  }
+  if (isWebBluetoothSupported()) {
+    activeTransport = "web";
+    return await _webConnect();
+  }
+  setState({ status: "unsupported", error: "Bluetooth not available on this device." });
+  return state;
+}
+
 /** Explicit Apple Health fallback (for "Use Apple Health" button). */
 export async function connectViaAppleHealth(): Promise<BtHrState> {
   if (!isHealthAvailable()) {
