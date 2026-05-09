@@ -18,7 +18,7 @@ bun add -d @capacitor/cli
 
 > `@capacitor/app` + `@capacitor/browser` are required for the Spotify
 > OAuth flow on iOS — the auth page opens in an in-app browser and the
-> redirect comes back via the `com.lovable.orbitrun://callback` URL scheme
+> redirect comes back via the `orbitrunapp://callback` URL scheme
 > (see section 5 below).
 
 > `@capacitor/geolocation` enables true high-accuracy background GPS on iOS
@@ -89,8 +89,9 @@ In Xcode:
 ## 5. Spotify OAuth — custom URL scheme
 
 Inside the iOS shell the web origin (`capacitor://localhost`) is not a valid
-Spotify Redirect URI. The app uses a custom URL scheme instead:
-`com.lovable.orbitrun://callback`.
+Spotify Redirect URI, and using a generic scheme like `capacitor://` can
+collide with other Capacitor apps installed on the device (e.g. Bookli). The
+app uses a unique custom URL scheme: `orbitrunapp://callback`.
 
 **a) Register the scheme in `ios/App/App/Info.plist`:**
 ```xml
@@ -98,10 +99,10 @@ Spotify Redirect URI. The app uses a custom URL scheme instead:
 <array>
   <dict>
     <key>CFBundleURLName</key>
-    <string>com.lovable.orbitrun</string>
+    <string>com.orbitrun.app</string>
     <key>CFBundleURLSchemes</key>
     <array>
-      <string>com.lovable.orbitrun</string>
+      <string>orbitrunapp</string>
     </array>
   </dict>
 </array>
@@ -111,7 +112,7 @@ Spotify Redirect URI. The app uses a custom URL scheme instead:
 (`https://developer.spotify.com/dashboard` → your app → Edit Settings →
 Redirect URIs):
 ```
-com.lovable.orbitrun://callback
+orbitrunapp://callback
 ```
 Keep your existing web URI (`https://orbitrunapp.lovable.app/spotify/callback`)
 alongside it so the web build still works.
