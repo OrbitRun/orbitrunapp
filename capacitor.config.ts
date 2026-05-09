@@ -27,7 +27,7 @@ const config: CapacitorConfig = {
     // inject Info.plist keys from this file. See docs/IOS_SETUP.md for the
     // full list (Health, Location, Motion, Bluetooth + UIBackgroundModes).
     //
-    // Custom URL scheme for Spotify OAuth callback (`jonas-orbitrun-app://callback`)
+    // Custom URL scheme for Spotify OAuth callback (`jonas-orbit-run://callback`)
     // is also declared in Info.plist via CFBundleURLTypes — see §5 of
     // docs/IOS_SETUP.md. Using a unique scheme (not `capacitor://`) avoids
     // collisions with other Capacitor apps on the same device.
