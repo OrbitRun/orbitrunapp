@@ -10,11 +10,11 @@ In a local clone of the project (Capacitor cannot run in the Cloudflare
 Worker bundle, so these are NOT added to the web `package.json`):
 
 ```bash
-bun add @capacitor/core @capacitor/ios @capacitor/geolocation \
+npm install @capacitor/core @capacitor/ios @capacitor/geolocation \
   @capacitor/app @capacitor/browser \
   @capacitor-community/health @capacitor-community/bluetooth-le \
   @capacitor-community/background-geolocation
-bun add -d @capacitor/cli
+npm install -D @capacitor/cli
 ```
 
 > `@capacitor/app` + `@capacitor/browser` are required for the Spotify
@@ -39,7 +39,7 @@ bun add -d @capacitor/cli
 ## 2. Add the iOS platform
 
 ```bash
-bun run build              # produces dist/client (matches webDir)
+npm run build              # produces dist/index.html (matches webDir)
 npx cap add ios
 npx cap sync ios
 ```
@@ -132,7 +132,7 @@ closes the browser.
 Whenever the web app is updated:
 
 ```bash
-bun run build:ios
+npm run build
 npx cap sync ios
 ```
 
@@ -171,8 +171,8 @@ tracking when the screen is locked.
 Run locally (Cloudflare Worker can't host the iOS shell):
 
 ```bash
-bun install
-bun run build         # produces dist/client (matches webDir)
+npm install
+npm run build         # produces dist/index.html (matches webDir)
 npx cap add ios       # first time only
 npx cap sync ios      # every time the web app changes
 npx cap open ios      # Archive → TestFlight

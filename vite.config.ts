@@ -1,9 +1,44 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... } }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-export default defineConfig();
+export default defineConfig({
+  // Capacitor skal bruge en ren statisk web-build med index.html direkte i dist.
+  cloudflare: false,
+  tanstackStart: {
+    spa: {
+      enabled: true,
+      maskPath: "/",
+      prerender: {
+        enabled: true,
+        outputPath: "/index",
+        autoSubfolderIndex: false,
+        crawlLinks: false,
+      },
+    },
+    prerender: {
+      enabled: true,
+      crawlLinks: false,
+      failOnError: true,
+    },
+    sitemap: {
+      enabled: false,
+    },
+  },
+  vite: {
+    build: {
+      outDir: "dist",
+      emptyOutDir: true,
+    },
+    environments: {
+      client: {
+        build: {
+          outDir: "dist",
+        },
+      },
+      ssr: {
+        build: {
+          outDir: "dist/.server",
+        },
+      },
+    },
+  },
+});
