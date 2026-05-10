@@ -234,7 +234,19 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const j = await res.json();
+      detail = j?.error_description || j?.error || "";
+    } catch {
+      /* ignore */
+    }
+    throw new Error(
+      `Spotify token exchange failed (${res.status})${detail ? `: ${detail}` : ""}. ` +
+        `Check that "${getRedirectUri()}" is added as a Redirect URI in the Spotify Developer Dashboard.`,
+    );
+  }
   const data = await res.json();
   const tok: SpotifyToken = {
     access_token: data.access_token,
