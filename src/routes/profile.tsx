@@ -390,6 +390,59 @@ function ProfilePage() {
         </button>
       </section>
 
+      {/* Notifications */}
+      <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {lang === "da" ? "Notifikationer" : "Notifications"}
+        </div>
+        <NotificationToggleRow
+          icon={<Bell className="h-4 w-4" />}
+          label={lang === "da" ? "Træningspåmindelser" : "Training reminders"}
+          description={
+            lang === "da"
+              ? "Påmind mig hvis jeg ikke har løbet i 2 dage"
+              : "Remind me if I haven't run for 2 days"
+          }
+          enabled={!!profile.trainingReminderEnabled}
+          onToggle={async (next) => {
+            if (next) {
+              const ok = await ensureNotificationPermission();
+              if (!ok) {
+                toast.error(lang === "da" ? "Tilladelse afvist" : "Permission denied");
+                return;
+              }
+              await scheduleInactivityReminder();
+            } else {
+              await cancelInactivityReminder();
+            }
+            update({ trainingReminderEnabled: next });
+          }}
+        />
+        <NotificationToggleRow
+          icon={<Bell className="h-4 w-4" />}
+          label={lang === "da" ? "Ugentlig opsummering" : "Weekly summary"}
+          description={
+            lang === "da"
+              ? "Hver mandag kl. 09:00"
+              : "Every Monday at 09:00"
+          }
+          enabled={!!profile.weeklySummaryEnabled}
+          onToggle={async (next) => {
+            if (next) {
+              const ok = await ensureNotificationPermission();
+              if (!ok) {
+                toast.error(lang === "da" ? "Tilladelse afvist" : "Permission denied");
+                return;
+              }
+              await scheduleWeeklySummary();
+            } else {
+              await cancelWeeklySummary();
+            }
+            update({ weeklySummaryEnabled: next });
+          }}
+        />
+      </section>
+
       {/* Legal */}
       <section className="mt-6 glass rounded-2xl divide-y divide-border">
         <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
