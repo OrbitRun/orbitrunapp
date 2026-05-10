@@ -34,7 +34,7 @@ export default defineConfig({
           outDir: "dist",
         },
       },
-      server: {
+      ssr: {
         build: {
           outDir: "dist/.server",
         },
