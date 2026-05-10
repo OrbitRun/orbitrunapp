@@ -767,3 +767,30 @@ function MyProfileSection({
     </>
   );
 }
+
+function NotificationToggleRow({
+  icon,
+  label,
+  description,
+  enabled,
+  onToggle,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  enabled: boolean;
+  onToggle: (next: boolean) => void | Promise<void>;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-xs text-muted-foreground truncate">{description}</div>
+      </div>
+      <Switch checked={enabled} onCheckedChange={(v) => { void onToggle(v); }} />
+    </div>
+  );
+}
