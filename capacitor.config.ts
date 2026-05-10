@@ -5,7 +5,7 @@
 //
 // Final export checklist (run locally before opening Xcode):
 //   bun install
-//   bun run build         # produces dist/client (matches webDir)
+//   npm run build         # produces dist/index.html (matches webDir)
 //   npx cap add ios       # first time only
 //   npx cap sync ios      # every time the web app changes
 //   npx cap open ios      # Archive → TestFlight
@@ -22,8 +22,8 @@ type CapacitorConfig = {
 const config: CapacitorConfig = {
   appId: "com.orbitrun.app",
   appName: "Orbit Run",
-  // TanStack Start's Vite build outputs to dist/client — do NOT change to "dist".
-  webDir: "dist/client",
+  // Standard SPA build outputs index.html directly in dist for Capacitor.
+  webDir: "dist",
   ios: {
     contentInset: "always",
     // Disable WKWebView rubber-banding/overscroll so the user can't drag
