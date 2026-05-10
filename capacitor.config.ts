@@ -4,7 +4,7 @@
 // locally before running `npx cap` commands.
 //
 // Final export checklist (run locally before opening Xcode):
-//   bun install
+//   npm install
 //   npm run build         # produces dist/index.html (matches webDir)
 //   npx cap add ios       # first time only
 //   npx cap sync ios      # every time the web app changes
