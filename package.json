@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build --config vite.config.ios.ts",
-    "build:ssr": "vite build",
+    "build": "vite build",
+    "build:ssr": "vite build --config vite.config.ssr.ts",
     "build:dev": "vite build --mode development",
-    "build:ios": "vite build --config vite.config.ios.ts",
+    "build:ios": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
