@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && rm -rf dist/.server",
-    "build:ssr": "vite build --config vite.config.ssr.ts",
+    "build": "vite build && node scripts/prepare-capacitor-build.mjs",
     "build:dev": "vite build --mode development",
-    "build:ios": "vite build && rm -rf dist/.server",
+    "build:ios": "npm run build",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
