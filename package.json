@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build --config vite.config.ios.ts",
+    "build:ssr": "vite build",
     "build:dev": "vite build --mode development",
     "build:ios": "vite build --config vite.config.ios.ts",
     "preview": "vite preview",
