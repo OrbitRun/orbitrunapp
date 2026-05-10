@@ -10,11 +10,11 @@ In a local clone of the project (Capacitor cannot run in the Cloudflare
 Worker bundle, so these are NOT added to the web `package.json`):
 
 ```bash
-bun add @capacitor/core @capacitor/ios @capacitor/geolocation \
+npm install @capacitor/core @capacitor/ios @capacitor/geolocation \
   @capacitor/app @capacitor/browser \
   @capacitor-community/health @capacitor-community/bluetooth-le \
   @capacitor-community/background-geolocation
-bun add -d @capacitor/cli
+npm install -D @capacitor/cli
 ```
 
 > `@capacitor/app` + `@capacitor/browser` are required for the Spotify
