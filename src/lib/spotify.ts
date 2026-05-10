@@ -177,12 +177,17 @@ export function initSpotifyDeepLinkListener(): () => void {
       if (!App?.addListener || cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const handle: any = await App.addListener("appUrlOpen", async (event: { url: string }) => {
-        if (!event?.url || !event.url.startsWith("jonas-orbit-run://")) return;
+        if (!event?.url || !event.url.toLowerCase().startsWith("jonas-orbit-run://")) return;
         try {
-          // URL parses fine even with a custom scheme.
+          // Custom schemes parse fine with `new URL`, but some iOS versions
+          // deliver the query in the fragment (`#code=...`). Handle both.
           const parsed = new URL(event.url);
-          const code = parsed.searchParams.get("code");
-          const err = parsed.searchParams.get("error");
+          const fragmentParams = new URLSearchParams(
+            parsed.hash.startsWith("#") ? parsed.hash.slice(1) : parsed.hash,
+          );
+          const code = parsed.searchParams.get("code") ?? fragmentParams.get("code");
+          const err =
+            parsed.searchParams.get("error") ?? fragmentParams.get("error");
           if (Browser?.close) {
             try { await Browser.close(); } catch { /* noop */ }
           }
@@ -229,7 +234,19 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
   });
-  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`);
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const j = await res.json();
+      detail = j?.error_description || j?.error || "";
+    } catch {
+      /* ignore */
+    }
+    throw new Error(
+      `Spotify token exchange failed (${res.status})${detail ? `: ${detail}` : ""}. ` +
+        `Check that "${getRedirectUri()}" is added as a Redirect URI in the Spotify Developer Dashboard.`,
+    );
+  }
   const data = await res.json();
   const tok: SpotifyToken = {
     access_token: data.access_token,
