@@ -142,6 +142,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   autoPauseEnabled: true,
   flightRecorderEnabled: true,
   countdownSeconds: 10,
+  trainingReminderEnabled: false,
+  weeklySummaryEnabled: false,
 };
 
 export function loadProfile(): UserProfile {
