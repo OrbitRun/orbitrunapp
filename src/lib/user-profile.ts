@@ -123,6 +123,9 @@ export type UserProfile = {
   // crash, refresh, or connectivity drop never loses the data.
   flightRecorderEnabled?: boolean;
   countdownSeconds?: CountdownSeconds;
+  // Local notifications (scheduled via @capacitor/local-notifications).
+  trainingReminderEnabled?: boolean;
+  weeklySummaryEnabled?: boolean;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
