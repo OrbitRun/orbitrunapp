@@ -13,6 +13,7 @@ type CapacitorConfig = {
   appId: string;
   appName: string;
   webDir: string;
+  urlSchemes?: string[];
   ios?: {
     contentInset?: "always" | "automatic" | "never" | "scrollableAxes";
     scrollEnabled?: boolean;
@@ -24,6 +25,8 @@ const config: CapacitorConfig = {
   appName: "Orbit Run",
   // Standard SPA build outputs index.html directly in dist for Capacitor.
   webDir: "dist",
+  // Must match CFBundleURLSchemes in ios/App/App/Info.plist.
+  urlSchemes: ["jonas-orbit-run"],
   ios: {
     contentInset: "always",
     // Disable WKWebView rubber-banding/overscroll so the user can't drag
