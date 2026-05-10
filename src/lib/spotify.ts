@@ -177,12 +177,17 @@ export function initSpotifyDeepLinkListener(): () => void {
       if (!App?.addListener || cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const handle: any = await App.addListener("appUrlOpen", async (event: { url: string }) => {
-        if (!event?.url || !event.url.startsWith("jonas-orbit-run://")) return;
+        if (!event?.url || !event.url.toLowerCase().startsWith("jonas-orbit-run://")) return;
         try {
-          // URL parses fine even with a custom scheme.
+          // Custom schemes parse fine with `new URL`, but some iOS versions
+          // deliver the query in the fragment (`#code=...`). Handle both.
           const parsed = new URL(event.url);
-          const code = parsed.searchParams.get("code");
-          const err = parsed.searchParams.get("error");
+          const fragmentParams = new URLSearchParams(
+            parsed.hash.startsWith("#") ? parsed.hash.slice(1) : parsed.hash,
+          );
+          const code = parsed.searchParams.get("code") ?? fragmentParams.get("code");
+          const err =
+            parsed.searchParams.get("error") ?? fragmentParams.get("error");
           if (Browser?.close) {
             try { await Browser.close(); } catch { /* noop */ }
           }
