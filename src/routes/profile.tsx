@@ -47,6 +47,14 @@ import {
   type WindUnit,
 } from "@/lib/user-profile";
 import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
+import {
+  ensurePermission as ensureNotificationPermission,
+  scheduleInactivityReminder,
+  cancelInactivityReminder,
+  scheduleWeeklySummary,
+  cancelWeeklySummary,
+} from "@/lib/notifications";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
