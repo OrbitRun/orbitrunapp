@@ -902,6 +902,10 @@ export function useRunTracker() {
       /* TRIMP is non-critical */
     }
     saveRun(run);
+    // Reset 2-day inactivity reminder when a run is logged.
+    if (loadProfile().trainingReminderEnabled) {
+      void import("@/lib/notifications").then((m) => m.scheduleInactivityReminder());
+    }
     // Backfill weather if the in-flight fetch never completed before stop().
     if (!run.weather && run.points.length > 0) {
       const seed = run.points[0];

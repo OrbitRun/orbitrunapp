@@ -47,6 +47,14 @@ import {
   type WindUnit,
 } from "@/lib/user-profile";
 import { defaultConfig, loadHrZones, saveHrZones } from "@/lib/hr-zones-config";
+import {
+  ensurePermission as ensureNotificationPermission,
+  scheduleInactivityReminder,
+  cancelInactivityReminder,
+  scheduleWeeklySummary,
+  cancelWeeklySummary,
+} from "@/lib/notifications";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -390,6 +398,59 @@ function ProfilePage() {
         </button>
       </section>
 
+      {/* Notifications */}
+      <section className="mt-4 glass rounded-2xl divide-y divide-border">
+        <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
+          {lang === "da" ? "Notifikationer" : "Notifications"}
+        </div>
+        <NotificationToggleRow
+          icon={<Bell className="h-4 w-4" />}
+          label={lang === "da" ? "Træningspåmindelser" : "Training reminders"}
+          description={
+            lang === "da"
+              ? "Påmind mig hvis jeg ikke har løbet i 2 dage"
+              : "Remind me if I haven't run for 2 days"
+          }
+          enabled={!!profile.trainingReminderEnabled}
+          onToggle={async (next) => {
+            if (next) {
+              const ok = await ensureNotificationPermission();
+              if (!ok) {
+                toast.error(lang === "da" ? "Tilladelse afvist" : "Permission denied");
+                return;
+              }
+              await scheduleInactivityReminder();
+            } else {
+              await cancelInactivityReminder();
+            }
+            update({ trainingReminderEnabled: next });
+          }}
+        />
+        <NotificationToggleRow
+          icon={<Bell className="h-4 w-4" />}
+          label={lang === "da" ? "Ugentlig opsummering" : "Weekly summary"}
+          description={
+            lang === "da"
+              ? "Hver mandag kl. 09:00"
+              : "Every Monday at 09:00"
+          }
+          enabled={!!profile.weeklySummaryEnabled}
+          onToggle={async (next) => {
+            if (next) {
+              const ok = await ensureNotificationPermission();
+              if (!ok) {
+                toast.error(lang === "da" ? "Tilladelse afvist" : "Permission denied");
+                return;
+              }
+              await scheduleWeeklySummary();
+            } else {
+              await cancelWeeklySummary();
+            }
+            update({ weeklySummaryEnabled: next });
+          }}
+        />
+      </section>
+
       {/* Legal */}
       <section className="mt-6 glass rounded-2xl divide-y divide-border">
         <div className="px-4 pt-3 pb-2 text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
@@ -704,5 +765,32 @@ function MyProfileSection({
         </div>
       </section>
     </>
+  );
+}
+
+function NotificationToggleRow({
+  icon,
+  label,
+  description,
+  enabled,
+  onToggle,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  enabled: boolean;
+  onToggle: (next: boolean) => void | Promise<void>;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <div className="h-9 w-9 rounded-xl bg-white/5 grid place-items-center text-neon">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-xs text-muted-foreground truncate">{description}</div>
+      </div>
+      <Switch checked={enabled} onCheckedChange={(v) => { void onToggle(v); }} />
+    </div>
   );
 }

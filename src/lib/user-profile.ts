@@ -123,6 +123,9 @@ export type UserProfile = {
   // crash, refresh, or connectivity drop never loses the data.
   flightRecorderEnabled?: boolean;
   countdownSeconds?: CountdownSeconds;
+  // Local notifications (scheduled via @capacitor/local-notifications).
+  trainingReminderEnabled?: boolean;
+  weeklySummaryEnabled?: boolean;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -139,6 +142,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   autoPauseEnabled: true,
   flightRecorderEnabled: true,
   countdownSeconds: 10,
+  trainingReminderEnabled: false,
+  weeklySummaryEnabled: false,
 };
 
 export function loadProfile(): UserProfile {
