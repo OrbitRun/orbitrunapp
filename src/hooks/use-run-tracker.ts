@@ -552,7 +552,7 @@ export function useRunTracker() {
     // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
     // when the iOS shell declares the `location` background mode.
     if (isNativeGeolocationAvailable()) {
-      if (nativeWatchIdRef.current != null || bgWatchIdRef.current != null) return;
+      if (nativeWatchIdRef.current != null) return;
       void (async () => {
         const perm = await requestNativeGeolocationPermission();
         if (perm !== "granted") {
@@ -603,7 +603,7 @@ export function useRunTracker() {
   const warmGps = useCallback(() => {
     // Native: just call armGps — the plugin handles permission state.
     if (isNativeGeolocationAvailable()) {
-      if (nativeWatchIdRef.current != null || bgWatchIdRef.current != null) return;
+      if (nativeWatchIdRef.current != null) return;
       armGps();
       return;
     }
