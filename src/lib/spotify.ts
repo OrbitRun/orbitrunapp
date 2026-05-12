@@ -181,6 +181,66 @@ export function initSpotifyDeepLinkListener(): () => void {
   if (!isCapacitorNative()) return () => {};
   let removeListener: (() => void) | null = null;
   let cancelled = false;
+
+  // Extract `code` (or `error`) from a jonas-orbit-run:// URL. Handles
+  // searchParams, fragment, and a regex fallback (older iOS sometimes drops
+  // the query when `new URL()` parses a custom scheme).
+  const parseCallback = (url: string): { code?: string; error?: string } => {
+    try {
+      const parsed = new URL(url);
+      const frag = new URLSearchParams(
+        parsed.hash.startsWith("#") ? parsed.hash.slice(1) : parsed.hash,
+      );
+      const code = parsed.searchParams.get("code") ?? frag.get("code") ?? undefined;
+      const error = parsed.searchParams.get("error") ?? frag.get("error") ?? undefined;
+      if (code || error) return { code: code ?? undefined, error: error ?? undefined };
+    } catch {
+      /* fall through to regex */
+    }
+    const m = url.match(/[?&#]code=([^&]+)/);
+    const e = url.match(/[?&#]error=([^&]+)/);
+    return {
+      code: m ? decodeURIComponent(m[1]) : undefined,
+      error: e ? decodeURIComponent(e[1]) : undefined,
+    };
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleUrl = async (url: string, Browser: any) => {
+    if (!url || !url.toLowerCase().startsWith("jonas-orbit-run://")) return;
+    // eslint-disable-next-line no-console
+    console.log("[spotify] deep link received", url);
+    const { code, error } = parseCallback(url);
+    if (Browser?.close) {
+      try { await Browser.close(); } catch { /* noop */ }
+    }
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("[spotify] auth error", error);
+      window.dispatchEvent(new CustomEvent("orbit:spotify-auth-error", { detail: error }));
+      return;
+    }
+    if (!code) {
+      // eslint-disable-next-line no-console
+      console.warn("[spotify] no code in callback URL");
+      return;
+    }
+    try {
+      await exchangeCode(code);
+      // eslint-disable-next-line no-console
+      console.log("[spotify] token exchange OK");
+      window.dispatchEvent(new CustomEvent("orbit:spotify-authed"));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[spotify] token exchange failed", err);
+      window.dispatchEvent(
+        new CustomEvent("orbit:spotify-auth-error", {
+          detail: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    }
+  };
+
   (async () => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -193,39 +253,21 @@ export function initSpotifyDeepLinkListener(): () => void {
       const Browser = browserMod?.Browser ?? browserMod?.default?.Browser ?? browserMod?.default;
       if (!App?.addListener || cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const handle: any = await App.addListener("appUrlOpen", async (event: { url: string }) => {
-        if (!event?.url || !event.url.toLowerCase().startsWith("jonas-orbit-run://")) return;
-        try {
-          // Custom schemes parse fine with `new URL`, but some iOS versions
-          // deliver the query in the fragment (`#code=...`). Handle both.
-          const parsed = new URL(event.url);
-          const fragmentParams = new URLSearchParams(
-            parsed.hash.startsWith("#") ? parsed.hash.slice(1) : parsed.hash,
-          );
-          const code = parsed.searchParams.get("code") ?? fragmentParams.get("code");
-          const err =
-            parsed.searchParams.get("error") ?? fragmentParams.get("error");
-          if (Browser?.close) {
-            try { await Browser.close(); } catch { /* noop */ }
-          }
-          if (err) {
-            window.dispatchEvent(new CustomEvent("orbit:spotify-auth-error", { detail: err }));
-            return;
-          }
-          if (!code) return;
-          await exchangeCode(code);
-          window.dispatchEvent(new CustomEvent("orbit:spotify-authed"));
-        } catch (e) {
-          window.dispatchEvent(
-            new CustomEvent("orbit:spotify-auth-error", {
-              detail: e instanceof Error ? e.message : String(e),
-            }),
-          );
-        }
-      });
+      const handle: any = await App.addListener(
+        "appUrlOpen",
+        (event: { url: string }) => { void handleUrl(event?.url ?? "", Browser); },
+      );
       removeListener = () => {
         try { handle?.remove?.(); } catch { /* noop */ }
       };
+      // Cold-start case: if iOS launched the app *because* of the URL, the
+      // appUrlOpen event fired before this listener registered. Replay it.
+      if (typeof App.getLaunchUrl === "function") {
+        try {
+          const launch = await App.getLaunchUrl();
+          if (launch?.url) void handleUrl(launch.url, Browser);
+        } catch { /* noop */ }
+      }
     } catch {
       /* native plugin not available — silently no-op */
     }
