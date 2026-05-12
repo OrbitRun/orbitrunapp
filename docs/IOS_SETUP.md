@@ -130,3 +130,30 @@ npx cap sync ios
   `jonas-orbit-run://callback`. Sammenlign tegn-for-tegn.
 - **Spotify åbner Safari i stedet for in-app browser** → `@capacitor/browser`
   ikke installeret. Kør `npm install` igen.
+
+---
+
+## 8. Spotify OAuth — sidder fast på "Connecting Spotify…"
+
+Hvis Safari kommer tilbage til appen, men UI'et bliver hængende på
+"Connecting Spotify…", er årsagen næsten altid Spotify-dashboardet:
+
+- Åbn [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+  → din app → **Edit Settings** → **Redirect URIs**.
+- **`jonas-orbit-run://callback` SKAL stå der præcis sådan** (ingen trailing
+  slash, ingen ekstra mellemrum). Web-URI'en alene er ikke nok til iOS-
+  buildet — uden den native URI redirect'er Spotify ind i SFSafariViewController
+  i stedet for at sende deep-link tilbage til appen.
+- Vent ~30 sekunder efter du har gemt — Spotify cacher redirect-listen.
+- Slet appen fra enheden og installer igen efter ændringer i `Info.plist`
+  (iOS cacher URL-scheme registreringer).
+
+Tjek Xcode-konsollen mens du forsøger login. Du skal se:
+```
+[spotify] beginAuth { native: true, redirect_uri: "jonas-orbit-run://callback" }
+[spotify] deep link received jonas-orbit-run://callback?code=...
+[spotify] token exchange OK
+```
+
+Hvis `native: false` står der, har Capacitor ikke initialiseret korrekt —
+genstart appen helt (luk via app-switcheren).
