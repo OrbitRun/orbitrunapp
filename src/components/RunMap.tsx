@@ -4,7 +4,7 @@ import { Crosshair } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
-import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { MAPBOX_STYLE, MAPBOX_TOKEN, mapboxTransformRequest } from "@/lib/mapbox";
 import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
 import {
@@ -99,6 +99,7 @@ function RunMapInner({
         boxZoom: false,
         doubleClickZoom: interactive,
         touchPitch: false,
+        transformRequest: mapboxTransformRequest,
       });
 
       const markUserMoved = (e: unknown) => {
