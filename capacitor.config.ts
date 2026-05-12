@@ -18,29 +18,24 @@ type CapacitorConfig = {
     contentInset?: "always" | "automatic" | "never" | "scrollableAxes";
     scrollEnabled?: boolean;
   };
+  plugins?: Record<string, unknown>;
 };
 
 const config: CapacitorConfig = {
   appId: "com.orbitrun.app",
   appName: "Orbit Run",
-  // Standard SPA build outputs index.html directly in dist for Capacitor.
   webDir: "dist",
-  // Must match CFBundleURLSchemes in ios/App/App/Info.plist.
   urlSchemes: ["jonas-orbit-run"],
   ios: {
     contentInset: "always",
-    // Must be true — disabling this locks the entire WKWebView and breaks
-    // page scrolling on every route. Rubber-band/overscroll is dampened
-    // via `overscroll-behavior: none` on html/body in src/styles.css.
     scrollEnabled: true,
-    // Purpose strings live in ios/App/App/Info.plist — Capacitor cannot
-    // inject Info.plist keys from this file. See docs/IOS_SETUP.md for the
-    // full list (Health, Location, Motion, Bluetooth + UIBackgroundModes).
-    //
-    // Custom URL scheme for Spotify OAuth callback (`jonas-orbit-run://callback`)
-    // is also declared in Info.plist via CFBundleURLTypes — see §5 of
-    // docs/IOS_SETUP.md. Using a unique scheme (not `capacitor://`) avoids
-    // collisions with other Capacitor apps on the same device.
+  },
+  plugins: {
+    // Patch window.fetch / XMLHttpRequest to use the native HTTP bridge on
+    // iOS. This bypasses WKWebView CORS restrictions and the "DownloadFailed"
+    // sandbox extension errors that Spotify/Open-Meteo trigger from inside
+    // the capacitor://localhost origin.
+    CapacitorHttp: { enabled: true },
   },
 };
 

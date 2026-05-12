@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { loadRuns } from "@/lib/run-types";
+import { nativeRequest } from "@/lib/native-http";
 
 export type CurrentEnv = {
   tempC: number;
@@ -39,7 +40,7 @@ function writeCache(env: CurrentEnv) {
 async function fetchEnv(lat: number, lng: number): Promise<CurrentEnv | null> {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(3)}&longitude=${lng.toFixed(3)}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m&wind_speed_unit=ms&temperature_unit=celsius`;
-    const res = await fetch(url);
+    const res = await nativeRequest(url);
     if (!res.ok) return null;
     const j = (await res.json()) as {
       current?: {

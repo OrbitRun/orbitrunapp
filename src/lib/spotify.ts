@@ -1,6 +1,10 @@
 // Spotify Web API client with PKCE OAuth (no backend, no client secret).
-// Replace SPOTIFY_CLIENT_ID with your own Client ID from
-// https://developer.spotify.com/dashboard
+// Uses CapacitorHttp + @capacitor/preferences on iOS to bypass WKWebView
+// CORS / sandbox extension errors and survive the Safari → app handoff.
+
+import { isCapacitorNative, loadCapacitorPlugin } from "./capacitor-runtime";
+import { nativeRequest } from "./native-http";
+import { getCached, getValue, primeNativeStorage, setValue } from "./native-storage";
 
 // Public Spotify Client ID. The Client ID is publishable (PKCE flow, no client secret).
 export const SPOTIFY_CLIENT_ID: string =
@@ -22,6 +26,16 @@ const TOKEN_KEY = "pulse.spotify.token";
 const VERIFIER_KEY = "pulse.spotify.verifier";
 const PLAYLIST_KEY = "pulse.spotify.active_workout_playlist";
 
+// Hydrate the in-memory cache from native storage as early as possible so
+// synchronous getters (getStoredToken, isAuthed, ...) return correct values
+// after the OAuth-induced app relaunch on iOS.
+let primed: Promise<void> | null = null;
+export function ensureSpotifyStoragePrimed(): Promise<void> {
+  if (!primed) primed = primeNativeStorage([TOKEN_KEY, VERIFIER_KEY, PLAYLIST_KEY]);
+  return primed;
+}
+if (typeof window !== "undefined") void ensureSpotifyStoragePrimed();
+
 export type ActiveWorkoutPlaylist = {
   uri: string;
   name: string;
@@ -29,9 +43,8 @@ export type ActiveWorkoutPlaylist = {
 };
 
 export function getActiveWorkoutPlaylist(): ActiveWorkoutPlaylist | null {
-  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(PLAYLIST_KEY);
+    const raw = getCached(PLAYLIST_KEY);
     return raw ? (JSON.parse(raw) as ActiveWorkoutPlaylist) : null;
   } catch {
     return null;
@@ -39,9 +52,7 @@ export function getActiveWorkoutPlaylist(): ActiveWorkoutPlaylist | null {
 }
 
 export function setActiveWorkoutPlaylist(p: ActiveWorkoutPlaylist | null) {
-  if (typeof window === "undefined") return;
-  if (!p) localStorage.removeItem(PLAYLIST_KEY);
-  else localStorage.setItem(PLAYLIST_KEY, JSON.stringify(p));
+  void setValue(PLAYLIST_KEY, p ? JSON.stringify(p) : null);
 }
 
 export function hasPlaylistScope(): boolean {
@@ -61,22 +72,6 @@ export type SpotifyToken = {
 // CFBundleURLTypes entry in ios/App/App/Info.plist AND the Redirect URI
 // registered in the Spotify Developer Dashboard.
 export const NATIVE_REDIRECT_URI = "jonas-orbit-run://callback";
-
-function isCapacitorNative(): boolean {
-  if (typeof window === "undefined") return false;
-  const w = window as unknown as {
-    Capacitor?: {
-      isNativePlatform?: () => boolean;
-      getPlatform?: () => string;
-      platform?: string;
-    };
-  };
-  const cap = w.Capacitor;
-  if (!cap) return false;
-  if (typeof cap.isNativePlatform === "function" && cap.isNativePlatform()) return true;
-  const p = (typeof cap.getPlatform === "function" ? cap.getPlatform() : cap.platform) ?? "";
-  return p === "ios" || p === "android";
-}
 
 export function getRedirectUri(): string {
   if (typeof window === "undefined") return "";
@@ -103,9 +98,8 @@ function randomString(len = 64): string {
 }
 
 export function getStoredToken(): SpotifyToken | null {
-  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(TOKEN_KEY);
+    const raw = getCached(TOKEN_KEY);
     if (!raw) return null;
     return JSON.parse(raw) as SpotifyToken;
   } catch {
@@ -114,9 +108,7 @@ export function getStoredToken(): SpotifyToken | null {
 }
 
 export function setStoredToken(t: SpotifyToken | null) {
-  if (typeof window === "undefined") return;
-  if (!t) localStorage.removeItem(TOKEN_KEY);
-  else localStorage.setItem(TOKEN_KEY, JSON.stringify(t));
+  void setValue(TOKEN_KEY, t ? JSON.stringify(t) : null);
 }
 
 export function isConfigured(): boolean {
@@ -126,9 +118,13 @@ export function isConfigured(): boolean {
 
 export async function beginAuth(): Promise<void> {
   if (!isConfigured()) throw new Error("Spotify Client ID not configured");
+  await ensureSpotifyStoragePrimed();
   const verifier = randomString(96);
   const challenge = base64url(await sha256(verifier));
-  sessionStorage.setItem(VERIFIER_KEY, verifier);
+  // Persist the PKCE verifier through native storage so it survives the
+  // Safari → app transition (sandbox extension drops can wipe in-memory
+  // sessionStorage on iOS during the OAuth round-trip).
+  await setValue(VERIFIER_KEY, verifier);
 
   const params = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
@@ -140,31 +136,17 @@ export async function beginAuth(): Promise<void> {
   });
   const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
   const native = isCapacitorNative();
-  // Diagnostic: visible in Xcode console. Confirms which redirect_uri Spotify
-  // sees. If this prints the https URL on a device, the native detection is
-  // failing and Spotify will redirect SFSafariViewController to the web page.
   // eslint-disable-next-line no-console
   console.log("[spotify] beginAuth", { native, redirect_uri: getRedirectUri() });
   if (native) {
-    // Open the Spotify auth page in an in-app browser. The user logs in,
-    // Spotify redirects to jonas-orbit-run://callback, iOS routes that
-    // back into the app via `appUrlOpen` (see initSpotifyDeepLinkListener).
-    try {
-      const specifier = "@capacitor/browser";
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mod: any = await (Function(
-        "s",
-        "return import(s)",
-      ) as (s: string) => Promise<unknown>)(specifier);
-      const Browser = mod?.Browser ?? mod?.default?.Browser ?? mod?.default;
-      if (Browser?.open) {
-        await Browser.open({ url: authUrl, presentationStyle: "popover" });
-        return;
-      }
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("[spotify] @capacitor/browser unavailable, falling back", e);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Browser = await loadCapacitorPlugin<any>("@capacitor/browser", "Browser");
+    if (Browser?.open) {
+      await Browser.open({ url: authUrl, presentationStyle: "popover" });
+      return;
     }
+    // eslint-disable-next-line no-console
+    console.warn("[spotify] @capacitor/browser unavailable, falling back to window.location");
   }
   window.location.href = authUrl;
 }
@@ -182,9 +164,6 @@ export function initSpotifyDeepLinkListener(): () => void {
   let removeListener: (() => void) | null = null;
   let cancelled = false;
 
-  // Extract `code` (or `error`) from a jonas-orbit-run:// URL. Handles
-  // searchParams, fragment, and a regex fallback (older iOS sometimes drops
-  // the query when `new URL()` parses a custom scheme).
   const parseCallback = (url: string): { code?: string; error?: string } => {
     try {
       const parsed = new URL(url);
@@ -242,34 +221,25 @@ export function initSpotifyDeepLinkListener(): () => void {
   };
 
   (async () => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dynImport = Function("s", "return import(s)") as (s: string) => Promise<unknown>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const appMod: any = await dynImport("@capacitor/app");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const browserMod: any = await dynImport("@capacitor/browser").catch(() => null);
-      const App = appMod?.App ?? appMod?.default?.App ?? appMod?.default;
-      const Browser = browserMod?.Browser ?? browserMod?.default?.Browser ?? browserMod?.default;
-      if (!App?.addListener || cancelled) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const handle: any = await App.addListener(
-        "appUrlOpen",
-        (event: { url: string }) => { void handleUrl(event?.url ?? "", Browser); },
-      );
-      removeListener = () => {
-        try { handle?.remove?.(); } catch { /* noop */ }
-      };
-      // Cold-start case: if iOS launched the app *because* of the URL, the
-      // appUrlOpen event fired before this listener registered. Replay it.
-      if (typeof App.getLaunchUrl === "function") {
-        try {
-          const launch = await App.getLaunchUrl();
-          if (launch?.url) void handleUrl(launch.url, Browser);
-        } catch { /* noop */ }
-      }
-    } catch {
-      /* native plugin not available — silently no-op */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const App = await loadCapacitorPlugin<any>("@capacitor/app", "App");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Browser = await loadCapacitorPlugin<any>("@capacitor/browser", "Browser");
+    if (!App?.addListener || cancelled) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const handle: any = await App.addListener(
+      "appUrlOpen",
+      (event: { url: string }) => { void handleUrl(event?.url ?? "", Browser); },
+    );
+    removeListener = () => {
+      try { handle?.remove?.(); } catch { /* noop */ }
+    };
+    // Cold-start case: replay any URL iOS used to launch the app.
+    if (typeof App.getLaunchUrl === "function") {
+      try {
+        const launch = await App.getLaunchUrl();
+        if (launch?.url) void handleUrl(launch.url, Browser);
+      } catch { /* noop */ }
     }
   })();
   return () => {
@@ -279,7 +249,8 @@ export function initSpotifyDeepLinkListener(): () => void {
 }
 
 export async function exchangeCode(code: string): Promise<SpotifyToken> {
-  const verifier = sessionStorage.getItem(VERIFIER_KEY);
+  await ensureSpotifyStoragePrimed();
+  const verifier = await getValue(VERIFIER_KEY);
   if (!verifier) throw new Error("Missing PKCE verifier");
   const body = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
@@ -287,8 +258,8 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
     code,
     redirect_uri: getRedirectUri(),
     code_verifier: verifier,
-  });
-  const res = await fetch("https://accounts.spotify.com/api/token", {
+  }).toString();
+  const res = await nativeRequest("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
@@ -296,7 +267,7 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
   if (!res.ok) {
     let detail = "";
     try {
-      const j = await res.json();
+      const j = (await res.json()) as { error_description?: string; error?: string };
       detail = j?.error_description || j?.error || "";
     } catch {
       /* ignore */
@@ -306,7 +277,13 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
         `Check that "${getRedirectUri()}" is added as a Redirect URI in the Spotify Developer Dashboard.`,
     );
   }
-  const data = await res.json();
+  const data = (await res.json()) as {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    token_type: string;
+    scope: string;
+  };
   const tok: SpotifyToken = {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
@@ -314,8 +291,8 @@ export async function exchangeCode(code: string): Promise<SpotifyToken> {
     token_type: data.token_type,
     scope: data.scope,
   };
-  setStoredToken(tok);
-  sessionStorage.removeItem(VERIFIER_KEY);
+  await setValue(TOKEN_KEY, JSON.stringify(tok));
+  await setValue(VERIFIER_KEY, null);
   return tok;
 }
 
@@ -326,8 +303,8 @@ async function refreshToken(): Promise<SpotifyToken | null> {
     client_id: SPOTIFY_CLIENT_ID,
     grant_type: "refresh_token",
     refresh_token: cur.refresh_token,
-  });
-  const res = await fetch("https://accounts.spotify.com/api/token", {
+  }).toString();
+  const res = await nativeRequest("https://accounts.spotify.com/api/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
@@ -336,7 +313,13 @@ async function refreshToken(): Promise<SpotifyToken | null> {
     setStoredToken(null);
     return null;
   }
-  const data = await res.json();
+  const data = (await res.json()) as {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    token_type: string;
+    scope: string;
+  };
   const tok: SpotifyToken = {
     access_token: data.access_token,
     refresh_token: data.refresh_token ?? cur.refresh_token,
@@ -344,7 +327,7 @@ async function refreshToken(): Promise<SpotifyToken | null> {
     token_type: data.token_type,
     scope: data.scope,
   };
-  setStoredToken(tok);
+  await setValue(TOKEN_KEY, JSON.stringify(tok));
   return tok;
 }
 
@@ -365,13 +348,20 @@ export function isAuthed(): boolean {
   return !!getStoredToken();
 }
 
-async function api(path: string, init: RequestInit = {}): Promise<Response> {
+import type { NativeHttpResponse } from "./native-http";
+
+async function api(path: string, init: { method?: "GET" | "POST" | "PUT" | "DELETE"; body?: string } = {}): Promise<NativeHttpResponse> {
   const token = await getValidToken();
   if (!token) throw new Error("Not authenticated");
-  const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${token}`);
-  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  return fetch(`https://api.spotify.com/v1${path}`, { ...init, headers });
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+  };
+  if (init.body) headers["Content-Type"] = "application/json";
+  return nativeRequest(`https://api.spotify.com/v1${path}`, {
+    method: init.method ?? "GET",
+    headers,
+    body: init.body,
+  });
 }
 
 export type NowPlaying = {
@@ -389,12 +379,22 @@ export async function getNowPlaying(): Promise<NowPlaying | null> {
   const res = await api("/me/player");
   if (res.status === 204) return { isPlaying: false, title: "", artist: "", album: "", artworkUrl: null, progressMs: 0, durationMs: 0, hasActiveDevice: false };
   if (!res.ok) throw new Error(`Spotify error ${res.status}`);
-  const d = await res.json();
+  const d = (await res.json()) as {
+    is_playing?: boolean;
+    progress_ms?: number;
+    device?: unknown;
+    item?: {
+      name?: string;
+      artists?: { name: string }[];
+      album?: { name?: string; images?: { url: string }[] };
+      duration_ms?: number;
+    };
+  };
   const item = d.item;
   return {
     isPlaying: !!d.is_playing,
     title: item?.name ?? "",
-    artist: (item?.artists ?? []).map((a: { name: string }) => a.name).join(", "),
+    artist: (item?.artists ?? []).map((a) => a.name).join(", "),
     album: item?.album?.name ?? "",
     artworkUrl: item?.album?.images?.[0]?.url ?? null,
     progressMs: d.progress_ms ?? 0,
@@ -421,7 +421,7 @@ export type SpotifyDevice = { id: string; name: string; is_active: boolean; type
 export async function getDevices(): Promise<SpotifyDevice[]> {
   const res = await api("/me/player/devices");
   if (!res.ok) return [];
-  const data = await res.json();
+  const data = (await res.json()) as { devices?: SpotifyDevice[] };
   return data.devices ?? [];
 }
 
@@ -440,12 +440,6 @@ export async function transferToFirstDevice(): Promise<boolean> {
   return true;
 }
 
-/**
- * Polls /me/player/devices until a device reports `is_active: true` (or any
- * device with the given id is active). Returns true when an active device is
- * detected, false on timeout. Used after `transferPlayback` to avoid the
- * race condition where Spotify hasn't yet promoted the target device.
- */
 export async function waitForActiveDevice(
   deviceId?: string,
   timeoutMs = 1500,
@@ -469,9 +463,6 @@ export async function playContext(contextUri: string, deviceId?: string): Promis
     body: JSON.stringify({ context_uri: contextUri }),
   });
   if (!res.ok && res.status !== 204) {
-    // 404 = device went to sleep between transfer and play. Wake it once
-    // more and retry — the most common cause of "music didn't start" on
-    // physical iPhones after the screen has been off for a while.
     if (res.status === 404 && deviceId) {
       await transferPlayback(deviceId, false);
       const ready = await waitForActiveDevice(deviceId, 1500);
@@ -503,7 +494,17 @@ export async function getMyPlaylists(): Promise<SpotifyPlaylist[]> {
   while (url) {
     const res = await api(url);
     if (!res.ok) throw new Error(`Spotify error ${res.status}`);
-    const data = await res.json();
+    const data = (await res.json()) as {
+      items?: Array<{
+        id: string;
+        name: string;
+        uri: string;
+        images?: { url: string }[];
+        owner?: { display_name?: string };
+        tracks?: { total?: number };
+      } | null>;
+      next?: string | null;
+    };
     for (const item of data.items ?? []) {
       if (!item) continue;
       out.push({
@@ -524,6 +525,3 @@ export async function getMyPlaylists(): Promise<SpotifyPlaylist[]> {
   }
   return out;
 }
-
-// Also patch play() so it doesn't silently swallow errors at call sites that need them.
-
