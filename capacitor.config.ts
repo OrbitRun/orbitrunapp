@@ -29,10 +29,10 @@ const config: CapacitorConfig = {
   urlSchemes: ["jonas-orbit-run"],
   ios: {
     contentInset: "always",
-    // Disable WKWebView rubber-banding/overscroll so the user can't drag
-    // the page down and reveal the native background. Internal scrollable
-    // containers (`.app-scroll`) still scroll normally.
-    scrollEnabled: false,
+    // Must be true — disabling this locks the entire WKWebView and breaks
+    // page scrolling on every route. Rubber-band/overscroll is dampened
+    // via `overscroll-behavior: none` on html/body in src/styles.css.
+    scrollEnabled: true,
     // Purpose strings live in ios/App/App/Info.plist — Capacitor cannot
     // inject Info.plist keys from this file. See docs/IOS_SETUP.md for the
     // full list (Health, Location, Motion, Bluetooth + UIBackgroundModes).
