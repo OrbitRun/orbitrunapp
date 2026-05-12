@@ -28,6 +28,10 @@ function getPreferences(): Promise<any | null> {
 
 export function getCached(key: string): string | null {
   if (cache.has(key)) return cache.get(key) ?? null;
+  // On native iOS, do NOT touch localStorage — sandbox extension drops can
+  // make WKWebView storage transiently unavailable, which we've seen surface
+  // as `unable to make sandbox extension: Operation not permitted` in Xcode.
+  if (isCapacitorNative()) return null;
   if (typeof window !== "undefined") {
     try {
       const v = window.localStorage.getItem(key);
@@ -47,14 +51,6 @@ export async function getValue(key: string): Promise<string | null> {
       const r = await Prefs.get({ key });
       const v: string | null = r?.value ?? null;
       cache.set(key, v);
-      // Also mirror to localStorage so sync code paths keep working even
-      // before the next prime cycle.
-      if (typeof window !== "undefined") {
-        try {
-          if (v == null) window.localStorage.removeItem(key);
-          else window.localStorage.setItem(key, v);
-        } catch { /* noop */ }
-      }
       return v;
     } catch {
       /* fall through */
@@ -65,7 +61,8 @@ export async function getValue(key: string): Promise<string | null> {
 
 export async function setValue(key: string, value: string | null): Promise<void> {
   cache.set(key, value);
-  if (typeof window !== "undefined") {
+  const native = isCapacitorNative();
+  if (!native && typeof window !== "undefined") {
     try {
       if (value == null) window.localStorage.removeItem(key);
       else window.localStorage.setItem(key, value);
@@ -96,9 +93,6 @@ export async function primeNativeStorage(keys: string[]): Promise<void> {
         const r = await Prefs.get({ key: k });
         const v: string | null = r?.value ?? null;
         cache.set(k, v);
-        if (typeof window !== "undefined" && v != null) {
-          try { window.localStorage.setItem(k, v); } catch { /* noop */ }
-        }
       } catch { /* noop */ }
     }),
   );

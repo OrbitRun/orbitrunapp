@@ -4,7 +4,7 @@ import { Pause, Play } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { Run } from "@/lib/run-types";
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
-import { MAPBOX_STYLE, MAPBOX_TOKEN } from "@/lib/mapbox";
+import { MAPBOX_STYLE, MAPBOX_TOKEN, mapboxTransformRequest } from "@/lib/mapbox";
 import { buildReplaySeries, sampleAtMs, type ReplaySeries } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
 
@@ -61,6 +61,7 @@ function RunReplayInner({ run, className }: Props) {
         cooperativeGestures: true,
         scrollZoom: false,
         doubleClickZoom: true,
+        transformRequest: mapboxTransformRequest,
       });
       map.on("load", () => {
         if (cancelled) return;

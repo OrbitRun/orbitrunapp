@@ -5,6 +5,7 @@ import type { Run } from "@/lib/run-types";
 import { formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { previewRunPrs } from "@/lib/personal-records";
 import { MAPBOX_TOKEN } from "@/lib/mapbox";
+import { nativeFetchDataUrl } from "@/lib/native-http";
 import type { Lang } from "@/lib/i18n";
 
 const SIZE = 1080;
@@ -63,6 +64,15 @@ async function loadImage(url: string): Promise<HTMLImageElement> {
   });
 }
 
+async function loadImageFromDataUrl(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
 async function fetchMapboxStatic(run: Run): Promise<HTMLImageElement | null> {
   if (run.points.length < 2) return null;
   const sampled = downsample(run.points, 220);
@@ -71,6 +81,11 @@ async function fetchMapboxStatic(run: Run): Promise<HTMLImageElement | null> {
   const overlay = `path-5+c8ff3d-1(${encodeURIComponent(encoded)})`;
   const url = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/${overlay}/auto/540x540@2x?padding=80&access_token=${MAPBOX_TOKEN}&logo=false&attribution=false`;
   try {
+    // Route through CapacitorHttp on iOS (bypasses sandbox/CORS); falls back
+    // to fetch + FileReader on web. Either way we end up with a data URL
+    // that loads into <img> without triggering another network request.
+    const dataUrl = await nativeFetchDataUrl(url);
+    if (dataUrl) return await loadImageFromDataUrl(dataUrl);
     return await loadImage(url);
   } catch {
     return null;
