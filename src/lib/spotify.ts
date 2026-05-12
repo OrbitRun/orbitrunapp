@@ -139,7 +139,13 @@ export async function beginAuth(): Promise<void> {
     scope: SPOTIFY_SCOPES,
   });
   const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
-  if (isCapacitorNative()) {
+  const native = isCapacitorNative();
+  // Diagnostic: visible in Xcode console. Confirms which redirect_uri Spotify
+  // sees. If this prints the https URL on a device, the native detection is
+  // failing and Spotify will redirect SFSafariViewController to the web page.
+  // eslint-disable-next-line no-console
+  console.log("[spotify] beginAuth", { native, redirect_uri: getRedirectUri() });
+  if (native) {
     // Open the Spotify auth page in an in-app browser. The user logs in,
     // Spotify redirects to jonas-orbit-run://callback, iOS routes that
     // back into the app via `appUrlOpen` (see initSpotifyDeepLinkListener).
@@ -155,8 +161,9 @@ export async function beginAuth(): Promise<void> {
         await Browser.open({ url: authUrl, presentationStyle: "popover" });
         return;
       }
-    } catch {
-      /* fall through to location.href */
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn("[spotify] @capacitor/browser unavailable, falling back", e);
     }
   }
   window.location.href = authUrl;
