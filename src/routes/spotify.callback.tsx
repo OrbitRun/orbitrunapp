@@ -6,11 +6,31 @@ export const Route = createFileRoute("/spotify/callback")({
   component: SpotifyCallback,
 });
 
+function isCapacitorNative(): boolean {
+  if (typeof window === "undefined") return false;
+  const w = window as unknown as {
+    Capacitor?: { isNativePlatform?: () => boolean; getPlatform?: () => string };
+  };
+  const cap = w.Capacitor;
+  if (!cap) return false;
+  if (cap.isNativePlatform?.()) return true;
+  const p = cap.getPlatform?.() ?? "";
+  return p === "ios" || p === "android";
+}
+
 function SpotifyCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // On native, the OAuth callback comes via the jonas-orbit-run:// custom
+    // scheme and is handled by initSpotifyDeepLinkListener. If we somehow
+    // landed on the web /spotify/callback route inside the native shell,
+    // bounce back home so we don't strand the user on "Connecting…".
+    if (isCapacitorNative()) {
+      navigate({ to: "/" });
+      return;
+    }
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
     const err = url.searchParams.get("error");
