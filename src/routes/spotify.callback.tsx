@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { exchangeCode } from "@/lib/spotify";
+import { ensureSpotifyStoragePrimed, exchangeCode } from "@/lib/spotify";
 
 export const Route = createFileRoute("/spotify/callback")({
   component: SpotifyCallback,
@@ -42,7 +42,8 @@ function SpotifyCallback() {
       setError("Missing authorization code");
       return;
     }
-    exchangeCode(code)
+    ensureSpotifyStoragePrimed()
+      .then(() => exchangeCode(code))
       .then(() => navigate({ to: "/" }))
       .catch((e) => setError(e instanceof Error ? e.message : "Auth failed"));
   }, [navigate]);
