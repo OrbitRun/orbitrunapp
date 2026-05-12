@@ -64,8 +64,18 @@ export const NATIVE_REDIRECT_URI = "jonas-orbit-run://callback";
 
 function isCapacitorNative(): boolean {
   if (typeof window === "undefined") return false;
-  const w = window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } };
-  return !!w.Capacitor?.isNativePlatform?.();
+  const w = window as unknown as {
+    Capacitor?: {
+      isNativePlatform?: () => boolean;
+      getPlatform?: () => string;
+      platform?: string;
+    };
+  };
+  const cap = w.Capacitor;
+  if (!cap) return false;
+  if (typeof cap.isNativePlatform === "function" && cap.isNativePlatform()) return true;
+  const p = (typeof cap.getPlatform === "function" ? cap.getPlatform() : cap.platform) ?? "";
+  return p === "ios" || p === "android";
 }
 
 export function getRedirectUri(): string {
