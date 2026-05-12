@@ -1,4 +1,5 @@
 import type { RunWeather } from "./run-types";
+import { nativeRequest } from "./native-http";
 
 type WeatherMeta = {
   conditionKey: string; // i18n key
@@ -24,7 +25,7 @@ export function weatherCodeToMeta(code: number): WeatherMeta {
 export async function fetchWeather(lat: number, lng: number): Promise<RunWeather | null> {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lng.toFixed(4)}&current=temperature_2m,wind_speed_10m,weather_code&wind_speed_unit=ms&temperature_unit=celsius`;
-    const res = await fetch(url, { method: "GET" });
+    const res = await nativeRequest(url, { method: "GET" });
     if (!res.ok) return null;
     const json = (await res.json()) as {
       current?: {
