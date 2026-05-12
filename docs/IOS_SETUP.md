@@ -163,3 +163,46 @@ Tjek Xcode-konsollen mens du forsøger login. Du skal se:
 
 Hvis `native: false` står der, har Capacitor ikke initialiseret korrekt —
 genstart appen helt (luk via app-switcheren).
+
+---
+
+## 9. Strict HTTPS + native HTTP for alle eksterne kald
+
+Alle udgående kald i appen er nu låst til **HTTPS** og rutes gennem Capacitor
+HTTP på iOS:
+
+- `src/lib/native-http.ts` opgraderer enhver `http://` til `https://` før
+  request afsendes (både `nativeRequest` og `nativeFetchDataUrl`).
+- `CapacitorHttp.enabled = true` i `capacitor.config.ts` patcher
+  `window.fetch` + `XMLHttpRequest`, så også **mapbox-gl** tile/style requests
+  går gennem den native HTTP-stack — ingen flere `DownloadFailed` /
+  `unable to make sandbox extension` resets på Mapbox.
+- `MAPBOX_STYLE` er nu en eksplicit `https://api.mapbox.com/styles/v1/...`
+  URL i stedet for `mapbox://styles/...`, så WKWebView aldrig skal slå et
+  custom-scheme op internt.
+- Mapbox **static images** (share-card) hentes via `nativeFetchDataUrl()` →
+  data URL → `<img>.src`, så billedet ikke åbner et separat `<img>`-load uden
+  for native HTTP-broen.
+- Spotify token (`pulse.spotify.token`) og PKCE verifier (`pulse.spotify.verifier`)
+  ligger udelukkende i `@capacitor/preferences` på native (ingen
+  localStorage-mirror) — undgår at sandbox-extension drops vipper login state.
+
+### Når du har trukket disse ændringer
+
+```bash
+npm install
+npm run build
+npx cap sync ios
+npx cap open ios
+```
+
+(SPM-cachen behøver kun nukes hvis Xcode klager på `CapApp-SPM` — se §6.)
+
+I Xcode-konsollen skal du nu se linjer som:
+```
+[native-http] → GET https://api.spotify.com/v1/me/player
+[native-http] → POST https://accounts.spotify.com/api/token
+[native-http] (blob) → https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/...
+```
+Hvis du i stedet ser `[native-http] CapacitorHttp unavailable on native`, så
+kørte `npx cap sync ios` ikke efter `capacitor.config.ts` blev opdateret.
