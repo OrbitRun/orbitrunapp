@@ -10,6 +10,8 @@ import {
 } from "@/lib/user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
 import { getPlanProgress, currentWeekAdjustment } from "@/lib/coach-plan";
+import { predictRaceTimes, type PredictionDistance } from "@/lib/performance-prediction";
+import { loadHistory, monthlyDelta } from "@/lib/prediction-history";
 import { bestEstimateVo2MaxWithSource, bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
 import { useVitals } from "@/hooks/use-vitals";
 import CoachOnboarding from "@/components/CoachOnboarding";
@@ -118,6 +120,7 @@ export default function CoachCard({ profile }: Props) {
             </div>
           );
         })()}
+        <PredictionInsightLine runs={runs} />
 
         {z5Override && (
           <div className="mt-3 rounded-xl border border-destructive/40 bg-destructive/10 p-3 flex gap-2">
@@ -210,6 +213,36 @@ export default function CoachCard({ profile }: Props) {
       </section>
       {onboarding && <CoachOnboarding onClose={() => setOnboarding(false)} />}
     </>
+  );
+}
+
+function PredictionInsightLine({ runs }: { runs: Run[] }) {
+  const { t } = useI18n();
+  const insight = useMemo(() => {
+    const predictions = predictRaceTimes(runs);
+    if (Object.keys(predictions).length === 0) return null;
+    const history = loadHistory();
+    const preferred: PredictionDistance[] = ["10k", "5k", "half"];
+    for (const id of preferred) {
+      const d = monthlyDelta(history, predictions, id);
+      if (d && d.deltaMs <= -1000) {
+        const abs = Math.abs(Math.round(d.deltaMs / 1000));
+        const value =
+          abs < 60 ? `${abs}s` : `${Math.floor(abs / 60)}m ${(abs % 60).toString().padStart(2, "0")}s`;
+        const distance = t(`prediction.distance.${id}` as const);
+        return t("prediction.coach.fasterMonth", { distance, value });
+      }
+    }
+    return null;
+    // re-evaluate when runs identity changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runs, t]);
+
+  if (!insight) return null;
+  return (
+    <div className="mt-2 text-[11px] text-neon font-bold leading-snug">
+      {insight}
+    </div>
   );
 }
 

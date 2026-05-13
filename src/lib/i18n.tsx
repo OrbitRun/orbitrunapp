@@ -793,6 +793,24 @@ const en: Dict = {
   "sensors.connected.poorBody": "Moisten the sensor with a little water and make sure the strap sits snugly against your skin.",
   "sensors.connected.liveHr": "Live HR",
   "sensors.connected.testHr": "Test HR",
+
+  // Performance Prediction
+  "prediction.title": "Performance Prediction",
+  "prediction.eyebrow": "Race time forecast",
+  "prediction.cta.show": "Show predictions",
+  "prediction.cta.hide": "Hide",
+  "prediction.distance.5k": "5K",
+  "prediction.distance.10k": "10K",
+  "prediction.distance.half": "Half",
+  "prediction.distance.marathon": "Marathon",
+  "prediction.delta.faster": "{value} vs last month",
+  "prediction.delta.slower": "{value} vs last month",
+  "prediction.delta.flat": "no change vs last month",
+  "prediction.delta.none": "no baseline yet",
+  "prediction.theoretical": "Theoretical potential",
+  "prediction.theoretical.info": "You haven't run 15 km yet, so this marathon estimate is a theoretical projection from your shorter runs.",
+  "prediction.empty": "Run at least twice in the last 6 weeks to unlock predictions.",
+  "prediction.coach.fasterMonth": "Your projected {distance} time has dropped {value} this month.",
 };
 
 const da: Dict = {
@@ -1569,6 +1587,24 @@ const da: Dict = {
   "sensors.connected.poorBody": "Fugt sensoren med lidt vand og sørg for, at bæltet sidder tæt mod huden.",
   "sensors.connected.liveHr": "Live puls",
   "sensors.connected.testHr": "Test puls",
+
+  // Performance Prediction
+  "prediction.title": "Performance-prognose",
+  "prediction.eyebrow": "Forventet løbstid",
+  "prediction.cta.show": "Vis prognoser",
+  "prediction.cta.hide": "Skjul",
+  "prediction.distance.5k": "5 km",
+  "prediction.distance.10k": "10 km",
+  "prediction.distance.half": "Halvmaraton",
+  "prediction.distance.marathon": "Maraton",
+  "prediction.delta.faster": "{value} vs. sidste måned",
+  "prediction.delta.slower": "{value} vs. sidste måned",
+  "prediction.delta.flat": "ingen ændring vs. sidste måned",
+  "prediction.delta.none": "intet sammenligningsgrundlag endnu",
+  "prediction.theoretical": "Teoretisk potentiale",
+  "prediction.theoretical.info": "Du har endnu ikke løbet 15 km, så maraton-estimatet er en teoretisk fremskrivning fra dine kortere løb.",
+  "prediction.empty": "Løb mindst to gange inden for de seneste 6 uger for at låse prognoser op.",
+  "prediction.coach.fasterMonth": "Din forventede {distance}-tid er blevet {value} hurtigere denne måned.",
 };
 
 const dicts: Record<Lang, Dict> = { en, da };

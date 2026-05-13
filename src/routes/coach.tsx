@@ -5,6 +5,7 @@ import { useUserProfile } from "@/hooks/use-user-profile";
 import { loadRuns, type Run } from "@/lib/run-types";
 import ReadinessPanel from "@/components/ReadinessPanel";
 import CoachCard from "@/components/CoachCard";
+import PerformancePredictionCard from "@/components/PerformancePredictionCard";
 import WeeklyTrimpBreakdown from "@/components/WeeklyTrimpBreakdown";
 
 export const Route = createFileRoute("/coach")({
@@ -38,6 +39,7 @@ function CoachPage() {
 
       <ReadinessPanel />
       <CoachCard profile={profile} />
+      <PerformancePredictionCard />
       {runs.length > 0 && <WeeklyTrimpBreakdown runs={runs} />}
     </main>
   );
