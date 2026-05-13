@@ -34,7 +34,7 @@ function formatDateShort(ts: number, lang: string): string {
   });
 }
 
-export default function RecordsCarousel() {
+export default function RecordsCarousel({ year = "all" }: { year?: RecordsYear } = {}) {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
   const profile = useUserProfile();
@@ -45,11 +45,20 @@ export default function RecordsCarousel() {
   const [selected, setSelected] = useState(0);
 
   useEffect(() => {
-    setPrs(recomputeAllPrs());
     const refresh = () => {
-      setPrs(loadPrs());
+      const allRuns = loadRuns();
+      const scopedRuns =
+        year === "all"
+          ? allRuns
+          : allRuns.filter((r) => new Date(r.startedAt).getFullYear() === year);
+      if (year === "all") {
+        // Keep persisted PR map in sync for All Time.
+        setPrs(recomputeAllPrs());
+      } else {
+        setPrs(computePrsForRuns(scopedRuns));
+      }
       setVo2Best(
-        bestVo2MaxFromRuns(loadRuns(), { coach: profile.coach, restHr: vitals.restingHr }),
+        bestVo2MaxFromRuns(scopedRuns, { coach: profile.coach, restHr: vitals.restingHr }),
       );
     };
     refresh();
@@ -59,7 +68,7 @@ export default function RecordsCarousel() {
       window.removeEventListener("orbit:new-pr", refresh);
       window.removeEventListener("orbit:run-updated", refresh);
     };
-  }, [profile.coach, vitals.restingHr]);
+  }, [profile.coach, vitals.restingHr, year]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -70,6 +79,11 @@ export default function RecordsCarousel() {
       emblaApi.off("select", onSelect);
     };
   }, [emblaApi]);
+
+  const eyebrow =
+    year === "all"
+      ? t("records.carousel.eyebrow")
+      : t("records.carousel.eyebrow.year", { year: String(year) });
 
   return (
     <section className="mb-4">
