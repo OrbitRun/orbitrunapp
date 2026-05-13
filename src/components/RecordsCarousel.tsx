@@ -4,7 +4,6 @@ import { Activity, Ghost } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useI18n } from "@/lib/i18n";
 import {
-  loadPrs,
   recomputeAllPrs,
   computePrsForRuns,
   PR_ORDER,
@@ -88,7 +87,7 @@ export default function RecordsCarousel({ year = "all" }: { year?: RecordsYear }
   return (
     <section className="mb-4">
       <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold px-1 pb-2">
-        {t("records.carousel.eyebrow")}
+        {eyebrow}
       </div>
       <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
         <div className="flex gap-3">
