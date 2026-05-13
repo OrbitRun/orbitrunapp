@@ -793,6 +793,24 @@ const en: Dict = {
   "sensors.connected.poorBody": "Moisten the sensor with a little water and make sure the strap sits snugly against your skin.",
   "sensors.connected.liveHr": "Live HR",
   "sensors.connected.testHr": "Test HR",
+
+  // Performance Prediction
+  "prediction.title": "Performance Prediction",
+  "prediction.eyebrow": "Race time forecast",
+  "prediction.cta.show": "Show predictions",
+  "prediction.cta.hide": "Hide",
+  "prediction.distance.5k": "5K",
+  "prediction.distance.10k": "10K",
+  "prediction.distance.half": "Half",
+  "prediction.distance.marathon": "Marathon",
+  "prediction.delta.faster": "{value} vs last month",
+  "prediction.delta.slower": "{value} vs last month",
+  "prediction.delta.flat": "no change vs last month",
+  "prediction.delta.none": "no baseline yet",
+  "prediction.theoretical": "Theoretical potential",
+  "prediction.theoretical.info": "You haven't run 15 km yet, so this marathon estimate is a theoretical projection from your shorter runs.",
+  "prediction.empty": "Run at least twice in the last 6 weeks to unlock predictions.",
+  "prediction.coach.fasterMonth": "Your projected {distance} time has dropped {value} this month.",
 };
 
 const da: Dict = {
