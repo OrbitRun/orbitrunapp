@@ -216,6 +216,40 @@ export default function CoachCard({ profile }: Props) {
   );
 }
 
+function PredictionInsightLine({ runs }: { runs: Run[] }) {
+  const { t } = useI18n();
+  const insight = useMemo(() => {
+    const predictions = predictRaceTimes(runs);
+    if (Object.keys(predictions).length === 0) return null;
+    const history = loadHistory();
+    const preferred: PredictionDistance[] = ["10k", "5k", "half"];
+    for (const id of preferred) {
+      const d = monthlyDelta(history, predictions, id);
+      if (d && d.deltaMs <= -1000) {
+        const abs = Math.abs(Math.round(d.deltaMs / 1000));
+        const value =
+          abs < 60 ? `${abs}s` : `${Math.floor(abs / 60)}m ${(abs % 60).toString().padStart(2, "0")}s`;
+        const distance = t(`prediction.distance.${id}` as const);
+        return t("prediction.coach.fasterMonth", { distance, value });
+      }
+    }
+    return null;
+    // re-evaluate when runs identity changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runs, t]);
+
+  if (!insight) return null;
+  // Discrete neon line, matches the existing weekly-adjustment treatment.
+  // Use lowercase override since the surrounding adjustment uses uppercase tracking.
+  const _ = PREDICTION_DISTANCES; // keep import
+  void _;
+  return (
+    <div className="mt-2 text-[11px] text-neon font-bold leading-snug">
+      {insight}
+    </div>
+  );
+}
+
 function Vo2MaxTile({ profile, runs }: { profile: UserProfile; runs: Run[] }) {
   const { t } = useI18n();
   const coach = profile.coach;
