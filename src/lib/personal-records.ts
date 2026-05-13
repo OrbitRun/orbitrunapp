@@ -173,8 +173,9 @@ export function checkAndUpdatePrs(run: Run): PrCategory[] {
   return improved;
 }
 
-export function recomputeAllPrs(): PrMap {
-  const runs = loadRuns();
+// Pure helper: derive a PR map from any subset of runs (no persistence).
+// Used for yearly-scoped records on the History page.
+export function computePrsForRuns(runs: Run[]): PrMap {
   const map: PrMap = {};
   // Process oldest → newest so achievedAt reflects the first run that set the record.
   const ordered = [...runs].sort((a, b) => a.endedAt - b.endedAt);
@@ -191,6 +192,11 @@ export function recomputeAllPrs(): PrMap {
       }
     }
   }
+  return map;
+}
+
+export function recomputeAllPrs(): PrMap {
+  const map = computePrsForRuns(loadRuns());
   savePrs(map);
   return map;
 }
