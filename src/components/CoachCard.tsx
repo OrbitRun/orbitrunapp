@@ -239,10 +239,6 @@ function PredictionInsightLine({ runs }: { runs: Run[] }) {
   }, [runs, t]);
 
   if (!insight) return null;
-  // Discrete neon line, matches the existing weekly-adjustment treatment.
-  // Use lowercase override since the surrounding adjustment uses uppercase tracking.
-  const _ = PREDICTION_DISTANCES; // keep import
-  void _;
   return (
     <div className="mt-2 text-[11px] text-neon font-bold leading-snug">
       {insight}
