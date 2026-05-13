@@ -56,15 +56,7 @@ function HistoryPage() {
   // Map runId -> ordered list of PR categories that this run currently holds.
   // For yearly views, derive PRs from the filtered runs so badges match scope.
   const prsByRun = useMemo(() => {
-    const source =
-      selectedYear === "all"
-        ? prs
-        : (() => {
-            // Lazy import avoided — computePrsForRuns is sync and pure.
-            // eslint-disable-next-line @typescript-eslint/no-var-requires
-            const mod = require("@/lib/personal-records") as typeof import("@/lib/personal-records");
-            return mod.computePrsForRuns(filteredRuns);
-          })();
+    const source = selectedYear === "all" ? prs : computePrsForRuns(filteredRuns);
     const map = new Map<string, PrCategory[]>();
     const order: PrCategory[] = ["1k", "5k", "10k", "half", "marathon", "fastestKm", "longest"];
     for (const cat of order) {
