@@ -4,13 +4,14 @@ import { ChevronDown, ChevronRight, Footprints, Ghost, Heart, Mountain, Trash2, 
 import { deleteRun, loadRuns, type Run, type Split } from "@/lib/run-types";
 import { formatDate, formatDistance, formatDuration, formatPace } from "@/lib/run-utils";
 import { ALL_METRIC_IDS, METRICS, computeRunMetrics } from "@/lib/stat-metrics";
-import { bestTimeForPoints } from "@/lib/personal-records";
+import { bestTimeForPoints, computePrsForRuns } from "@/lib/personal-records";
 import RunMap from "@/components/RunMap";
 import WeatherBadge from "@/components/WeatherBadge";
 import { getShoeById } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import WeeklyTrimpBreakdown from "@/components/WeeklyTrimpBreakdown";
 import RecordsCarousel from "@/components/RecordsCarousel";
+import YearFilterCarousel, { type YearSelection } from "@/components/YearFilterCarousel";
 
 import { loadPrs, type PrCategory, type PrMap } from "@/lib/personal-records";
 import { selectGhost } from "@/lib/ghost-runner";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/history")({
 function HistoryPage() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [prs, setPrs] = useState<PrMap>({});
+  const [selectedYear, setSelectedYear] = useState<YearSelection>("all");
   const { t } = useI18n();
   
 
@@ -33,23 +35,43 @@ function HistoryPage() {
     return () => window.removeEventListener("orbit:run-updated", refresh);
   }, []);
 
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    for (const r of runs) set.add(new Date(r.startedAt).getFullYear());
+    return Array.from(set).sort((a, b) => b - a);
+  }, [runs]);
+
+  // Reset to All Time if the selected year disappears (e.g. last run deleted).
+  useEffect(() => {
+    if (selectedYear !== "all" && !years.includes(selectedYear)) {
+      setSelectedYear("all");
+    }
+  }, [years, selectedYear]);
+
+  const filteredRuns = useMemo(() => {
+    if (selectedYear === "all") return runs;
+    return runs.filter((r) => new Date(r.startedAt).getFullYear() === selectedYear);
+  }, [runs, selectedYear]);
+
   // Map runId -> ordered list of PR categories that this run currently holds.
+  // For yearly views, derive PRs from the filtered runs so badges match scope.
   const prsByRun = useMemo(() => {
+    const source = selectedYear === "all" ? prs : computePrsForRuns(filteredRuns);
     const map = new Map<string, PrCategory[]>();
     const order: PrCategory[] = ["1k", "5k", "10k", "half", "marathon", "fastestKm", "longest"];
     for (const cat of order) {
-      const entry = prs[cat];
+      const entry = source[cat];
       if (!entry) continue;
       const list = map.get(entry.runId) ?? [];
       list.push(cat);
       map.set(entry.runId, list);
     }
     return map;
-  }, [prs]);
+  }, [prs, selectedYear, filteredRuns]);
 
-  const totalDistance = runs.reduce((a, r) => a + r.distanceM, 0);
-  const totalRuns = runs.length;
-  const totalTime = runs.reduce((a, r) => a + r.durationMs, 0);
+  const totalDistance = filteredRuns.reduce((a, r) => a + r.distanceM, 0);
+  const totalRuns = filteredRuns.length;
+  const totalTime = filteredRuns.reduce((a, r) => a + r.durationMs, 0);
 
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
@@ -60,7 +82,15 @@ function HistoryPage() {
         <h1 className="font-display font-black text-3xl tracking-tight">{t("history.title")}</h1>
       </header>
 
-      <RecordsCarousel />
+      {years.length > 0 && (
+        <YearFilterCarousel
+          years={years}
+          selected={selectedYear}
+          onChange={setSelectedYear}
+        />
+      )}
+
+      <RecordsCarousel year={selectedYear} />
 
       <section className="grid grid-cols-3 gap-3 mb-4">
         <div className="glass rounded-2xl p-3 text-center">
@@ -89,9 +119,9 @@ function HistoryPage() {
         </div>
       </section>
 
-      {runs.length > 0 && <WeeklyTrimpBreakdown runs={runs} />}
+      {filteredRuns.length > 0 && <WeeklyTrimpBreakdown runs={filteredRuns} />}
 
-      {runs.length === 0 ? (
+      {filteredRuns.length === 0 ? (
         <div className="glass rounded-3xl p-8 text-center">
           <p className="text-muted-foreground text-sm">{t("history.empty")}</p>
           <Link
@@ -103,7 +133,7 @@ function HistoryPage() {
         </div>
       ) : (
         <ul className="space-y-3 pb-4">
-          {runs.map((r) => (
+          {filteredRuns.map((r) => (
             <li key={r.id}>
               <ExpandableRunCard
                 run={r}

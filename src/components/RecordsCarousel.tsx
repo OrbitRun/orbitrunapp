@@ -4,8 +4,8 @@ import { Activity, Ghost } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useI18n } from "@/lib/i18n";
 import {
-  loadPrs,
   recomputeAllPrs,
+  computePrsForRuns,
   PR_ORDER,
   type PrCategory,
   type PrMap,
@@ -16,6 +16,8 @@ import { selectGhost } from "@/lib/ghost-runner";
 import { bestVo2MaxFromRuns, classifyFitnessByProfile } from "@/lib/vo2max";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useVitals } from "@/hooks/use-vitals";
+
+export type RecordsYear = number | "all";
 
 function formatValue(category: PrCategory, value: number): string {
   if (category === "longest") return `${formatDistance(value)} km`;
@@ -31,7 +33,7 @@ function formatDateShort(ts: number, lang: string): string {
   });
 }
 
-export default function RecordsCarousel() {
+export default function RecordsCarousel({ year = "all" }: { year?: RecordsYear } = {}) {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
   const profile = useUserProfile();
@@ -42,11 +44,20 @@ export default function RecordsCarousel() {
   const [selected, setSelected] = useState(0);
 
   useEffect(() => {
-    setPrs(recomputeAllPrs());
     const refresh = () => {
-      setPrs(loadPrs());
+      const allRuns = loadRuns();
+      const scopedRuns =
+        year === "all"
+          ? allRuns
+          : allRuns.filter((r) => new Date(r.startedAt).getFullYear() === year);
+      if (year === "all") {
+        // Keep persisted PR map in sync for All Time.
+        setPrs(recomputeAllPrs());
+      } else {
+        setPrs(computePrsForRuns(scopedRuns));
+      }
       setVo2Best(
-        bestVo2MaxFromRuns(loadRuns(), { coach: profile.coach, restHr: vitals.restingHr }),
+        bestVo2MaxFromRuns(scopedRuns, { coach: profile.coach, restHr: vitals.restingHr }),
       );
     };
     refresh();
@@ -56,7 +67,7 @@ export default function RecordsCarousel() {
       window.removeEventListener("orbit:new-pr", refresh);
       window.removeEventListener("orbit:run-updated", refresh);
     };
-  }, [profile.coach, vitals.restingHr]);
+  }, [profile.coach, vitals.restingHr, year]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -68,10 +79,15 @@ export default function RecordsCarousel() {
     };
   }, [emblaApi]);
 
+  const eyebrow =
+    year === "all"
+      ? t("records.carousel.eyebrow")
+      : t("records.carousel.eyebrow.year", { year: String(year) });
+
   return (
     <section className="mb-4">
       <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold px-1 pb-2">
-        {t("records.carousel.eyebrow")}
+        {eyebrow}
       </div>
       <div className="overflow-hidden -mx-4 px-4" ref={emblaRef}>
         <div className="flex gap-3">
