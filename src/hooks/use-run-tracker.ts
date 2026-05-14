@@ -536,6 +536,7 @@ export function useRunTracker() {
                   ? `Du er ${sec} sekunder bagud din ghost.`
                   : `You are ${sec} seconds behind your ghost.`,
                 lang,
+                "coach",
               );
             }
           }
