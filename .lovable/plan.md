@@ -1,125 +1,81 @@
-# Performance Prediction
+## Indoor / Outdoor mode for Orbit Run
 
-A new collapsible section on the Orbit Coach page that estimates race times for 5K, 10K, half marathon and marathon, compares them to a 30-day-old snapshot, and feeds the trend back into the daily coach briefing.
+### 1. Profile setting (global)
 
-## 1. UI: new collapsible card on the Coach page
+**`src/lib/user-profile.ts`**
+- Add `activityEnvironment: "outdoor" | "indoor"` to `UserProfile` (default `"outdoor"`).
+- Persisted in the existing `localStorage` profile blob, broadcasts via the existing `orbit:profile-update` event.
 
-New file `src/components/PerformancePredictionCard.tsx`, mounted in `src/routes/coach.tsx` directly under `<CoachCard />`.
+**`src/routes/profile.tsx`**
+- New minimalist segmented toggle ("Outdoor" / "Indoor") inserted directly under the Member Card section, using the same glass/border styling as other Profile rows.
+- Updates profile via `saveProfile()` so every consumer (`useRunTracker`, `RunPage`, `FocusRunView`) reacts immediately.
 
-Visual treatment matches the existing Orbit Coach card:
-- `glass rounded-2xl p-4` container with the same header pattern (icon tile + title + eyebrow).
-- Lucide `TrendingUp` icon in a `bg-white/5` rounded tile, neon foreground.
-- Title: `Performance Prediction` (i18n).
-- Same neon collapse button as the "Show session" button on `CoachCard` (`bg-neon/10 border border-neon/30 text-neon … uppercase tracking-[0.15em]`), label toggles between `Show predictions` / `Hide`.
-- Collapsed state shows just the header + CTA. Expanded state reveals four distance rows.
+**`src/lib/i18n.tsx`** — add EN/DA keys: `profile.environment.title`, `profile.environment.outdoor`, `profile.environment.indoor`, `profile.environment.hint`.
 
-Each distance row (minimal, lots of whitespace, typography-led):
+### 2. Smart sensor source
 
-```text
-5K              19:42      ▲ −18s vs last month
-10K             41:05      ▲ −34s vs last month
-HALF          1:31:20      — no baseline yet
-MARATHON      3:12:55      Theoretical potential
-```
+New file **`src/lib/motion-source.ts`**:
+- Type `MotionSource = "gps" | "watch" | "phone" | "camera"`.
+- `pickIndoorSource(opts)` returns the active source given:
+  1. BLE/Apple Watch HR connected → `"watch"` (HR + cadence from BT cadence/SPM characteristic when available, else accelerometer cadence as backup).
+  2. Phone moves with sustained accel variance > threshold → `"phone"` (pocket mode).
+  3. Phone is still (low accel variance for 5 s) and camera permission granted → `"camera"` (holder mode).
 
-- Distance label: `text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-bold`.
-- Time: `font-display font-black text-2xl tabular`.
-- Delta line: `text-[11px]` — neon when faster, muted when slower or unchanged, with a small `ArrowUp` / `ArrowDown` (lucide) glyph. Color stays subtle (no destructive red).
-- Marathon (and any distance for which the user has never run ≥15 km) gets the eyebrow label `Theoretical potential` next to the time and an `Info` icon that, on tap, shows a one-line tooltip via the existing `InfoHint` component.
-- Rows separated by `border-t border-white/5 pt-3 mt-3` to mirror the Vo2Max divider in `CoachCard`.
+New file **`src/lib/cadence-accelerometer.ts`**:
+- Wraps `DeviceMotionEvent` (web) and `@capacitor/motion` (native) to compute steps/min via peak detection on the magnitude of `accelerationIncludingGravity`. Exposes `start(cb)` / `stop()` returning live `cadenceSpm` and an integrated step-derived `distanceM` using the user's stride (heuristic: `0.413 * heightCm / 100` fallback `0.78 m`).
+- Used to drive distance + cadence indoors when GPS is disabled.
 
-No new colors. All styling stays inside semantic tokens already in `src/styles.css` (`text-neon`, `text-muted-foreground`, `border-white/5`, `bg-white/5`).
+New file **`src/lib/cadence-camera.ts`**:
+- Holder mode. Opens front camera via `navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })`, downsamples each frame to a small canvas, computes per-frame mean luminance delta as a 1-D signal, and runs an FFT/peak-detector to estimate cadence (steps/min in the 120–220 range).
+- Permission request gated behind a one-time confirm sheet; gracefully no-ops on web preview when permission denied.
 
-## 2. Prediction algorithm
+**`src/hooks/use-run-tracker.ts`**:
+- Accept indoor mode (read from profile on `start()`).
+- Indoor branch: skip `nativeWatchPosition` / `navigator.geolocation.watchPosition`, set `gpsReady = true` synthetically, set `hrSource`/`gpsAccuracyM` from the chosen motion source.
+- Subscribe to the accelerometer module by default; switch to camera module if the phone is detected stationary for ≥5 s and camera was authorised.
+- Distance + cadence are fed from `cadence-accelerometer` / `cadence-camera`; pace derived from distance/time. HR continues to come from BT/Health unchanged.
+- Expose new state field `motionSource: MotionSource` in the tracker state.
 
-New file `src/lib/performance-prediction.ts`. Pure functions, no React.
+### 3. Indoor run layout
 
-Inputs: `Run[]` (from `loadRuns()`), a reference `now` timestamp.
+**`src/components/IndoorRunView.tsx`** (new):
+- Replaces `<RunMap />` and the existing carousel when `profile.activityEnvironment === "indoor"`.
+- Layout:
+  - **Hero**: `Pace` in massive neon-green display font (≈`text-[96px]`, `font-display font-black`, `text-neon`), labelled `PACE · MIN/KM` in muted-uppercase.
+  - **2×2 grid** below: `Heart Rate (BPM)`, `Distance (km)`, `Time`, `Cadence (SPM)` — each tile uses the existing `StatTile` styling tokens (no custom hex).
+- Pause / Resume / hold-to-stop controls reused from `FocusRunView` (extracted into a small `RunControls` subcomponent so both views share them).
+- Spotify mini player block stays mounted below the stats.
 
-Steps:
+**`src/components/FocusRunView.tsx`**:
+- Branch at the top: if `activityEnvironment === "indoor"` render `<IndoorRunView />` instead of the map+carousel block. All the hooks (zone cues, pacing, hold-to-stop, HR spike banner) keep working.
 
-1. **Window the runs.** Take all runs with `endedAt >= now - 42 days` (6 weeks). If fewer than 2 qualifying runs, return `null` for all distances.
-2. **Per-run race-equivalent time at distance D.** For each run, compute the best continuous time over D using the existing `bestTimeForPoints(run.points, D)` helper from `personal-records.ts` when `run.distanceM >= D`. If the run is shorter than D, project a time using a Riegel extrapolation from the run's full `(distanceM, durationMs)`:
+**`src/routes/index.tsx`**:
+- Static (pre-run) layout: when indoor mode is on, hide the map preview block and instead show the same hero/2×2 placeholder zeroed out, so the visual identity matches the active session.
 
-   ```text
-   T_D = T_run * (D / distanceM_run) ^ k
-   ```
+### 4. Source indicator chip
 
-   Use `k = 1.06` for D ≤ 10 km and `k = 1.08` for half/marathon (slightly steeper than the textbook 1.06 to reflect endurance fade). Skip runs shorter than `0.4 * D` — too short to extrapolate meaningfully.
-3. **Endurance anchor.** Find the longest run in the window (`L = max(distanceM)`). Multiply each projected `T_D` by an endurance factor
+**`src/components/SourceSignalChip.tsx`** (new, replaces `GpsSignalChip` at the call sites):
+- Same pill chrome as `GpsSignalChip` (`glass-strong`, neon ping dot).
+- Icon switches by `motionSource`:
+  - `gps` → `Satellite`
+  - `watch` → `Watch`
+  - `phone` → `Smartphone` (the requested "wave/phone" icon)
+  - `camera` → `Aperture` (lens)
+- Label keys: `source.gps`, `source.watch`, `source.phone`, `source.camera` (EN/DA).
 
-   ```text
-   f = clamp(1 + max(0, (D - L) / D) * 0.04, 1.0, 1.20)
-   ```
+**`src/routes/index.tsx`** + **`src/components/FocusRunView.tsx`**:
+- Replace `<GpsSignalChip />` with `<SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} />` in the top-right of both the static page and the active run view.
 
-   so estimates beyond what the user has actually covered get progressively penalised (capped at +20%).
-4. **Recency-weighted aggregate.** For each candidate `T_D`, weight by `w = exp(-ageDays / 21)` (3-week half-life-ish) AND by a quality weight `q = 1 / (1 + max(0, (D / runDistance) - 1))` so a 5 km projection trusts a 4 km run more than a 1.5 km sprint. Take the weighted minimum-of-best-3 (cheap robust estimator: sort `T_D * (1/qw)` ascending, take the lowest 3, return their weighted mean).
-5. Return `{ "5k": ms, "10k": ms, "half": ms, "marathon": ms } | null per distance`.
+### 5. Design finish
+- Numbers in neon (`text-neon`), labels in `text-muted-foreground` uppercase tracking, all via existing tokens — no hard-coded hex.
+- Mode switch is instant: `RunPage` and `FocusRunView` re-render on `orbit:profile-update`. The indoor layout mounts in the same DOM slot as the map container so the transition is a simple unmount/mount with no animation jank.
 
-Also export `hasLongRunFor(runs, distanceM)` returning `true` if any run in the window is `>= 0.7 * distanceM` (used to decide marathon "Theoretical potential" — falls back to the user's all-time longest to be lenient: marathon is theoretical if no run ever ≥ 15 km).
+### Out of scope / assumptions
+- Marathon-grade indoor accuracy (treadmill calibration UI) is not part of this change — stride length uses the heuristic above; we can add a "calibrate stride" affordance later.
+- Camera-based cadence is a best-effort luminance/motion estimate; if no signal is detectable for 10 s the tracker silently falls back to the accelerometer source.
+- BLE cadence-from-strap requires a strap that exposes the standard Running Speed and Cadence service; if absent we keep cadence from accelerometer even when HR comes from `"watch"`.
 
-## 3. Trend storage (30-day comparison)
-
-New file `src/lib/prediction-history.ts` — tiny localStorage log so we don't recompute history on every render.
-
-Schema:
-
-```ts
-type PredictionSnapshot = {
-  t: number; // ms timestamp
-  values: { "5k"?: number; "10k"?: number; half?: number; marathon?: number };
-};
-const KEY = "orbit:prediction-history:v1";
-```
-
-API:
-- `loadHistory(): PredictionSnapshot[]`
-- `appendSnapshot(values)` — pushes if last entry is older than 6 hours (rate limit), trims to last 180 entries (~6 months at one snapshot/day max).
-- `snapshotClosestTo(history, targetT, toleranceDays = 7)` — returns the snapshot whose `t` is closest to `targetT` within tolerance, or `null`.
-- `monthlyDelta(history, current, distance)` — returns `{ deltaMs: number, baselineT: number } | null` comparing `current[distance]` against the snapshot closest to `now - 30 days` (±7 days window).
-
-`PerformancePredictionCard` calls `appendSnapshot(currentPredictions)` once on mount whenever `runs.length > 0` and predictions are non-null. This gives us a continuously growing baseline without recomputing past predictions.
-
-## 4. Coach briefing integration
-
-`src/lib/coach-plan.ts` already drives the Coach card text. Add a new exported helper `predictionInsight(lang)` that:
-
-- Calls `loadRuns()` + `predictRaceTimes(runs)` + `monthlyDelta(history, …, "10k")` (preferred distance: first of `10k`, `5k`, `half` that has a non-null delta).
-- Returns an i18n-formatted sentence like: `Your projected 10K time has dropped 12s this month.` or `null` if no signal.
-
-Surface this string in `CoachCard.tsx` as a discreet line beneath the existing `currentWeekAdjustment` note (same `text-[10px] text-neon font-bold uppercase tracking-[0.12em]` style), only rendered when non-null and trending faster (delta < 0).
-
-This is a small additive read; no changes to plan or session logic.
-
-## 5. i18n
-
-Add to `src/lib/i18n.tsx` (English + Danish) under a new `prediction.*` namespace:
-
-- `prediction.title` — "Performance Prediction" / "Performance-prognose"
-- `prediction.eyebrow` — "Race time forecast" / "Forventet løbstid"
-- `prediction.cta.show` / `prediction.cta.hide`
-- `prediction.distance.5k` / `.10k` / `.half` / `.marathon`
-- `prediction.delta.faster` — "{value} vs last month"
-- `prediction.delta.slower` — "+{value} vs last month"
-- `prediction.delta.none` — "no baseline yet"
-- `prediction.theoretical` — "Theoretical potential" / "Teoretisk potentiale"
-- `prediction.theoretical.info` — short tooltip explaining the user hasn't run ≥15 km yet
-- `prediction.empty` — shown when fewer than 2 runs in the last 6 weeks
-- `prediction.coach.fasterMonth` — "Your projected {distance} time has dropped {value} this month."
-
-## 6. Out of scope
-
-- No backend / Supabase changes; everything is local.
-- No changes to existing PR storage, run schema, or History page.
-- No changes to other routes.
-- No new dependencies.
-
-## Files
-
-- new: `src/lib/performance-prediction.ts`
-- new: `src/lib/prediction-history.ts`
-- new: `src/components/PerformancePredictionCard.tsx`
-- edit: `src/routes/coach.tsx` (mount the new card)
-- edit: `src/components/CoachCard.tsx` (render the trend insight line)
-- edit: `src/lib/coach-plan.ts` (add `predictionInsight` helper)
-- edit: `src/lib/i18n.tsx` (new keys, EN + DA)
+### Files
+- new: `src/components/IndoorRunView.tsx`, `src/components/SourceSignalChip.tsx`, `src/lib/motion-source.ts`, `src/lib/cadence-accelerometer.ts`, `src/lib/cadence-camera.ts`
+- edited: `src/lib/user-profile.ts`, `src/lib/i18n.tsx`, `src/routes/profile.tsx`, `src/routes/index.tsx`, `src/components/FocusRunView.tsx`, `src/hooks/use-run-tracker.ts`
+- `src/components/GpsSignalChip.tsx` kept as a thin re-export wrapper for backwards compat (or removed if unused after migration).
