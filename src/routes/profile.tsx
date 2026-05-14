@@ -355,6 +355,20 @@ function ProfilePage() {
           onToggle={toggleAudioCue}
         />
         <SettingRowWithInfo
+          icon={<Mic className="h-4 w-4" />}
+          label={t("profile.voiceCues")}
+          valueText={t(profile.voiceCuesEnabled === false ? "profile.voiceCues.value.off" : "profile.voiceCues.value.on")}
+          infoText={t("profile.voiceCues.info")}
+          onToggle={() => update({ voiceCuesEnabled: profile.voiceCuesEnabled === false })}
+        />
+        <SettingRowWithInfo
+          icon={<MessageSquare className="h-4 w-4" />}
+          label={t("profile.coachVoiceCues")}
+          valueText={t(profile.coachVoiceCuesEnabled === false ? "profile.coachVoiceCues.value.off" : "profile.coachVoiceCues.value.on")}
+          infoText={t("profile.coachVoiceCues.info")}
+          onToggle={() => update({ coachVoiceCuesEnabled: profile.coachVoiceCuesEnabled === false })}
+        />
+        <SettingRowWithInfo
           icon={<Trophy className="h-4 w-4" />}
           label={t("profile.prVoice")}
           valueText={profile.prVoiceEnabled ? t("profile.prVoice.value.on") : t("profile.prVoice.value.off")}
