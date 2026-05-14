@@ -12,7 +12,7 @@ import Onboarding from "@/components/Onboarding";
 import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
-import GpsSignalChip from "@/components/GpsSignalChip";
+import SourceSignalChip from "@/components/SourceSignalChip";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -242,23 +242,32 @@ function RunPage() {
       )}
 
       <section className="relative">
-        <div className="rounded-3xl overflow-hidden border border-border shadow-card">
-          <RunMap
-            points={t.points}
-            className="h-[221px] w-full"
-            interactive={!isActive}
-            ghost={
-              t.ghost
-                ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
-                : null
-            }
-          />
-        </div>
-        {!t.gpsReady && (
-          <div className="absolute top-3 left-3 pointer-events-none">
-            <GpsSignalChip accuracyM={t.gpsAccuracyM} />
+        {profile.activityEnvironment === "indoor" ? (
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
+              {tr("indoor.preview.title")}
+            </div>
+            <div className="mt-2 text-[11px] text-muted-foreground font-semibold">
+              {tr("indoor.preview.hint")}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card">
+            <RunMap
+              points={t.points}
+              className="h-[221px] w-full"
+              interactive={!isActive}
+              ghost={
+                t.ghost
+                  ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
+                  : null
+              }
+            />
           </div>
         )}
+        <div className="absolute top-3 left-3 pointer-events-none">
+          <SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} />
+        </div>
         {t.points.length === 0 && t.permissionError && (
           <div className="absolute inset-x-3 top-3 pointer-events-none">
             <div className="glass-strong rounded-xl px-3 py-1.5 text-[11px] text-destructive text-center">
@@ -266,20 +275,22 @@ function RunPage() {
             </div>
           </div>
         )}
-        <div className="absolute bottom-3 right-3 glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 text-[10px] font-semibold">
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-3 rounded-full bg-[var(--speed-slow)]" />
-            {tr("map.legend.slow")}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-3 rounded-full bg-[var(--speed-mid)]" />
-            {tr("map.legend.mid")}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-3 rounded-full bg-[var(--speed-fast)]" />
-            {tr("map.legend.fast")}
-          </span>
-        </div>
+        {profile.activityEnvironment !== "indoor" && (
+          <div className="absolute bottom-3 right-3 glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 text-[10px] font-semibold">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-3 rounded-full bg-[var(--speed-slow)]" />
+              {tr("map.legend.slow")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-3 rounded-full bg-[var(--speed-mid)]" />
+              {tr("map.legend.mid")}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-3 rounded-full bg-[var(--speed-fast)]" />
+              {tr("map.legend.fast")}
+            </span>
+          </div>
+        )}
       </section>
 
       <section className="mt-4 flex items-center justify-end px-1">
