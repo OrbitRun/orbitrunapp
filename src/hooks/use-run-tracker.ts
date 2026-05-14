@@ -882,6 +882,9 @@ export function useRunTracker() {
     }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
+    indoorStopRef.current?.();
+    indoorStopRef.current = null;
+    indoorEnabledRef.current = false;
     const s = stateRef.current;
     if (!s.startedAt) {
       stopHeartRatePolling();
