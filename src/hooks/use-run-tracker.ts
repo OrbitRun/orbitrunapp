@@ -718,7 +718,7 @@ export function useRunTracker() {
         const speedMs = (s.cadenceSpm * indoorStrideMRef.current) / 60;
         const currentPace = speedMs > 0.3 ? 1000 / speedMs : 0;
         setState((p) =>
-          p.status === "running" || p.status === "paused"
+          p.status === "running"
             ? {
                 ...p,
                 distanceM: distM,
