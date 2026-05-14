@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, MessageSquare, Mic, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -353,6 +353,20 @@ function ProfilePage() {
           valueText={t(`profile.audio.value.${profile.audioCueMeters}`)}
           infoText={t("profile.audio.info")}
           onToggle={toggleAudioCue}
+        />
+        <SettingRowWithInfo
+          icon={<Mic className="h-4 w-4" />}
+          label={t("profile.voiceCues")}
+          valueText={t(profile.voiceCuesEnabled === false ? "profile.voiceCues.value.off" : "profile.voiceCues.value.on")}
+          infoText={t("profile.voiceCues.info")}
+          onToggle={() => update({ voiceCuesEnabled: profile.voiceCuesEnabled === false })}
+        />
+        <SettingRowWithInfo
+          icon={<MessageSquare className="h-4 w-4" />}
+          label={t("profile.coachVoiceCues")}
+          valueText={t(profile.coachVoiceCuesEnabled === false ? "profile.coachVoiceCues.value.off" : "profile.coachVoiceCues.value.on")}
+          infoText={t("profile.coachVoiceCues.info")}
+          onToggle={() => update({ coachVoiceCuesEnabled: profile.coachVoiceCuesEnabled === false })}
         />
         <SettingRowWithInfo
           icon={<Trophy className="h-4 w-4" />}

@@ -2,6 +2,47 @@
 
 import type { Lang } from "@/lib/i18n";
 
+export type VoiceCueCategory = "general" | "coach";
+
+// Cached voice-cue prefs, hydrated lazily from localStorage and refreshed on
+// `orbit:profile-update` so toggles take effect without a reload.
+type VoicePrefs = { master: boolean; coach: boolean };
+let cachedVoicePrefs: VoicePrefs | null = null;
+
+function readVoicePrefs(): VoicePrefs {
+  if (typeof window === "undefined") return { master: true, coach: true };
+  try {
+    const raw = window.localStorage.getItem("orbit:user-profile:v1");
+    if (!raw) return { master: true, coach: true };
+    const p = JSON.parse(raw) as { voiceCuesEnabled?: boolean; coachVoiceCuesEnabled?: boolean };
+    return {
+      master: p.voiceCuesEnabled !== false,
+      coach: p.coachVoiceCuesEnabled !== false,
+    };
+  } catch {
+    return { master: true, coach: true };
+  }
+}
+
+function getVoicePrefs(): VoicePrefs {
+  if (cachedVoicePrefs) return cachedVoicePrefs;
+  cachedVoicePrefs = readVoicePrefs();
+  if (typeof window !== "undefined") {
+    window.addEventListener("orbit:profile-update", () => {
+      cachedVoicePrefs = readVoicePrefs();
+    });
+  }
+  return cachedVoicePrefs;
+}
+
+export function isVoiceCueAllowed(category: VoiceCueCategory = "general"): boolean {
+  const p = getVoicePrefs();
+  if (!p.master) return false;
+  if (category === "coach" && !p.coach) return false;
+  return true;
+}
+
+
 let ctx: AudioContext | null = null;
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -39,7 +80,12 @@ function pickVoice(lang: Lang): SpeechSynthesisVoice | undefined {
   return voices.find((v) => v.lang?.toLowerCase().startsWith(target));
 }
 
-export function speakLocalized(text: string, lang: Lang) {
+export function speakLocalized(
+  text: string,
+  lang: Lang,
+  category: VoiceCueCategory = "general",
+) {
+  if (!isVoiceCueAllowed(category)) return;
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     beep(1320, 320, 0.3);
     return;
@@ -60,7 +106,7 @@ export function speakLocalized(text: string, lang: Lang) {
 }
 
 export function speakGo(lang: Lang = "en") {
-  speakLocalized(lang === "da" ? "Løb!" : "Go!", lang);
+  speakLocalized(lang === "da" ? "Løb!" : "Go!", lang, "general");
 }
 
 // Throttled zone-change cue: speaks only when zone has changed AND
@@ -73,7 +119,7 @@ export function speakZoneEntered(zone: number, lang: Lang, template: string) {
   if (zone === lastZoneSpoken && now - lastZoneAt < 60_000) return;
   lastZoneSpoken = zone;
   lastZoneAt = now;
-  speakLocalized(template.replace("{zone}", String(zone)), lang);
+  speakLocalized(template.replace("{zone}", String(zone)), lang, "coach");
 }
 
 export function resetZoneCueState() {
@@ -101,7 +147,7 @@ export function speakPacingCue(
   if (status === lastPacingStatus && now - lastPacingAt < 45_000) return;
   lastPacingStatus = status;
   lastPacingAt = now;
-  speakLocalized(text, lang);
+  speakLocalized(text, lang, "coach");
 }
 
 // Pre-warm the audio context + voice list on a user gesture so iOS allows playback later.

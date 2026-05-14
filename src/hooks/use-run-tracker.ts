@@ -158,7 +158,7 @@ function speakSplit(
         ? " Ny rekord! Længste løbetur nogensinde."
         : " New personal record! Your longest run ever.";
   }
-  speakLocalized(txt, lang);
+  speakLocalized(txt, lang, "coach");
 }
 
 export function useRunTracker() {
@@ -522,6 +522,7 @@ export function useRunTracker() {
                   ? "Du er lige gået forbi din ghost!"
                   : "You just passed your ghost!",
                 lang,
+                "coach",
               );
             }
             // If we slip back behind, allow the cue to fire again next overtake.
@@ -535,6 +536,7 @@ export function useRunTracker() {
                   ? `Du er ${sec} sekunder bagud din ghost.`
                   : `You are ${sec} seconds behind your ghost.`,
                 lang,
+                "coach",
               );
             }
           }

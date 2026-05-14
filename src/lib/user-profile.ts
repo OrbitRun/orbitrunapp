@@ -129,6 +129,12 @@ export type UserProfile = {
   // Global indoor/outdoor mode. Disables GPS and switches the run UI to a
   // map-less hero+grid layout when set to "indoor".
   activityEnvironment?: "outdoor" | "indoor";
+  // Master switch for all spoken voice cues (countdown, run summary, coach
+  // callouts, etc.). When false, no speech synthesis is triggered.
+  voiceCuesEnabled?: boolean;
+  // Sub-switch for Orbit Coach voice cues (zone changes, pacing, km splits,
+  // ghost callouts). Only applies when `voiceCuesEnabled` is also true.
+  coachVoiceCuesEnabled?: boolean;
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -148,6 +154,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   trainingReminderEnabled: false,
   weeklySummaryEnabled: false,
   activityEnvironment: "outdoor",
+  voiceCuesEnabled: true,
+  coachVoiceCuesEnabled: true,
 };
 
 export function loadProfile(): UserProfile {

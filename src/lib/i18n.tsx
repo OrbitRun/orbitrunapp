@@ -222,6 +222,12 @@ const en: Dict = {
   "profile.prVoice": "PR voice callouts",
   "profile.prVoice.value.on": "On",
   "profile.prVoice.value.off": "Off",
+  "profile.voiceCues": "Voice cues",
+  "profile.voiceCues.value.on": "On",
+  "profile.voiceCues.value.off": "Off",
+  "profile.coachVoiceCues": "Orbit Coach voice cues",
+  "profile.coachVoiceCues.value.on": "On",
+  "profile.coachVoiceCues.value.off": "Off",
   "profile.language": "Language",
   "profile.runner": "Runner",
   "profile.name": "Your name",
@@ -691,6 +697,10 @@ const en: Dict = {
     "Choose how often the AI coach should give you audio updates (e.g. every kilometer or 500 meters) about your pace and heart rate.",
   "profile.prVoice.info":
     "Turn on to get an audio cue when you set a new personal record or beat your Ghost Runner.",
+  "profile.voiceCues.info":
+    "Master switch for all spoken voice cues — countdown, run summaries, coach callouts, and more. Turn off for a fully silent run.",
+  "profile.coachVoiceCues.info":
+    "Toggle the Orbit Coach voice callouts during a run: heart-rate zone changes, pacing nudges, kilometer splits, and ghost updates.",
   "profile.autoPause.info":
     "Automatically pauses the timer if you stop (e.g. at a traffic light), so your average speed stays accurate.",
   "profile.haptic.info":
@@ -1013,6 +1023,12 @@ const da: Dict = {
   "profile.prVoice": "Stemmesignaler ved rekord",
   "profile.prVoice.value.on": "Til",
   "profile.prVoice.value.off": "Fra",
+  "profile.voiceCues": "Stemmesignaler",
+  "profile.voiceCues.value.on": "Til",
+  "profile.voiceCues.value.off": "Fra",
+  "profile.coachVoiceCues": "Orbit Coach stemmesignaler",
+  "profile.coachVoiceCues.value.on": "Til",
+  "profile.coachVoiceCues.value.off": "Fra",
   "profile.language": "Sprog",
   "profile.runner": "Løber",
   "profile.name": "Dit navn",
@@ -1495,6 +1511,10 @@ const da: Dict = {
     "Vælg hvor ofte AI-coachen skal give dig lydopdateringer (f.eks. for hver kilometer eller 500 meter) om dit tempo og din puls.",
   "profile.prVoice.info":
     "Slå til for at få et lydsignal, når du sætter ny personlig rekord eller slår din Ghost Runner.",
+  "profile.voiceCues.info":
+    "Hovedkontakt for alle talte stemmesignaler — nedtælling, løbsresuméer, coach-beskeder og mere. Slå fra for et helt lydløst løb.",
+  "profile.coachVoiceCues.info":
+    "Slå Orbit Coach stemmebeskederne til/fra under et løb: pulszone-skift, tempo-tjek, kilometer-splits og ghost-opdateringer.",
   "profile.autoPause.info":
     "Sætter tiden på pause automatisk, hvis du stopper op (f.eks. ved et lyskryds), så din gennemsnitshastighed forbliver præcis.",
   "profile.haptic.info":
