@@ -182,6 +182,39 @@ function ProfilePage() {
         </div>
       </section>
 
+      {/* Activity environment toggle */}
+      <section className="mt-3 glass rounded-2xl p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+              {t("profile.environment.title")}
+            </div>
+            <div className="mt-1 text-[10px] text-muted-foreground leading-tight">
+              {t("profile.environment.hint")}
+            </div>
+          </div>
+          <div className="flex shrink-0 rounded-full bg-white/5 border border-white/10 p-0.5">
+            {(["outdoor", "indoor"] as const).map((env) => {
+              const active = (profile.activityEnvironment ?? "outdoor") === env;
+              return (
+                <button
+                  key={env}
+                  type="button"
+                  onClick={() => update({ activityEnvironment: env })}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.18em] transition ${
+                    active
+                      ? "bg-neon text-primary-foreground shadow-neon"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {t(`profile.environment.${env}`)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <MusicIntegrationSection />
 
       <ShoesSection />
