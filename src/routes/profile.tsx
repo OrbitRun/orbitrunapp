@@ -102,10 +102,23 @@ function ProfilePage() {
     saveProfile(next);
   };
 
-  const toggleAudioCue = () => {
-    const next: AudioCueMeters = profile.audioCueMeters === 500 ? 1000 : 500;
-    update({ audioCueMeters: next });
+  const cycleVoiceCues = () => {
+    // Off → 500m → 1km → Off
+    if (profile.voiceCuesEnabled === false) {
+      update({ voiceCuesEnabled: true, audioCueMeters: 500 });
+    } else if ((profile.audioCueMeters ?? 500) === 500) {
+      update({ audioCueMeters: 1000 });
+    } else {
+      update({ voiceCuesEnabled: false });
+    }
   };
+
+  const voiceCuesValueKey =
+    profile.voiceCuesEnabled === false
+      ? "profile.voiceCues.value.off"
+      : (profile.audioCueMeters ?? 500) === 500
+        ? "profile.voiceCues.value.500"
+        : "profile.voiceCues.value.1000";
 
   const langs: { code: Lang; label: string }[] = [
     { code: "en", label: "English" },
