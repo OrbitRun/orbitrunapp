@@ -158,7 +158,7 @@ function speakSplit(
         ? " Ny rekord! Længste løbetur nogensinde."
         : " New personal record! Your longest run ever.";
   }
-  speakLocalized(txt, lang);
+  speakLocalized(txt, lang, "coach");
 }
 
 export function useRunTracker() {
