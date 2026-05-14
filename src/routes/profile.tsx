@@ -361,18 +361,11 @@ function ProfilePage() {
           {t("profile.section.general")}
         </div>
         <SettingRowWithInfo
-          icon={<Volume2 className="h-4 w-4" />}
-          label={t("profile.audio")}
-          valueText={t(`profile.audio.value.${profile.audioCueMeters}`)}
-          infoText={t("profile.audio.info")}
-          onToggle={toggleAudioCue}
-        />
-        <SettingRowWithInfo
           icon={<Mic className="h-4 w-4" />}
           label={t("profile.voiceCues")}
-          valueText={t(profile.voiceCuesEnabled === false ? "profile.voiceCues.value.off" : "profile.voiceCues.value.on")}
+          valueText={t(voiceCuesValueKey)}
           infoText={t("profile.voiceCues.info")}
-          onToggle={() => update({ voiceCuesEnabled: profile.voiceCuesEnabled === false })}
+          onToggle={cycleVoiceCues}
         />
         <SettingRowWithInfo
           icon={<MessageSquare className="h-4 w-4" />}
