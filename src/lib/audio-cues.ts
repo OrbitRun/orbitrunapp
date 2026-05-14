@@ -2,6 +2,47 @@
 
 import type { Lang } from "@/lib/i18n";
 
+export type VoiceCueCategory = "general" | "coach";
+
+// Cached voice-cue prefs, hydrated lazily from localStorage and refreshed on
+// `orbit:profile-update` so toggles take effect without a reload.
+type VoicePrefs = { master: boolean; coach: boolean };
+let cachedVoicePrefs: VoicePrefs | null = null;
+
+function readVoicePrefs(): VoicePrefs {
+  if (typeof window === "undefined") return { master: true, coach: true };
+  try {
+    const raw = window.localStorage.getItem("orbit:user-profile:v1");
+    if (!raw) return { master: true, coach: true };
+    const p = JSON.parse(raw) as { voiceCuesEnabled?: boolean; coachVoiceCuesEnabled?: boolean };
+    return {
+      master: p.voiceCuesEnabled !== false,
+      coach: p.coachVoiceCuesEnabled !== false,
+    };
+  } catch {
+    return { master: true, coach: true };
+  }
+}
+
+function getVoicePrefs(): VoicePrefs {
+  if (cachedVoicePrefs) return cachedVoicePrefs;
+  cachedVoicePrefs = readVoicePrefs();
+  if (typeof window !== "undefined") {
+    window.addEventListener("orbit:profile-update", () => {
+      cachedVoicePrefs = readVoicePrefs();
+    });
+  }
+  return cachedVoicePrefs;
+}
+
+export function isVoiceCueAllowed(category: VoiceCueCategory = "general"): boolean {
+  const p = getVoicePrefs();
+  if (!p.master) return false;
+  if (category === "coach" && !p.coach) return false;
+  return true;
+}
+
+
 let ctx: AudioContext | null = null;
 function getCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
