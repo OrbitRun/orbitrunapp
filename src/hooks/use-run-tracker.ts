@@ -522,6 +522,7 @@ export function useRunTracker() {
                   ? "Du er lige gået forbi din ghost!"
                   : "You just passed your ghost!",
                 lang,
+                "coach",
               );
             }
             // If we slip back behind, allow the cue to fire again next overtake.
