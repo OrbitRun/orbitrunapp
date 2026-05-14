@@ -67,7 +67,7 @@ export default function IndoorRunView({ tracker, onPause, onResume, onStop }: Pr
       {/* Super hero: pace */}
       <div className="px-4 pt-6 text-center">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
-          {tr("stat.pace")} · {tr("unit.minPerKm")}
+          {tr("stat.pace")} · MIN/KM
         </div>
         <div className="font-display font-black tabular-nums text-neon leading-none mt-2 text-[96px]">
           {pace}
