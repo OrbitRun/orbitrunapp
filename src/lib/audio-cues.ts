@@ -147,7 +147,7 @@ export function speakPacingCue(
   if (status === lastPacingStatus && now - lastPacingAt < 45_000) return;
   lastPacingStatus = status;
   lastPacingAt = now;
-  speakLocalized(text, lang);
+  speakLocalized(text, lang, "coach");
 }
 
 // Pre-warm the audio context + voice list on a user gesture so iOS allows playback later.
