@@ -41,6 +41,9 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
+import type { MotionSource } from "@/lib/motion-source";
+import { startCadenceAccelerometer, type CadenceSample } from "@/lib/cadence-accelerometer";
+import { startCadenceCamera } from "@/lib/cadence-camera";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -67,6 +70,9 @@ type State = {
   // True when the runner is paused because the auto-pause heuristic fired
   // (vs a manual pause). Used by FocusRunView to surface a chip.
   autoPaused: boolean;
+  // Active data source feeding the live tracker. "gps" outdoors;
+  // "watch" / "phone" / "camera" when the run is in indoor mode.
+  motionSource: MotionSource;
 };
 
 const initial: State = {
@@ -90,6 +96,7 @@ const initial: State = {
   maxHrBpm: null,
   avgHrBpm: null,
   autoPaused: false,
+  motionSource: "gps",
 };
 
 type PrFlags = {
