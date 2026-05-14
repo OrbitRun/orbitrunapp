@@ -1032,6 +1032,8 @@ const da: Dict = {
   "profile.voiceCues": "Stemmesignaler",
   "profile.voiceCues.value.on": "Til",
   "profile.voiceCues.value.off": "Fra",
+  "profile.voiceCues.value.500": "Hver 500 m",
+  "profile.voiceCues.value.1000": "Hver 1 km",
   "profile.coachVoiceCues": "Orbit Coach stemmesignaler",
   "profile.coachVoiceCues.value.on": "Til",
   "profile.coachVoiceCues.value.off": "Fra",
