@@ -39,7 +39,6 @@ import {
   coachGoalLabel,
   COUNTDOWN_OPTIONS,
   effectiveMaxHr,
-  type AudioCueMeters,
   type CoachConfig,
   type CountdownSeconds,
   type ExperienceLevel,
