@@ -1152,6 +1152,8 @@ export function useRunTracker() {
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
+      indoorStopRef.current?.();
+      indoorStopRef.current = null;
       stopHeartRatePolling();
       btUnsubRef.current?.();
       btUnsubRef.current = null;
