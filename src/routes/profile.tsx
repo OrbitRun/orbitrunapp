@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, MessageSquare, Mic, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
