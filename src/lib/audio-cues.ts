@@ -119,7 +119,7 @@ export function speakZoneEntered(zone: number, lang: Lang, template: string) {
   if (zone === lastZoneSpoken && now - lastZoneAt < 60_000) return;
   lastZoneSpoken = zone;
   lastZoneAt = now;
-  speakLocalized(template.replace("{zone}", String(zone)), lang);
+  speakLocalized(template.replace("{zone}", String(zone)), lang, "coach");
 }
 
 export function resetZoneCueState() {
