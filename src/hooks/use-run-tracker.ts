@@ -742,9 +742,8 @@ export function useRunTracker() {
                 strideM: indoorStrideMRef.current,
                 onSample,
               }).then((stopFn) => {
-                if (stopFn === (() => {})) return;
-                // Switch source label only if camera actually delivers samples;
-                // we set it optimistically and let accelerometer keep filling.
+                // If camera fails to start the returned no-op silently absorbs
+                // the cleanup; accelerometer keeps providing samples.
                 indoorActiveSourceRef.current = "camera";
                 setState((p) =>
                   p.status === "running" || p.status === "paused"
