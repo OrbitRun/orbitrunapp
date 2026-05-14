@@ -681,14 +681,97 @@ export function useRunTracker() {
     hrWindowRef.current = [];
     lastSpikeAtRef.current = 0;
     const startedAt = Date.now();
+
+    // ---- Indoor mode bootstrap --------------------------------------------
+    indoorEnabledRef.current = profile.activityEnvironment === "indoor";
+    indoorBaseStepsRef.current = 0;
+    indoorCameraStartedRef.current = false;
+    indoorLowMotionSinceRef.current = null;
+    if (indoorEnabledRef.current) {
+      // Stride heuristic: 0.413 × height (m) for women / 0.415 × height for men.
+      const heightCm = profile.coach?.heightCm;
+      indoorStrideMRef.current =
+        heightCm && heightCm > 0 ? 0.413 * (heightCm / 100) : 0.78;
+      // BT strap connected → watch is primary; otherwise default to phone.
+      indoorActiveSourceRef.current = hrSourceRef.current === "bt" ? "watch" : "phone";
+    }
+
     setState({
       ...initial,
       status: "running",
       startedAt,
       ghost: ghostRef.current,
       ghostDeltaMs: ghostRef.current ? 0 : null,
+      motionSource: indoorEnabledRef.current ? indoorActiveSourceRef.current : "gps",
+      gpsReady: indoorEnabledRef.current ? true : false,
     });
-    armGps();
+
+    if (indoorEnabledRef.current) {
+      // Skip GPS entirely indoors. Subscribe to accelerometer; if motion
+      // variance stays low for ≥5s we escalate to the camera-based source.
+      const onSample = (s: CadenceSample) => {
+        const startedAtNow = stateRef.current.startedAt ?? startedAt;
+        const elapsed = Date.now() - startedAtNow - pauseAccumRef.current;
+        const distM = Math.max(0, s.totalDistanceM - indoorBaseStepsRef.current);
+        const avgPace = distM > 5 && elapsed > 0 ? elapsed / 1000 / (distM / 1000) : 0;
+        // Rolling pace: use cadence × stride as instantaneous speed proxy.
+        const speedMs = (s.cadenceSpm * indoorStrideMRef.current) / 60;
+        const currentPace = speedMs > 0.3 ? 1000 / speedMs : 0;
+        setState((p) =>
+          p.status === "running" || p.status === "paused"
+            ? {
+                ...p,
+                distanceM: distM,
+                cadenceSpm: s.cadenceSpm > 0 ? s.cadenceSpm : p.cadenceSpm,
+                avgPaceSecPerKm: avgPace,
+                currentPaceSecPerKm: currentPace,
+              }
+            : p,
+        );
+        // Holder-mode escalation: low variance for 5s and not yet using camera.
+        if (
+          !indoorCameraStartedRef.current &&
+          indoorActiveSourceRef.current !== "watch"
+        ) {
+          if (s.motionVariance < 0.4) {
+            const t0 = indoorLowMotionSinceRef.current ?? Date.now();
+            indoorLowMotionSinceRef.current = t0;
+            if (Date.now() - t0 >= 5000) {
+              indoorCameraStartedRef.current = true;
+              void startCadenceCamera({
+                strideM: indoorStrideMRef.current,
+                onSample,
+              }).then((stopFn) => {
+                if (stopFn === (() => {})) return;
+                // Switch source label only if camera actually delivers samples;
+                // we set it optimistically and let accelerometer keep filling.
+                indoorActiveSourceRef.current = "camera";
+                setState((p) =>
+                  p.status === "running" || p.status === "paused"
+                    ? { ...p, motionSource: "camera" }
+                    : p,
+                );
+                const prevStop = indoorStopRef.current;
+                indoorStopRef.current = () => {
+                  prevStop?.();
+                  stopFn();
+                };
+              });
+            }
+          } else {
+            indoorLowMotionSinceRef.current = null;
+          }
+        }
+      };
+      void startCadenceAccelerometer({
+        strideM: indoorStrideMRef.current,
+        onSample,
+      }).then((stopFn) => {
+        indoorStopRef.current = stopFn;
+      });
+    } else {
+      armGps();
+    }
     startSilentLoop(); // keep iOS from suspending JS when screen locks
 
     // --- Heart rate sources ---------------------------------------------------
