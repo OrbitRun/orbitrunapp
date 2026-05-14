@@ -126,6 +126,9 @@ export type UserProfile = {
   // Local notifications (scheduled via @capacitor/local-notifications).
   trainingReminderEnabled?: boolean;
   weeklySummaryEnabled?: boolean;
+  // Global indoor/outdoor mode. Disables GPS and switches the run UI to a
+  // map-less hero+grid layout when set to "indoor".
+  activityEnvironment?: "outdoor" | "indoor";
 };
 
 const STORAGE_KEY = "orbit:user-profile:v1";
@@ -144,6 +147,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   countdownSeconds: 10,
   trainingReminderEnabled: false,
   weeklySummaryEnabled: false,
+  activityEnvironment: "outdoor",
 };
 
 export function loadProfile(): UserProfile {
