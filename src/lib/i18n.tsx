@@ -681,6 +681,10 @@ const en: Dict = {
 
   // Coach override + live HR spike alert
   "coach.zone5Override": "Heart worked harder than usual today. Even though your legs feel fresh, take a rest day to protect your nervous system.",
+  "coach.adjust.note.injuryCurrent": "GENTLE COMEBACK — PROTECTING YOUR INJURY",
+  "coach.adjust.note.injuryPast": "EASING IN AFTER PREVIOUS INJURY",
+  "coach.adjust.note.lowVolume": "GRADUAL BUILD-UP — AVOIDING TOO MUCH TOO SOON",
+  "coach.adjust.note.lifestyle": "LOWER LOAD — SLEEP & STRESS RECOVERY",
   "focus.hrSpike": "Heart rate climbing fast — check your breathing",
   "focus.autoPause": "Auto-pause",
 
