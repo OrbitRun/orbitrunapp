@@ -154,6 +154,8 @@ export const DEFAULT_PROFILE: UserProfile = {
   trainingReminderEnabled: false,
   weeklySummaryEnabled: false,
   activityEnvironment: "outdoor",
+  voiceCuesEnabled: true,
+  coachVoiceCuesEnabled: true,
 };
 
 export function loadProfile(): UserProfile {
