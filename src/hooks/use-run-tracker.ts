@@ -786,9 +786,19 @@ export function useRunTracker() {
         const series = hrSeriesRef.current;
         const max = series.reduce((a, b) => Math.max(a, b.bpm), 0);
         const avg = Math.round(series.reduce((a, b) => a + b.bpm, 0) / series.length);
+        const upgradeIndoorToWatch =
+          indoorEnabledRef.current && indoorActiveSourceRef.current !== "watch";
+        if (upgradeIndoorToWatch) indoorActiveSourceRef.current = "watch";
         setState((p) =>
           p.status === "running" || p.status === "paused"
-            ? { ...p, hrBpm: bt.bpm, hrSource: "bt", maxHrBpm: max, avgHrBpm: avg }
+            ? {
+                ...p,
+                hrBpm: bt.bpm,
+                hrSource: "bt",
+                maxHrBpm: max,
+                avgHrBpm: avg,
+                motionSource: upgradeIndoorToWatch ? "watch" : p.motionSource,
+              }
             : p,
         );
       } else if (hrSourceRef.current === "bt") {
