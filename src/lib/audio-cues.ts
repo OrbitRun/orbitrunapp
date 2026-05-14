@@ -80,7 +80,12 @@ function pickVoice(lang: Lang): SpeechSynthesisVoice | undefined {
   return voices.find((v) => v.lang?.toLowerCase().startsWith(target));
 }
 
-export function speakLocalized(text: string, lang: Lang) {
+export function speakLocalized(
+  text: string,
+  lang: Lang,
+  category: VoiceCueCategory = "general",
+) {
+  if (!isVoiceCueAllowed(category)) return;
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     beep(1320, 320, 0.3);
     return;
@@ -101,7 +106,7 @@ export function speakLocalized(text: string, lang: Lang) {
 }
 
 export function speakGo(lang: Lang = "en") {
-  speakLocalized(lang === "da" ? "Løb!" : "Go!", lang);
+  speakLocalized(lang === "da" ? "Løb!" : "Go!", lang, "general");
 }
 
 // Throttled zone-change cue: speaks only when zone has changed AND
