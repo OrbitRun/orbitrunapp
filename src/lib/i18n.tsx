@@ -225,6 +225,8 @@ const en: Dict = {
   "profile.voiceCues": "Voice cues",
   "profile.voiceCues.value.on": "On",
   "profile.voiceCues.value.off": "Off",
+  "profile.voiceCues.value.500": "Every 500 m",
+  "profile.voiceCues.value.1000": "Every 1 km",
   "profile.coachVoiceCues": "Orbit Coach voice cues",
   "profile.coachVoiceCues.value.on": "On",
   "profile.coachVoiceCues.value.off": "Off",
