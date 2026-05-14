@@ -207,6 +207,30 @@ export default function FocusRunView({
   const ghostDelta = tracker.ghostDeltaMs;
   const ghostActive = tracker.ghost != null && ghostDelta != null;
 
+  // Indoor mode short-circuits the entire map+carousel layout.
+  const profile = loadProfile();
+  if (profile.activityEnvironment === "indoor") {
+    return (
+      <div
+        className="fixed inset-0 z-[60] flex flex-col bg-background"
+        style={{
+          height: "100dvh",
+          touchAction: "none",
+          overscrollBehavior: "contain",
+          paddingTop: "max(env(safe-area-inset-top), 0.5rem)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
+        }}
+      >
+        <IndoorRunView
+          tracker={tracker}
+          onPause={onPause}
+          onResume={onResume}
+          onStop={onStop}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-[60] flex flex-col bg-background"
