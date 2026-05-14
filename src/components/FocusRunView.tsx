@@ -3,6 +3,7 @@ import { Bluetooth, Heart, Pause, Play, Square } from "lucide-react";
 import RunMap from "@/components/RunMap";
 import MusicHubFull from "@/components/MusicHubFull";
 import ZonePacingChip from "@/components/ZonePacingChip";
+import IndoorRunView from "@/components/IndoorRunView";
 import { useI18n } from "@/lib/i18n";
 import { resetZoneCueState, speakPacingCue, speakZoneEntered } from "@/lib/audio-cues";
 import { loadProfile } from "@/lib/user-profile";
@@ -205,6 +206,30 @@ export default function FocusRunView({
   // ---------- Ghost ----------
   const ghostDelta = tracker.ghostDeltaMs;
   const ghostActive = tracker.ghost != null && ghostDelta != null;
+
+  // Indoor mode short-circuits the entire map+carousel layout.
+  const profile = loadProfile();
+  if (profile.activityEnvironment === "indoor") {
+    return (
+      <div
+        className="fixed inset-0 z-[60] flex flex-col bg-background"
+        style={{
+          height: "100dvh",
+          touchAction: "none",
+          overscrollBehavior: "contain",
+          paddingTop: "max(env(safe-area-inset-top), 0.5rem)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
+        }}
+      >
+        <IndoorRunView
+          tracker={tracker}
+          onPause={onPause}
+          onResume={onResume}
+          onStop={onStop}
+        />
+      </div>
+    );
+  }
 
   return (
     <div

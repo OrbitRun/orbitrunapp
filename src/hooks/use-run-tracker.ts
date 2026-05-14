@@ -41,6 +41,9 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
+import type { MotionSource } from "@/lib/motion-source";
+import { startCadenceAccelerometer, type CadenceSample } from "@/lib/cadence-accelerometer";
+import { startCadenceCamera } from "@/lib/cadence-camera";
 
 type Status = "idle" | "running" | "paused" | "finished";
 
@@ -67,6 +70,9 @@ type State = {
   // True when the runner is paused because the auto-pause heuristic fired
   // (vs a manual pause). Used by FocusRunView to surface a chip.
   autoPaused: boolean;
+  // Active data source feeding the live tracker. "gps" outdoors;
+  // "watch" / "phone" / "camera" when the run is in indoor mode.
+  motionSource: MotionSource;
 };
 
 const initial: State = {
@@ -90,6 +96,7 @@ const initial: State = {
   maxHrBpm: null,
   avgHrBpm: null,
   autoPaused: false,
+  motionSource: "gps",
 };
 
 type PrFlags = {
@@ -224,6 +231,17 @@ export function useRunTracker() {
   const lastAutoCueAtRef = useRef<number>(0);
   // Captured run identity — populated on `start()`.
   const runIdRef = useRef<string | null>(null);
+
+  // ---- Indoor mode -------------------------------------------------------
+  // When set, GPS is bypassed and distance/cadence are driven by the
+  // accelerometer or front-camera fallback.
+  const indoorEnabledRef = useRef<boolean>(false);
+  const indoorStrideMRef = useRef<number>(0.78);
+  const indoorStopRef = useRef<(() => void) | null>(null);
+  const indoorBaseStepsRef = useRef<number>(0);
+  const indoorActiveSourceRef = useRef<MotionSource>("phone");
+  const indoorCameraStartedRef = useRef<boolean>(false);
+  const indoorLowMotionSinceRef = useRef<number | null>(null);
 
   // ---- Flight recorder ---------------------------------------------------
   const flightRecorderEnabledRef = useRef<boolean>(true);
@@ -663,14 +681,96 @@ export function useRunTracker() {
     hrWindowRef.current = [];
     lastSpikeAtRef.current = 0;
     const startedAt = Date.now();
+
+    // ---- Indoor mode bootstrap --------------------------------------------
+    indoorEnabledRef.current = profile.activityEnvironment === "indoor";
+    indoorBaseStepsRef.current = 0;
+    indoorCameraStartedRef.current = false;
+    indoorLowMotionSinceRef.current = null;
+    if (indoorEnabledRef.current) {
+      // Stride heuristic: 0.413 × height (m) for women / 0.415 × height for men.
+      const heightCm = profile.coach?.heightCm;
+      indoorStrideMRef.current =
+        heightCm && heightCm > 0 ? 0.413 * (heightCm / 100) : 0.78;
+      // BT strap connected → watch is primary; otherwise default to phone.
+      indoorActiveSourceRef.current = hrSourceRef.current === "bt" ? "watch" : "phone";
+    }
+
     setState({
       ...initial,
       status: "running",
       startedAt,
       ghost: ghostRef.current,
       ghostDeltaMs: ghostRef.current ? 0 : null,
+      motionSource: indoorEnabledRef.current ? indoorActiveSourceRef.current : "gps",
+      gpsReady: indoorEnabledRef.current ? true : false,
     });
-    armGps();
+
+    if (indoorEnabledRef.current) {
+      // Skip GPS entirely indoors. Subscribe to accelerometer; if motion
+      // variance stays low for ≥5s we escalate to the camera-based source.
+      const onSample = (s: CadenceSample) => {
+        const startedAtNow = stateRef.current.startedAt ?? startedAt;
+        const elapsed = Date.now() - startedAtNow - pauseAccumRef.current;
+        const distM = Math.max(0, s.totalDistanceM - indoorBaseStepsRef.current);
+        const avgPace = distM > 5 && elapsed > 0 ? elapsed / 1000 / (distM / 1000) : 0;
+        // Rolling pace: use cadence × stride as instantaneous speed proxy.
+        const speedMs = (s.cadenceSpm * indoorStrideMRef.current) / 60;
+        const currentPace = speedMs > 0.3 ? 1000 / speedMs : 0;
+        setState((p) =>
+          p.status === "running"
+            ? {
+                ...p,
+                distanceM: distM,
+                cadenceSpm: s.cadenceSpm > 0 ? s.cadenceSpm : p.cadenceSpm,
+                avgPaceSecPerKm: avgPace,
+                currentPaceSecPerKm: currentPace,
+              }
+            : p,
+        );
+        // Holder-mode escalation: low variance for 5s and not yet using camera.
+        if (
+          !indoorCameraStartedRef.current &&
+          indoorActiveSourceRef.current !== "watch"
+        ) {
+          if (s.motionVariance < 0.4) {
+            const t0 = indoorLowMotionSinceRef.current ?? Date.now();
+            indoorLowMotionSinceRef.current = t0;
+            if (Date.now() - t0 >= 5000) {
+              indoorCameraStartedRef.current = true;
+              void startCadenceCamera({
+                strideM: indoorStrideMRef.current,
+                onSample,
+              }).then((stopFn) => {
+                // If camera fails to start the returned no-op silently absorbs
+                // the cleanup; accelerometer keeps providing samples.
+                indoorActiveSourceRef.current = "camera";
+                setState((p) =>
+                  p.status === "running" || p.status === "paused"
+                    ? { ...p, motionSource: "camera" }
+                    : p,
+                );
+                const prevStop = indoorStopRef.current;
+                indoorStopRef.current = () => {
+                  prevStop?.();
+                  stopFn();
+                };
+              });
+            }
+          } else {
+            indoorLowMotionSinceRef.current = null;
+          }
+        }
+      };
+      void startCadenceAccelerometer({
+        strideM: indoorStrideMRef.current,
+        onSample,
+      }).then((stopFn) => {
+        indoorStopRef.current = stopFn;
+      });
+    } else {
+      armGps();
+    }
     startSilentLoop(); // keep iOS from suspending JS when screen locks
 
     // --- Heart rate sources ---------------------------------------------------
@@ -686,9 +786,19 @@ export function useRunTracker() {
         const series = hrSeriesRef.current;
         const max = series.reduce((a, b) => Math.max(a, b.bpm), 0);
         const avg = Math.round(series.reduce((a, b) => a + b.bpm, 0) / series.length);
+        const upgradeIndoorToWatch =
+          indoorEnabledRef.current && indoorActiveSourceRef.current !== "watch";
+        if (upgradeIndoorToWatch) indoorActiveSourceRef.current = "watch";
         setState((p) =>
           p.status === "running" || p.status === "paused"
-            ? { ...p, hrBpm: bt.bpm, hrSource: "bt", maxHrBpm: max, avgHrBpm: avg }
+            ? {
+                ...p,
+                hrBpm: bt.bpm,
+                hrSource: "bt",
+                maxHrBpm: max,
+                avgHrBpm: avg,
+                motionSource: upgradeIndoorToWatch ? "watch" : p.motionSource,
+              }
             : p,
         );
       } else if (hrSourceRef.current === "bt") {
@@ -772,6 +882,9 @@ export function useRunTracker() {
     }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
+    indoorStopRef.current?.();
+    indoorStopRef.current = null;
+    indoorEnabledRef.current = false;
     const s = stateRef.current;
     if (!s.startedAt) {
       stopHeartRatePolling();
@@ -1039,6 +1152,8 @@ export function useRunTracker() {
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
+      indoorStopRef.current?.();
+      indoorStopRef.current = null;
       stopHeartRatePolling();
       btUnsubRef.current?.();
       btUnsubRef.current = null;
