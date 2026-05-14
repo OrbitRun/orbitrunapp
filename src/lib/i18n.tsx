@@ -1511,6 +1511,10 @@ const da: Dict = {
     "Vælg hvor ofte AI-coachen skal give dig lydopdateringer (f.eks. for hver kilometer eller 500 meter) om dit tempo og din puls.",
   "profile.prVoice.info":
     "Slå til for at få et lydsignal, når du sætter ny personlig rekord eller slår din Ghost Runner.",
+  "profile.voiceCues.info":
+    "Hovedkontakt for alle talte stemmesignaler — nedtælling, løbsresuméer, coach-beskeder og mere. Slå fra for et helt lydløst løb.",
+  "profile.coachVoiceCues.info":
+    "Slå Orbit Coach stemmebeskederne til/fra under et løb: pulszone-skift, tempo-tjek, kilometer-splits og ghost-opdateringer.",
   "profile.autoPause.info":
     "Sætter tiden på pause automatisk, hvis du stopper op (f.eks. ved et lyskryds), så din gennemsnitshastighed forbliver præcis.",
   "profile.haptic.info":
