@@ -697,6 +697,10 @@ const en: Dict = {
     "Choose how often the AI coach should give you audio updates (e.g. every kilometer or 500 meters) about your pace and heart rate.",
   "profile.prVoice.info":
     "Turn on to get an audio cue when you set a new personal record or beat your Ghost Runner.",
+  "profile.voiceCues.info":
+    "Master switch for all spoken voice cues — countdown, run summaries, coach callouts, and more. Turn off for a fully silent run.",
+  "profile.coachVoiceCues.info":
+    "Toggle the Orbit Coach voice callouts during a run: heart-rate zone changes, pacing nudges, kilometer splits, and ghost updates.",
   "profile.autoPause.info":
     "Automatically pauses the timer if you stop (e.g. at a traffic light), so your average speed stays accurate.",
   "profile.haptic.info":
