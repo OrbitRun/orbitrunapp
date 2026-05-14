@@ -232,6 +232,17 @@ export function useRunTracker() {
   // Captured run identity — populated on `start()`.
   const runIdRef = useRef<string | null>(null);
 
+  // ---- Indoor mode -------------------------------------------------------
+  // When set, GPS is bypassed and distance/cadence are driven by the
+  // accelerometer or front-camera fallback.
+  const indoorEnabledRef = useRef<boolean>(false);
+  const indoorStrideMRef = useRef<number>(0.78);
+  const indoorStopRef = useRef<(() => void) | null>(null);
+  const indoorBaseStepsRef = useRef<number>(0);
+  const indoorActiveSourceRef = useRef<MotionSource>("phone");
+  const indoorCameraStartedRef = useRef<boolean>(false);
+  const indoorLowMotionSinceRef = useRef<number | null>(null);
+
   // ---- Flight recorder ---------------------------------------------------
   const flightRecorderEnabledRef = useRef<boolean>(true);
   const recorderRef = useRef<DebouncedRecorder | null>(null);
