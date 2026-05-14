@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, MessageSquare, Mic, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Volume2, Wind, Zap } from "lucide-react";
+import { Bell, ChevronDown, FileText, Heart, Info, Languages, MapPin, MessageSquare, Mic, PauseCircle, ShieldCheck, Sparkles, Timer, Trash2, Trophy, Wind, Zap } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +39,6 @@ import {
   coachGoalLabel,
   COUNTDOWN_OPTIONS,
   effectiveMaxHr,
-  type AudioCueMeters,
   type CoachConfig,
   type CountdownSeconds,
   type ExperienceLevel,
@@ -102,10 +101,23 @@ function ProfilePage() {
     saveProfile(next);
   };
 
-  const toggleAudioCue = () => {
-    const next: AudioCueMeters = profile.audioCueMeters === 500 ? 1000 : 500;
-    update({ audioCueMeters: next });
+  const cycleVoiceCues = () => {
+    // Off → 500m → 1km → Off
+    if (profile.voiceCuesEnabled === false) {
+      update({ voiceCuesEnabled: true, audioCueMeters: 500 });
+    } else if ((profile.audioCueMeters ?? 500) === 500) {
+      update({ audioCueMeters: 1000 });
+    } else {
+      update({ voiceCuesEnabled: false });
+    }
   };
+
+  const voiceCuesValueKey =
+    profile.voiceCuesEnabled === false
+      ? "profile.voiceCues.value.off"
+      : (profile.audioCueMeters ?? 500) === 500
+        ? "profile.voiceCues.value.500"
+        : "profile.voiceCues.value.1000";
 
   const langs: { code: Lang; label: string }[] = [
     { code: "en", label: "English" },
@@ -348,18 +360,11 @@ function ProfilePage() {
           {t("profile.section.general")}
         </div>
         <SettingRowWithInfo
-          icon={<Volume2 className="h-4 w-4" />}
-          label={t("profile.audio")}
-          valueText={t(`profile.audio.value.${profile.audioCueMeters}`)}
-          infoText={t("profile.audio.info")}
-          onToggle={toggleAudioCue}
-        />
-        <SettingRowWithInfo
           icon={<Mic className="h-4 w-4" />}
           label={t("profile.voiceCues")}
-          valueText={t(profile.voiceCuesEnabled === false ? "profile.voiceCues.value.off" : "profile.voiceCues.value.on")}
+          valueText={t(voiceCuesValueKey)}
           infoText={t("profile.voiceCues.info")}
-          onToggle={() => update({ voiceCuesEnabled: profile.voiceCuesEnabled === false })}
+          onToggle={cycleVoiceCues}
         />
         <SettingRowWithInfo
           icon={<MessageSquare className="h-4 w-4" />}
