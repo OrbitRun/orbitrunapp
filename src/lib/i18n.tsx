@@ -298,6 +298,7 @@ const en: Dict = {
   "edit.pickMetric": "Choose metric",
   "edit.pickHint": "Tap a stat to assign it to this slot.",
   "edit.exit": "Done",
+  "edit.swapHero": "Swap hero stats",
   "edit.hint": "Long-press any tile to customize",
 
   // Voice cues
@@ -1103,6 +1104,7 @@ const da: Dict = {
   "edit.pickMetric": "Vælg måling",
   "edit.pickHint": "Tryk på en måling for at tildele den til feltet.",
   "edit.exit": "Færdig",
+  "edit.swapHero": "Byt hero-felter",
   "edit.hint": "Hold på et felt for at tilpasse",
 
   "voice.kmDone": "Kilometer {km} fuldført.",
