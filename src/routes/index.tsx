@@ -317,7 +317,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-2 grid grid-cols-2 gap-3">
+      <section className="mt-2 relative grid grid-cols-2 gap-3">
         {(() => {
           const heroSizeClass = heroFontSizeFor(
             layout.hero.map((id) => METRICS[id].format(t)),
@@ -339,6 +339,26 @@ function RunPage() {
             />
           ));
         })()}
+        {editMode && (
+          <button
+            type="button"
+            onClick={() => {
+              setLayout((prev) => {
+                const next: StatLayout = {
+                  hero: [prev.hero[1], prev.hero[0]] as [MetricId, MetricId],
+                  secondary: [...prev.secondary] as [MetricId, MetricId, MetricId],
+                };
+                saveLayout(next, profile.level);
+                return next;
+              });
+            }}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-neon text-primary-foreground grid place-items-center shadow-neon active:scale-95 z-10"
+            aria-label={tr("edit.swapHero")}
+            title={tr("edit.swapHero")}
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+          </button>
+        )}
       </section>
 
       <section className="mt-3 grid grid-cols-3 gap-3">
