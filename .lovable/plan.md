@@ -1,42 +1,63 @@
-## Plan: Orbit Coach text fixes & voice cue consolidation
+## Mål
 
-### 1. Add missing English `coach.adjust.note.*` keys
-In `src/lib/i18n.tsx` (English block, near line 681 where other coach keys live), add the 4 keys that today only exist in the Danish block (line 1281–1284). Without these, EN renders the raw `COACH.ADJUST.NOTE.INJURYPAST` string.
+1. Lås farverne på Hero-boksene til **position**, ikke metric.
+2. Tilføj **Hastighed (km/t)** som en valgbar metric til både Hero- og sekundær-felter (samt brugbar i FocusRunView).
 
-```ts
-"coach.adjust.note.injuryCurrent": "GENTLE COMEBACK — PROTECTING YOUR INJURY",
-"coach.adjust.note.injuryPast": "EASING IN AFTER PREVIOUS INJURY",
-"coach.adjust.note.lowVolume": "GRADUAL BUILD-UP — AVOIDING TOO MUCH TOO SOON",
-"coach.adjust.note.lifestyle": "LOWER LOAD — SLEEP & STRESS RECOVERY",
-```
+---
 
-### 2. Rewrite the Danish "past injury" copy
-In `src/lib/i18n.tsx` line 1282, replace `"Letter dig ind efter tidligere skade"` with `"GENOPBYGNING EFTER TIDLIGERE SKADE"`. Also uppercase the other three DA `coach.adjust.note.*` strings so they match the on-screen treatment.
+## 1. Position-baseret farve på Hero-bokse
 
-The neon-green / uppercase styling already comes from the existing classes in `CoachCard.tsx` (`text-neon font-bold uppercase tracking-[0.12em]`) — no styling changes needed.
+I dag styrer `EditableStat` hero-farven ud fra metric-id (`distance` → neon, `ghost` → grøn/rød). I `FocusRunView` er den hardcoded til `id === "distance"`.
 
-### 3. Merge voice-cue settings into one 3-state row
-Currently `src/routes/profile.tsx` shows two separate rows in the General section:
-- `profile.audio` — cycles 500m / 1km (`audioCueMeters`)
-- `profile.voiceCues` — on/off (`voiceCuesEnabled`)
+**Ændring:**
 
-Replace these two rows with a single `SettingRowWithInfo` that cycles **Off → 500m → 1km → Off** on tap.
+- `src/components/EditableStat.tsx`
+  - Ny prop `heroPosition?: "left" | "right"` (kun relevant når `variant="hero"`).
+  - Hero-tal-farve bestemmes udelukkende af position:
+    - `left` → `text-neon` + `glow-neon`
+    - `right` → `text-foreground` (hvid/lysegrå)
+  - Specialtilfælde for `ghost` (rød/grøn delta) bevares **kun** for sekundær-variant. I hero-positionen følger den positions-farven (efter brugerens ønske: "uanset hvilken datatype").
+  - `accent`/`glow`-props påvirker ikke længere hero-farven (bliver no-op for hero).
 
-- New `cycleVoiceCues()` helper:
-  - Off (`voiceCuesEnabled: false`) → `{ voiceCuesEnabled: true, audioCueMeters: 500 }`
-  - 500m → `{ audioCueMeters: 1000 }`
-  - 1km → `{ voiceCuesEnabled: false }`
-- `valueText` resolves to one of three new i18n keys: `profile.voiceCues.value.off`, `profile.voiceCues.value.500`, `profile.voiceCues.value.1000`.
-- Keep the `Mic` icon and reuse `profile.voiceCues.info` tooltip.
-- The existing `profile.coachVoiceCues` row stays as-is (separate coach gate).
-- The level-change auto-sync in `update()` (line 98) keeps working because `audioCueMeters` is still the underlying field.
+- `src/routes/index.tsx`
+  - Ved render af `layout.hero.map((id, i) => …)`: send `heroPosition={i === 0 ? "left" : "right"}`.
 
-Add the three new value strings in both EN and DA blocks of `src/lib/i18n.tsx`:
-- EN: `"Off"`, `"Every 500 m"`, `"Every 1 km"`
-- DA: `"Fra"`, `"Hver 500 m"`, `"Hver 1 km"`
+- `src/components/FocusRunView.tsx` (linje ~334)
+  - Erstat `${id === "distance" ? "text-neon" : "text-foreground"}` med positions-baseret klasse: index 0 → `text-neon`, index 1 → `text-foreground`.
 
-### Files touched
-- `src/lib/i18n.tsx` — add 4 EN `coach.adjust.note.*` keys; rewrite/uppercase the 4 DA ones; add 3 new `profile.voiceCues.value.*` keys per language.
-- `src/routes/profile.tsx` — remove the standalone audio-interval row, replace voice-cues row with a 3-state cycle, drop the now-unused `toggleAudioCue` helper.
+Labels og enheder forbliver `text-muted-foreground` (uændret).
 
-No business-logic changes elsewhere; consumers of `voiceCuesEnabled` and `audioCueMeters` keep working unchanged.
+---
+
+## 2. Ny metric: Hastighed (km/t)
+
+- `src/lib/stat-metrics.ts`
+  - Tilføj `MetricId` værdi `"speed"`.
+  - Tilføj `METRICS.speed`:
+    - `labelKey: "stat.speed"`
+    - `unitKey: "unit.kmh"`
+    - `format`: brug nuværende pace (fallback til avg) → `3600 / paceSecPerKm`, vist med 1 decimal; tom værdi → `"—"`.
+  - Tilføj `"speed"` til `ALL_METRIC_IDS` (så den dukker op i `MetricPicker`, som læser fra dette array).
+
+- `src/lib/i18n.tsx`
+  - Tilføj nøgler i både engelsk og dansk:
+    - `"stat.speed"` → "Speed" / "Hastighed"
+    - `"unit.kmh"` → "km/h" / "km/t"
+
+`MetricPicker` viser automatisk alle ikke-brugte metrics, så ingen ændringer der. Brugeren kan vælge den til alle 5 felter.
+
+---
+
+## Tekniske noter
+
+- Ingen ændringer i tracker-logik eller business-rules.
+- Eksisterende layouts (gemt i localStorage pr. niveau) påvirkes ikke; brugeren tilføjer selv `speed` via long-press → picker.
+- Ghost-metric i hero-position mister sin rød/grøn farvning (bevidst pr. krav). Anbefaling: ghost passer dårligt i venstre hero (altid neon) — vi kunne overveje at filtrere den ud af hero-picker, men gør det ikke nu medmindre du beder om det.
+
+## Filer der ændres
+
+- `src/components/EditableStat.tsx`
+- `src/components/FocusRunView.tsx`
+- `src/routes/index.tsx`
+- `src/lib/stat-metrics.ts`
+- `src/lib/i18n.tsx`
