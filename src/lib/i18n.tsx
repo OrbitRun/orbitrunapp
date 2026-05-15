@@ -883,6 +883,7 @@ const da: Dict = {
   "unit.ms": "ms",
   "unit.l": "L",
   "unit.bpm": "bpm",
+  "unit.kmh": "km/t",
 
   "map.legend.slow": "lav",
   "map.legend.mid": "mid",
