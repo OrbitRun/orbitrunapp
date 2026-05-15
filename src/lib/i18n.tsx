@@ -298,6 +298,7 @@ const en: Dict = {
   "edit.pickMetric": "Choose metric",
   "edit.pickHint": "Tap a stat to assign it to this slot.",
   "edit.exit": "Done",
+  "edit.swapHero": "Swap hero stats",
   "edit.hint": "Long-press any tile to customize",
 
   // Voice cues
