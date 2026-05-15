@@ -134,7 +134,7 @@ export default function EditableStat({
             <span
               className={`font-display font-black tabular leading-none ${heroValueSize} ${
                 heroPosition === "left"
-                  ? "text-neon glow-neon"
+                  ? "text-neon"
                   : "text-foreground"
               }`}
             >
