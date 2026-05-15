@@ -228,6 +228,19 @@ export const METRICS: Record<MetricId, MetricDef> = {
       return `${sign}${m}:${sec}`;
     },
   },
+  ghost: {
+...
+  },
+  speed: {
+    id: "speed",
+    labelKey: "stat.speed",
+    unitKey: "unit.kmh",
+    format: (s) => {
+      const pace = s.currentPaceSecPerKm || s.avgPaceSecPerKm;
+      if (!pace || pace <= 0) return "—";
+      return (3600 / pace).toFixed(1);
+    },
+  },
 };
 
 export const ALL_METRIC_IDS: MetricId[] = [
