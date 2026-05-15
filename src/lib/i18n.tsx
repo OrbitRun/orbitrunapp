@@ -865,6 +865,7 @@ const da: Dict = {
   "stat.ghost": "Ghost",
   "stat.hr": "Puls",
   "stat.avgHr": "Snit-puls",
+  "stat.speed": "Hastighed",
   "ghost.race": "Udfordr",
   "ghost.active": "Ghost aktiv",
   "ghost.clear": "Ryd",
