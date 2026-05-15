@@ -20,7 +20,8 @@ export type MetricId =
   | "ghost"
   | "hrBpm"
   | "hrMax"
-  | "hrAvg";
+  | "hrAvg"
+  | "speed";
 
 export type LiveStats = {
   distanceM: number;
