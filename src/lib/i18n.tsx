@@ -32,6 +32,8 @@ const en: Dict = {
   "stat.ghost": "Ghost",
   "stat.hr": "Heart rate",
   "stat.avgHr": "Avg HR",
+  "stat.hrMax": "Max HR",
+  "stat.speed": "Speed",
   "ghost.race": "Race",
   "ghost.active": "Ghost active",
   "ghost.clear": "Clear",
