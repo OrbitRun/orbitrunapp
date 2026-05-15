@@ -17,6 +17,7 @@ type Props = {
   heroValueSizeClass?: string;
   secondaryValueSizeClass?: string;
   secondaryUnitSizeClass?: string;
+  heroPosition?: "left" | "right";
 };
 
 const LONG_PRESS_MS = 1000;
