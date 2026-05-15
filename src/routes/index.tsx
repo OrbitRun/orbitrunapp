@@ -330,6 +330,7 @@ function RunPage() {
               variant="hero"
               editMode={editMode}
               heroValueSizeClass={heroSizeClass}
+              heroPosition={i === 0 ? "left" : "right"}
               onLongPress={() => {
                 setEditMode(true);
                 setPickerSlot({ kind: "hero", index: i });

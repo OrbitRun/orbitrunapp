@@ -324,14 +324,14 @@ export default function FocusRunView({
 
       {/* Hero stats */}
       <div className="grid grid-cols-2 gap-2 px-4 pt-3">
-        {layout.hero.map((id) => {
+        {layout.hero.map((id, i) => {
           const def = METRICS[id];
           return (
             <div key={id} className="text-center">
               <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-bold">
                 {tr(def.labelKey)}
               </div>
-              <div className={`font-display font-black tabular-nums leading-none mt-1 text-[48px] ${id === "distance" ? "text-neon" : "text-foreground"}`}>
+              <div className={`font-display font-black tabular-nums leading-none mt-1 text-[48px] ${i === 0 ? "text-neon" : "text-foreground"}`}>
                 {def.format(tracker)}
               </div>
             </div>

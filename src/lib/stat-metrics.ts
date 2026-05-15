@@ -20,7 +20,8 @@ export type MetricId =
   | "ghost"
   | "hrBpm"
   | "hrMax"
-  | "hrAvg";
+  | "hrAvg"
+  | "speed";
 
 export type LiveStats = {
   distanceM: number;
@@ -227,6 +228,16 @@ export const METRICS: Record<MetricId, MetricDef> = {
       return `${sign}${m}:${sec}`;
     },
   },
+  speed: {
+    id: "speed",
+    labelKey: "stat.speed",
+    unitKey: "unit.kmh",
+    format: (s) => {
+      const pace = s.currentPaceSecPerKm || s.avgPaceSecPerKm;
+      if (!pace || pace <= 0) return "—";
+      return (3600 / pace).toFixed(1);
+    },
+  },
 };
 
 export const ALL_METRIC_IDS: MetricId[] = [
@@ -245,6 +256,7 @@ export const ALL_METRIC_IDS: MetricId[] = [
   "hrMax",
   "hrAvg",
   "ghost",
+  "speed",
 ];
 
 export type StatLayout = {

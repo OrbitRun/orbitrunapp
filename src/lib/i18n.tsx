@@ -32,6 +32,7 @@ const en: Dict = {
   "stat.ghost": "Ghost",
   "stat.hr": "Heart rate",
   "stat.avgHr": "Avg HR",
+  "stat.speed": "Speed",
   "ghost.race": "Race",
   "ghost.active": "Ghost active",
   "ghost.clear": "Clear",
@@ -49,6 +50,7 @@ const en: Dict = {
   "unit.ms": "ms",
   "unit.l": "L",
   "unit.bpm": "bpm",
+  "unit.kmh": "km/h",
 
   // Map
   "map.legend.slow": "slow",
@@ -863,6 +865,7 @@ const da: Dict = {
   "stat.ghost": "Ghost",
   "stat.hr": "Puls",
   "stat.avgHr": "Snit-puls",
+  "stat.speed": "Hastighed",
   "ghost.race": "Udfordr",
   "ghost.active": "Ghost aktiv",
   "ghost.clear": "Ryd",
@@ -880,6 +883,7 @@ const da: Dict = {
   "unit.ms": "ms",
   "unit.l": "L",
   "unit.bpm": "bpm",
+  "unit.kmh": "km/t",
 
   "map.legend.slow": "lav",
   "map.legend.mid": "mid",

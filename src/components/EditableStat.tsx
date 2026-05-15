@@ -17,6 +17,7 @@ type Props = {
   heroValueSizeClass?: string;
   secondaryValueSizeClass?: string;
   secondaryUnitSizeClass?: string;
+  heroPosition?: "left" | "right";
 };
 
 const LONG_PRESS_MS = 1000;
@@ -33,6 +34,7 @@ export default function EditableStat({
   heroValueSizeClass,
   secondaryValueSizeClass,
   secondaryUnitSizeClass,
+  heroPosition,
 }: Props) {
   const { t } = useI18n();
   const def = METRICS[metricId];
@@ -131,16 +133,10 @@ export default function EditableStat({
           <div className="mt-1 flex items-baseline gap-1.5 justify-center whitespace-nowrap min-w-0 px-1">
             <span
               className={`font-display font-black tabular leading-none ${heroValueSize} ${
-                metricId === "ghost"
-                  ? stats.ghostDeltaMs == null
-                    ? "text-muted-foreground"
-                    : stats.ghostDeltaMs >= 0
-                      ? "text-emerald-400"
-                      : "text-red-400"
-                  : accent || glow || metricId === "distance"
-                    ? "text-neon"
-                    : "text-foreground"
-              } ${glow && metricId !== "ghost" ? "glow-neon" : ""}`}
+                heroPosition === "left"
+                  ? "text-neon glow-neon"
+                  : "text-foreground"
+              }`}
             >
               {value}
             </span>
