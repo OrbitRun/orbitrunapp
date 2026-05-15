@@ -256,6 +256,7 @@ export const ALL_METRIC_IDS: MetricId[] = [
   "hrMax",
   "hrAvg",
   "ghost",
+  "speed",
 ];
 
 export type StatLayout = {
