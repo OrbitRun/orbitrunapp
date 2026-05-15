@@ -228,9 +228,6 @@ export const METRICS: Record<MetricId, MetricDef> = {
       return `${sign}${m}:${sec}`;
     },
   },
-  ghost: {
-...
-  },
   speed: {
     id: "speed",
     labelKey: "stat.speed",
