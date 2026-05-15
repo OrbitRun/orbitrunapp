@@ -50,6 +50,7 @@ const en: Dict = {
   "unit.ms": "ms",
   "unit.l": "L",
   "unit.bpm": "bpm",
+  "unit.kmh": "km/h",
 
   // Map
   "map.legend.slow": "slow",
