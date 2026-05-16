@@ -244,14 +244,7 @@ function RunPage() {
 
       <section className="relative">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
-              {tr("indoor.preview.title")}
-            </div>
-            <div className="mt-2 text-[11px] text-muted-foreground font-semibold">
-              {tr("indoor.preview.hint")}
-            </div>
-          </div>
+          <IndoorLayoutPreview />
         ) : (
           <div className="rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
