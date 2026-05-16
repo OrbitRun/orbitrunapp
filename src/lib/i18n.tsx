@@ -203,6 +203,8 @@ const en: Dict = {
   "source.camera": "Camera",
   "indoor.preview.title": "Indoor mode",
   "indoor.preview.hint": "Map disabled · sensor based tracking",
+  "indoor.tapToChange": "Tap to change",
+  "indoor.holdToCustomize": "Hold to customize",
   "profile.runs": "Runs",
   "profile.km": "KM",
   "profile.time": "Time",
