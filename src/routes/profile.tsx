@@ -215,7 +215,7 @@ function ProfilePage() {
                   onClick={() => update({ activityEnvironment: env })}
                   className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.18em] transition ${
                     active
-                      ? "bg-neon text-primary-foreground shadow-neon"
+                      ? "bg-neon text-primary-foreground"
                       : "text-muted-foreground"
                   }`}
                 >

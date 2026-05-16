@@ -1,15 +1,14 @@
-## Remove glow from neon-green hero numbers
+## Remove glow from environment toggle and Shoes "Add" button
 
-Remove the glow effect from the left hero stat values so the neon green digits render flat (no shadow/halo), matching a cleaner look.
+Match the flatter look of the Experience-level buttons (which use `bg-neon text-primary-foreground` with no `shadow-neon`).
 
-### Change
+### Changes
 
-**`src/components/EditableStat.tsx`** — In the hero value `<span>`, drop the `glow-neon` class from the `heroPosition === "left"` branch:
+**`src/routes/profile.tsx`** (line 218) — Outdoor/Indoor toggle active state:
+- From: `"bg-neon text-primary-foreground shadow-neon"`
+- To:   `"bg-neon text-primary-foreground"`
 
-```tsx
-heroPosition === "left"
-  ? "text-neon"          // was: "text-neon glow-neon"
-  : "text-foreground"
-```
+**`src/components/ShoesSection.tsx`** (line 91) — "Tilføj" button in the Shoes section header:
+- Drop the trailing `shadow-neon` class so the button is a flat neon pill, like the Experience tiles.
 
-No other files need changes. `FocusRunView.tsx` already uses plain `text-neon` for its hero numbers without glow, so it stays as-is.
+No other styles are touched. The shoe-add confirm button inside the add-shoe form (line 198) is left unchanged since it's not visible from the main Shoes section header.
