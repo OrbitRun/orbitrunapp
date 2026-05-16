@@ -13,6 +13,7 @@ import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
 import SourceSignalChip from "@/components/SourceSignalChip";
+import IndoorLayoutPreview from "@/components/IndoorLayoutPreview";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
