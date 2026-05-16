@@ -13,7 +13,6 @@ import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
 import SourceSignalChip from "@/components/SourceSignalChip";
-import IndoorLayoutPreview from "@/components/IndoorLayoutPreview";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -244,7 +243,14 @@ function RunPage() {
 
       <section className="relative">
         {profile.activityEnvironment === "indoor" ? (
-          <IndoorLayoutPreview />
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
+              {tr("indoor.preview.title")}
+            </div>
+            <div className="mt-2 text-[11px] text-muted-foreground font-semibold">
+              {tr("indoor.preview.hint")}
+            </div>
+          </div>
         ) : (
           <div className="rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
