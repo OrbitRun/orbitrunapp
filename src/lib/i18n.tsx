@@ -1015,6 +1015,8 @@ const da: Dict = {
   "source.camera": "Kamera",
   "indoor.preview.title": "Indendørs",
   "indoor.preview.hint": "Kort deaktiveret · sensor-baseret",
+  "indoor.tapToChange": "Tryk for at skifte",
+  "indoor.holdToCustomize": "Hold for at tilpasse",
   "profile.runs": "Løb",
   "profile.km": "KM",
   "profile.time": "Tid",
