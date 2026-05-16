@@ -88,7 +88,7 @@ export default function ShoesSection() {
         <div className="flex-1 text-sm font-semibold">{t("shoes.title")}</div>
         <button
           onClick={() => setAddOpen(true)}
-          className="h-8 px-3 rounded-full bg-neon text-primary-foreground text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1 active:scale-95 transition shadow-neon"
+          className="h-8 px-3 rounded-full bg-neon text-primary-foreground text-[10px] font-black uppercase tracking-[0.18em] flex items-center gap-1 active:scale-95 transition"
         >
           <Plus className="h-3 w-3" />
           {t("shoes.add")}
