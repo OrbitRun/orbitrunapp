@@ -62,24 +62,46 @@ async function loadPlugin(): Promise<unknown | null> {
   }
 }
 
-export async function requestNativeGeolocationPermission(): Promise<
-  "granted" | "denied" | "unavailable"
-> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const plugin: any = await loadPlugin();
-  if (!plugin) return "unavailable";
+export type GeoPermissionStatus = "granted" | "denied" | "prompt" | "unavailable";
+
+// Dedup concurrent permission requests. On iOS the system dialog is only
+// shown for the FIRST `requestPermissions()` call — competing calls resolve
+// immediately with `"prompt"` before the user has answered, which previously
+// got mapped to `"denied"` and poisoned the run-tracker state.
+let permInflight: Promise<GeoPermissionStatus> | null = null;
+
+function mapState(s: unknown): GeoPermissionStatus {
+  if (s === "granted") return "granted";
+  if (s === "denied") return "denied";
+  if (s === "prompt" || s === "prompt-with-rationale") return "prompt";
+  return "denied";
+}
+
+export async function requestNativeGeolocationPermission(): Promise<GeoPermissionStatus> {
+  if (permInflight) return permInflight;
+  permInflight = (async (): Promise<GeoPermissionStatus> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plugin: any = await loadPlugin();
+    if (!plugin) return "unavailable";
+    try {
+      // Cheap check first — if already granted we skip the dialog entirely.
+      const cur = await plugin.checkPermissions?.();
+      const curState = mapState(cur?.location ?? cur?.coarseLocation);
+      if (curState === "granted") return "granted";
+      // Call without arguments — the iOS plugin ignores `permissions` and
+      // always calls `requestWhenInUseAuthorization`; passing the array
+      // adds no value and risks alias-handling regressions.
+      const res = await plugin.requestPermissions?.();
+      return mapState(res?.location ?? res?.coarseLocation);
+    } catch {
+      return "denied";
+    }
+  })();
   try {
-    // `aliases: ["location", "coarseLocation"]` ensures both fine + coarse on
-    // Android; on iOS the user is asked for "When In Use". We separately call
-    // `requestPermissions` again later if we need "Always" for true background
-    // tracking — iOS only escalates after the When-In-Use grant is granted.
-    const res = await plugin.requestPermissions?.({
-      permissions: ["location", "coarseLocation"],
-    });
-    const state = res?.location ?? res?.coarseLocation ?? "denied";
-    return state === "granted" ? "granted" : "denied";
-  } catch {
-    return "denied";
+    return await permInflight;
+  } finally {
+    // Clear so a later real re-prompt (after the user toggled Settings) works.
+    permInflight = null;
   }
 }
 
