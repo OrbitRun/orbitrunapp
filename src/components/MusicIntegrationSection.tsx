@@ -28,11 +28,41 @@ export default function MusicIntegrationSection() {
     setPlaylist(getActiveWorkoutPlaylist());
   }, []);
 
+  // React to the native deep-link OAuth round-trip so the "Forbinder…" state
+  // clears as soon as the token has been exchanged (or we got an error).
+  useEffect(() => {
+    const onAuthed = () => {
+      setAuthed(isAuthed());
+      setPlaylist(getActiveWorkoutPlaylist());
+      setBusy(false);
+    };
+    const onError = (e: Event) => {
+      setBusy(false);
+      const detail = (e as CustomEvent).detail;
+      toast.error(typeof detail === "string" ? detail : "Spotify connect failed");
+    };
+    window.addEventListener("orbit:spotify-authed", onAuthed);
+    window.addEventListener("orbit:spotify-auth-error", onError);
+    return () => {
+      window.removeEventListener("orbit:spotify-authed", onAuthed);
+      window.removeEventListener("orbit:spotify-auth-error", onError);
+    };
+  }, []);
+
   const handleConnect = async () => {
+    let safety: ReturnType<typeof setTimeout> | null = null;
     try {
       setBusy(true);
       await beginAuth();
+      // Safety net: if the user cancels the in-app browser without completing
+      // OAuth, no event fires — clear the spinner after a minute so they can
+      // try again instead of being stuck on "Forbinder…".
+      safety = setTimeout(() => {
+        setAuthed(isAuthed());
+        setBusy(false);
+      }, 60_000);
     } catch (err) {
+      if (safety) clearTimeout(safety);
       setBusy(false);
       toast.error(err instanceof Error ? err.message : "Connect failed");
     }
