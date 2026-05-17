@@ -18,7 +18,11 @@ export function useGpsWarmup() {
       try {
         if (isNativeGeolocationAvailable()) {
           const status = await requestNativeGeolocationPermission();
-          if (cancelled || status !== "granted") return;
+          if (cancelled) return;
+          // Only the "denied" / "unavailable" paths skip warm-up. For
+          // "prompt" we attempt a fix anyway — getCurrentPosition triggers
+          // the system dialog on iOS if it hasn't shown yet.
+          if (status === "denied" || status === "unavailable") return;
           await nativeGetCurrentPosition();
           return;
         }
