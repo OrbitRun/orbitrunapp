@@ -185,7 +185,11 @@ function RunMapInner({
         // Trigger the iOS permission prompt explicitly when the map mounts —
         // covers the case where the user dismissed the app-start warmup prompt.
         const status = await requestNativeGeolocationPermission();
-        if (cancelled || status !== "granted") return;
+        if (cancelled) return;
+        // "prompt" (concurrent request races) → still try; iOS will deliver
+        // a fix once the user taps Allow. Only an explicit "denied" / no
+        // plugin should bail.
+        if (status === "denied" || status === "unavailable") return;
         const first = await nativeGetCurrentPosition();
         if (first && !cancelled) {
           const b = toBrowserPosition(first);
