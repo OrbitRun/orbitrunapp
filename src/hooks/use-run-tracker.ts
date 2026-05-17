@@ -575,19 +575,29 @@ export function useRunTracker() {
       if (nativeWatchIdRef.current != null) return;
       void (async () => {
         const perm = await requestNativeGeolocationPermission();
-        if (perm !== "granted") {
+        // Only an explicit "denied" should surface the error overlay.
+        // "prompt" / "unavailable" → still attempt a fix; the system dialog
+        // may resolve mid-flight, and watchPosition's own error callback
+        // will report a real failure if it happens.
+        if (perm === "denied") {
           setState((p) => ({ ...p, permissionError: "Location permission denied." }));
           return;
         }
         // Immediate single-shot fix for a fast first callback.
         const first = await nativeGetCurrentPosition();
-        if (first) handlePosition(toBrowserPosition(first));
+        if (first) {
+          setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+          handlePosition(toBrowserPosition(first));
+        }
         // Native @capacitor/geolocation watcher. With UIBackgroundModes
         // = ["location"] in Info.plist + "Always" location permission,
         // iOS keeps delivering high-accuracy fixes while the screen is
         // locked or the app is backgrounded.
         const id = await nativeWatchPosition(
-          (pos) => handlePosition(toBrowserPosition(pos)),
+          (pos) => {
+            setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+            handlePosition(toBrowserPosition(pos));
+          },
           (err) => handleError({ message: err.message } as GeolocationPositionError),
         );
         nativeWatchIdRef.current = id;
