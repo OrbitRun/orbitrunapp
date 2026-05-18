@@ -99,7 +99,7 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
               onClick={() => setCode(p.code)}
               className={cn(
                 "flex flex-col items-center gap-1 rounded-xl py-2 px-1 transition active:scale-95",
-                active ? "bg-neon text-primary-foreground shadow-neon" : "glass text-foreground",
+                active ? "bg-neon text-primary-foreground" : "glass text-foreground",
               )}
               aria-pressed={active}
             >
@@ -150,7 +150,7 @@ export default function WeatherEditor({ initial, onSave, onCancel }: Props) {
 
       <button
         onClick={handleSave}
-        className="mt-3 w-full h-11 rounded-xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
+        className="mt-3 w-full h-11 rounded-xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition"
       >
         <Check className="h-4 w-4" />
         {t("weather.edit.save")}

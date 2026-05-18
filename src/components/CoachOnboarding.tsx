@@ -412,7 +412,7 @@ export default function CoachOnboarding({ onClose }: Props) {
               </div>
               <button
                 onClick={goToCoach}
-                className="mt-6 w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-neon text-primary-foreground text-sm font-black uppercase tracking-[0.15em] shadow-neon active:scale-[0.98] transition"
+                className="mt-6 w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-neon text-primary-foreground text-sm font-black uppercase tracking-[0.15em] active:scale-[0.98] transition"
               >
                 <Sparkles className="h-4 w-4" />
                 {t("coach.thinking.cta")}
@@ -810,7 +810,7 @@ export default function CoachOnboarding({ onClose }: Props) {
             <button
               onClick={() => canAdvance && setStep(safeStep + 1)}
               disabled={!canAdvance}
-              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5 disabled:opacity-40 disabled:active:scale-100"
+              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] active:scale-95 transition flex items-center gap-1.5 disabled:opacity-40 disabled:active:scale-100"
             >
               {t("onb.next")}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -819,7 +819,7 @@ export default function CoachOnboarding({ onClose }: Props) {
             <button
               onClick={() => canAdvance && enterThinking()}
               disabled={!canAdvance}
-              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5 disabled:opacity-40 disabled:active:scale-100"
+              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] active:scale-95 transition flex items-center gap-1.5 disabled:opacity-40 disabled:active:scale-100"
             >
               <Check className="h-3.5 w-3.5" />
               {t("coach.save")}

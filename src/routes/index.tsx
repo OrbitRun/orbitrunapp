@@ -300,7 +300,7 @@ function RunPage() {
         {editMode && (
           <button
             onClick={() => setEditMode(false)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon text-primary-foreground text-[10px] font-black uppercase tracking-[0.18em] shadow-neon"
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon text-primary-foreground text-[10px] font-black uppercase tracking-[0.18em]"
           >
             <Check className="h-3 w-3" />
             {tr("edit.exit")}
@@ -352,7 +352,7 @@ function RunPage() {
                 return next;
               });
             }}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-neon text-primary-foreground grid place-items-center shadow-neon active:scale-95 z-10"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-neon text-primary-foreground grid place-items-center active:scale-95 z-10"
             aria-label={tr("edit.swapHero")}
             title={tr("edit.swapHero")}
           >

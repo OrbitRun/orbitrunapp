@@ -201,7 +201,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
               }
               onSave(rpe ?? undefined);
             }}
-            className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] shadow-neon active:scale-95 transition"
+            className="h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition"
           >
             <Check className="h-4 w-4" />
             {t("summary.save")}
