@@ -37,6 +37,18 @@ export default function MusicHubFull() {
     setAuthed(isAuthed());
   }, []);
 
+  const refresh = useCallback(async () => {
+    if (!isAuthed()) return;
+    try {
+      const np = await getNowPlaying();
+      setNow(np);
+      setTickProgress(np?.progressMs ?? 0);
+      lastSyncRef.current = Date.now();
+    } catch {
+      setAuthed(isAuthed());
+    }
+  }, []);
+
   // React to the native deep-link OAuth round-trip so the widget flips from
   // "Connect Spotify in Profile" to the full player as soon as the token is
   // exchanged, without waiting for a remount or the next poll tick.
@@ -55,18 +67,6 @@ export default function MusicHubFull() {
       window.removeEventListener("orbit:spotify-auth-error", onError);
     };
   }, [refresh]);
-
-  const refresh = useCallback(async () => {
-    if (!isAuthed()) return;
-    try {
-      const np = await getNowPlaying();
-      setNow(np);
-      setTickProgress(np?.progressMs ?? 0);
-      lastSyncRef.current = Date.now();
-    } catch {
-      setAuthed(isAuthed());
-    }
-  }, []);
 
   useEffect(() => {
     if (!authed) return;
