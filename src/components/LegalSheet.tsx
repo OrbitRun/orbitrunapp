@@ -108,7 +108,7 @@ export default function LegalSheet({
         <div className="px-5 py-3 border-t border-white/10">
           <button
             onClick={onClose}
-            className="w-full rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.18em] py-3 active:scale-95 transition shadow-neon"
+            className="w-full rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.18em] py-3 active:scale-95 transition"
           >
             {t("legal.close")}
           </button>

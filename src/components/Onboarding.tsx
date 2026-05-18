@@ -67,7 +67,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("profile.namePlaceholder")}
-                className="mt-3 w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-base font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-neon focus:shadow-neon transition"
+                className="mt-3 w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-base font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-neon transition"
                 maxLength={24}
               />
             </div>
@@ -138,7 +138,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           {step < 2 ? (
             <button
               onClick={() => setStep(step + 1)}
-              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] active:scale-95 transition flex items-center gap-1.5"
             >
               {t("onb.next")}
               <ArrowRight className="h-3.5 w-3.5" />
@@ -146,7 +146,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           ) : (
             <button
               onClick={finish}
-              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] shadow-neon active:scale-95 transition flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] active:scale-95 transition flex items-center gap-1.5"
             >
               <Check className="h-3.5 w-3.5" />
               {t("onb.finish")}

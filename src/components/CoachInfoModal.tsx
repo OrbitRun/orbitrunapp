@@ -103,7 +103,7 @@ export default function CoachInfoModal({
               onNavigateToSettings();
               onClose();
             }}
-            className="w-full h-12 rounded-xl bg-neon text-primary-foreground font-black text-sm uppercase tracking-[0.14em] shadow-neon active:scale-[0.98] transition"
+            className="w-full h-12 rounded-xl bg-neon text-primary-foreground font-black text-sm uppercase tracking-[0.14em] active:scale-[0.98] transition"
           >
             {t("coach.info.cta")}
           </button>

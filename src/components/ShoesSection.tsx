@@ -195,7 +195,7 @@ export default function ShoesSection() {
             <button
               onClick={handleAdd}
               disabled={!brand.trim() || !model.trim()}
-              className="flex-1 h-11 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.18em] active:scale-95 transition shadow-neon disabled:opacity-40 disabled:shadow-none"
+              className="flex-1 h-11 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.18em] active:scale-95 transition disabled:opacity-40 disabled:shadow-none"
             >
               {t("shoes.save")}
             </button>

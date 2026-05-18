@@ -93,7 +93,7 @@ export default function HealthPermissionSheet({ open, onOpenChange, onResult }: 
           <button
             onClick={handleAllow}
             disabled={busy}
-            className="h-12 rounded-2xl bg-neon text-primary-foreground text-sm font-black uppercase tracking-[0.16em] shadow-neon active:scale-95 transition disabled:opacity-50"
+            className="h-12 rounded-2xl bg-neon text-primary-foreground text-sm font-black uppercase tracking-[0.16em] active:scale-95 transition disabled:opacity-50"
           >
             {busy ? "…" : "Allow"}
           </button>

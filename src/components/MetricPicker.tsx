@@ -41,7 +41,7 @@ export default function MetricPicker({ open, current, used, onSelect, onOpenChan
                 disabled={isUsed}
                 className={`relative px-3 rounded-xl font-bold uppercase tracking-[0.12em] transition active:scale-95 text-xs py-[10px] ${
                   isCurrent
-                    ? "bg-neon text-primary-foreground shadow-neon"
+                    ? "bg-neon text-primary-foreground"
                     : isUsed
                       ? "bg-white/5 text-muted-foreground/40 cursor-not-allowed"
                       : "bg-white/5 hover:bg-white/10 text-foreground"

@@ -29,7 +29,7 @@ export default function RecoverRunBanner() {
       <div className="mt-3 flex gap-2">
         <button
           onClick={save}
-          className="flex-1 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.18em] py-2 active:scale-95 transition shadow-neon"
+          className="flex-1 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.18em] py-2 active:scale-95 transition"
         >
           {t("recover.save")}
         </button>
