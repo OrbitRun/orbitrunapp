@@ -148,6 +148,20 @@ export async function beginAuth(): Promise<void> {
     // eslint-disable-next-line no-console
     console.warn("[spotify] @capacitor/browser unavailable, falling back to window.location");
   }
+  // Web fallback. If we're inside an iframe (Lovable editor preview),
+  // Spotify's auth page refuses to be framed (X-Frame-Options: DENY),
+  // which shows up as "This site can't be reached". Break out to the top
+  // window so the user lands on Spotify in the real browser tab.
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = authUrl;
+      return;
+    }
+  } catch {
+    // Cross-origin top access denied — fall back to opening a new tab.
+    window.open(authUrl, "_blank", "noopener");
+    return;
+  }
   window.location.href = authUrl;
 }
 
