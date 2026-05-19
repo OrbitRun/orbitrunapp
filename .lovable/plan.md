@@ -1,45 +1,24 @@
-## Problem
+## Problem (bekræftet)
 
-`beginAuth()` i `src/lib/spotify.ts` bruger `window.location.href = authUrl` for at sende brugeren til Spotify. I Lovable-editorens preview er appen indlejret i en iframe, og Spotify svarer med `X-Frame-Options: DENY` — derfor "This site can't be reached" før login-skærmen overhovedet vises.
+Jeg navigerede direkte til både `https://orbitrunapp.lovable.app/spotify/callback` og `https://orbitrunapp.lovable.app/coach` på din published URL. Begge returnerer en bar `Not Found`-tekst (Cloudflare edge 404), ikke vores TanStack `NotFoundComponent` med design.
 
-På published URL åbnet i en separat fane virker det allerede. Fixet sikrer at det også virker når brugeren tester via editor-preview, uden at ændre det fungerende native (Capacitor Browser) flow.
+Det betyder: **din nuværende published build er forældet**. Den blev publiceret før `/spotify/callback`-ruten (og andre nyere ruter) eksisterede. Når Spotify accepterer auth og sender brugeren tilbage til `/spotify/callback`, rammer requesten en edge der ikke kender ruten → "Not Found" øverst i din egen browserfane.
 
-## Ændring
+I preview ser du samme symptom fordi `getRedirectUri()` bygges fra `window.location.origin`. Hvis du startede flowet i preview, går callback tilbage til preview-URL'en — som *har* ruten — men hvis du af en eller anden grund startede på published (eller redirect URI'en i Spotify-dashboard er forskellig fra hvor du står), lander du på den forældede prod.
 
-Én fil: `src/lib/spotify.ts`, inde i `beginAuth()` — den eksisterende `window.location.href = authUrl` linje (slutningen af funktionen, web-grenen).
+## Hvad du skal gøre — ingen kode-ændringer
 
-Erstat med iframe-detektion:
+1. Tryk **Publish → Update** i Lovable-editoren. Det skubber den nuværende build (inkl. `/spotify/callback`-ruten) op på `orbitrunapp.lovable.app`.
+2. Verificér ved at åbne `https://orbitrunapp.lovable.app/spotify/callback` direkte i en ny fane. Det skal nu vise "Connecting Spotify…" eller en fejl — IKKE rå "Not Found".
+3. Test Connect-flowet igen — både i preview og på den nye published URL.
 
-```ts
-// Web fallback. If we're inside an iframe (Lovable editor preview),
-// Spotify's auth page refuses to be framed (X-Frame-Options: DENY),
-// which shows up as "This site can't be reached". Break out to the top
-// window so the user lands on Spotify in the real browser tab.
-try {
-  if (window.top && window.top !== window.self) {
-    window.top.location.href = authUrl;
-    return;
-  }
-} catch {
-  // Cross-origin top access denied — fall back to opening a new tab.
-  window.open(authUrl, "_blank", "noopener");
-  return;
-}
-window.location.href = authUrl;
-```
+## Hvad der ikke behøver ændres
 
-## Hvad ændringen ikke rører
+- `src/lib/spotify.ts` — flowet er korrekt, iframe-fixet fra sidste tur står ved magt.
+- `src/routes/spotify.callback.tsx` — ruten findes, er registreret i `routeTree.gen.ts`, og virker i preview.
+- Redirect URIs i Spotify Dashboard — alle 3 er stadig korrekte ifølge dig.
+- Client ID — virker, vi har set Spotify acceptere auth og sende `?code=...` tilbage.
 
-- Capacitor-grenen (`@capacitor/browser`) for iOS/TestFlight — uændret.
-- Redirect URI'er, scopes, PKCE-flow, token-exchange — uændret.
-- `/spotify/callback` route — uændret.
+## Hvis det stadig fejler efter re-publish
 
-## TestFlight-sporet
-
-"This site can't be reached" i TestFlight er en separat sag (custom URL scheme handoff). Vi parkerer den indtil web er bekræftet grøn, da du selv skrev at i-app Spotify-flowet historisk aldrig har virket i TestFlight. Når web er ok, åbner vi det som næste skridt.
-
-## Verifikation efter implementation
-
-1. I editor-preview: tryk Connect → Spotify-loginskærm åbner i top-fanen (eller ny fane).
-2. Log ind → redirect til `/spotify/callback` → tilbage til `/` autentificeret.
-3. Published URL: uændret, virker fortsat.
+Mest sandsynlige opfølgning er at `orbit:spotify-auth-error`-toast viser "Missing PKCE verifier", fordi `verifier`-værdien blev gemt på preview-origin men slået op på published-origin (forskellige `localStorage`-buckets). Det fixer vi separat ved at undgå krydsorigin-flow — men der skal vi ikke hen før re-publish er testet.
