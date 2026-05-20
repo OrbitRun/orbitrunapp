@@ -194,7 +194,7 @@ function RunPage() {
         />
       )}
 
-      <header className="flex items-center justify-between py-3">
+      <header className="flex items-center justify-between py-1 flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={logo}
