@@ -369,7 +369,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-3 grid grid-cols-3 gap-3">
+      <section className="grid grid-cols-3 gap-3 flex-shrink-0">
         {(() => {
           const secondarySize = secondaryFontSizeFor(
             layout.secondary.map((id) => {
