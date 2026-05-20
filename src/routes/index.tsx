@@ -301,7 +301,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-4 flex items-center justify-end px-1">
+      <section className="flex items-center justify-end px-1 flex-shrink-0">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
           {editMode ? tr("edit.pickHint") : ""}
         </div>
