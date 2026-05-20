@@ -248,9 +248,9 @@ function RunPage() {
         </div>
       )}
 
-      <section className="relative">
+      <section className="relative flex-1 min-h-[180px] flex flex-col">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
+          <div className="flex-1 min-h-[180px] rounded-3xl overflow-hidden border border-border shadow-card flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -259,10 +259,10 @@ function RunPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card">
+          <div className="flex-1 min-h-[180px] rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
               points={t.points}
-              className="h-[221px] w-full"
+              className="h-full w-full"
               interactive={!isActive}
               ghost={
                 t.ghost
@@ -272,6 +272,7 @@ function RunPage() {
             />
           </div>
         )}
+
         <div className="absolute top-3 left-3 pointer-events-none">
           <SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} />
         </div>
