@@ -443,7 +443,7 @@ function RunPage() {
 
 
       {t.splits.length > 0 && (
-        <section className="mt-3 glass rounded-2xl p-3">
+        <section className="glass rounded-2xl p-3 flex-shrink-0">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold px-1 pb-2">
             {tr("splits.title")}
           </div>
@@ -459,7 +459,8 @@ function RunPage() {
           </div>
         </section>
       )}
-      <section className="mt-5 mb-6 flex items-center justify-center gap-4">
+      <section className="flex items-center justify-center gap-4 flex-shrink-0 mt-auto pt-2">
+
         {t.status === "idle" || t.status === "finished" ? (
           <button
             onClick={beginCountdown}
