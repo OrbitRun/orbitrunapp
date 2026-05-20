@@ -172,7 +172,14 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main
+      className="mx-auto max-w-md px-4 flex flex-col gap-2 sm:gap-3"
+      style={{
+        minHeight: "100dvh",
+        paddingTop: "max(env(safe-area-inset-top), 0.75rem)",
+        paddingBottom: "calc(96px + max(env(safe-area-inset-bottom), 0.5rem))",
+      }}
+    >
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
