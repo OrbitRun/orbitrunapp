@@ -325,7 +325,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-2 relative grid grid-cols-2 gap-3">
+      <section className="relative grid grid-cols-2 gap-3 flex-shrink-0">
         {(() => {
           const heroSizeClass = heroFontSizeFor(
             layout.hero.map((id) => METRICS[id].format(t)),
