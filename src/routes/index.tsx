@@ -172,7 +172,14 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main
+      className="mx-auto max-w-md px-4 flex flex-col gap-2 sm:gap-3"
+      style={{
+        minHeight: "100dvh",
+        paddingTop: "max(env(safe-area-inset-top), 0.75rem)",
+        paddingBottom: "calc(96px + max(env(safe-area-inset-bottom), 0.5rem))",
+      }}
+    >
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
@@ -187,7 +194,7 @@ function RunPage() {
         />
       )}
 
-      <header className="flex items-center justify-between py-3">
+      <header className="flex items-center justify-between py-1 flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={logo}
@@ -241,9 +248,9 @@ function RunPage() {
         </div>
       )}
 
-      <section className="relative">
+      <section className="relative flex-1 min-h-[180px] flex flex-col">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
+          <div className="flex-1 min-h-[180px] rounded-3xl overflow-hidden border border-border shadow-card flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -252,10 +259,10 @@ function RunPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card">
+          <div className="flex-1 min-h-[180px] rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
               points={t.points}
-              className="h-[221px] w-full"
+              className="h-full w-full"
               interactive={!isActive}
               ghost={
                 t.ghost
@@ -265,6 +272,7 @@ function RunPage() {
             />
           </div>
         )}
+
         <div className="absolute top-3 left-3 pointer-events-none">
           <SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} />
         </div>
@@ -293,7 +301,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-4 flex items-center justify-end px-1">
+      <section className="flex items-center justify-end px-1 flex-shrink-0">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
           {editMode ? tr("edit.pickHint") : ""}
         </div>
@@ -317,7 +325,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-2 relative grid grid-cols-2 gap-3">
+      <section className="relative grid grid-cols-2 gap-3 flex-shrink-0">
         {(() => {
           const heroSizeClass = heroFontSizeFor(
             layout.hero.map((id) => METRICS[id].format(t)),
@@ -361,7 +369,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="mt-3 grid grid-cols-3 gap-3">
+      <section className="grid grid-cols-3 gap-3 flex-shrink-0">
         {(() => {
           const secondarySize = secondaryFontSizeFor(
             layout.secondary.map((id) => {
@@ -435,7 +443,7 @@ function RunPage() {
 
 
       {t.splits.length > 0 && (
-        <section className="mt-3 glass rounded-2xl p-3">
+        <section className="glass rounded-2xl p-3 flex-shrink-0">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold px-1 pb-2">
             {tr("splits.title")}
           </div>
@@ -451,7 +459,8 @@ function RunPage() {
           </div>
         </section>
       )}
-      <section className="mt-5 mb-6 flex items-center justify-center gap-4">
+      <section className="flex items-center justify-center gap-4 flex-shrink-0 mt-auto pt-2">
+
         {t.status === "idle" || t.status === "finished" ? (
           <button
             onClick={beginCountdown}
