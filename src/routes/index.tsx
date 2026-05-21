@@ -248,7 +248,10 @@ function RunPage() {
         </div>
       )}
 
-      <section className="relative flex-1 min-h-[200px] rounded-3xl overflow-hidden border border-border shadow-card">
+      <section
+        className="relative flex-1 rounded-3xl overflow-hidden border border-border shadow-card"
+        style={{ minHeight: "clamp(220px, 38dvh, 460px)" }}
+      >
         {profile.activityEnvironment === "indoor" ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">

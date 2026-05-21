@@ -441,7 +441,7 @@ function RunMapInner({
   const legend = heatmap && showLegend && points.length >= 2;
   return (
     <>
-      <div ref={containerRef} className={`relative ${className ?? ""}`}>
+      <div ref={containerRef} className={className ?? "relative"}>
         {showRecenter && (
           <button
             type="button"
