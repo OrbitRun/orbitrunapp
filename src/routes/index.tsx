@@ -248,9 +248,9 @@ function RunPage() {
         </div>
       )}
 
-      <section className="relative flex-1 min-h-[180px] flex flex-col">
+      <section className="relative flex-1 min-h-[200px] rounded-3xl overflow-hidden border border-border shadow-card">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="flex-1 min-h-[180px] rounded-3xl overflow-hidden border border-border shadow-card flex flex-col items-center justify-center bg-white/5">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -259,18 +259,16 @@ function RunPage() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 min-h-[180px] rounded-3xl overflow-hidden border border-border shadow-card">
-            <RunMap
-              points={t.points}
-              className="h-full w-full"
-              interactive={!isActive}
-              ghost={
-                t.ghost
-                  ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
-                  : null
-              }
-            />
-          </div>
+          <RunMap
+            points={t.points}
+            className="absolute inset-0 h-full w-full"
+            interactive={!isActive}
+            ghost={
+              t.ghost
+                ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
+                : null
+            }
+          />
         )}
 
         <div className="absolute top-3 left-3 pointer-events-none">
