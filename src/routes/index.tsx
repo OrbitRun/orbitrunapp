@@ -172,14 +172,7 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main
-      className="mx-auto max-w-md px-4 flex flex-col gap-2 sm:gap-3"
-      style={{
-        minHeight: "100dvh",
-        paddingTop: "max(env(safe-area-inset-top), 0.75rem)",
-        paddingBottom: "calc(96px + max(env(safe-area-inset-bottom), 0.5rem))",
-      }}
-    >
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
@@ -194,7 +187,7 @@ function RunPage() {
         />
       )}
 
-      <header className="flex items-center justify-between py-1 flex-shrink-0">
+      <header className="flex items-center justify-between py-3">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={logo}
@@ -248,12 +241,9 @@ function RunPage() {
         </div>
       )}
 
-      <section
-        className="relative flex-1 rounded-3xl overflow-hidden border border-border shadow-card"
-        style={{ minHeight: "clamp(220px, 38dvh, 460px)" }}
-      >
+      <section className="relative">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/5">
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -262,18 +252,19 @@ function RunPage() {
             </div>
           </div>
         ) : (
-          <RunMap
-            points={t.points}
-            className="absolute inset-0 h-full w-full"
-            interactive={!isActive}
-            ghost={
-              t.ghost
-                ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
-                : null
-            }
-          />
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card">
+            <RunMap
+              points={t.points}
+              className="h-[221px] w-full"
+              interactive={!isActive}
+              ghost={
+                t.ghost
+                  ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
+                  : null
+              }
+            />
+          </div>
         )}
-
         <div className="absolute top-3 left-3 pointer-events-none">
           <SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} />
         </div>
@@ -302,7 +293,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="flex items-center justify-end px-1 flex-shrink-0">
+      <section className="mt-4 flex items-center justify-end px-1">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
           {editMode ? tr("edit.pickHint") : ""}
         </div>
@@ -326,7 +317,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="relative grid grid-cols-2 gap-3 flex-shrink-0">
+      <section className="mt-2 relative grid grid-cols-2 gap-3">
         {(() => {
           const heroSizeClass = heroFontSizeFor(
             layout.hero.map((id) => METRICS[id].format(t)),
@@ -370,7 +361,7 @@ function RunPage() {
         )}
       </section>
 
-      <section className="grid grid-cols-3 gap-3 flex-shrink-0">
+      <section className="mt-3 grid grid-cols-3 gap-3">
         {(() => {
           const secondarySize = secondaryFontSizeFor(
             layout.secondary.map((id) => {
@@ -444,7 +435,7 @@ function RunPage() {
 
 
       {t.splits.length > 0 && (
-        <section className="glass rounded-2xl p-3 flex-shrink-0">
+        <section className="mt-3 glass rounded-2xl p-3">
           <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-bold px-1 pb-2">
             {tr("splits.title")}
           </div>
@@ -460,8 +451,7 @@ function RunPage() {
           </div>
         </section>
       )}
-      <section className="flex items-center justify-center gap-4 flex-shrink-0 mt-auto pt-2">
-
+      <section className="mt-5 mb-6 flex items-center justify-center gap-4">
         {t.status === "idle" || t.status === "finished" ? (
           <button
             onClick={beginCountdown}
