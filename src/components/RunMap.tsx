@@ -493,9 +493,21 @@ function RunMapInner({
 
   const showRecenter = interactive && userMoved && points.length > 0;
   const legend = heatmap && showLegend && points.length >= 2;
+  const showGpsBanner =
+    points.length === 0 &&
+    (gpsStatus === "locating" || gpsStatus === "denied" || gpsStatus === "error" || gpsStatus === "unavailable") &&
+    !userLoc;
   return (
     <>
       <div ref={containerRef} className={`relative ${className ?? ""}`}>
+        {showGpsBanner && (
+          <div className="absolute inset-x-3 top-3 z-10 rounded-xl bg-background/85 backdrop-blur border border-border px-3 py-2 text-[11px] font-semibold pointer-events-none">
+            {gpsStatus === "locating" && <span>Henter GPS-signal…</span>}
+            {gpsStatus !== "locating" && (
+              <span className="text-destructive">{gpsError ?? "GPS utilgængelig"}</span>
+            )}
+          </div>
+        )}
         {showRecenter && (
           <button
             type="button"
