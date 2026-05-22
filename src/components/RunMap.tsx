@@ -198,6 +198,8 @@ function RunMapInner({
       // eslint-disable-next-line no-console
       console.log("[map] userLoc fix", lat, lng);
       setUserLoc({ lat, lng });
+      setGpsStatus("ready");
+      setGpsError(null);
       try {
         window.localStorage.setItem("orbit.lastUserLoc", JSON.stringify({ lat, lng }));
       } catch {
@@ -205,20 +207,24 @@ function RunMapInner({
       }
     };
 
+    setGpsStatus("locating");
+
     (async () => {
       if (isNativeGeolocationAvailable()) {
-        // Trigger the iOS permission prompt explicitly when the map mounts —
-        // covers the case where the user dismissed the app-start warmup prompt.
         const status = await requestNativeGeolocationPermission();
         if (cancelled) return;
         // eslint-disable-next-line no-console
         console.log("[map] native perm status", status);
-        // "prompt" (concurrent request races) → still try; iOS will deliver
-        // a fix once the user taps Allow. Only an explicit "denied" / no
-        // plugin should bail.
-        if (status === "denied" || status === "unavailable") return;
-        // Retry getCurrentPosition up to 3x with 1s gap — covers the case
-        // where iOS hasn't fully resolved the permission yet on first call.
+        if (status === "denied") {
+          setGpsStatus("denied");
+          setGpsError("Lokationsadgang er ikke tilladt. Åbn Indstillinger → Orbit Run → Lokation → Mens appen er i brug.");
+          return;
+        }
+        if (status === "unavailable") {
+          setGpsStatus("unavailable");
+          setGpsError("GPS-pluginnet er ikke tilgængeligt i denne build.");
+          return;
+        }
         for (let i = 0; i < 3 && !cancelled; i++) {
           const fix = await nativeGetCurrentPosition();
           if (fix) {
@@ -237,19 +243,30 @@ function RunMapInner({
           (err) => {
             // eslint-disable-next-line no-console
             console.warn("[map] native watch error", err);
+            setGpsStatus("error");
+            setGpsError(err.message || "GPS-fejl");
           },
         );
       } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (p) => onPos(p.coords.latitude, p.coords.longitude),
-          () => {},
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 },
+          (e) => {
+            setGpsStatus("error");
+            setGpsError(e.message || "GPS-fejl");
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
         );
         webWatchId = navigator.geolocation.watchPosition(
           (p) => onPos(p.coords.latitude, p.coords.longitude),
-          () => {},
+          (e) => {
+            setGpsStatus("error");
+            setGpsError(e.message || "GPS-fejl");
+          },
           { enableHighAccuracy: true, maximumAge: 2000 },
         );
+      } else {
+        setGpsStatus("unavailable");
+        setGpsError("Geolocation er ikke understøttet.");
       }
     })();
 
