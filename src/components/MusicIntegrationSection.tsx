@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { ListMusic, LogOut, Music2, X } from "lucide-react";
+import { ListMusic, LogOut, Music2, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import SpotifyPlaylistPicker from "@/components/SpotifyPlaylistPicker";
 import { useI18n } from "@/lib/i18n";
 import {
   beginAuth,
+  fullReset,
   getActiveWorkoutPlaylist,
   isAuthed,
   isConfigured,
@@ -136,14 +137,31 @@ export default function MusicIntegrationSection() {
       {!configured ? (
         <div className="text-xs text-muted-foreground">{t("music.notConfigured")}</div>
       ) : !authed ? (
-        <button
-          onClick={handleConnect}
-          disabled={busy}
-          className="w-full h-10 rounded-xl text-sm font-bold text-black hover:opacity-90 transition active:scale-[0.98] disabled:opacity-50"
-          style={{ backgroundColor: SPOTIFY_GREEN }}
-        >
-          {busy ? t("music.connecting") : t("music.connect")}
-        </button>
+        <div className="space-y-2">
+          <button
+            onClick={handleConnect}
+            disabled={busy}
+            className="w-full h-10 rounded-xl text-sm font-bold text-black hover:opacity-90 transition active:scale-[0.98] disabled:opacity-50"
+            style={{ backgroundColor: SPOTIFY_GREEN }}
+          >
+            {busy ? t("music.connecting") : t("music.connect")}
+          </button>
+          {busy && (
+            <button
+              onClick={() => {
+                void fullReset();
+                setBusy(false);
+                setAuthed(false);
+                setPlaylist(null);
+                toast.success("Spotify-login nulstillet");
+              }}
+              className="w-full h-9 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 bg-white/5 hover:bg-white/10 text-muted-foreground transition"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Annullér / nulstil login
+            </button>
+          )}
+        </div>
       ) : (
         <div className="space-y-3">
           {/* Account row */}

@@ -23,10 +23,12 @@ Alle på Capacitor 8.x — én major, ingen blandede versioner:
 - `@capacitor-community/bluetooth-le` 8.1.3
 - `@capacitor/preferences` 8.x  (native key/value storage for Spotify token + PKCE verifier — survives Safari → app handoff)
 
-`CapacitorHttp` (bundled i `@capacitor/core`) er aktiveret i `capacitor.config.ts`
-under `plugins.CapacitorHttp.enabled = true`. Det rerouter `fetch()` /
-`XMLHttpRequest` gennem iOS' native HTTP-stack og fjerner `DownloadFailed` /
-sandbox-extension fejl som Spotify og Open-Meteo udløste i WKWebView.
+`CapacitorHttp` (bundled i `@capacitor/core`) er **slået FRA** i
+`capacitor.config.ts` (`plugins.CapacitorHttp.enabled = false`). Når den var
+slået til, returnerede den base64-strenge i stedet for binære `ArrayBuffer`,
+hvilket brækkede Mapbox GL's Web Worker → sort kort på iOS. Vores eksplicitte
+`CapacitorHttp.request(...)` kald i `src/lib/native-http.ts` bypasser stadig
+WKWebView CORS for Spotify / Open-Meteo uden den globale patch.
 
 Bemærk: `@capacitor-community/background-geolocation` er **fjernet**.
 Baggrunds-GPS leveres af `@capacitor/geolocation` + `UIBackgroundModes=location`
@@ -206,3 +208,38 @@ I Xcode-konsollen skal du nu se linjer som:
 ```
 Hvis du i stedet ser `[native-http] CapacitorHttp unavailable on native`, så
 kørte `npx cap sync ios` ikke efter `capacitor.config.ts` blev opdateret.
+
+---
+
+## 10. TestFlight tjekliste — GPS + Spotify
+
+Når du tester en ny build, åbn Xcode → Window → Devices and Simulators →
+vælg din iPhone → "Open Console". Filtrer på processen "Orbit Run".
+
+**GPS skal logge i denne rækkefølge inden du trykker Start Løb:**
+```
+[geo] watchPosition started <id>
+[geo] watch fix <lat> <lng> acc <m>
+[map] userLoc fix <lat> <lng>
+```
+- Ser du `[geo] watch error … code 1` = brugeren har trykket "Don't Allow".
+  Slet appen, geninstallér, vælg "Allow While Using App".
+- Ser du `[geo] getCurrentPosition returned null` gentagne gange uden et
+  `watch fix` indenfor 30s = iOS har ikke et fix endnu. Gå udendørs.
+- Ingen `[geo]` linjer overhovedet = `@capacitor/geolocation` plugin ikke
+  installeret. Kør §6's plugin-flow.
+
+**Spotify skal logge:**
+```
+[spotify] beginAuth { native: true, redirect_uri: "jonas-orbit-run://callback" }
+[spotify] opening auth URL in system Safari
+[spotify] deep link received jonas-orbit-run://callback?code=…
+[spotify] token exchange OK
+[native-http] → GET https://api.spotify.com/v1/me/playlists?limit=50
+```
+- Hænger på `beginAuth` uden `deep link received` = Redirect URI matcher
+  ikke i Spotify Dashboard (se §5).
+- `token exchange failed` = stale PKCE verifier. Tryk "Annullér / nulstil
+  login" i appen og prøv igen.
+- `[spotify] getMyPlaylists failed 403` = token mangler
+  `playlist-read-private` scope. Tryk "Nulstil login" i playlist-pickeren.

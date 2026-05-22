@@ -374,6 +374,18 @@ export function logout() {
   setStoredToken(null);
 }
 
+/**
+ * Hard reset: clears stored token, in-flight PKCE verifier and the saved
+ * workout playlist. Use this to recover from a stuck "Forbinder…" loop
+ * (stale verifier from a previous attempt makes the next token exchange fail
+ * with `invalid_grant`).
+ */
+export async function fullReset(): Promise<void> {
+  await setValue(TOKEN_KEY, null);
+  await setValue(VERIFIER_KEY, null);
+  await setValue(PLAYLIST_KEY, null);
+}
+
 export function isAuthed(): boolean {
   return !!getStoredToken();
 }
