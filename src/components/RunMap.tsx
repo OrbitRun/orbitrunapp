@@ -69,7 +69,15 @@ function RunMapInner({
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem("orbit.lastUserLoc");
+      return raw ? (JSON.parse(raw) as { lat: number; lng: number }) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
