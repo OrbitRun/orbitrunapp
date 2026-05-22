@@ -44,20 +44,19 @@ export function isNativeGeolocationAvailable(): boolean {
   return p === "ios" || p === "android";
 }
 
-// Lazily resolve the plugin so the web bundle never tries to resolve it.
+// Lazily resolve the plugin via a literal `import()` string so Vite bundles
+// it as a chunk in the iOS build (the previous Function("...")() trick hid
+// the import from the bundler → plugin missing at runtime → "plugin unavailable").
 async function loadPlugin(): Promise<unknown | null> {
   if (!isNativeGeolocationAvailable()) return null;
   try {
-    const specifier = "@capacitor/geolocation";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mod: any = await (Function(
-      "s",
-      "return import(s)",
-    ) as (s: string) => Promise<unknown>)(specifier);
+    const mod = await import("@capacitor/geolocation");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const m = mod as any;
     return m?.Geolocation ?? m?.default?.Geolocation ?? m?.default ?? null;
-  } catch {
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn("[geo] failed to import @capacitor/geolocation", (e as Error)?.message ?? e);
     return null;
   }
 }
