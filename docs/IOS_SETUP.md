@@ -129,6 +129,11 @@ npx cap sync ios
 - **`CapApp-SPM` kan ikke løses i Xcode** → `rm -rf node_modules
   package-lock.json ios` og start forfra fra §2. SPM cacher tidligere
   plugin-versioner.
+- **"GPS-pluginnet er ikke tilgængeligt i denne build."** → web-bundlen
+  indeholder ikke `@capacitor/geolocation`-chunken. Det sker hvis du har
+  kørt `npx cap sync ios` UDEN først at køre `npm run build` efter en
+  ændring i `src/lib/capacitor-runtime.ts` eller `src/lib/geolocation-native.ts`.
+  Kør hele §6's plugin-flow igen.
 - **GPS-prompt vises ikke** → tjek at `node scripts/apply-ios-template.mjs`
   kørte uden fejl. Slet appen fra enheden og installer igen (iOS cacher
   "Don't Allow"-svar).
@@ -136,8 +141,9 @@ npx cap sync ios
   være tændt i Xcode (§4) **og** brugeren skal have valgt "Always".
 - **Spotify-login fejler ved retur** → Redirect URI matcher ikke
   `jonas-orbit-run://callback`. Sammenlign tegn-for-tegn.
-- **Spotify åbner Safari i stedet for in-app browser** → `@capacitor/browser`
-  ikke installeret. Kør `npm install` igen.
+- **Spotify hænger på "Forbinder…"** → typisk Redirect URI fejl ELLER
+  `@capacitor/browser` plugin manglende. Tryk "Annullér / nulstil login"
+  og prøv igen. Tjek Xcode-konsollen for `[spotify] beginAuth` linjen.
 
 ---
 

@@ -53,10 +53,12 @@ export default function MusicIntegrationSection() {
   const handleConnect = async () => {
     let safety: ReturnType<typeof setTimeout> | null = null;
     let poll: ReturnType<typeof setInterval> | null = null;
+    let returnTimeout: ReturnType<typeof setTimeout> | null = null;
     let onFocus: (() => void) | null = null;
     const clearTimers = () => {
       if (safety) clearTimeout(safety);
       if (poll) clearInterval(poll);
+      if (returnTimeout) clearTimeout(returnTimeout);
       if (onFocus) {
         window.removeEventListener("focus", onFocus);
         document.removeEventListener("visibilitychange", onFocus);
@@ -65,8 +67,6 @@ export default function MusicIntegrationSection() {
     try {
       setBusy(true);
       await beginAuth();
-      // Poll isAuthed() every 2s in case the appUrlOpen event fired but
-      // we missed it (e.g. listener torn down during the Safari handoff).
       poll = setInterval(() => {
         if (isAuthed()) {
           clearTimers();
@@ -75,26 +75,40 @@ export default function MusicIntegrationSection() {
           setBusy(false);
         }
       }, 2_000);
-      // When the app returns to the foreground (user came back from Safari),
-      // re-check auth state immediately instead of waiting up to 2s for poll.
+      // When the app returns to the foreground (user came back from Safari/
+      // in-app Browser), re-check auth state. If we don't have a token
+      // within 4s of returning, surface a real error instead of hanging.
       onFocus = () => {
         if (isAuthed()) {
           clearTimers();
           setAuthed(true);
           setPlaylist(getActiveWorkoutPlaylist());
           setBusy(false);
+          return;
         }
+        if (returnTimeout) clearTimeout(returnTimeout);
+        returnTimeout = setTimeout(() => {
+          if (!isAuthed()) {
+            clearTimers();
+            setBusy(false);
+            toast.error(
+              "Spotify-login blev ikke gennemført. Tjek at jonas-orbit-run://callback er tilføjet i Spotify Dashboard.",
+            );
+          }
+        }, 4_000);
       };
       window.addEventListener("focus", onFocus);
       document.addEventListener("visibilitychange", onFocus);
-      // Safety net: 3 minutes — enough time for first-time Spotify login +
-      // "Open in Orbit Run?" prompt. The poll above clears the spinner
-      // instantly on success, so this only fires if the user truly cancelled.
+      // Hard safety net: 90s. The poll + focus handlers normally clear
+      // the spinner much faster.
       safety = setTimeout(() => {
         clearTimers();
         setAuthed(isAuthed());
         setBusy(false);
-      }, 180_000);
+        if (!isAuthed()) {
+          toast.error("Spotify-login timed out. Prøv igen.");
+        }
+      }, 90_000);
     } catch (err) {
       clearTimers();
       setBusy(false);

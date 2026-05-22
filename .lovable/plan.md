@@ -1,26 +1,57 @@
+## Problem
+
+Det er ikke et kort-layout problem længere. Screenshotet viser:
+
+- **GPS:** Appen kører som native iOS, men JavaScript kan ikke finde `@capacitor/geolocation` i den aktuelle build. Derfor får du “GPS-pluginnet er ikke tilgængeligt i denne build.”
+- **Spotify:** Login bliver hængende på “Forbinder…”, hvilket peger på at native callback-flowet ikke bliver gennemført eller at token-udvekslingen aldrig når tilbage til UI’et.
+
 ## Plan
 
-### 1) Make GPS tracking deterministic instead of best-effort
-- Change the run start flow so the app does **not** start the countdown/run until it has a usable first GPS fix, or shows a clear error if iOS does not return one.
-- Reuse that first fix as the first route point so the map begins drawing immediately when the run starts.
-- Loosen the first-fix gate slightly: accept the first coordinate up to a practical accuracy threshold, then tighten filtering for later points.
-- Add visible GPS states on the run page: “henter GPS”, “klar”, “svagt signal”, or the real native error message.
-- Fix the native GPS error logging so TestFlight/Xcode tells us whether the plugin returns permission, timeout, unavailable, or accuracy errors.
+1. **Gør Capacitor-plugins bundlet deterministisk**
+   - Erstat de nuværende “skjulte” dynamiske imports af Capacitor-plugins med Vite-venlige dynamiske imports.
+   - Det gælder især `@capacitor/geolocation`, `@capacitor/app`, `@capacitor/browser` og `@capacitor/preferences`.
+   - Målet er at plugins faktisk kommer med i `dist` og dermed virker i TestFlight-buildet.
 
-### 2) Keep the map usable on small screens
-- Keep the FocusRun-style flexible map during active runs.
-- On the start screen, make the map height responsive with a bigger upper limit, but reserve space for stats and the Start button so it never goes under the bottom navigation.
+2. **GPS: tydelig fallback og start-flow**
+   - Opdatér `geolocation-native.ts`, så “plugin ikke fundet” ikke forveksles med “permission nægtet”.
+   - Lad løbetrackeren bruge web-geolocation som sidste fallback, hvis Capacitor siger native men plugin-loaderen fejler.
+   - Start løb må ikke bare fortsætte stille, hvis der hverken er native plugin eller web-GPS.
 
-### 3) Make Spotify stop blocking the core app
-- Keep the existing Spotify support, but make the auth flow more diagnosable: show the exact callback/token/playlists error in-app and in logs.
-- Add a “nulstil Spotify-login” path that clears token + PKCE verifier + selected playlist before starting over, so stale/verifier-mismatch states cannot keep looping.
-- If the custom scheme callback is still unreliable, switch the native redirect to the already-supported web callback route as a fallback: Spotify returns to the website, which then opens the app with a clean handoff.
+3. **Spotify: gør native OAuth robust**
+   - Skift native åbning af Spotify til en plugin-metode der findes stabilt i Capacitor (`Browser.open`) i stedet for at være afhængig af en usikker `App.openUrl`-gren.
+   - Behold `appUrlOpen` listeneren til `jonas-orbit-run://callback`.
+   - Sørg for at fejl fra callback/token exchange vises direkte i UI’et i stedet for bare “Forbinder…” for evigt.
 
-### 4) Update setup docs so TestFlight build is not guessing
-- Correct the iOS setup doc to match the current `CapacitorHttp.enabled = false` decision for Mapbox.
-- Add a short TestFlight verification checklist: GPS must log first fix before countdown; Spotify must log deep link + token exchange + playlist API result.
+4. **Spotify: automatisk recovery fra hængt login**
+   - Når brugeren trykker connect, ryd gammel PKCE-verifier før ny auth starter.
+   - Hvis appen kommer tilbage fra Safari/Browser uden token, skal knappen vende tilbage til “Forbind Spotify” og vise en konkret fejlbesked.
 
-## Technical details
-- Main files: `src/hooks/use-run-tracker.ts`, `src/components/RunMap.tsx`, `src/routes/index.tsx`, `src/lib/geolocation-native.ts`, `src/lib/spotify.ts`, `src/components/MusicIntegrationSection.tsx`, `src/components/SpotifyPlaylistPicker.tsx`, `docs/IOS_SETUP.md`.
-- Biggest GPS change: `armGps()` should return/resolve the first valid position instead of only starting a watcher asynchronously, and `beginCountdown()` should wait for that result before launching countdown.
-- Biggest Spotify change: clear both `pulse.spotify.token` and `pulse.spotify.verifier` on reset/reauth, then surface the actual failing status/message rather than silently returning to “connect again”.
+5. **Ryd op i iOS-dokumentation**
+   - Ret modstridende afsnit i `docs/IOS_SETUP.md`, så den matcher den faktiske beslutning: `CapacitorHttp.enabled = false` for ikke at ødelægge Mapbox.
+   - Tilføj en kort “hvis du ser GPS-plugin fejl” sektion med præcis kommando: fuld rebuild/sync af iOS-projektet.
+
+## Tekniske filer
+
+- `src/lib/capacitor-runtime.ts`
+- `src/lib/geolocation-native.ts`
+- `src/hooks/use-run-tracker.ts`
+- `src/components/RunMap.tsx`
+- `src/lib/spotify.ts`
+- `src/components/MusicIntegrationSection.tsx`
+- `docs/IOS_SETUP.md`
+
+## Vigtigt efter implementering
+
+Efter ændringen skal der laves en **helt ny iOS-build**, ikke kun web-preview:
+
+```bash
+rm -rf ios
+npm install
+npm run build
+npx cap add ios
+node scripts/apply-ios-template.mjs
+npx cap sync ios
+npx cap open ios
+```
+
+Hvis `ios/` ikke genskabes efter plugin-loader ændringen, kan TestFlight stadig køre med et gammelt native plugin-state.
