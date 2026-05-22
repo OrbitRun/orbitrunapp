@@ -52,9 +52,14 @@ export default function MusicIntegrationSection() {
   const handleConnect = async () => {
     let safety: ReturnType<typeof setTimeout> | null = null;
     let poll: ReturnType<typeof setInterval> | null = null;
+    let onFocus: (() => void) | null = null;
     const clearTimers = () => {
       if (safety) clearTimeout(safety);
       if (poll) clearInterval(poll);
+      if (onFocus) {
+        window.removeEventListener("focus", onFocus);
+        document.removeEventListener("visibilitychange", onFocus);
+      }
     };
     try {
       setBusy(true);
@@ -69,13 +74,26 @@ export default function MusicIntegrationSection() {
           setBusy(false);
         }
       }, 2_000);
-      // Safety net: clear the spinner after 15s if the user cancelled in
-      // Safari and never came back, so they can try again.
+      // When the app returns to the foreground (user came back from Safari),
+      // re-check auth state immediately instead of waiting up to 2s for poll.
+      onFocus = () => {
+        if (isAuthed()) {
+          clearTimers();
+          setAuthed(true);
+          setPlaylist(getActiveWorkoutPlaylist());
+          setBusy(false);
+        }
+      };
+      window.addEventListener("focus", onFocus);
+      document.addEventListener("visibilitychange", onFocus);
+      // Safety net: 3 minutes — enough time for first-time Spotify login +
+      // "Open in Orbit Run?" prompt. The poll above clears the spinner
+      // instantly on success, so this only fires if the user truly cancelled.
       safety = setTimeout(() => {
         clearTimers();
         setAuthed(isAuthed());
         setBusy(false);
-      }, 15_000);
+      }, 180_000);
     } catch (err) {
       clearTimers();
       setBusy(false);

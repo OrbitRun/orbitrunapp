@@ -69,7 +69,15 @@ function RunMapInner({
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = window.localStorage.getItem("orbit.lastUserLoc");
+      return raw ? (JSON.parse(raw) as { lat: number; lng: number }) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
@@ -86,11 +94,17 @@ function RunMapInner({
       (mapboxgl as any).accessToken = MAPBOX_TOKEN;
       MRef.current = mapboxgl;
 
+      // Default center: cached last user location if available, else a
+      // geographically neutral Denmark center so the fallback doesn't look
+      // like London when the GPS fix is still pending.
+      const initialCenter: [number, number] = userLoc
+        ? [userLoc.lng, userLoc.lat]
+        : [10.2, 56.15];
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: MAPBOX_STYLE,
-        center: [-0.09, 51.505],
-        zoom: 14,
+        center: initialCenter,
+        zoom: userLoc ? 15 : 6,
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
@@ -177,7 +191,14 @@ function RunMapInner({
 
     const onPos = (lat: number, lng: number) => {
       if (cancelled) return;
+      // eslint-disable-next-line no-console
+      console.log("[map] userLoc fix", lat, lng);
       setUserLoc({ lat, lng });
+      try {
+        window.localStorage.setItem("orbit.lastUserLoc", JSON.stringify({ lat, lng }));
+      } catch {
+        /* noop */
+      }
     };
 
     (async () => {
@@ -186,21 +207,33 @@ function RunMapInner({
         // covers the case where the user dismissed the app-start warmup prompt.
         const status = await requestNativeGeolocationPermission();
         if (cancelled) return;
+        // eslint-disable-next-line no-console
+        console.log("[map] native perm status", status);
         // "prompt" (concurrent request races) → still try; iOS will deliver
         // a fix once the user taps Allow. Only an explicit "denied" / no
         // plugin should bail.
         if (status === "denied" || status === "unavailable") return;
-        const first = await nativeGetCurrentPosition();
-        if (first && !cancelled) {
-          const b = toBrowserPosition(first);
-          onPos(b.coords.latitude, b.coords.longitude);
+        // Retry getCurrentPosition up to 3x with 1s gap — covers the case
+        // where iOS hasn't fully resolved the permission yet on first call.
+        for (let i = 0; i < 3 && !cancelled; i++) {
+          const fix = await nativeGetCurrentPosition();
+          if (fix) {
+            const b = toBrowserPosition(fix);
+            onPos(b.coords.latitude, b.coords.longitude);
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 1000));
         }
+        if (cancelled) return;
         nativeId = await nativeWatchPosition(
           (p) => {
             const b = toBrowserPosition(p);
             onPos(b.coords.latitude, b.coords.longitude);
           },
-          () => {},
+          (err) => {
+            // eslint-disable-next-line no-console
+            console.warn("[map] native watch error", err);
+          },
         );
       } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
