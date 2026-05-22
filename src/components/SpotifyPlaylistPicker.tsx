@@ -119,7 +119,7 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
             <div className="p-6 text-center">
               <div className="text-sm text-muted-foreground mb-3">{t("music.playlistLoadError")}</div>
               <button
-                onClick={() => void beginAuth()}
+                onClick={() => void handleReauth()}
                 className="px-4 h-9 rounded-full text-xs font-bold bg-neon text-primary-foreground"
               >
                 {t("music.reconnectForPlaylists")}
