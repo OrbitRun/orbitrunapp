@@ -255,7 +255,7 @@ function RunPage() {
           <div className="rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
               points={t.points}
-              className="h-[221px] w-full"
+              className="h-[180px] sm:h-[221px] w-full"
               interactive={!isActive}
               ghost={
                 t.ghost
