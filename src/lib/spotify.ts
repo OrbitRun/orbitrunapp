@@ -119,11 +119,13 @@ export function isConfigured(): boolean {
 export async function beginAuth(): Promise<void> {
   if (!isConfigured()) throw new Error("Spotify Client ID not configured");
   await ensureSpotifyStoragePrimed();
+  // Always wipe any leftover PKCE verifier / stale token before a new auth
+  // round-trip — a stale verifier from a cancelled attempt makes the next
+  // token exchange fail with invalid_grant and locks the UI on "Forbinder…".
+  await setValue(TOKEN_KEY, null);
+  await setValue(VERIFIER_KEY, null);
   const verifier = randomString(96);
   const challenge = base64url(await sha256(verifier));
-  // Persist the PKCE verifier through native storage so it survives the
-  // Safari → app transition (sandbox extension drops can wipe in-memory
-  // sessionStorage on iOS during the OAuth round-trip).
   await setValue(VERIFIER_KEY, verifier);
 
   const params = new URLSearchParams({
@@ -139,30 +141,29 @@ export async function beginAuth(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log("[spotify] beginAuth", { native, redirect_uri: getRedirectUri() });
   if (native) {
-    // Open the OAuth URL in system Safari via @capacitor/app's openUrl.
-    // SFSafariViewController (via @capacitor/browser) is unreliable on
-    // iOS 17/18 for custom-scheme redirects — sometimes appUrlOpen never
-    // fires after the Spotify "Open in Orbit Run?" prompt. System Safari
-    // always delivers the deep link back via appUrlOpen.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const App = await loadCapacitorPlugin<any>("@capacitor/app", "App");
-    if (App?.openUrl) {
-      // eslint-disable-next-line no-console
-      console.log("[spotify] opening auth URL in system Safari");
-      await App.openUrl({ url: authUrl });
-      return;
-    }
-    // Fallback to in-app browser if openUrl is unavailable for some reason.
+    // Prefer the in-app Browser (SFSafariViewController) — it reliably
+    // delivers the custom-scheme deep link back via appUrlOpen on iOS 17/18
+    // and avoids the "Open in Orbit Run?" interstitial that system Safari
+    // sometimes shows. System Safari (App.openUrl) is the fallback.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Browser = await loadCapacitorPlugin<any>("@capacitor/browser", "Browser");
     if (Browser?.open) {
       // eslint-disable-next-line no-console
-      console.warn("[spotify] App.openUrl unavailable, falling back to in-app Browser");
+      console.log("[spotify] opening auth URL in in-app Browser");
       await Browser.open({ url: authUrl, presentationStyle: "popover" });
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const App = await loadCapacitorPlugin<any>("@capacitor/app", "App");
+    if (App?.openUrl) {
+      // eslint-disable-next-line no-console
+      console.warn("[spotify] Browser plugin missing, falling back to system Safari");
+      await App.openUrl({ url: authUrl });
+      return;
+    }
     // eslint-disable-next-line no-console
-    console.warn("[spotify] no native browser plugin available");
+    console.error("[spotify] no native browser plugin available — auth cannot continue");
+    throw new Error("Spotify-login kræver @capacitor/browser. Genbyg iOS-appen.");
   }
   // Web fallback. If we're inside an iframe (Lovable editor preview),
   // Spotify's auth page refuses to be framed (X-Frame-Options: DENY),
