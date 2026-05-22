@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { ListMusic, LogOut, Music2, X } from "lucide-react";
+import { ListMusic, LogOut, Music2, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import SpotifyPlaylistPicker from "@/components/SpotifyPlaylistPicker";
 import { useI18n } from "@/lib/i18n";
 import {
   beginAuth,
+  fullReset,
   getActiveWorkoutPlaylist,
   isAuthed,
   isConfigured,
