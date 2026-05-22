@@ -243,7 +243,7 @@ function RunPage() {
 
       <section className="relative">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[180px] sm:h-[221px] flex flex-col items-center justify-center bg-white/5">
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[clamp(140px,22dvh,240px)] flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -255,7 +255,7 @@ function RunPage() {
           <div className="rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
               points={t.points}
-              className="h-[180px] sm:h-[221px] w-full"
+              className="h-[clamp(140px,22dvh,240px)] w-full"
               interactive={!isActive}
               ghost={
                 t.ghost
