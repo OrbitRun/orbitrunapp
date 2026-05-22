@@ -23,10 +23,12 @@ Alle på Capacitor 8.x — én major, ingen blandede versioner:
 - `@capacitor-community/bluetooth-le` 8.1.3
 - `@capacitor/preferences` 8.x  (native key/value storage for Spotify token + PKCE verifier — survives Safari → app handoff)
 
-`CapacitorHttp` (bundled i `@capacitor/core`) er aktiveret i `capacitor.config.ts`
-under `plugins.CapacitorHttp.enabled = true`. Det rerouter `fetch()` /
-`XMLHttpRequest` gennem iOS' native HTTP-stack og fjerner `DownloadFailed` /
-sandbox-extension fejl som Spotify og Open-Meteo udløste i WKWebView.
+`CapacitorHttp` (bundled i `@capacitor/core`) er **slået FRA** i
+`capacitor.config.ts` (`plugins.CapacitorHttp.enabled = false`). Når den var
+slået til, returnerede den base64-strenge i stedet for binære `ArrayBuffer`,
+hvilket brækkede Mapbox GL's Web Worker → sort kort på iOS. Vores eksplicitte
+`CapacitorHttp.request(...)` kald i `src/lib/native-http.ts` bypasser stadig
+WKWebView CORS for Spotify / Open-Meteo uden den globale patch.
 
 Bemærk: `@capacitor-community/background-geolocation` er **fjernet**.
 Baggrunds-GPS leveres af `@capacitor/geolocation` + `UIBackgroundModes=location`
