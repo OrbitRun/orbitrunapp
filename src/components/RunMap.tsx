@@ -191,7 +191,14 @@ function RunMapInner({
 
     const onPos = (lat: number, lng: number) => {
       if (cancelled) return;
+      // eslint-disable-next-line no-console
+      console.log("[map] userLoc fix", lat, lng);
       setUserLoc({ lat, lng });
+      try {
+        window.localStorage.setItem("orbit.lastUserLoc", JSON.stringify({ lat, lng }));
+      } catch {
+        /* noop */
+      }
     };
 
     (async () => {
@@ -200,21 +207,33 @@ function RunMapInner({
         // covers the case where the user dismissed the app-start warmup prompt.
         const status = await requestNativeGeolocationPermission();
         if (cancelled) return;
+        // eslint-disable-next-line no-console
+        console.log("[map] native perm status", status);
         // "prompt" (concurrent request races) → still try; iOS will deliver
         // a fix once the user taps Allow. Only an explicit "denied" / no
         // plugin should bail.
         if (status === "denied" || status === "unavailable") return;
-        const first = await nativeGetCurrentPosition();
-        if (first && !cancelled) {
-          const b = toBrowserPosition(first);
-          onPos(b.coords.latitude, b.coords.longitude);
+        // Retry getCurrentPosition up to 3x with 1s gap — covers the case
+        // where iOS hasn't fully resolved the permission yet on first call.
+        for (let i = 0; i < 3 && !cancelled; i++) {
+          const fix = await nativeGetCurrentPosition();
+          if (fix) {
+            const b = toBrowserPosition(fix);
+            onPos(b.coords.latitude, b.coords.longitude);
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 1000));
         }
+        if (cancelled) return;
         nativeId = await nativeWatchPosition(
           (p) => {
             const b = toBrowserPosition(p);
             onPos(b.coords.latitude, b.coords.longitude);
           },
-          () => {},
+          (err) => {
+            // eslint-disable-next-line no-console
+            console.warn("[map] native watch error", err);
+          },
         );
       } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
