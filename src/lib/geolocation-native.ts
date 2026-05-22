@@ -108,15 +108,28 @@ export async function requestNativeGeolocationPermission(): Promise<GeoPermissio
 export async function nativeGetCurrentPosition(): Promise<NativePosition | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plugin: any = await loadPlugin();
-  if (!plugin) return null;
+  if (!plugin) {
+    // eslint-disable-next-line no-console
+    console.warn("[geo] plugin unavailable (getCurrentPosition)");
+    return null;
+  }
   try {
     const pos = await plugin.getCurrentPosition?.({
       enableHighAccuracy: true, // iOS: kCLLocationAccuracyBestForNavigation
-      timeout: 8000,
-      maximumAge: 5000,
+      timeout: 15000,
+      maximumAge: 10000,
     });
+    if (!pos) {
+      // eslint-disable-next-line no-console
+      console.warn("[geo] getCurrentPosition returned null");
+    } else {
+      // eslint-disable-next-line no-console
+      console.log("[geo] getCurrentPosition ok", pos?.coords?.latitude, pos?.coords?.longitude, "acc", pos?.coords?.accuracy);
+    }
     return pos ?? null;
-  } catch {
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("[geo] getCurrentPosition threw", (e as Error)?.message ?? e);
     return null;
   }
 }
@@ -127,25 +140,38 @@ export async function nativeWatchPosition(
 ): Promise<string | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plugin: any = await loadPlugin();
-  if (!plugin) return null;
+  if (!plugin) {
+    onError({ message: "Geolocation plugin not available" });
+    return null;
+  }
   try {
     const id: string = await plugin.watchPosition?.(
       {
         enableHighAccuracy: true, // BestForNavigation on iOS
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (pos: any, err: any) => {
         if (err) {
+          // eslint-disable-next-line no-console
+          console.error("[geo] watch error", err?.message ?? err, "code", err?.code);
           onError({ message: err?.message ?? "Location error" });
           return;
         }
-        if (pos) onPosition(pos as NativePosition);
+        if (pos) {
+          // eslint-disable-next-line no-console
+          console.log("[geo] watch fix", pos?.coords?.latitude, pos?.coords?.longitude, "acc", pos?.coords?.accuracy);
+          onPosition(pos as NativePosition);
+        }
       },
     );
+    // eslint-disable-next-line no-console
+    console.log("[geo] watchPosition started", id);
     return id ?? null;
   } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("[geo] watchPosition threw", (e as Error)?.message ?? e);
     onError({ message: (e as Error)?.message ?? "Location error" });
     return null;
   }
