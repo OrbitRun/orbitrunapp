@@ -339,10 +339,11 @@ export function useRunTracker() {
         }
 
         // ---- GPS quality gate -------------------------------------------------
-        // Strict accuracy gate: reject any sample with reported accuracy
-        // worse than 20m to prevent zig-zagging on the map. The first valid
-        // sample is always accepted to seed the trace.
-        if (acc > 20 && prev.points.length > 0) {
+        // Tightened accuracy gate AFTER the route is seeded: reject samples
+        // worse than 30m to prevent zig-zag, but always accept the very first
+        // sample so the map starts drawing immediately even on a cold fix
+        // (iOS often reports 30–50m for the first few seconds).
+        if (acc > 30 && prev.points.length > 0) {
           return { ...prev, gpsAccuracyM: acc, gpsReady };
         }
 
