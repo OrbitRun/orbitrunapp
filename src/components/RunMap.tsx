@@ -94,11 +94,17 @@ function RunMapInner({
       (mapboxgl as any).accessToken = MAPBOX_TOKEN;
       MRef.current = mapboxgl;
 
+      // Default center: cached last user location if available, else a
+      // geographically neutral Denmark center so the fallback doesn't look
+      // like London when the GPS fix is still pending.
+      const initialCenter: [number, number] = userLoc
+        ? [userLoc.lng, userLoc.lat]
+        : [10.2, 56.15];
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: MAPBOX_STYLE,
-        center: [-0.09, 51.505],
-        zoom: 14,
+        center: initialCenter,
+        zoom: userLoc ? 15 : 6,
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
