@@ -36,6 +36,8 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
     if (!open) return;
     setActiveUri(getActiveWorkoutPlaylist()?.uri ?? null);
     if (!hasPlaylistScope()) {
+      // eslint-disable-next-line no-console
+      console.warn("[spotify] token missing playlist-read-private scope");
       setNeedsReauth(true);
       return;
     }
@@ -46,11 +48,23 @@ export default function SpotifyPlaylistPicker({ open, onClose, onChange }: Props
       .then((p) => setPlaylists(p))
       .catch((e: unknown) => {
         const msg = e instanceof Error ? e.message : String(e);
+        // eslint-disable-next-line no-console
+        console.error("[spotify] getMyPlaylists failed", msg);
         if (msg.includes("401") || msg.includes("403")) setNeedsReauth(true);
-        else setError(t("music.playlistLoadError"));
+        else setError(`${t("music.playlistLoadError")} (${msg})`);
       })
       .finally(() => setLoading(false));
   }, [open, t]);
+
+  const handleReauth = async () => {
+    // Wipe stale token (which may have missing scopes) so PKCE starts clean.
+    logout();
+    try {
+      await beginAuth();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Reauth failed");
+    }
+  };
 
   const handleSelect = async (p: SpotifyPlaylist) => {
     setActiveWorkoutPlaylist({ uri: p.uri, name: p.name, imageUrl: p.imageUrl });
