@@ -172,7 +172,7 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] [padding-bottom:calc(env(safe-area-inset-bottom)+6rem)]">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
@@ -243,7 +243,7 @@ function RunPage() {
 
       <section className="relative">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[180px] sm:h-[221px] flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -255,7 +255,7 @@ function RunPage() {
           <div className="rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
               points={t.points}
-              className="h-[221px] w-full"
+              className="h-[180px] sm:h-[221px] w-full"
               interactive={!isActive}
               ghost={
                 t.ghost

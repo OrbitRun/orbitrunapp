@@ -51,18 +51,33 @@ export default function MusicIntegrationSection() {
 
   const handleConnect = async () => {
     let safety: ReturnType<typeof setTimeout> | null = null;
+    let poll: ReturnType<typeof setInterval> | null = null;
+    const clearTimers = () => {
+      if (safety) clearTimeout(safety);
+      if (poll) clearInterval(poll);
+    };
     try {
       setBusy(true);
       await beginAuth();
-      // Safety net: if the user cancels the in-app browser without completing
-      // OAuth, no event fires — clear the spinner after a minute so they can
-      // try again instead of being stuck on "Forbinder…".
+      // Poll isAuthed() every 2s in case the appUrlOpen event fired but
+      // we missed it (e.g. listener torn down during the Safari handoff).
+      poll = setInterval(() => {
+        if (isAuthed()) {
+          clearTimers();
+          setAuthed(true);
+          setPlaylist(getActiveWorkoutPlaylist());
+          setBusy(false);
+        }
+      }, 2_000);
+      // Safety net: clear the spinner after 15s if the user cancelled in
+      // Safari and never came back, so they can try again.
       safety = setTimeout(() => {
+        clearTimers();
         setAuthed(isAuthed());
         setBusy(false);
-      }, 60_000);
+      }, 15_000);
     } catch (err) {
-      if (safety) clearTimeout(safety);
+      clearTimers();
       setBusy(false);
       toast.error(err instanceof Error ? err.message : "Connect failed");
     }
