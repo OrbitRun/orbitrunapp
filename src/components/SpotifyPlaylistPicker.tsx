@@ -8,6 +8,7 @@ import {
   getDevices,
   getMyPlaylists,
   hasPlaylistScope,
+  logout,
   playContext,
   setActiveWorkoutPlaylist,
   transferPlayback,
