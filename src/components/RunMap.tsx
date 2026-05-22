@@ -69,6 +69,10 @@ function RunMapInner({
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<
+    "idle" | "locating" | "ready" | "denied" | "unavailable" | "error"
+  >("idle");
+  const [gpsError, setGpsError] = useState<string | null>(null);
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(() => {
     if (typeof window === "undefined") return null;
     try {
