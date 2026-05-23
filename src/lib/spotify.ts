@@ -141,18 +141,17 @@ export async function beginAuth(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log("[spotify] beginAuth", { native, redirect_uri: getRedirectUri() });
   if (native) {
-    // Prefer system Safari via App.openUrl. SFSafariViewController
-    // (@capacitor/browser) is known to mis-handle 302 redirects to custom
-    // URL schemes — it can hang on a blank page and never fire appUrlOpen
-    // (ionic-team/capacitor-plugins#2369, #2485, #628). System Safari
-    // reliably hands the jonas-orbit-run:// callback back to the app.
+    // Prefer the native AppLauncher plugin so iOS opens the Spotify OAuth URL
+    // outside the WebView. SFSafariViewController (@capacitor/browser) can
+    // hang on 302 redirects to custom URL schemes and never fire appUrlOpen
+    // (ionic-team/capacitor-plugins#2369, #2485, #628).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const App = await loadCapacitorPlugin<any>("@capacitor/app", "App");
-    if (App?.openUrl) {
+    const AppLauncher = await loadCapacitorPlugin<any>("@capacitor/app-launcher", "AppLauncher");
+    if (AppLauncher?.openUrl) {
       // eslint-disable-next-line no-console
-      console.log("[spotify] opening auth URL in system Safari");
+      console.log("[spotify] opening auth URL via AppLauncher");
       try {
-        const res = await App.openUrl({ url: authUrl });
+        const res = await AppLauncher.openUrl({ url: authUrl });
         // Capacitor returns { completed: boolean } on iOS.
         if (res && res.completed === false) {
           throw new Error("iOS afviste at åbne Spotify-login URL'en");
@@ -160,8 +159,11 @@ export async function beginAuth(): Promise<void> {
         return;
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.warn("[spotify] App.openUrl failed, falling back to in-app Browser", err);
+        console.warn("[spotify] AppLauncher.openUrl failed, falling back to in-app Browser", err);
       }
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn("[spotify] AppLauncher plugin unavailable, falling back to in-app Browser");
     }
     // Fallback: in-app Browser. Works for the auth UI itself; the callback
     // is captured via appUrlOpen registered in initSpotifyDeepLinkListener.
