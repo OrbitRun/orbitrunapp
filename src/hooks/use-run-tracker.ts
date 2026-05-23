@@ -329,7 +329,7 @@ export function useRunTracker() {
       }
       setState((prev) => {
         const acc = pos.coords.accuracy ?? 999;
-        const gpsReady = acc <= 20;
+        const gpsReady = acc < 100;
         // Always reflect latest GPS quality, even before the run starts, so
         // the "Finder signal…" chip can disappear as soon as a usable fix
         // arrives during the warm-up phase.
@@ -601,7 +601,7 @@ export function useRunTracker() {
           },
           (err) => handleError({ message: err.message } as GeolocationPositionError),
         );
-        nativeWatchIdRef.current = id;
+        if (id) nativeWatchIdRef.current = id;
       })();
       return;
     }
