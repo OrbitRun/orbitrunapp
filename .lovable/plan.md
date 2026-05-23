@@ -1,32 +1,17 @@
-Problemet ser nu anderledes ud end før: screenshot’et viser, at iOS-plugin installationen faktisk virker. Det vil sige, at vi ikke længere skal jage “plugin missing” — vi skal rette app-flowet ovenpå de native plugins.
+Jeg vil rette to sandsynlige årsager i native iOS-flowet:
 
-Plan:
+1. Spotify åbner ikke Safari
+- Fjerne brugen af `App.openUrl`, fordi Capacitor `@capacitor/app` håndterer deep links, men ikke er den officielle API til at åbne eksterne URL’er i Capacitor 8.
+- Tilføje `@capacitor/app-launcher` og bruge `AppLauncher.openUrl({ url: spotifyAuthUrl })` som primær native launch til system Safari/ekstern URL.
+- Beholde `Browser.open` som fallback, men logge tydeligt hvis AppLauncher ikke findes eller fejler.
+- Opdatere plugin-loaderen, så app-launcher bliver bundlet i iOS-buildet.
 
-1. Fix GPS/status på løbeskærmen
-- Stop med at vise en evig “søger efter GPS”-tilstand, når iOS allerede har et GPS-fix.
-- Gør `SourceSignalChip` status-baseret, så den kan vise “GPS klar ±8m” i stedet for kun “GPS”.
-- Sørg for at warmup-fix fra kortet/tracker faktisk sætter `gpsReady`, så startskærmen og løbekortet afspejler det GPS-fix som diagnostikken allerede beviser findes.
-- Løsn første-punkt gating en smule, så ruten begynder at tegne straks ved første brugbare fix i stedet for at vente på en perfekt sekvens.
+2. GPS bliver ved med at “søge”
+- Der er flere uafhængige GPS-watchers: root warm-up, RunMap warm-up og run-tracker. De kan starte/stoppe hinanden og give iOS-lokationsikonet kort liv uden at opdatere chip-state.
+- Gøre `use-run-tracker` til den primære kilde for chip-status og lade startskærmens `warmGps()` faktisk starte en watcher, der opdaterer `gpsAccuracyM`/`gpsReady` før løbet.
+- Justere “klar”-grænsen fra meget stramme `<=20m` til samme realistiske niveau som chippen bruger (`<100m`), så UI ikke bliver hængende på “Finder signal…” selvom iPhone har en brugbar GPS-fix.
+- Reducere eller koordinere RunMap’s egen GPS-opvarmning, så den ikke konkurrerer med run-trackerens native watcher.
 
-2. Fix Spotify OAuth-start
-- Skift native Spotify-login fra `Browser.open()` tilbage til systemåbning med `App.openUrl()` som primær metode.
-- Grunden: Capacitor Browser bruger iOS `SFSafariViewController`, og den er kendt for at være upålidelig til OAuth deep-link callbacks; system Safari/app-open flow er mere korrekt til custom URL scheme.
-- Behold Browser kun som fallback, ikke som førstevalg.
-- Tilføj konkret fejlvisning hvis auth URL ikke kan åbnes, så knappen ikke hænger på “Forbinder…”.
-
-3. Gør Spotify deep-link flow mere robust
-- Initialisér deep-link listeneren før loginforsøget, så callback ikke kan komme før listeneren er klar.
-- Log og håndtér både `appUrlOpen` og launch URL mere tydeligt.
-- Ryd spinneren deterministisk, hvis appen kommer tilbage uden token.
-
-4. Fjern/afgræns diagnostics-panelet bagefter
-- Når fixes er på plads, kan diagnostics enten skjules bag en lille debug-knap eller fjernes fra Profil, så brugeren ikke ser teknisk test-UI i produktet.
-
-Tekniske filer der berøres:
-- `src/lib/spotify.ts`
-- `src/components/MusicIntegrationSection.tsx`
-- `src/hooks/use-run-tracker.ts`
-- `src/components/SourceSignalChip.tsx`
-- evt. `src/routes/index.tsx` / `src/components/RunMap.tsx` for korrekt GPS-ready visning
-
-Efter implementering skal der laves en ny TestFlight build med `npm run build` og `npx cap sync ios`, fordi Spotify/GPS ændringerne rammer native wrapper-flowet.
+3. Native iOS build-vejledning
+- Opdatere iOS-setup-noterne/tjeklisten, så den matcher den nye AppLauncher-baserede Spotify-start og viser de forventede logs.
+- Efter ændringer skal du køre `npm run build && npx cap sync ios`, og hvis der er Info.plist/native plugin ændringer: slet appen fra iPhone og installer igen fra Xcode.
