@@ -141,29 +141,41 @@ export async function beginAuth(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log("[spotify] beginAuth", { native, redirect_uri: getRedirectUri() });
   if (native) {
-    // Prefer the in-app Browser (SFSafariViewController) — it reliably
-    // delivers the custom-scheme deep link back via appUrlOpen on iOS 17/18
-    // and avoids the "Open in Orbit Run?" interstitial that system Safari
-    // sometimes shows. System Safari (App.openUrl) is the fallback.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Browser = await loadCapacitorPlugin<any>("@capacitor/browser", "Browser");
-    if (Browser?.open) {
-      // eslint-disable-next-line no-console
-      console.log("[spotify] opening auth URL in in-app Browser");
-      await Browser.open({ url: authUrl, presentationStyle: "popover" });
-      return;
-    }
+    // Prefer system Safari via App.openUrl. SFSafariViewController
+    // (@capacitor/browser) is known to mis-handle 302 redirects to custom
+    // URL schemes — it can hang on a blank page and never fire appUrlOpen
+    // (ionic-team/capacitor-plugins#2369, #2485, #628). System Safari
+    // reliably hands the jonas-orbit-run:// callback back to the app.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const App = await loadCapacitorPlugin<any>("@capacitor/app", "App");
     if (App?.openUrl) {
       // eslint-disable-next-line no-console
-      console.warn("[spotify] Browser plugin missing, falling back to system Safari");
-      await App.openUrl({ url: authUrl });
+      console.log("[spotify] opening auth URL in system Safari");
+      try {
+        const res = await App.openUrl({ url: authUrl });
+        // Capacitor returns { completed: boolean } on iOS.
+        if (res && res.completed === false) {
+          throw new Error("iOS afviste at åbne Spotify-login URL'en");
+        }
+        return;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[spotify] App.openUrl failed, falling back to in-app Browser", err);
+      }
+    }
+    // Fallback: in-app Browser. Works for the auth UI itself; the callback
+    // is captured via appUrlOpen registered in initSpotifyDeepLinkListener.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Browser = await loadCapacitorPlugin<any>("@capacitor/browser", "Browser");
+    if (Browser?.open) {
+      // eslint-disable-next-line no-console
+      console.log("[spotify] opening auth URL in in-app Browser (fallback)");
+      await Browser.open({ url: authUrl, presentationStyle: "popover" });
       return;
     }
     // eslint-disable-next-line no-console
     console.error("[spotify] no native browser plugin available — auth cannot continue");
-    throw new Error("Spotify-login kræver @capacitor/browser. Genbyg iOS-appen.");
+    throw new Error("Spotify-login kunne ikke åbnes. Genbyg iOS-appen.");
   }
   // Web fallback. If we're inside an iframe (Lovable editor preview),
   // Spotify's auth page refuses to be framed (X-Frame-Options: DENY),
