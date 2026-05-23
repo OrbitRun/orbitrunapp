@@ -147,7 +147,9 @@ export async function nativeWatchPosition(
     const id: string = await plugin.watchPosition?.(
       {
         enableHighAccuracy: true, // BestForNavigation on iOS
-        timeout: 15000,
+        // iOS can take 30–60s to deliver the first cold GPS fix. A short
+        // timeout makes CoreLocation stop before the UI ever becomes ready.
+        timeout: 60000,
         maximumAge: 0,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
