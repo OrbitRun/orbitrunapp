@@ -266,7 +266,7 @@ function RunPage() {
           </div>
         )}
         <div className="absolute top-3 left-3 pointer-events-none">
-          <SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} />
+          <SourceSignalChip source={t.motionSource} accuracyM={t.gpsAccuracyM} ready={t.gpsReady} />
         </div>
         {t.points.length === 0 && t.permissionError && (
           <div className="absolute inset-x-3 top-3 pointer-events-none">
