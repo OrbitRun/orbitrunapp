@@ -230,6 +230,8 @@ function ProfilePage() {
 
       <MusicIntegrationSection />
 
+      <NativeDiagnostics />
+
       <ShoesSection />
 
       {/* Experience level */}
