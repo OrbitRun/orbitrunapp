@@ -26,7 +26,7 @@ import CoachInfoModal from "@/components/CoachInfoModal";
 import SensorsSection from "@/components/SensorsSection";
 import IntegrationsSection from "@/components/IntegrationsSection";
 import MusicIntegrationSection from "@/components/MusicIntegrationSection";
-import NativeDiagnostics from "@/components/NativeDiagnostics";
+
 import { isHealthAvailable, type HealthPermissionStatus } from "@/lib/health";
 import { useHrZones } from "@/hooks/use-hr-zones";
 
@@ -230,9 +230,8 @@ function ProfilePage() {
 
       <MusicIntegrationSection />
 
-      <NativeDiagnostics />
-
       <ShoesSection />
+
 
       {/* Experience level */}
       <section className="mt-4 glass rounded-2xl p-4">
