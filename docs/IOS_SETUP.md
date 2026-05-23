@@ -238,7 +238,7 @@ vælg din iPhone → "Open Console". Filtrer på processen "Orbit Run".
 **Spotify skal logge:**
 ```
 [spotify] beginAuth { native: true, redirect_uri: "jonas-orbit-run://callback" }
-[spotify] opening auth URL in system Safari
+[spotify] opening auth URL via AppLauncher
 [spotify] deep link received jonas-orbit-run://callback?code=…
 [spotify] token exchange OK
 [native-http] → GET https://api.spotify.com/v1/me/playlists?limit=50

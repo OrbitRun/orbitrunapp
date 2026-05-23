@@ -31,6 +31,8 @@ async function importPlugin(specifier: string): Promise<any | null> {
         return await import("@capacitor/geolocation");
       case "@capacitor/app":
         return await import("@capacitor/app");
+      case "@capacitor/app-launcher":
+        return await import("@capacitor/app-launcher");
       case "@capacitor/browser":
         return await import("@capacitor/browser");
       case "@capacitor/preferences":

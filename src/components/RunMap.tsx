@@ -9,9 +9,7 @@ import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
 import {
   isNativeGeolocationAvailable,
-  nativeClearWatch,
   nativeGetCurrentPosition,
-  nativeWatchPosition,
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
@@ -191,7 +189,6 @@ function RunMapInner({
     if (points.length > 0) return; // run started — tracker takes over
     let cancelled = false;
     let webWatchId: number | null = null;
-    let nativeId: string | null = null;
 
     const onPos = (lat: number, lng: number) => {
       if (cancelled) return;
@@ -234,19 +231,6 @@ function RunMapInner({
           }
           await new Promise((r) => setTimeout(r, 1000));
         }
-        if (cancelled) return;
-        nativeId = await nativeWatchPosition(
-          (p) => {
-            const b = toBrowserPosition(p);
-            onPos(b.coords.latitude, b.coords.longitude);
-          },
-          (err) => {
-            // eslint-disable-next-line no-console
-            console.warn("[map] native watch error", err);
-            setGpsStatus("error");
-            setGpsError(err.message || "GPS-fejl");
-          },
-        );
       } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (p) => onPos(p.coords.latitude, p.coords.longitude),
@@ -275,7 +259,6 @@ function RunMapInner({
       if (webWatchId != null && navigator.geolocation) {
         navigator.geolocation.clearWatch(webWatchId);
       }
-      if (nativeId) void nativeClearWatch(nativeId);
     };
   }, [points.length]);
 
