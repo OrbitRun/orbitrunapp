@@ -1,30 +1,24 @@
-I’ll fix the native iOS GPS issue with a focused change set:
+## Fix Capacitor iOS build
 
-1. Update `src/lib/geolocation-native.ts`
-   - Keep Capacitor plugin permission handling for native builds.
-   - Route actual location reads/watches through `navigator.geolocation` on iOS native as a fallback/bypass, because Capacitor Geolocation can hang/drop callbacks on some iOS/Xcode combinations while WKWebView geolocation still works.
-   - Keep the Capacitor plugin path available for Android/native compatibility.
-   - Use longer iOS-friendly timeouts and normalize watch IDs so `nativeClearWatch()` can clear either native plugin watches or web geolocation watches.
+The `npm run build` fails during prerender with `createRootRoute is not defined`, which prevents `dist/index.html` from being generated and breaks `npx cap sync ios`.
 
-2. Update `src/hooks/use-gps-warmup.ts`
-   - Keep the simple warmup hook, but make it use the updated native helper so it warms the same GPS path the tracker uses.
+### Changes
 
-3. Update `src/hooks/use-run-tracker.ts`
-   - Leave the tracker architecture intact, but make the native watch path benefit from the new iOS fallback.
-   - Avoid showing a hard permission error for transient iOS cold-fix timeouts while the watch is still trying.
+1. **`vite.config.ts`** — Disable both prerender configs:
+   - Set `tanstackStart.spa.prerender.enabled = false`
+   - Set `tanstackStart.prerender.enabled = false`
+   - Keep the rest of the SPA config (maskPath, outputPath) intact so the shell HTML is still emitted.
 
-4. Update `src/components/RunMap.tsx`
-   - Remove the extra pre-run native GPS polling loop or switch it to one lightweight single fix only, so the map warmup doesn’t compete with the run tracker’s GPS watch.
+2. **`scripts/prepare-capacitor-build.mjs`** — Add a fallback chain so the script doesn't hard-fail when prerender is off:
+   - After existing `dist/client` flattening, if `dist/index.html` still missing:
+     a. Copy `dist/_shell.html` → `dist/index.html` if present.
+     b. Otherwise, scan `dist/` for any `.html` file and copy the first match to `dist/index.html`.
+   - Only throw if none of the above succeed.
 
-5. Update `src/components/NativeDiagnostics.tsx` and `docs/IOS_SETUP.md`
-   - Diagnostics should test the same effective GPS path used by the app, not only direct `@capacitor/geolocation` calls.
-   - Docs should say to rebuild/sync iOS and verify native console logs after reinstalling from Xcode/TestFlight.
+3. **`src/routes/__root.tsx`** — Verify the import line is exactly `import { useGpsWarmup } from "@/hooks/use-gps-warmup";` (no `GpsDebugOverlay`) and that `useGpsWarmup()` is called in `RootComponent` next to `useHealthAutoSync()` / `useSpotifyRunControl()`. Already in place per current file — confirm and leave as-is.
 
-After implementation, you’ll need to run locally:
+4. **`src/hooks/use-gps-warmup.ts`** — Verify it only exports `useGpsWarmup` and contains no JSX / React components. Already matches per current file — confirm and leave as-is.
 
-```bash
-npm run build
-npx cap sync ios
-```
+### Post-fix verification
 
-Then reinstall the app from Xcode/TestFlight. If iOS permission was previously denied or stuck, delete the app first so the permission prompt resets.
+Run `npm run build` and confirm `dist/index.html` exists. Then `npx cap sync ios` and reinstall from Xcode.
