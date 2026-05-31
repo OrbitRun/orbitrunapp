@@ -309,7 +309,7 @@ export async function nativeWatchPosition(
   const plugin: any = await loadPlugin();
   if (!plugin) return startWeb();
   try {
-    const id: string = await withTimeout(
+    const id: string = await withTimeout<string>(
       plugin.watchPosition?.(
         { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
