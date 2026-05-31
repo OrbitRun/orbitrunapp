@@ -1,4 +1,4 @@
-import { cp, mkdir, rm, stat } from "node:fs/promises";
+import { cp, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const dist = "dist";
@@ -24,6 +24,19 @@ if (await exists(clientIndex)) {
 
 if (!(await exists(distIndex)) && (await exists(shellIndex))) {
   await cp(shellIndex, distIndex, { force: true });
+}
+
+if (!(await exists(distIndex))) {
+  try {
+    const entries = await readdir(dist);
+    const fallback = entries.find((f) => f.endsWith(".html"));
+    if (fallback) {
+      await cp(join(dist, fallback), distIndex, { force: true });
+      console.log(`Capacitor build: used ${fallback} as index.html fallback.`);
+    }
+  } catch {
+    /* noop */
+  }
 }
 
 await rm(join(dist, ".server"), { recursive: true, force: true });
