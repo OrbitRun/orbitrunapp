@@ -225,7 +225,8 @@ export async function nativeGetCurrentPosition(): Promise<NativePosition | null>
   const plugin: any = await loadPlugin();
   if (!plugin) return webGetCurrentPosition(20000);
   try {
-    const pos = await withTimeout(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pos: any = await withTimeout<any>(
       plugin.getCurrentPosition?.({
         enableHighAccuracy: true,
         timeout: 20000,
