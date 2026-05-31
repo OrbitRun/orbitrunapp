@@ -149,14 +149,16 @@ export async function requestNativeGeolocationPermission(): Promise<GeoPermissio
     const plugin: any = await loadPlugin();
     if (plugin) {
       try {
-        const cur = await withTimeout(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cur: any = await withTimeout<any>(
           plugin.checkPermissions?.() ?? Promise.resolve(null),
           4000,
           "checkPermissions",
         );
         const curState = mapState(cur?.location ?? cur?.coarseLocation);
         if (curState === "granted") return "granted";
-        const res = await withTimeout(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const res: any = await withTimeout<any>(
           plugin.requestPermissions?.() ?? Promise.resolve(null),
           15000,
           "requestPermissions",
