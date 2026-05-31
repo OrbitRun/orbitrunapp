@@ -8,9 +8,7 @@ export default defineConfig({
       enabled: true,
       maskPath: "/",
       prerender: {
-        enabled: true,
-        // TanStack Start appends `.html` to SPA shell outputPath, so `/index`
-        // writes exactly `dist/index.html`.
+        enabled: false,
         outputPath: "/index",
         autoSubfolderIndex: false,
         crawlLinks: false,
@@ -18,9 +16,9 @@ export default defineConfig({
       },
     },
     prerender: {
-      enabled: true,
+      enabled: false,
       crawlLinks: false,
-      failOnError: true,
+      failOnError: false,
       autoStaticPathsDiscovery: false,
     },
     sitemap: {
