@@ -1,24 +1,33 @@
-## Fix Capacitor iOS build
+## Disable prerender/SSR for Capacitor SPA build
 
-The `npm run build` fails during prerender with `createRootRoute is not defined`, which prevents `dist/index.html` from being generated and breaks `npx cap sync ios`.
+`npm run build` crasher fordi TanStack Start's prerender-crawler forsøger at SSR-rendere komponenter, der bruger Capacitor/native APIs. Til iOS/Android-pakning skal appen være en ren statisk SPA med `dist/index.html`.
 
-### Changes
+### Status
+- `vite.config.ts` har allerede `spa.prerender.enabled = false` og `prerender.enabled = false`.
+- `scripts/prepare-capacitor-build.mjs` har allerede fallback fra `_shell.html` eller en hvilken som helst `.html` til `dist/index.html`.
 
-1. **`vite.config.ts`** — Disable both prerender configs:
-   - Set `tanstackStart.spa.prerender.enabled = false`
-   - Set `tanstackStart.prerender.enabled = false`
-   - Keep the rest of the SPA config (maskPath, outputPath) intact so the shell HTML is still emitted.
+Men prerender-crawleren kan stadig blive trigget hvis `spa.enabled = true` aktiverer den implicit, eller hvis crawleren stadig forsøger at evaluere routes ved build-tid.
 
-2. **`scripts/prepare-capacitor-build.mjs`** — Add a fallback chain so the script doesn't hard-fail when prerender is off:
-   - After existing `dist/client` flattening, if `dist/index.html` still missing:
-     a. Copy `dist/_shell.html` → `dist/index.html` if present.
-     b. Otherwise, scan `dist/` for any `.html` file and copy the first match to `dist/index.html`.
-   - Only throw if none of the above succeed.
+### Ændringer
 
-3. **`src/routes/__root.tsx`** — Verify the import line is exactly `import { useGpsWarmup } from "@/hooks/use-gps-warmup";` (no `GpsDebugOverlay`) and that `useGpsWarmup()` is called in `RootComponent` next to `useHealthAutoSync()` / `useSpotifyRunControl()`. Already in place per current file — confirm and leave as-is.
+1. **`vite.config.ts`** — Sørg for at SPA-shell genereres uden at crawle routes:
+   - Behold `spa.enabled = true` + `maskPath: "/"` så `_shell.html` produceres.
+   - Bekræft begge `prerender.enabled = false` (allerede sat).
+   - Tilføj `spa.prerender.crawlLinks = false` og `retryCount = 0` (allerede sat) — verificér.
+   - Hvis crawleren stadig kører ved `enabled: false`, fjern hele `prerender`-blokken under `spa` så ingen prerender-pipeline initialiseres.
 
-4. **`src/hooks/use-gps-warmup.ts`** — Verify it only exports `useGpsWarmup` and contains no JSX / React components. Already matches per current file — confirm and leave as-is.
+2. **`scripts/prepare-capacitor-build.mjs`** — Allerede robust med fallback-kæde (`dist/index.html` → `dist/_shell.html` → første `.html` i `dist/`). Ingen ændringer nødvendige; verificér kun ved at køre build.
 
-### Post-fix verification
+3. **Build script** — Verificér at `package.json`'s `build`-script kører `vite build && node scripts/prepare-capacitor-build.mjs` (eller tilsvarende), så fallback-scriptet altid kører efter Vite.
 
-Run `npm run build` and confirm `dist/index.html` exists. Then `npx cap sync ios` and reinstall from Xcode.
+4. **Verifikation** — Kør `npm run build` og bekræft:
+   - Ingen `createRootRoute is not defined` fejl.
+   - `dist/index.html` eksisterer og indeholder SPA-shell med `<div id="root">` + script-tags.
+   - Derefter `npx cap sync ios` og reinstaller fra Xcode.
+
+### Hvis fejlen stadig opstår
+
+Hvis `vite build` selv med `prerender.enabled = false` stadig kalder crawleren (kendt issue i nogle TanStack Start-versioner), fald tilbage til den eksisterende `vite.config.ios.ts` (allerede i repo) og brug den eksplicit til Capacitor-builds via en separat npm-script: `vite build --config vite.config.ios.ts`. Det isolerer Capacitor-builden fra den almindelige web-build.
+
+### Forventet resultat
+Ren statisk `dist/index.html` uden SSR/prerender, klar til Capacitor wrap til iOS og Android.
