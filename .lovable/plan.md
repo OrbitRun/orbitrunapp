@@ -1,33 +1,23 @@
-## Disable prerender/SSR for Capacitor SPA build
+## Fix CSS build + bekræft SPA-only build
 
-`npm run build` crasher fordi TanStack Start's prerender-crawler forsøger at SSR-rendere komponenter, der bruger Capacitor/native APIs. Til iOS/Android-pakning skal appen være en ren statisk SPA med `dist/index.html`.
-
-### Status
-- `vite.config.ts` har allerede `spa.prerender.enabled = false` og `prerender.enabled = false`.
-- `scripts/prepare-capacitor-build.mjs` har allerede fallback fra `_shell.html` eller en hvilken som helst `.html` til `dist/index.html`.
-
-Men prerender-crawleren kan stadig blive trigget hvis `spa.enabled = true` aktiverer den implicit, eller hvis crawleren stadig forsøger at evaluere routes ved build-tid.
+### Fund
+- `src/styles.css` er kun 373 linjer (ikke 5304). Alle `@import`-regler er allerede øverst (linje 1–6).
+- Den faktiske årsag til 500 på `/src/styles.css` er linje 6: `@import url("https://fonts.googleapis.com/...")`. Lightning CSS forsøger at resolve URL'en fra filsystemet og fejler (jf. tailwind4-gotchas: remote `@import` er aldrig gyldig i v4 — fonts skal indlæses via `<link>` i `__root.tsx`).
+- `vite.config.ts` har allerede `spa.prerender.enabled = false` og `prerender.enabled = false`. `cloudflare`-option blev fjernet sidste tur.
 
 ### Ændringer
 
-1. **`vite.config.ts`** — Sørg for at SPA-shell genereres uden at crawle routes:
-   - Behold `spa.enabled = true` + `maskPath: "/"` så `_shell.html` produceres.
-   - Bekræft begge `prerender.enabled = false` (allerede sat).
-   - Tilføj `spa.prerender.crawlLinks = false` og `retryCount = 0` (allerede sat) — verificér.
-   - Hvis crawleren stadig kører ved `enabled: false`, fjern hele `prerender`-blokken under `spa` så ingen prerender-pipeline initialiseres.
+1. **`src/styles.css`** — Fjern linje 6 (remote Google Fonts `@import`). Inter og JetBrains Mono er allerede refereret i `@theme inline` (linje 11–12); fonten skal blot indlæses via `<link>`.
 
-2. **`scripts/prepare-capacitor-build.mjs`** — Allerede robust med fallback-kæde (`dist/index.html` → `dist/_shell.html` → første `.html` i `dist/`). Ingen ændringer nødvendige; verificér kun ved at køre build.
+2. **`src/routes/__root.tsx`** — Tilføj font-links til `head().links`:
+   ```ts
+   { rel: "preconnect", href: "https://fonts.googleapis.com" },
+   { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+   { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" },
+   ```
 
-3. **Build script** — Verificér at `package.json`'s `build`-script kører `vite build && node scripts/prepare-capacitor-build.mjs` (eller tilsvarende), så fallback-scriptet altid kører efter Vite.
+3. **`vite.config.ts`** — Allerede konfigureret til SPA uden prerender. Ingen ændringer nødvendige; verificeres efter fix.
 
-4. **Verifikation** — Kør `npm run build` og bekræft:
-   - Ingen `createRootRoute is not defined` fejl.
-   - `dist/index.html` eksisterer og indeholder SPA-shell med `<div id="root">` + script-tags.
-   - Derefter `npx cap sync ios` og reinstaller fra Xcode.
-
-### Hvis fejlen stadig opstår
-
-Hvis `vite build` selv med `prerender.enabled = false` stadig kalder crawleren (kendt issue i nogle TanStack Start-versioner), fald tilbage til den eksisterende `vite.config.ios.ts` (allerede i repo) og brug den eksplicit til Capacitor-builds via en separat npm-script: `vite build --config vite.config.ios.ts`. Det isolerer Capacitor-builden fra den almindelige web-build.
-
-### Forventet resultat
-Ren statisk `dist/index.html` uden SSR/prerender, klar til Capacitor wrap til iOS og Android.
+### Verifikation
+- Dev-server's `/src/styles.css` returnerer 200.
+- `npm run build` producerer `dist/index.html` uden prerender-fejl.
