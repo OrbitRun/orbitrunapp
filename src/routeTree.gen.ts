@@ -9,22 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as HistoryRouteImport } from './routes/history'
-import { Route as CoachRouteImport } from './routes/coach'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SpotifyCallbackRouteImport } from './routes/spotify.callback'
-import { Route as RunIdRouteImport } from './routes/run.$id'
+import { Route as CoachRouteImport } from './routes/coach'
+import { Route as HistoryRouteImport } from './routes/history'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ProfileHeartRateRouteImport } from './routes/profile_.heart-rate'
+import { Route as RunIdRouteImport } from './routes/run.$id'
+import { Route as SpotifyCallbackRouteImport } from './routes/spotify.callback'
 
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HistoryRoute = HistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachRoute = CoachRouteImport.update({
@@ -32,14 +27,19 @@ const CoachRoute = CoachRouteImport.update({
   path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SpotifyCallbackRoute = SpotifyCallbackRouteImport.update({
-  id: '/spotify/callback',
-  path: '/spotify/callback',
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileHeartRateRoute = ProfileHeartRateRouteImport.update({
+  id: '/profile_/heart-rate',
+  path: '/profile/heart-rate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RunIdRoute = RunIdRouteImport.update({
@@ -47,9 +47,9 @@ const RunIdRoute = RunIdRouteImport.update({
   path: '/run/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileHeartRateRoute = ProfileHeartRateRouteImport.update({
-  id: '/profile_/heart-rate',
-  path: '/profile/heart-rate',
+const SpotifyCallbackRoute = SpotifyCallbackRouteImport.update({
+  id: '/spotify/callback',
+  path: '/spotify/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -123,18 +123,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/history': {
-      id: '/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof HistoryRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coach': {
@@ -144,18 +137,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/spotify/callback': {
-      id: '/spotify/callback'
-      path: '/spotify/callback'
-      fullPath: '/spotify/callback'
-      preLoaderRoute: typeof SpotifyCallbackRouteImport
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile_/heart-rate': {
+      id: '/profile_/heart-rate'
+      path: '/profile/heart-rate'
+      fullPath: '/profile/heart-rate'
+      preLoaderRoute: typeof ProfileHeartRateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/run/$id': {
@@ -165,11 +165,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RunIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile_/heart-rate': {
-      id: '/profile_/heart-rate'
-      path: '/profile/heart-rate'
-      fullPath: '/profile/heart-rate'
-      preLoaderRoute: typeof ProfileHeartRateRouteImport
+    '/spotify/callback': {
+      id: '/spotify/callback'
+      path: '/spotify/callback'
+      fullPath: '/spotify/callback'
+      preLoaderRoute: typeof SpotifyCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
