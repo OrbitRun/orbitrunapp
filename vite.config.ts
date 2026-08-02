@@ -24,5 +24,11 @@ export default defineConfig({
       enabled: false,
     },
   },
+  vite: {
+    build: {
+      outDir: "dist",
+      emptyOutDir: true,
+    },
+  },
 
 });
