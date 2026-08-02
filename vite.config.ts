@@ -7,7 +7,7 @@ export default defineConfig({
       enabled: true,
       maskPath: "/",
       prerender: {
-        enabled: true,
+        enabled: false,
         outputPath: "/index",
         autoSubfolderIndex: false,
         crawlLinks: false,
