@@ -1,24 +1,27 @@
-## Fix Capacitor iOS build
+# Native-first GPS in geolocation-native.ts
 
-The `npm run build` fails during prerender with `createRootRoute is not defined`, which prevents `dist/index.html` from being generated and breaks `npx cap sync ios`.
+Make the geolocation layer trust Capacitor's own platform API and always use the native plugin on iOS/Android. The browser API becomes a web-only path.
 
-### Changes
+## Changes (single file: `src/lib/geolocation-native.ts`)
 
-1. **`vite.config.ts`** — Disable both prerender configs:
-   - Set `tanstackStart.spa.prerender.enabled = false`
-   - Set `tanstackStart.prerender.enabled = false`
-   - Keep the rest of the SPA config (maskPath, outputPath) intact so the shell HTML is still emitted.
+1. **Platform detection**
+   - Import `Capacitor` from `@capacitor/core` and `Geolocation` from `@capacitor/geolocation` directly (static imports, no lazy `import()` wrapper, no `window.Capacitor` probing).
+   - `getPlatform()` returns `Capacitor.getPlatform()`.
+   - `isNativeGeolocationAvailable()` returns `Capacitor.isNativePlatform()` for ios/android.
 
-2. **`scripts/prepare-capacitor-build.mjs`** — Add a fallback chain so the script doesn't hard-fail when prerender is off:
-   - After existing `dist/client` flattening, if `dist/index.html` still missing:
-     a. Copy `dist/_shell.html` → `dist/index.html` if present.
-     b. Otherwise, scan `dist/` for any `.html` file and copy the first match to `dist/index.html`.
-   - Only throw if none of the above succeed.
+2. **Permissions**
+   - Native: `Geolocation.checkPermissions()` then `Geolocation.requestPermissions()`; return the mapped status. No `navigator.geolocation` fallback on native.
+   - Web: keep the existing `navigator.geolocation` probe.
 
-3. **`src/routes/__root.tsx`** — Verify the import line is exactly `import { useGpsWarmup } from "@/hooks/use-gps-warmup";` (no `GpsDebugOverlay`) and that `useGpsWarmup()` is called in `RootComponent` next to `useHealthAutoSync()` / `useSpotifyRunControl()`. Already in place per current file — confirm and leave as-is.
+3. **Position reads**
+   - `nativeGetCurrentPosition()`: on ios/android call `Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 })`; only the web branch uses `navigator.geolocation`.
+   - `nativeWatchPosition()`: on ios/android call `Geolocation.watchPosition(...)` and return a `cap:<id>` handle; web returns `web:<id>`.
+   - `nativeClearWatch()` keeps handling both prefixes.
 
-4. **`src/hooks/use-gps-warmup.ts`** — Verify it only exports `useGpsWarmup` and contains no JSX / React components. Already matches per current file — confirm and leave as-is.
+4. **Kept as-is**
+   - `withTimeout` guards remain so a hung bridge surfaces as an error instead of freezing, but the error is reported rather than silently falling back to `navigator` on native.
+   - `toBrowserPosition()` and the `NativePosition` shape stay unchanged, so `use-run-tracker.ts` and all run/pace/distance calculations are untouched.
 
-### Post-fix verification
+## Not changed
 
-Run `npm run build` and confirm `dist/index.html` exists. Then `npx cap sync ios` and reinstall from Xcode.
+No edits to run calculation logic, the tracker hook, map component, or any other file.
