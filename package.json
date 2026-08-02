@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "build:ios": "vite build && node scripts/prepare-capacitor-build.mjs",
+    "build:ios": "vite build --config vite.config.ios.ts && node scripts/prepare-capacitor-build.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
