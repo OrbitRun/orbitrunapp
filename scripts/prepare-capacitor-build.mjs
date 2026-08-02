@@ -18,9 +18,10 @@ async function exists(path) {
 
 await mkdir(dist, { recursive: true });
 
-if (await exists(clientIndex)) {
+if (await exists(distClient)) {
   await cp(distClient, dist, { recursive: true, force: true });
 }
+void clientIndex;
 
 if (!(await exists(distIndex)) && (await exists(shellIndex))) {
   await cp(shellIndex, distIndex, { force: true });
