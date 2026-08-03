@@ -1,18 +1,12 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  // Capacitor skal bruge en ren statisk SPA-build med index.html direkte i dist.
+  // Web-deployment kører SSR. SPA-shell/prerender er slået fra, fordi
+  // prerender-crawleren leder efter dist/server/server.js (findes ikke i
+  // dette nitro-output). Capacitor bygges med vite.config.ios.ts.
   tanstackStart: {
     spa: {
-      enabled: true,
-      maskPath: "/",
-      prerender: {
-        enabled: false,
-        outputPath: "/index",
-        autoSubfolderIndex: false,
-        crawlLinks: false,
-        retryCount: 0,
-      },
+      enabled: false,
     },
     prerender: {
       enabled: false,
