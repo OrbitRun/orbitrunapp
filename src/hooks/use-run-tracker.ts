@@ -35,6 +35,7 @@ import {
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 import {
   isNativeGeolocationAvailable,
+  isWebPlatform,
   nativeClearWatch,
   nativeGetCurrentPosition,
   nativeWatchPosition,
