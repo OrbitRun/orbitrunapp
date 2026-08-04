@@ -35,6 +35,7 @@ import {
 import TimerWorker from "@/workers/timer.worker.ts?worker";
 import {
   isNativeGeolocationAvailable,
+  isWebPlatform,
   nativeClearWatch,
   nativeGetCurrentPosition,
   nativeWatchPosition,
@@ -605,6 +606,11 @@ export function useRunTracker() {
       })();
       return;
     }
+    // Web only from here on — navigator.geolocation must never run on native.
+    if (!isWebPlatform()) {
+      setState((p) => ({ ...p, permissionError: "Location plugin unavailable." }));
+      return;
+    }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState((p) => ({ ...p, permissionError: "Geolocation not supported in this browser." }));
       return;
@@ -629,28 +635,11 @@ export function useRunTracker() {
     });
   }, [handlePosition, handleError]);
 
-  // Idempotent variant used to warm GPS as soon as the app opens, so that the
-  // first fix is already cached when the user taps Start.
+  // Kept for API compatibility. Location is NEVER requested automatically —
+  // only when the user actively starts a run (or taps the map's GPS button).
   const warmGps = useCallback(() => {
-    // Native: just call armGps — the plugin handles permission state.
-    if (isNativeGeolocationAvailable()) {
-      if (nativeWatchIdRef.current != null) return;
-      armGps();
-      return;
-    }
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    if (watchIdRef.current != null) return;
-    if (typeof navigator.permissions?.query === "function") {
-      navigator.permissions
-        .query({ name: "geolocation" as PermissionName })
-        .then((p) => {
-          if (p.state === "granted") armGps();
-        })
-        .catch(() => {});
-      return;
-    }
-    // No Permissions API — skip silent warm-up to avoid an unexpected prompt.
-  }, [armGps]);
+    /* intentional no-op */
+  }, []);
 
   const start = useCallback(() => {
     haptic(40);
@@ -885,7 +874,7 @@ export function useRunTracker() {
   const stop = useCallback((): Run | null => {
     haptic(60);
     if (watchIdRef.current != null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
+      if (isWebPlatform()) navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
     if (nativeWatchIdRef.current != null) {
@@ -1160,7 +1149,8 @@ export function useRunTracker() {
 
   useEffect(() => {
     return () => {
-      if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current != null && isWebPlatform())
+        navigator.geolocation.clearWatch(watchIdRef.current);
       if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
       workerRef.current?.terminate();
       workerRef.current = null;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-import { Crosshair } from "lucide-react";
+import { Crosshair, LocateFixed } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
@@ -9,6 +9,7 @@ import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
 import {
   isNativeGeolocationAvailable,
+  isWebPlatform,
   nativeGetCurrentPosition,
   requestNativeGeolocationPermission,
   toBrowserPosition,
@@ -181,40 +182,36 @@ function RunMapInner({
     };
   }, [interactive, heatmap]);
 
-  // GPS warm-up: subscribe to user location before a run starts so the map
-  // can center immediately and we keep the GPS chip warm for an accurate
-  // first fix when the runner taps Start.
-  useEffect(() => {
+  // Location is NEVER fetched automatically. The map starts on the last
+  // cached position (or the default center) and only asks for a fix when the
+  // user taps the locate button below.
+  const webWatchIdRef = useRef<number | null>(null);
+  const locatingRef = useRef(false);
+
+  const onPos = useCallback((lat: number, lng: number) => {
+    setUserLoc({ lat, lng });
+    setGpsStatus("ready");
+    setGpsError(null);
+    try {
+      window.localStorage.setItem("orbit.lastUserLoc", JSON.stringify({ lat, lng }));
+    } catch {
+      /* noop */
+    }
+  }, []);
+
+  const locateMe = useCallback(async () => {
     if (typeof window === "undefined") return;
-    if (points.length > 0) return; // run started — tracker takes over
-    let cancelled = false;
-    let webWatchId: number | null = null;
-
-    const onPos = (lat: number, lng: number) => {
-      if (cancelled) return;
-      // eslint-disable-next-line no-console
-      console.log("[map] userLoc fix", lat, lng);
-      setUserLoc({ lat, lng });
-      setGpsStatus("ready");
-      setGpsError(null);
-      try {
-        window.localStorage.setItem("orbit.lastUserLoc", JSON.stringify({ lat, lng }));
-      } catch {
-        /* noop */
-      }
-    };
-
+    if (locatingRef.current) return;
+    locatingRef.current = true;
     setGpsStatus("locating");
-
-    (async () => {
+    try {
       if (isNativeGeolocationAvailable()) {
         const status = await requestNativeGeolocationPermission();
-        if (cancelled) return;
-        // eslint-disable-next-line no-console
-        console.log("[map] native perm status", status);
         if (status === "denied") {
           setGpsStatus("denied");
-          setGpsError("Lokationsadgang er ikke tilladt. Åbn Indstillinger → Orbit Run → Lokation → Mens appen er i brug.");
+          setGpsError(
+            "Lokationsadgang er ikke tilladt. Åbn Indstillinger → Orbit Run → Lokation → Mens appen er i brug.",
+          );
           return;
         }
         if (status === "unavailable") {
@@ -222,16 +219,21 @@ function RunMapInner({
           setGpsError("GPS-pluginnet er ikke tilgængeligt i denne build.");
           return;
         }
-        for (let i = 0; i < 3 && !cancelled; i++) {
+        for (let i = 0; i < 3; i++) {
           const fix = await nativeGetCurrentPosition();
           if (fix) {
             const b = toBrowserPosition(fix);
             onPos(b.coords.latitude, b.coords.longitude);
-            break;
+            return;
           }
           await new Promise((r) => setTimeout(r, 1000));
         }
-      } else if (navigator.geolocation) {
+        setGpsStatus("error");
+        setGpsError("Kunne ikke få et GPS-signal.");
+        return;
+      }
+      // Web only.
+      if (isWebPlatform() && typeof navigator !== "undefined" && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (p) => onPos(p.coords.latitude, p.coords.longitude),
           (e) => {
@@ -240,27 +242,35 @@ function RunMapInner({
           },
           { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
         );
-        webWatchId = navigator.geolocation.watchPosition(
-          (p) => onPos(p.coords.latitude, p.coords.longitude),
-          (e) => {
-            setGpsStatus("error");
-            setGpsError(e.message || "GPS-fejl");
-          },
-          { enableHighAccuracy: true, maximumAge: 2000 },
-        );
-      } else {
-        setGpsStatus("unavailable");
-        setGpsError("Geolocation er ikke understøttet.");
+        if (webWatchIdRef.current == null) {
+          webWatchIdRef.current = navigator.geolocation.watchPosition(
+            (p) => onPos(p.coords.latitude, p.coords.longitude),
+            (e) => {
+              setGpsStatus("error");
+              setGpsError(e.message || "GPS-fejl");
+            },
+            { enableHighAccuracy: true, maximumAge: 2000 },
+          );
+        }
+        return;
       }
-    })();
+      setGpsStatus("unavailable");
+      setGpsError("Geolocation er ikke understøttet.");
+    } finally {
+      locatingRef.current = false;
+    }
+  }, [onPos]);
 
+  // Clean up any web watcher on unmount.
+  useEffect(() => {
     return () => {
-      cancelled = true;
-      if (webWatchId != null && navigator.geolocation) {
-        navigator.geolocation.clearWatch(webWatchId);
+      if (webWatchIdRef.current != null && isWebPlatform() && navigator.geolocation) {
+        navigator.geolocation.clearWatch(webWatchIdRef.current);
+        webWatchIdRef.current = null;
       }
     };
-  }, [points.length]);
+  }, []);
+
 
   // Render pulsating neon user-location marker (only before a run).
   useEffect(() => {
@@ -475,6 +485,7 @@ function RunMapInner({
   }, [points]);
 
   const showRecenter = interactive && userMoved && points.length > 0;
+  const showLocate = interactive && points.length === 0;
   const legend = heatmap && showLegend && points.length >= 2;
   const showGpsBanner =
     points.length === 0 &&
@@ -490,6 +501,16 @@ function RunMapInner({
               <span className="text-destructive">{gpsError ?? "GPS utilgængelig"}</span>
             )}
           </div>
+        )}
+        {showLocate && (
+          <button
+            type="button"
+            onClick={() => void locateMe()}
+            aria-label="Find min position"
+            className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
+          >
+            <LocateFixed className={`h-4 w-4 ${gpsStatus === "locating" ? "animate-pulse text-neon" : ""}`} />
+          </button>
         )}
         {showRecenter && (
           <button

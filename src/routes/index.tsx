@@ -94,12 +94,8 @@ function RunPage() {
     return () => window.removeEventListener(GHOST_CHANGED_EVENT, onChange);
   }, []);
 
-  // Warm GPS as soon as the page mounts (only if permission already granted),
-  // so the first fix is cached when the user taps Start.
-  useEffect(() => {
-    t.warmGps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // No automatic GPS warm-up: location is only requested when the user
+  // actively starts a run or taps the map's locate button.
 
   const isActive = t.status === "running" || t.status === "paused";
 
