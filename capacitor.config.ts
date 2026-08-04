@@ -39,6 +39,12 @@ const config: CapacitorConfig = {
     // already bypass WKWebView CORS for Spotify / Open-Meteo without
     // needing the global patch.
     CapacitorHttp: { enabled: false },
+    // Native resize keeps the WKWebView layout in sync with the keyboard so
+    // the UI stays interactive after it closes. No auto-focus anywhere.
+    Keyboard: {
+      resize: "native",
+      resizeOnFullScreen: true,
+    },
   },
 };
 
