@@ -8,6 +8,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
+import { useNativeKeyboardFix } from "@/hooks/use-native-keyboard-fix";
 
 import { initSpotifyDeepLinkListener } from "@/lib/spotify";
 
@@ -99,6 +100,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useHealthAutoSync();
   useSpotifyRunControl();
+  useNativeKeyboardFix();
+
   
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (

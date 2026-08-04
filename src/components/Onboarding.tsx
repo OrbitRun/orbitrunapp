@@ -39,8 +39,8 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5">
-      <div className="w-full max-w-md glass-strong rounded-3xl p-6 shadow-card">
+    <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5 overflow-y-auto py-8">
+      <div className="w-full max-w-md glass-strong rounded-3xl p-6 shadow-card" style={{ touchAction: "manipulation" }}>
         <div className="flex items-center gap-2 text-neon mb-1">
           <Sparkles className="h-4 w-4" />
           <span className="text-[10px] uppercase tracking-[0.3em] font-bold">
@@ -63,10 +63,14 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             <div>
               <label className="text-sm font-semibold">{t("onb.step.name")}</label>
               <input
-                autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("profile.namePlaceholder")}
+                enterKeyHint="done"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                }}
+                style={{ touchAction: "manipulation", fontSize: 16 }}
                 className="mt-3 w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-base font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-neon transition"
                 maxLength={24}
               />
