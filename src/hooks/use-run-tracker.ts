@@ -874,7 +874,7 @@ export function useRunTracker() {
   const stop = useCallback((): Run | null => {
     haptic(60);
     if (watchIdRef.current != null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
+      if (isWebPlatform()) navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
     if (nativeWatchIdRef.current != null) {
