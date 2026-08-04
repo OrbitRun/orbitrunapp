@@ -63,10 +63,14 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             <div>
               <label className="text-sm font-semibold">{t("onb.step.name")}</label>
               <input
-                autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("profile.namePlaceholder")}
+                enterKeyHint="done"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                }}
+                style={{ touchAction: "manipulation", fontSize: 16 }}
                 className="mt-3 w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-base font-semibold text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-neon transition"
                 maxLength={24}
               />
