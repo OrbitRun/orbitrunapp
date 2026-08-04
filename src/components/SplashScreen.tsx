@@ -2,13 +2,25 @@ import { useEffect, useState } from "react";
 import logo from "@/assets/08a0cc02-81da-4cc6-89d2-2c567d41b102.png";
 
 const SESSION_KEY = "orbit.splash.shown";
+const PROFILE_KEY = "orbit:user-profile:v1";
 const VISIBLE_MS = 3000;
 const FADE_MS = 300;
+
+function onboardingPending() {
+  try {
+    const raw = window.localStorage.getItem(PROFILE_KEY);
+    if (!raw) return true;
+    return !JSON.parse(raw)?.onboarded;
+  } catch {
+    return false;
+  }
+}
 
 export default function SplashScreen() {
   const [mounted, setMounted] = useState(() => {
     if (typeof window === "undefined") return true;
     try {
+      if (onboardingPending()) return false;
       return !sessionStorage.getItem(SESSION_KEY);
     } catch {
       return true;
