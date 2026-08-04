@@ -22,6 +22,7 @@
     "@capacitor/core": "8.3.3",
     "@capacitor/geolocation": "8.2.0",
     "@capacitor/ios": "8.3.3",
+    "@capacitor/keyboard": "8",
     "@capacitor/local-notifications": "8.1.0",
     "@capacitor/preferences": "8",
     "@cloudflare/vite-plugin": "^1.25.5",
