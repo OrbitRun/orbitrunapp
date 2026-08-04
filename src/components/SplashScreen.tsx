@@ -37,12 +37,14 @@ export default function SplashScreen() {
   return (
     <div
       aria-hidden
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background"
+      className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-background"
       style={{
         backgroundImage: "var(--gradient-dark)",
         opacity: fading ? 0 : 1,
         transition: `opacity ${FADE_MS}ms ease-out`,
-        pointerEvents: fading ? "none" : "auto",
+        // Never intercept touches: the splash is purely decorative and must not
+        // block onboarding or any other UI underneath it.
+        pointerEvents: "none",
       }}
     >
       <div className="relative flex items-center justify-center">
