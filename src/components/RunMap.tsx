@@ -9,6 +9,7 @@ import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
 import {
   isNativeGeolocationAvailable,
+  isWebPlatform,
   nativeGetCurrentPosition,
   requestNativeGeolocationPermission,
   toBrowserPosition,
