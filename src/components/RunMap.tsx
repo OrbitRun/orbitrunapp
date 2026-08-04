@@ -501,6 +501,16 @@ function RunMapInner({
             )}
           </div>
         )}
+        {showLocate && (
+          <button
+            type="button"
+            onClick={() => void locateMe()}
+            aria-label="Find min position"
+            className="absolute right-3 bottom-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-background/80 backdrop-blur border border-border text-foreground shadow-card hover:bg-background pointer-events-auto"
+          >
+            <LocateFixed className={`h-4 w-4 ${gpsStatus === "locating" ? "animate-pulse text-neon" : ""}`} />
+          </button>
+        )}
         {showRecenter && (
           <button
             type="button"
