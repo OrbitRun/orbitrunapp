@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-import { Crosshair } from "lucide-react";
+import { Crosshair, LocateFixed } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
 import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
@@ -485,6 +485,7 @@ function RunMapInner({
   }, [points]);
 
   const showRecenter = interactive && userMoved && points.length > 0;
+  const showLocate = interactive && points.length === 0;
   const legend = heatmap && showLegend && points.length >= 2;
   const showGpsBanner =
     points.length === 0 &&
