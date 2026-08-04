@@ -100,6 +100,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useHealthAutoSync();
   useSpotifyRunControl();
+  useNativeKeyboardFix();
+
   
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
