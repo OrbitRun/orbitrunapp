@@ -57,6 +57,7 @@
 :root,
 .dark {
   --radius: 1rem;
+  --bottom-nav-height: 68px;
 
   /* Deep luxury black canvas */
   --background: oklch(0.14 0.012 240);
@@ -128,24 +129,20 @@
     border-color: var(--color-border);
   }
 
-  /* Capacitor iOS: lock the viewport. Only .app-scroll-container scrolls, so
-     html/body can never rubber-band and expose blank area above the header or
-     below the footer. */
+  /* Native app shell: the dark canvas can never show white, but html/body keep
+     their normal overflow so nothing global can lock scrolling. */
   html,
   body,
   #root {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
     margin: 0;
+    width: 100%;
+    min-height: 100%;
     background: #020b0f;
     overscroll-behavior: none;
   }
 
   html,
   body {
-    overflow: hidden;
-    background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -159,25 +156,47 @@
     display: none;
   }
 
-  #root {
-    overflow: hidden;
-  }
-
   body {
     background-image: var(--gradient-dark);
   }
 
-  .app-scroll-container {
+  /* Root shell fills the visible iOS viewport */
+  .app-shell {
     height: 100dvh;
+    min-height: 100dvh;
+    background: #020b0f;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Only place that applies the top safe area */
+  .app-content {
+    flex: 1;
+    min-height: 0;
+    background: transparent;
+    padding-top: env(safe-area-inset-top);
     overflow-y: auto;
     overflow-x: hidden;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
-    padding-top: env(safe-area-inset-top);
+  }
+  .app-content::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Only place that applies the bottom safe area */
+  .bottom-nav {
+    flex: 0 0 auto;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .app-scroll-container::-webkit-scrollbar {
-    display: none;
+
+  .run-page-content {
+    padding-bottom: calc(var(--bottom-nav-height) + 16px);
+  }
+
+  .run-map {
+    height: clamp(260px, 38dvh, 460px);
   }
 
   /* Remove tap-highlight + text-selection on interactive surfaces */

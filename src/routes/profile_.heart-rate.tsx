@@ -83,7 +83,7 @@ function HeartRateSettingsPage() {
   };
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-32">
+    <main className="mx-auto max-w-md px-4 pt-4 pb-32">
       <header className="py-3 flex items-center gap-3">
         <Link
           to="/profile"
