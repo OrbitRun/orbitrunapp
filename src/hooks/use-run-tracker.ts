@@ -619,11 +619,22 @@ export function useRunTracker() {
           setState((p) => ({ ...p, permissionError: "Location permission denied." }));
           return;
         }
+        setState((p) => ({ ...p, needsAlwaysPermission: perm !== "always" }));
         orbitGeoStopRef.current = await addOrbitGeoListener(
-          (pt) => consumeNativePoint(orbitGeoToPosition(pt)),
+          (pt) => consumeNativePoint(orbitGeoToPosition(pt), pt.lowQuality === true),
           (message) => handleError({ message } as GeolocationPositionError),
+          (status) => setState((p) => ({ ...p, needsAlwaysPermission: status !== "always" })),
         );
-        await startBackgroundTracking();
+        const res = await startBackgroundTracking();
+        if (!res.started) {
+          // Foreground tracking still works; the run just won't survive a
+          // screen lock until Location is set to "Always" in Settings.
+          setState((p) => ({
+            ...p,
+            needsAlwaysPermission: res.requiresAlwaysPermission === true,
+            permissionError: res.denied ? "Location permission denied." : p.permissionError,
+          }));
+        }
         const first = await orbitGeoCurrentPosition();
         if (first) consumeNativePoint(first);
       })();
