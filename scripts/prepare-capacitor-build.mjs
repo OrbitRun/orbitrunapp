@@ -47,6 +47,34 @@ if (!(await exists(outIndex))) {
     if (fallback) {
       await cp(join(outDir, fallback), outIndex, { force: true });
       console.log(`Capacitor build: used ${fallback} as index.html fallback.`);
+    } else {
+      // SSR-only output (no static shell). Generate a minimal SPA shell that
+      // boots the client entry emitted by the build.
+      const entry = await findClientEntry();
+      const assets = await readdir(join(outDir, "assets")).catch(() => []);
+      const css = assets
+        .filter((f) => f.startsWith("styles") && f.endsWith(".css"))
+        .map((f) => `    <link rel="stylesheet" href="/assets/${f}" />`)
+        .join("\n");
+      await writeFile(
+        outIndex,
+        `<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+${css}
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="${entry}"></script>
+  </body>
+</html>
+`,
+        "utf8",
+      );
+      console.log(`Capacitor build: generated SPA shell for entry ${entry}.`);
     }
   }
 }
