@@ -209,13 +209,13 @@ export default function FocusRunView({
   if (profile.activityEnvironment === "indoor") {
     return (
       <div
-        className="fixed inset-0 z-[60] flex flex-col bg-background"
+        className="absolute inset-0 z-[60] flex flex-col bg-background"
         style={{
           height: "100dvh",
           touchAction: "none",
           overscrollBehavior: "contain",
-          paddingTop: "max(env(safe-area-inset-top), 0.5rem)",
-          paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
+          paddingTop: "0.5rem",
+          paddingBottom: "0.5rem",
         }}
       >
         <IndoorRunView
@@ -230,13 +230,13 @@ export default function FocusRunView({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-background"
+      className="absolute inset-0 z-[60] flex flex-col bg-background"
       style={{
         height: "100dvh",
         touchAction: "none",
         overscrollBehavior: "contain",
-        paddingTop: "max(env(safe-area-inset-top), 0.5rem)",
-        paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
+        paddingTop: "0.5rem",
+        paddingBottom: "0.5rem",
       }}
     >
       {hrSpike && (

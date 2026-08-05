@@ -187,7 +187,7 @@ function HeartRateSettingsPage() {
       )}
 
       {/* Sticky actions */}
-      <div className="fixed inset-x-0 bottom-0 px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-3 bg-gradient-to-t from-background via-background/95 to-transparent">
+      <div className="fixed inset-x-0 bottom-0 px-4 pb-4 pt-3 bg-gradient-to-t from-background via-background/95 to-transparent">
         <div className="mx-auto max-w-md grid grid-cols-2 gap-2">
           <Link
             to="/profile"

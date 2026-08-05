@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { resetBodyLocks } from "@/lib/modal-debug";
 import { useFreezeTrace } from "@/hooks/use-freeze-trace";
 import {
   saveProfile,
@@ -21,8 +20,8 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   useFreezeTrace("Onboarding");
 
   useEffect(() => {
-    resetBodyLocks();
-    return () => resetBodyLocks();
+    document.body.classList.add("onboarding-open");
+    return () => document.body.classList.remove("onboarding-open");
   }, []);
 
   const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
@@ -48,7 +47,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5 overflow-y-auto py-8">
+    <div className="absolute inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5 overflow-y-auto py-8">
       <div className="w-full max-w-md glass-strong rounded-3xl p-6 shadow-card" style={{ touchAction: "manipulation" }}>
         <div className="flex items-center gap-2 text-neon mb-1">
           <Sparkles className="h-4 w-4" />

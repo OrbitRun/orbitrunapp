@@ -9,7 +9,6 @@ import FreezeDiagnostics from "@/components/FreezeDiagnostics";
 import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
-import { useBodyUnlock } from "@/hooks/use-body-unlock";
 
 import { initSpotifyDeepLinkListener } from "@/lib/spotify";
 
@@ -101,7 +100,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useHealthAutoSync();
   useSpotifyRunControl();
-  useBodyUnlock();
 
   
   useEffect(() => initSpotifyDeepLinkListener(), []);

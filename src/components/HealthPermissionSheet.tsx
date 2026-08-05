@@ -56,7 +56,7 @@ export default function HealthPermissionSheet({ open, onOpenChange, onResult }: 
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-background/70 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-md glass-strong rounded-t-3xl border-t border-x border-border p-6 pb-[max(env(safe-area-inset-bottom),1.5rem)]">
+      <div className="w-full max-w-md glass-strong rounded-t-3xl border-t border-x border-border p-6 pb-6">
         <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-xl bg-neon/10 grid place-items-center text-neon">
             <Activity className="h-5 w-5" />

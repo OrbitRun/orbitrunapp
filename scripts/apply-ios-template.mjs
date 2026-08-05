@@ -53,50 +53,63 @@ if (!existsSync(swiftSrc)) {
 copyFileSync(swiftSrc, resolve(appDir, "OrbitGeo.swift"));
 console.log(`✓ OrbitGeo.swift kopieret til ${appDir}/OrbitGeo.swift`);
 
-// ---------- 3. Tilføj filen til Xcode-targetet ----------
+// ---------- 3. Mørk native WebView-host ----------
+const viewControllerSrc = resolve(root, "templates/ios/OrbitViewController.swift");
+if (!existsSync(viewControllerSrc)) {
+  console.error(`✗ Mangler ${viewControllerSrc}`);
+  process.exit(1);
+}
+copyFileSync(viewControllerSrc, resolve(appDir, "OrbitViewController.swift"));
+console.log(`✓ OrbitViewController.swift kopieret til ${appDir}/OrbitViewController.swift`);
+
+const storyboard = resolve(appDir, "Base.lproj/Main.storyboard");
+if (existsSync(storyboard)) {
+  const source = readFileSync(storyboard, "utf8");
+  const patched = source.replace(
+    /customClass="CAPBridgeViewController" customModule="Capacitor"/g,
+    'customClass="OrbitViewController" customModule="App" customModuleProvider="target"',
+  );
+  writeFileSync(storyboard, patched);
+  console.log("✓ Main.storyboard bruger OrbitViewController");
+}
+
+// ---------- 4. Tilføj Swift-filerne til Xcode-targetet ----------
 if (!existsSync(pbxproj)) {
   console.warn("! project.pbxproj ikke fundet — tilføj OrbitGeo.swift manuelt i Xcode.");
   process.exit(0);
 }
 
 let proj = readFileSync(pbxproj, "utf8");
-if (proj.includes("OrbitGeo.swift")) {
-  console.log("✓ OrbitGeo.swift er allerede en del af Xcode-targetet");
-  process.exit(0);
-}
 
 const uid = () => randomBytes(12).toString("hex").toUpperCase();
-const fileRefId = uid();
-const buildFileId = uid();
-
-// 3a. PBXFileReference
-proj = proj.replace(
-  /(\/\* Begin PBXFileReference section \*\/\n)/,
-  `$1\t\t${fileRefId} /* OrbitGeo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbitGeo.swift; sourceTree = "<group>"; };\n`,
-);
-
-// 3b. PBXBuildFile
-proj = proj.replace(
-  /(\/\* Begin PBXBuildFile section \*\/\n)/,
-  `$1\t\t${buildFileId} /* OrbitGeo.swift in Sources */ = {isa = PBXBuildFile; fileRef = ${fileRefId} /* OrbitGeo.swift */; };\n`,
-);
-
-// 3c. Læg fil-referencen i samme gruppe som AppDelegate.swift
 const appDelegateRef = proj.match(/([0-9A-F]{24}) \/\* AppDelegate\.swift \*\//);
-if (appDelegateRef) {
-  const re = new RegExp(`(\\t\\t\\t\\t${appDelegateRef[1]} \\/\\* AppDelegate\\.swift \\*\\/,\\n)`);
-  proj = proj.replace(re, `$1\t\t\t\t${fileRefId} /* OrbitGeo.swift */,\n`);
-}
-
-// 3d. Tilføj til Sources build phase
 const sourcesBuild = proj.match(/([0-9A-F]{24}) \/\* AppDelegate\.swift in Sources \*\//);
-if (sourcesBuild) {
-  const re = new RegExp(`(\\t\\t\\t\\t${sourcesBuild[1]} \\/\\* AppDelegate\\.swift in Sources \\*\\/,\\n)`);
-  proj = proj.replace(re, `$1\t\t\t\t${buildFileId} /* OrbitGeo.swift in Sources */,\n`);
-} else {
-  console.warn("! Kunne ikke finde Sources build phase — tilføj OrbitGeo.swift manuelt i Xcode.");
+
+for (const filename of ["OrbitGeo.swift", "OrbitViewController.swift"]) {
+  if (proj.includes(`${filename} in Sources`)) {
+    console.log(`✓ ${filename} er allerede en del af Xcode-targetet`);
+    continue;
+  }
+  const fileRefId = uid();
+  const buildFileId = uid();
+  proj = proj.replace(
+    /(\/\* Begin PBXFileReference section \*\/\n)/,
+    `$1\t\t${fileRefId} /* ${filename} */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ${filename}; sourceTree = "<group>"; };\n`,
+  );
+  proj = proj.replace(
+    /(\/\* Begin PBXBuildFile section \*\/\n)/,
+    `$1\t\t${buildFileId} /* ${filename} in Sources */ = {isa = PBXBuildFile; fileRef = ${fileRefId} /* ${filename} */; };\n`,
+  );
+  if (appDelegateRef) {
+    const re = new RegExp(`(\\t\\t\\t\\t${appDelegateRef[1]} \\/\\* AppDelegate\\.swift \\*\\/,\\n)`);
+    proj = proj.replace(re, `$1\t\t\t\t${fileRefId} /* ${filename} */,\n`);
+  }
+  if (sourcesBuild) {
+    const re = new RegExp(`(\\t\\t\\t\\t${sourcesBuild[1]} \\/\\* AppDelegate\\.swift in Sources \\*\\/,\\n)`);
+    proj = proj.replace(re, `$1\t\t\t\t${buildFileId} /* ${filename} in Sources */,\n`);
+  }
 }
 
 writeFileSync(pbxproj, proj);
-console.log("✓ OrbitGeo.swift tilføjet til app-targetets Sources");
+console.log("✓ Native Swift-filer tilføjet til app-targetets Sources");
 console.log(`  Kør nu: npx cap sync ios`);
