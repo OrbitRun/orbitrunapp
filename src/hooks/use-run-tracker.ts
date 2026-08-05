@@ -41,6 +41,7 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
+import { isOrbitGeoAvailable, startOrbitGeo, type OrbitGeoHandle } from "@/lib/orbit-geo";
 import type { MotionSource } from "@/lib/motion-source";
 import { startCadenceAccelerometer, type CadenceSample } from "@/lib/cadence-accelerometer";
 import { startCadenceCamera } from "@/lib/cadence-camera";
@@ -170,6 +171,8 @@ export function useRunTracker() {
   // When running inside a Capacitor native shell, we use the native plugin
   // instead of `navigator.geolocation`. The native watch id is a string.
   const nativeWatchIdRef = useRef<string | null>(null);
+  const orbitGeoRef = useRef<OrbitGeoHandle | null>(null);
+  const orbitGeoStartingRef = useRef(false);
   // Background-geolocation plugin watcher id (iOS/Android, runs while screen
   // is locked / app in background — requires UIBackgroundModes=location).
   
@@ -569,6 +572,27 @@ export function useRunTracker() {
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
+    // Native iOS background GPS (OrbitGeo plugin) — keeps recording while the
+    // screen is locked and replays buffered points on resume.
+    if (isOrbitGeoAvailable()) {
+      if (orbitGeoRef.current || orbitGeoStartingRef.current) return;
+      orbitGeoStartingRef.current = true;
+      void (async () => {
+        try {
+          const handle = await startOrbitGeo(
+            (pos) => {
+              setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+              handlePosition(pos);
+            },
+            (err) => handleError({ message: err.message } as GeolocationPositionError),
+          );
+          if (handle) orbitGeoRef.current = handle;
+        } finally {
+          orbitGeoStartingRef.current = false;
+        }
+      })();
+      return;
+    }
     // Native path (Capacitor iOS/Android) — uses kCLLocationAccuracyBestForNavigation
     // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
     // when the iOS shell declares the `location` background mode.
@@ -893,6 +917,11 @@ export function useRunTracker() {
       nativeWatchIdRef.current = null;
       void nativeClearWatch(id);
     }
+    if (orbitGeoRef.current) {
+      const handle = orbitGeoRef.current;
+      orbitGeoRef.current = null;
+      void handle.stop();
+    }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     indoorStopRef.current?.();
@@ -1162,6 +1191,10 @@ export function useRunTracker() {
     return () => {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
       if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
+      if (orbitGeoRef.current) {
+        void orbitGeoRef.current.stop();
+        orbitGeoRef.current = null;
+      }
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
