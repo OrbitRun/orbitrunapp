@@ -4,6 +4,7 @@ import RunMap from "@/components/RunMap";
 import MusicHubFull from "@/components/MusicHubFull";
 import ZonePacingChip from "@/components/ZonePacingChip";
 import IndoorRunView from "@/components/IndoorRunView";
+import { resetBodyLocks } from "@/lib/modal-debug";
 import { useI18n } from "@/lib/i18n";
 import { resetZoneCueState, speakPacingCue, speakZoneEntered } from "@/lib/audio-cues";
 import { loadProfile } from "@/lib/user-profile";
@@ -101,17 +102,13 @@ export default function FocusRunView({
   // Reset on unmount so a new run starts fresh.
   useEffect(() => () => resetZoneCueState(), []);
 
-  // Lock global UI: hide bottom nav, kill body scroll/bounce.
+  // Hide the bottom nav only. Scroll locking lives in the app shell CSS, so we
+  // never mutate body styles here (they can survive an interrupted unmount on iOS).
   useEffect(() => {
     document.body.classList.add("focus-mode");
-    const prevOverflow = document.body.style.overflow;
-    const prevOverscroll = document.body.style.overscrollBehavior;
-    document.body.style.overflow = "hidden";
-    document.body.style.overscrollBehavior = "none";
     return () => {
       document.body.classList.remove("focus-mode");
-      document.body.style.overflow = prevOverflow;
-      document.body.style.overscrollBehavior = prevOverscroll;
+      resetBodyLocks();
     };
   }, []);
 

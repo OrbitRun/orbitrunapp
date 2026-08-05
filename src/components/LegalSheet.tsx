@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { resetBodyLocks } from "@/lib/modal-debug";
 import { useI18n } from "@/lib/i18n";
 
 type Kind = "privacy" | "terms";
@@ -21,11 +22,10 @@ export default function LegalSheet({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // No manual body scroll-lock: the app shell owns scrolling (see styles.css).
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      resetBodyLocks();
     };
   }, [open, onClose]);
 
