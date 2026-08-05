@@ -917,6 +917,11 @@ export function useRunTracker() {
       nativeWatchIdRef.current = null;
       void nativeClearWatch(id);
     }
+    if (orbitGeoRef.current) {
+      const handle = orbitGeoRef.current;
+      orbitGeoRef.current = null;
+      void handle.stop();
+    }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     indoorStopRef.current?.();
