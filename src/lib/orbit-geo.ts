@@ -205,8 +205,8 @@ export async function orbitGeoCurrentPosition(): Promise<NativePosition | null> 
 /** Opens iOS Settings → Orbit Run so the user can switch Location to "Always". */
 export async function openAppLocationSettings(): Promise<void> {
   try {
-    const { App } = await import("@capacitor/app");
-    await App.openUrl({ url: "app-settings:" });
+    const { AppLauncher } = await import("@capacitor/app-launcher");
+    await AppLauncher.openUrl({ url: "app-settings:" });
   } catch {
     /* noop */
   }
