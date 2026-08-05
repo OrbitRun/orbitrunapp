@@ -587,16 +587,24 @@ export function useRunTracker() {
   }, []);
 
   // Feed a native fix into the shared pipeline, tracking the newest timestamp
-  // so we know where to resume from after a background gap.
+  // so we know where to resume from after a background gap. The timestamp
+  // guard also dedupes: a point can never be counted twice, no matter whether
+  // it arrived as a live event or through a drain replay.
   const consumeNativePoint = useCallback(
-    (pos: Parameters<typeof toBrowserPosition>[0]) => {
+    (pos: Parameters<typeof toBrowserPosition>[0], lowQuality = false) => {
       if (pos.timestamp <= lastFixTsRef.current) return;
       lastFixTsRef.current = pos.timestamp;
       setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+      if (lowQuality) {
+        // 50–100 m fix: good enough to show signal, too noisy for distance.
+        setState((p) => ({ ...p, gpsAccuracyM: pos.coords.accuracy }));
+        return;
+      }
       handlePosition(toBrowserPosition(pos));
     },
     [handlePosition],
   );
+
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
