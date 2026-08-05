@@ -72,10 +72,8 @@ missede punkter og et punkt aldrig tælles to gange.
 ```bash
 rm -rf node_modules package-lock.json ios
 npm install
-npm run build:capacitor
 npx cap add ios
-node scripts/apply-ios-template.mjs   # Info.plist + OrbitGeo.swift + Xcode-target
-npx cap sync ios
+npm run build:ios       # SPA-build + sync + native templates + verifikation
 npx cap open ios
 ```
 
@@ -140,18 +138,15 @@ så web-buildet stadig virker. Almindelige fejl:
 
 Plugin-listen er uændret:
 ```bash
-npm run build
-npx cap sync ios
+npm run build:ios
 ```
 
 Plugin-listen ændret (eller SPM-fejl):
 ```bash
 rm -rf ios
 npm install
-npm run build
 npx cap add ios
-node scripts/apply-ios-template.mjs
-npx cap sync ios
+npm run build:ios
 ```
 
 ---
@@ -163,7 +158,7 @@ npx cap sync ios
   plugin-versioner.
 - **"GPS-pluginnet er ikke tilgængeligt i denne build."** → web-bundlen
   indeholder ikke `@capacitor/geolocation`-chunken. Det sker hvis du har
-  kørt `npx cap sync ios` UDEN først at køre `npm run build` efter en
+  kørt `npx cap sync ios` UDEN først at køre `npm run build:ios` efter en
   ændring i `src/lib/capacitor-runtime.ts` eller `src/lib/geolocation-native.ts`.
   Kør hele §6's plugin-flow igen.
 - **GPS-prompt vises ikke** → tjek at `node scripts/apply-ios-template.mjs`

@@ -9,28 +9,15 @@ export default function BottomNav() {
   const { t } = useI18n();
   const profile = useUserProfile();
   const [focusMode, setFocusMode] = useState(false);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const check = () => {
-      setFocusMode(document.body.classList.contains("focus-mode"));
-      setOnboardingOpen(document.body.classList.contains("onboarding-open"));
-    };
+    const check = () => setFocusMode(document.body.classList.contains("focus-mode"));
     check();
     const obs = new MutationObserver(check);
     obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     return () => obs.disconnect();
   }, []);
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const check = () => setKeyboardOpen(window.innerHeight - viewport.height > 120);
-    check();
-    viewport.addEventListener("resize", check);
-    return () => viewport.removeEventListener("resize", check);
-  }, []);
-  if (focusMode || onboardingOpen || keyboardOpen) return null;
+  if (focusMode || !profile.onboarded) return null;
   const coachEnabled = profile.coachEnabled !== false;
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },

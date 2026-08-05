@@ -25,11 +25,6 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
     logDiagnosticEvent("name-state-render", input, `state=${JSON.stringify(name)}`);
   }, [name, step]);
 
-  useEffect(() => {
-    document.body.classList.add("onboarding-open");
-    return () => document.body.classList.remove("onboarding-open");
-  }, []);
-
   const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
 
   const finish = () => {
