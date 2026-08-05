@@ -29,7 +29,7 @@ export default function BottomNav() {
     <nav className="bottom-nav relative z-40">
       <div className="mx-auto max-w-md px-4 pb-3">
 
-        <div className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around shadow-card pointer-events-auto">
+        <div className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around shadow-card">
           {items.map(({ to, label, Icon }) => {
             const active = location.pathname === to;
             return (
