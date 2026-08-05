@@ -32,11 +32,14 @@ export default function FreezeDiagnostics() {
     setVisible(isNative || forced);
 
     const uninstall = installFreezeWatchdog();
+    let lastSeen: FreezeReport | null = getLastFreezeReport();
     const unsub = subscribeLifecycle(() => {
       const last = getLastFreezeReport();
-      if (last) setAutoCount((c) => c + (last === lastSeen ? 0 : 1)), (lastSeen = last);
+      if (last && last !== lastSeen) {
+        lastSeen = last;
+        setAutoCount((c) => c + 1);
+      }
     });
-    let lastSeen: FreezeReport | null = getLastFreezeReport();
     return () => {
       uninstall();
       unsub();
