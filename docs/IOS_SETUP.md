@@ -54,6 +54,17 @@ Native filer:
 Registrering sker via `CAPBridgedPlugin` i Swift — Capacitor 6+ kræver ikke
 længere en Objective-C `CAP_PLUGIN`-makrofil.
 
+### Permission-krav
+
+Pluginet skelner mellem `always`, `whenInUse`, `denied` og `prompt`.
+Baggrundstracking (skærmlås) kræver **Altid**. Med "Ved brug" starter løbet
+stadig, men kun i forgrunden — appen viser da et banner med en knap til
+Indstillinger → Orbit Run → Lokalitet → Altid.
+
+Punkterne buffres native og hentes med `drain({ since, acknowledgeThrough })`.
+Events sendes uden `retainUntilConsumed`, så bufferen er den eneste kilde til
+missede punkter og et punkt aldrig tælles to gange.
+
 ---
 
 ## 2. Eksport-flow (kør på din Mac)
