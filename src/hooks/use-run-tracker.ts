@@ -41,6 +41,7 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
+import { isOrbitGeoAvailable, startOrbitGeo, type OrbitGeoHandle } from "@/lib/orbit-geo";
 import type { MotionSource } from "@/lib/motion-source";
 import { startCadenceAccelerometer, type CadenceSample } from "@/lib/cadence-accelerometer";
 import { startCadenceCamera } from "@/lib/cadence-camera";
