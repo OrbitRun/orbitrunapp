@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { logModalState, resetBodyLocks } from "@/lib/modal-debug";
 import {
   saveProfile,
   type ExperienceLevel,
@@ -15,6 +16,15 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
   const [goal, setGoal] = useState<RunningGoal>("run5k");
   const [level, setLevel] = useState<ExperienceLevel>("novice");
+
+  useEffect(() => {
+    logModalState("Onboarding", true);
+    resetBodyLocks();
+    return () => {
+      resetBodyLocks();
+      logModalState("Onboarding", false);
+    };
+  }, []);
 
   const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
 

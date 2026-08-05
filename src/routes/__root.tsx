@@ -8,7 +8,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
-import { useNativeKeyboardFix } from "@/hooks/use-native-keyboard-fix";
+import { useBodyUnlock } from "@/hooks/use-body-unlock";
 
 import { initSpotifyDeepLinkListener } from "@/lib/spotify";
 
@@ -100,14 +100,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useHealthAutoSync();
   useSpotifyRunControl();
-  useNativeKeyboardFix();
+  useBodyUnlock();
 
   
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
     <I18nProvider>
-      <div className="min-h-screen pb-24 mb-[30px]">
+      <div className="app-scroll-container">
+        <div className="min-h-full pb-28">
         <Outlet />
+        </div>
         <BottomNav />
         <PrAchievement />
       </div>
