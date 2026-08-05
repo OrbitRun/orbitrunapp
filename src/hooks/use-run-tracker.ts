@@ -171,6 +171,8 @@ export function useRunTracker() {
   // When running inside a Capacitor native shell, we use the native plugin
   // instead of `navigator.geolocation`. The native watch id is a string.
   const nativeWatchIdRef = useRef<string | null>(null);
+  const orbitGeoRef = useRef<OrbitGeoHandle | null>(null);
+  const orbitGeoStartingRef = useRef(false);
   // Background-geolocation plugin watcher id (iOS/Android, runs while screen
   // is locked / app in background — requires UIBackgroundModes=location).
   
