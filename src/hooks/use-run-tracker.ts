@@ -1229,6 +1229,12 @@ export function useRunTracker() {
       if (watchIdRef.current != null && isWebPlatform())
         navigator.geolocation.clearWatch(watchIdRef.current);
       if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
+      if (orbitGeoActiveRef.current) {
+        orbitGeoActiveRef.current = false;
+        orbitGeoStopRef.current?.();
+        orbitGeoStopRef.current = null;
+        void stopBackgroundTracking();
+      }
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
