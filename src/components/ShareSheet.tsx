@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useI18n } from "@/lib/i18n";
+import { logModalState } from "@/lib/modal-debug";
 import type { Run } from "@/lib/run-types";
 import {
   generateShareCard,
@@ -30,6 +31,10 @@ export default function ShareSheet({ open, onOpenChange, run }: Props) {
   const [note, setNote] = useState<string | null>(null);
   const blobRef = useRef<Blob | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    logModalState("ShareSheet", open);
+  }, [open]);
 
   // Regenerate preview whenever mode/photo changes while the sheet is open.
   useEffect(() => {
