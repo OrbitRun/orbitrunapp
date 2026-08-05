@@ -570,6 +570,27 @@ export function useRunTracker() {
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
+    // Native iOS background GPS (OrbitGeo plugin) — keeps recording while the
+    // screen is locked and replays buffered points on resume.
+    if (isOrbitGeoAvailable()) {
+      if (orbitGeoRef.current || orbitGeoStartingRef.current) return;
+      orbitGeoStartingRef.current = true;
+      void (async () => {
+        try {
+          const handle = await startOrbitGeo(
+            (pos) => {
+              setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+              handlePosition(pos);
+            },
+            (err) => handleError({ message: err.message } as GeolocationPositionError),
+          );
+          if (handle) orbitGeoRef.current = handle;
+        } finally {
+          orbitGeoStartingRef.current = false;
+        }
+      })();
+      return;
+    }
     // Native path (Capacitor iOS/Android) — uses kCLLocationAccuracyBestForNavigation
     // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
     // when the iOS shell declares the `location` background mode.
