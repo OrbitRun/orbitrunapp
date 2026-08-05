@@ -182,8 +182,15 @@ export function useRunTracker() {
   // When running inside a Capacitor native shell, we use the native plugin
   // instead of `navigator.geolocation`. The native watch id is a string.
   const nativeWatchIdRef = useRef<string | null>(null);
-  // Background-geolocation plugin watcher id (iOS/Android, runs while screen
-  // is locked / app in background — requires UIBackgroundModes=location).
+  // Native CLLocationManager plugin (iOS): keeps streaming while the screen
+  // is locked and buffers fixes natively so nothing is lost if the WebView
+  // gets suspended. `orbitGeoStopRef` removes the event listeners.
+  const orbitGeoStopRef = useRef<(() => void) | null>(null);
+  const orbitGeoActiveRef = useRef(false);
+  // Timestamp of the newest GPS fix we have consumed — used as the `since`
+  // cursor when draining the native buffer after the app returns.
+  const lastFixTsRef = useRef(0);
+
   
   const workerRef = useRef<Worker | null>(null);
   const lastSplitKmRef = useRef(0);
