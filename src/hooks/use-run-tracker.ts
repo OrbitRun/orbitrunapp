@@ -42,6 +42,17 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
+import {
+  addLocationListener as addOrbitGeoListener,
+  clearOrbitGeoBuffer,
+  drainSince as orbitGeoDrainSince,
+  isOrbitGeoAvailable,
+  orbitGeoCurrentPosition,
+  orbitGeoToPosition,
+  requestOrbitGeoPermission,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from "@/lib/orbit-geo";
 import type { MotionSource } from "@/lib/motion-source";
 import { startCadenceAccelerometer, type CadenceSample } from "@/lib/cadence-accelerometer";
 import { startCadenceCamera } from "@/lib/cadence-camera";
@@ -171,8 +182,15 @@ export function useRunTracker() {
   // When running inside a Capacitor native shell, we use the native plugin
   // instead of `navigator.geolocation`. The native watch id is a string.
   const nativeWatchIdRef = useRef<string | null>(null);
-  // Background-geolocation plugin watcher id (iOS/Android, runs while screen
-  // is locked / app in background — requires UIBackgroundModes=location).
+  // Native CLLocationManager plugin (iOS): keeps streaming while the screen
+  // is locked and buffers fixes natively so nothing is lost if the WebView
+  // gets suspended. `orbitGeoStopRef` removes the event listeners.
+  const orbitGeoStopRef = useRef<(() => void) | null>(null);
+  const orbitGeoActiveRef = useRef(false);
+  // Timestamp of the newest GPS fix we have consumed — used as the `since`
+  // cursor when draining the native buffer after the app returns.
+  const lastFixTsRef = useRef(0);
+
   
   const workerRef = useRef<Worker | null>(null);
   const lastSplitKmRef = useRef(0);
@@ -568,11 +586,42 @@ export function useRunTracker() {
     setState((p) => ({ ...p, permissionError: err.message || "Location unavailable" }));
   }, []);
 
+  // Feed a native fix into the shared pipeline, tracking the newest timestamp
+  // so we know where to resume from after a background gap.
+  const consumeNativePoint = useCallback(
+    (pos: Parameters<typeof toBrowserPosition>[0]) => {
+      if (pos.timestamp <= lastFixTsRef.current) return;
+      lastFixTsRef.current = pos.timestamp;
+      setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+      handlePosition(toBrowserPosition(pos));
+    },
+    [handlePosition],
+  );
+
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
-    // Native path (Capacitor iOS/Android) — uses kCLLocationAccuracyBestForNavigation
-    // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
-    // when the iOS shell declares the `location` background mode.
+    // iOS: real background tracking via our own CLLocationManager plugin.
+    if (isOrbitGeoAvailable()) {
+      if (orbitGeoActiveRef.current) return;
+      orbitGeoActiveRef.current = true;
+      void (async () => {
+        const perm = await requestOrbitGeoPermission();
+        if (perm === "denied") {
+          orbitGeoActiveRef.current = false;
+          setState((p) => ({ ...p, permissionError: "Location permission denied." }));
+          return;
+        }
+        orbitGeoStopRef.current = await addOrbitGeoListener(
+          (pt) => consumeNativePoint(orbitGeoToPosition(pt)),
+          (message) => handleError({ message } as GeolocationPositionError),
+        );
+        await startBackgroundTracking();
+        const first = await orbitGeoCurrentPosition();
+        if (first) consumeNativePoint(first);
+      })();
+      return;
+    }
+    // Android (and any other Capacitor platform) — @capacitor/geolocation.
     if (isNativeGeolocationAvailable()) {
       if (nativeWatchIdRef.current != null) return;
       void (async () => {
@@ -587,25 +636,16 @@ export function useRunTracker() {
         }
         // Immediate single-shot fix for a fast first callback.
         const first = await nativeGetCurrentPosition();
-        if (first) {
-          setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
-          handlePosition(toBrowserPosition(first));
-        }
-        // Native @capacitor/geolocation watcher. With UIBackgroundModes
-        // = ["location"] in Info.plist + "Always" location permission,
-        // iOS keeps delivering high-accuracy fixes while the screen is
-        // locked or the app is backgrounded.
+        if (first) consumeNativePoint(first);
         const id = await nativeWatchPosition(
-          (pos) => {
-            setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
-            handlePosition(toBrowserPosition(pos));
-          },
+          (pos) => consumeNativePoint(pos),
           (err) => handleError({ message: err.message } as GeolocationPositionError),
         );
         if (id) nativeWatchIdRef.current = id;
       })();
       return;
     }
+
     // Web only from here on — navigator.geolocation must never run on native.
     if (!isWebPlatform()) {
       setState((p) => ({ ...p, permissionError: "Location plugin unavailable." }));
@@ -633,7 +673,33 @@ export function useRunTracker() {
       maximumAge: 0,
       timeout: 5000,
     });
-  }, [handlePosition, handleError]);
+  }, [handlePosition, handleError, consumeNativePoint]);
+
+  // When the app comes back to the foreground, replay every native fix that
+  // arrived while JavaScript was suspended (screen locked / backgrounded).
+  useEffect(() => {
+    if (!isOrbitGeoAvailable()) return;
+    let cancelled = false;
+    const catchUp = async () => {
+      if (!orbitGeoActiveRef.current) return;
+      const missed = await orbitGeoDrainSince(lastFixTsRef.current);
+      if (cancelled || missed.length === 0) return;
+      for (const pt of missed.sort((a, b) => a.timestamp - b.timestamp)) {
+        consumeNativePoint(orbitGeoToPosition(pt));
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void catchUp();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [consumeNativePoint]);
+
 
   // Kept for API compatibility. Location is NEVER requested automatically —
   // only when the user actively starts a run (or taps the map's GPS button).
@@ -882,6 +948,17 @@ export function useRunTracker() {
       nativeWatchIdRef.current = null;
       void nativeClearWatch(id);
     }
+    if (orbitGeoActiveRef.current) {
+      orbitGeoActiveRef.current = false;
+      orbitGeoStopRef.current?.();
+      orbitGeoStopRef.current = null;
+      lastFixTsRef.current = 0;
+      void (async () => {
+        await stopBackgroundTracking();
+        await clearOrbitGeoBuffer();
+      })();
+    }
+
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     indoorStopRef.current?.();
@@ -1152,6 +1229,12 @@ export function useRunTracker() {
       if (watchIdRef.current != null && isWebPlatform())
         navigator.geolocation.clearWatch(watchIdRef.current);
       if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
+      if (orbitGeoActiveRef.current) {
+        orbitGeoActiveRef.current = false;
+        orbitGeoStopRef.current?.();
+        orbitGeoStopRef.current = null;
+        void stopBackgroundTracking();
+      }
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();

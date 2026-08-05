@@ -31,8 +31,28 @@ hvilket brækkede Mapbox GL's Web Worker → sort kort på iOS. Vores eksplicitt
 WKWebView CORS for Spotify / Open-Meteo uden den globale patch.
 
 Bemærk: `@capacitor-community/background-geolocation` er **fjernet**.
-Baggrunds-GPS leveres af `@capacitor/geolocation` + `UIBackgroundModes=location`
-+ "Always"-permission. Færre plugins = ingen SPM-konflikt.
+Baggrunds-GPS leveres på iOS af vores eget native plugin **OrbitGeo**
+(`templates/ios/OrbitGeo.swift`), som bruger `CLLocationManager` med
+`kCLLocationAccuracyBestForNavigation`, `distanceFilter = 3`,
+`activityType = .fitness`, `allowsBackgroundLocationUpdates = true`,
+`pausesLocationUpdatesAutomatically = false` og
+`showsBackgroundLocationIndicator = true`.
+
+Hvert fix sendes til React via Capacitor-eventet `orbitLocation` **og** gemmes
+i en native buffer på disk. Når appen vender tilbage til forgrunden kalder
+`src/hooks/use-run-tracker.ts` `drain({ since })`, så punkter registreret mens
+WebView'en var suspenderet spilles ind i ruten. Der bruges **ikke** silent
+audio. `@capacitor/geolocation` bruges kun på Android; browser-GPS kun på web.
+
+Native filer:
+
+- `templates/ios/OrbitGeo.swift` → kopieres til `ios/App/App/OrbitGeo.swift`
+- `ios/App/App/Info.plist` (fra `templates/Info.plist`)
+- `ios/App/App.xcodeproj/project.pbxproj` (patches automatisk, så
+  `OrbitGeo.swift` indgår i app-targetets Sources)
+
+Registrering sker via `CAPBridgedPlugin` i Swift — Capacitor 6+ kræver ikke
+længere en Objective-C `CAP_PLUGIN`-makrofil.
 
 ---
 
@@ -41,12 +61,13 @@ Baggrunds-GPS leveres af `@capacitor/geolocation` + `UIBackgroundModes=location`
 ```bash
 rm -rf node_modules package-lock.json ios
 npm install
-npm run build
+npm run build:capacitor
 npx cap add ios
-node scripts/apply-ios-template.mjs   # injicerer Info.plist (Spotify, GPS, Health, BLE, Motion)
+node scripts/apply-ios-template.mjs   # Info.plist + OrbitGeo.swift + Xcode-target
 npx cap sync ios
 npx cap open ios
 ```
+
 
 `rm -rf` af lockfile + `ios/` er obligatorisk efter plugin-ændringer —
 det er hovedårsagen til `CapApp-SPM` SPM-fejl i Xcode.
@@ -137,8 +158,10 @@ npx cap sync ios
 - **GPS-prompt vises ikke** → tjek at `node scripts/apply-ios-template.mjs`
   kørte uden fejl. Slet appen fra enheden og installer igen (iOS cacher
   "Don't Allow"-svar).
-- **GPS dør når skærmen låses** → Background Modes → Location updates skal
-  være tændt i Xcode (§4) **og** brugeren skal have valgt "Always".
+- **GPS dør når skærmen låses** → OrbitGeo er ikke kompileret ind. Tjek at
+  `OrbitGeo.swift` ligger i `ios/App/App/` og står under Build Phases →
+  Compile Sources i Xcode, at Background Modes → Location updates er tændt
+  (§4), og at brugeren har valgt "Always".
 - **Spotify-login fejler ved retur** → Redirect URI matcher ikke
   `jonas-orbit-run://callback`. Sammenlign tegn-for-tegn.
 - **Spotify hænger på "Forbinder…"** → typisk Redirect URI fejl ELLER
