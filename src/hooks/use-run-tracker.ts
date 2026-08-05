@@ -673,7 +673,33 @@ export function useRunTracker() {
       maximumAge: 0,
       timeout: 5000,
     });
-  }, [handlePosition, handleError]);
+  }, [handlePosition, handleError, consumeNativePoint]);
+
+  // When the app comes back to the foreground, replay every native fix that
+  // arrived while JavaScript was suspended (screen locked / backgrounded).
+  useEffect(() => {
+    if (!isOrbitGeoAvailable()) return;
+    let cancelled = false;
+    const catchUp = async () => {
+      if (!orbitGeoActiveRef.current) return;
+      const missed = await orbitGeoDrainSince(lastFixTsRef.current);
+      if (cancelled || missed.length === 0) return;
+      for (const pt of missed.sort((a, b) => a.timestamp - b.timestamp)) {
+        consumeNativePoint(orbitGeoToPosition(pt));
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void catchUp();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [consumeNativePoint]);
+
 
   // Kept for API compatibility. Location is NEVER requested automatically —
   // only when the user actively starts a run (or taps the map's GPS button).
