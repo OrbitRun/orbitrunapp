@@ -3,7 +3,7 @@
 // The framework emits the browser bundle to dist/client (with dist/.server for SSR).
 // Capacitor needs a plain static folder with index.html at its root, so we copy
 // dist/client into dist-capacitor (see webDir in capacitor.config.ts).
-import { cp, mkdir, readdir, rm, stat } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const dist = "dist";
