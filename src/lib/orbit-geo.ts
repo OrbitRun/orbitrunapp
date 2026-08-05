@@ -85,7 +85,7 @@ export async function startBackgroundTracking(): Promise<boolean> {
     await OrbitGeo.start();
     return true;
   } catch (e) {
-    // eslint-disable-next-line no-console
+    
     console.warn("[orbit-geo] start failed", (e as Error)?.message ?? e);
     return false;
   }
