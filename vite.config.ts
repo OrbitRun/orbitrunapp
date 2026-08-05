@@ -24,22 +24,4 @@ export default defineConfig({
       enabled: false,
     },
   },
-  vite: {
-    build: {
-      outDir: "dist",
-      emptyOutDir: true,
-    },
-    environments: {
-      client: {
-        build: {
-          outDir: "dist",
-        },
-      },
-      ssr: {
-        build: {
-          outDir: "dist/.server",
-        },
-      },
-    },
-  },
 });

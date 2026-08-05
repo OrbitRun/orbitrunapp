@@ -5,7 +5,7 @@
 //
 // Final export checklist (run locally before opening Xcode):
 //   npm install
-//   npm run build         # produces dist/index.html (matches webDir)
+//   npm run build:capacitor  # produces dist-capacitor/index.html (matches webDir)
 //   npx cap add ios       # first time only
 //   npx cap sync ios      # every time the web app changes
 //   npx cap open ios      # Archive → TestFlight
@@ -24,7 +24,7 @@ type CapacitorConfig = {
 const config: CapacitorConfig = {
   appId: "com.orbitrun.app",
   appName: "Orbit Run",
-  webDir: "dist",
+  webDir: "dist-capacitor",
   urlSchemes: ["jonas-orbit-run"],
   ios: {
     contentInset: "always",
