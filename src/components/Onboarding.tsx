@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { logModalState, resetBodyLocks } from "@/lib/modal-debug";
+import { resetBodyLocks } from "@/lib/modal-debug";
+import { useFreezeTrace } from "@/hooks/use-freeze-trace";
 import {
   saveProfile,
   type ExperienceLevel,
@@ -17,13 +18,11 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   const [goal, setGoal] = useState<RunningGoal>("run5k");
   const [level, setLevel] = useState<ExperienceLevel>("novice");
 
+  useFreezeTrace("Onboarding");
+
   useEffect(() => {
-    logModalState("Onboarding", true);
     resetBodyLocks();
-    return () => {
-      resetBodyLocks();
-      logModalState("Onboarding", false);
-    };
+    return () => resetBodyLocks();
   }, []);
 
   const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];

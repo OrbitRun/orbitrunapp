@@ -5,7 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { logModalState, resetBodyLocks } from "@/lib/modal-debug";
+import { logOverlayState, resetBodyLocks } from "@/lib/modal-debug";
 
 // iOS/Capacitor: `modal` mode pulls in react-remove-scroll + FocusScope, which
 // mutate body styles and trap focus. In WKWebView those styles can survive an
@@ -44,10 +44,10 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   React.useEffect(() => {
-    logModalState("Dialog", true);
+    logOverlayState("Dialog", true);
     return () => {
       resetBodyLocks();
-      logModalState("Dialog", false);
+      logOverlayState("Dialog", false);
     };
   }, []);
 
