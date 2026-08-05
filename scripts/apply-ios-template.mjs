@@ -73,6 +73,17 @@ if (existsSync(storyboard)) {
   console.log("✓ Main.storyboard bruger OrbitViewController");
 }
 
+const launchStoryboard = resolve(appDir, "Base.lproj/LaunchScreen.storyboard");
+if (existsSync(launchStoryboard)) {
+  const source = readFileSync(launchStoryboard, "utf8");
+  const darkColor = '<color key="backgroundColor" red="0.007843137255" green="0.043137254902" blue="0.058823529412" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>';
+  const patched = source
+    .replace(/<color key="backgroundColor" systemColor="systemBackgroundColor"\s*\/>/g, darkColor)
+    .replace(/\s*<systemColor name="systemBackgroundColor">[\s\S]*?<\/systemColor>/g, "");
+  writeFileSync(launchStoryboard, patched);
+  console.log("✓ LaunchScreen bruger Orbit-baggrunden #020b0f");
+}
+
 // ---------- 4. Tilføj Swift-filerne til Xcode-targetet ----------
 if (!existsSync(pbxproj)) {
   console.warn("! project.pbxproj ikke fundet — tilføj OrbitGeo.swift manuelt i Xcode.");

@@ -29,5 +29,6 @@ public final class OrbitViewController: CAPBridgeViewController {
         webView?.isOpaque = true
         webView?.backgroundColor = orbitBackground
         webView?.scrollView.backgroundColor = orbitBackground
+        webView?.scrollView.contentInsetAdjustmentBehavior = .never
     }
 }
