@@ -158,8 +158,10 @@ npx cap sync ios
 - **GPS-prompt vises ikke** → tjek at `node scripts/apply-ios-template.mjs`
   kørte uden fejl. Slet appen fra enheden og installer igen (iOS cacher
   "Don't Allow"-svar).
-- **GPS dør når skærmen låses** → Background Modes → Location updates skal
-  være tændt i Xcode (§4) **og** brugeren skal have valgt "Always".
+- **GPS dør når skærmen låses** → OrbitGeo er ikke kompileret ind. Tjek at
+  `OrbitGeo.swift` ligger i `ios/App/App/` og står under Build Phases →
+  Compile Sources i Xcode, at Background Modes → Location updates er tændt
+  (§4), og at brugeren har valgt "Always".
 - **Spotify-login fejler ved retur** → Redirect URI matcher ikke
   `jonas-orbit-run://callback`. Sammenlign tegn-for-tegn.
 - **Spotify hænger på "Forbinder…"** → typisk Redirect URI fejl ELLER
