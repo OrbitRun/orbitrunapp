@@ -5,13 +5,10 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { logModalState, resetBodyLocks } from "@/lib/modal-debug";
 
-// Non-modal for the same WKWebView freeze reason documented in dialog.tsx.
-const AlertDialog = ({
-  modal: _modal,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Root>) => (
-  <AlertDialogPrimitive.Root modal={false} {...props} />
-);
+// AlertDialog is always modal in Radix (no `modal` prop), so the WKWebView
+// freeze is handled by resetting body locks when the content unmounts, plus the
+// global watchdog in use-body-unlock.
+const AlertDialog = AlertDialogPrimitive.Root;
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
