@@ -97,12 +97,12 @@ public class OrbitGeo: CAPPlugin, CAPBridgedPlugin {
         return CLLocationManager.authorizationStatus()
     }
 
-    @objc func checkPermissions(_ call: CAPPluginCall) {
+    @objc override public func checkPermissions(_ call: CAPPluginCall) {
         let s = authString(currentStatus())
         call.resolve(["location": s, "coarseLocation": s])
     }
 
-    @objc func requestPermissions(_ call: CAPPluginCall) {
+    @objc override public func requestPermissions(_ call: CAPPluginCall) {
         let always = call.getBool("always") ?? true
         let status = currentStatus()
 
