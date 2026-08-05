@@ -586,11 +586,42 @@ export function useRunTracker() {
     setState((p) => ({ ...p, permissionError: err.message || "Location unavailable" }));
   }, []);
 
+  // Feed a native fix into the shared pipeline, tracking the newest timestamp
+  // so we know where to resume from after a background gap.
+  const consumeNativePoint = useCallback(
+    (pos: Parameters<typeof toBrowserPosition>[0]) => {
+      if (pos.timestamp <= lastFixTsRef.current) return;
+      lastFixTsRef.current = pos.timestamp;
+      setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+      handlePosition(toBrowserPosition(pos));
+    },
+    [handlePosition],
+  );
+
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
-    // Native path (Capacitor iOS/Android) — uses kCLLocationAccuracyBestForNavigation
-    // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
-    // when the iOS shell declares the `location` background mode.
+    // iOS: real background tracking via our own CLLocationManager plugin.
+    if (isOrbitGeoAvailable()) {
+      if (orbitGeoActiveRef.current) return;
+      orbitGeoActiveRef.current = true;
+      void (async () => {
+        const perm = await requestOrbitGeoPermission();
+        if (perm === "denied") {
+          orbitGeoActiveRef.current = false;
+          setState((p) => ({ ...p, permissionError: "Location permission denied." }));
+          return;
+        }
+        orbitGeoStopRef.current = await addOrbitGeoListener(
+          (pt) => consumeNativePoint(orbitGeoToPosition(pt)),
+          (message) => handleError({ message } as GeolocationPositionError),
+        );
+        await startBackgroundTracking();
+        const first = await orbitGeoCurrentPosition();
+        if (first) consumeNativePoint(first);
+      })();
+      return;
+    }
+    // Android (and any other Capacitor platform) — @capacitor/geolocation.
     if (isNativeGeolocationAvailable()) {
       if (nativeWatchIdRef.current != null) return;
       void (async () => {
@@ -605,25 +636,16 @@ export function useRunTracker() {
         }
         // Immediate single-shot fix for a fast first callback.
         const first = await nativeGetCurrentPosition();
-        if (first) {
-          setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
-          handlePosition(toBrowserPosition(first));
-        }
-        // Native @capacitor/geolocation watcher. With UIBackgroundModes
-        // = ["location"] in Info.plist + "Always" location permission,
-        // iOS keeps delivering high-accuracy fixes while the screen is
-        // locked or the app is backgrounded.
+        if (first) consumeNativePoint(first);
         const id = await nativeWatchPosition(
-          (pos) => {
-            setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
-            handlePosition(toBrowserPosition(pos));
-          },
+          (pos) => consumeNativePoint(pos),
           (err) => handleError({ message: err.message } as GeolocationPositionError),
         );
         if (id) nativeWatchIdRef.current = id;
       })();
       return;
     }
+
     // Web only from here on — navigator.geolocation must never run on native.
     if (!isWebPlatform()) {
       setState((p) => ({ ...p, permissionError: "Location plugin unavailable." }));
