@@ -11,8 +11,30 @@ export type LifecycleEvent = {
   phase: "mount" | "unmount" | "open" | "close";
 };
 
+export type DiagnosticEvent = {
+  t: number;
+  type: string;
+  target: string;
+  tracked: string;
+  detail: string;
+};
+
+export type ProbeElement = {
+  element: string;
+  pointerEvents: string;
+  zIndex: string;
+  rect: string;
+  disabled: boolean;
+  ariaHidden: string;
+  inert: boolean;
+};
+
 const LIFECYCLE_LIMIT = 40;
 const lifecycle: LifecycleEvent[] = [];
+const diagnosticEvents: DiagnosticEvent[] = [];
+let probeStack: ProbeElement[] = [];
+let probePoint = "ingen";
+let probeArmed = false;
 
 const listeners = new Set<() => void>();
 
@@ -37,6 +59,36 @@ export function getLifecycle(): LifecycleEvent[] {
 export function subscribeLifecycle(fn: () => void) {
   listeners.add(fn);
   return () => listeners.delete(fn);
+}
+
+function notify() {
+  listeners.forEach((listener) => listener());
+}
+
+function pushDiagnostic(type: string, target: Element | null, detail = "") {
+  const trackedElement = target?.closest?.("[data-diag-target]") as HTMLElement | null;
+  diagnosticEvents.push({
+    t: Date.now(),
+    type,
+    target: describeElement(target),
+    tracked: trackedElement?.dataset.diagTarget ?? "—",
+    detail,
+  });
+  if (diagnosticEvents.length > 80) diagnosticEvents.shift();
+  notify();
+}
+
+export function logDiagnosticEvent(type: string, target: Element | null, detail = "") {
+  pushDiagnostic(type, target, detail);
+}
+
+export function armProbeMode() {
+  probeArmed = true;
+  pushDiagnostic("probe-armed", null);
+}
+
+export function isProbeArmed() {
+  return probeArmed;
 }
 
 export function describeElement(el: Element | null): string {
@@ -73,6 +125,9 @@ export type FreezeReport = {
   lastTouch: string;
   elementAtTouch: string;
   lifecycle: string[];
+  probePoint: string;
+  probeStack: ProbeElement[];
+  eventLog: string[];
 };
 
 let lastPoint: { x: number; y: number } | null = null;
@@ -123,6 +178,12 @@ export function collectFreezeReport(reason = "manual"): FreezeReport {
     lifecycle: lifecycle
       .slice(-12)
       .map((e) => `${new Date(e.t).toISOString().slice(11, 23)} ${e.name} ${e.phase}`),
+    probePoint,
+    probeStack: [...probeStack],
+    eventLog: diagnosticEvents.slice(-24).map((event) => {
+      const time = new Date(event.t).toISOString().slice(11, 23);
+      return `${time} ${event.type} tracked=${event.tracked} target=${event.target}${event.detail ? ` ${event.detail}` : ""}`;
+    }),
   };
 }
 
@@ -142,8 +203,15 @@ export function formatFreezeReport(r: FreezeReport): string {
     `sidst unmounted/lukket: ${r.lastUnmounted}`,
     `sidste touch: ${r.lastTouch}`,
     `elementFromPoint: ${r.elementAtTouch}`,
+    `probe: ${r.probePoint} (${r.probeStack.length} elementer)`,
+    ...r.probeStack.map(
+      (item, index) =>
+        `  ${index + 1}. ${item.element} pe=${item.pointerEvents} z=${item.zIndex} rect=${item.rect} disabled=${item.disabled} aria-hidden=${item.ariaHidden} inert=${item.inert}`,
+    ),
     "lifecycle:",
     ...(r.lifecycle.length ? r.lifecycle.map((l) => `  ${l}`) : ["  (tom)"]),
+    "events:",
+    ...(r.eventLog.length ? r.eventLog.map((event) => `  ${event}`) : ["  (tom)"]),
   ].join("\n");
 }
 
@@ -173,6 +241,40 @@ export function installFreezeWatchdog() {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let sawClick = false;
 
+  const eventDetail = (event: Event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) && !(target instanceof HTMLTextAreaElement)) {
+      return `defaultPrevented=${event.defaultPrevented}`;
+    }
+    const inputEvent = event instanceof InputEvent ? event : null;
+    return `value=${JSON.stringify(target.value)} data=${JSON.stringify(inputEvent?.data ?? null)} inputType=${inputEvent?.inputType ?? "—"} defaultPrevented=${event.defaultPrevented}`;
+  };
+
+  const onCapturedEvent = (event: Event) => {
+    pushDiagnostic(event.type, event.target as Element | null, eventDetail(event));
+  };
+
+  const captureProbe = (x: number, y: number) => {
+    probeArmed = false;
+    probePoint = `${Math.round(x)}, ${Math.round(y)}`;
+    probeStack = document.elementsFromPoint(x, y).map((element) => {
+      const html = element as HTMLElement;
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return {
+        element: describeElement(element),
+        pointerEvents: style.pointerEvents,
+        zIndex: style.zIndex,
+        rect: `${Math.round(rect.x)},${Math.round(rect.y)} ${Math.round(rect.width)}x${Math.round(rect.height)}`,
+        disabled: "disabled" in html ? Boolean((html as HTMLButtonElement).disabled) : false,
+        ariaHidden: html.getAttribute("aria-hidden") ?? "false",
+        inert: html.inert,
+      };
+    });
+    pushDiagnostic("probe-captured", document.elementFromPoint(x, y), `stack=${probeStack.length}`);
+    window.setTimeout(() => reportFreeze("probe mode hit-test"), 350);
+  };
+
   const onDown = (x: number, y: number) => {
     lastPoint = { x, y };
     sawClick = false;
@@ -196,6 +298,9 @@ export function installFreezeWatchdog() {
   };
 
   const onPointerDown = (e: PointerEvent) => onDown(e.clientX, e.clientY);
+  const onProbePointerDown = (e: PointerEvent) => {
+    if (probeArmed) captureProbe(e.clientX, e.clientY);
+  };
   const onTouchStart = (e: TouchEvent) => {
     const t = e.touches[0] ?? e.changedTouches[0];
     if (t) onDown(t.clientX, t.clientY);
@@ -205,14 +310,28 @@ export function installFreezeWatchdog() {
   };
 
   window.addEventListener("pointerdown", onPointerDown, true);
+  window.addEventListener("pointerdown", onProbePointerDown, true);
   window.addEventListener("touchstart", onTouchStart, true);
   window.addEventListener("click", onClick, true);
+  const capturedTypes = [
+    "pointerdown",
+    "pointerup",
+    "touchstart",
+    "touchend",
+    "click",
+    "beforeinput",
+    "input",
+    "change",
+  ] as const;
+  capturedTypes.forEach((type) => window.addEventListener(type, onCapturedEvent, true));
 
   return () => {
     installed = false;
     if (timer) clearTimeout(timer);
     window.removeEventListener("pointerdown", onPointerDown, true);
+    window.removeEventListener("pointerdown", onProbePointerDown, true);
     window.removeEventListener("touchstart", onTouchStart, true);
     window.removeEventListener("click", onClick, true);
+    capturedTypes.forEach((type) => window.removeEventListener(type, onCapturedEvent, true));
   };
 }

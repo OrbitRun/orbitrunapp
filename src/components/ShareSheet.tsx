@@ -180,6 +180,7 @@ export default function ShareSheet({ open, onOpenChange, run }: Props) {
 
         {/* Share button */}
         <button
+          data-diag-target="share-button"
           onClick={handleShare}
           disabled={sharing || generating || !previewUrl}
           className="mt-4 w-full h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition disabled:opacity-60"

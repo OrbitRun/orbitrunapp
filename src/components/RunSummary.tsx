@@ -172,6 +172,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
         {/* Share button — opens the share sheet */}
         <section className="mt-4">
           <button
+            data-diag-target="share-button"
             onClick={() => setShareOpen(true)}
             className="w-full h-14 rounded-2xl border border-neon/40 bg-neon/10 text-neon flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition"
           >

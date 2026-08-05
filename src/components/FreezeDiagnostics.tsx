@@ -12,6 +12,7 @@ import {
   collectFreezeReport,
   formatFreezeReport,
   getLastFreezeReport,
+  armProbeMode,
   installFreezeWatchdog,
   subscribeLifecycle,
   type FreezeReport,
@@ -81,19 +82,29 @@ export default function FreezeDiagnostics() {
             <button
               type="button"
               onClick={() => {
+                armProbeMode();
+                setOpen(false);
+              }}
+              className="flex-1 rounded-lg bg-white/10 py-2 text-xs font-bold"
+            >
+              Probe næste
+            </button>
+            <button
+              type="button"
+              onClick={() => {
                 const last = getLastFreezeReport();
                 if (last) capture(last);
               }}
               className="flex-1 rounded-lg bg-white/10 py-2 text-xs font-bold"
             >
-              Sidste freeze
+              Sidste
             </button>
             <button
               type="button"
               onClick={() => capture()}
               className="flex-1 rounded-lg bg-white/10 py-2 text-xs font-bold"
             >
-              Opdater
+              Opdatér
             </button>
             <button
               type="button"
