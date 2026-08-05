@@ -20,6 +20,22 @@ async function exists(path) {
   }
 }
 
+// Reads the client entry chunk from the generated server manifest
+// (the root route's first preload).
+async function findClientEntry() {
+  const serverDir = join(dist, "server");
+  const files = await readdir(serverDir).catch(() => []);
+  const manifest = files.find((f) => f.includes("tanstack-start-manifest"));
+  if (manifest) {
+    const src = await readFile(join(serverDir, manifest), "utf8");
+    const match = src.match(/preloads:\s*\["(\/assets\/[^"]+\.js)"/);
+    if (match) return match[1];
+  }
+  throw new Error(
+    "Capacitor build failed: could not determine the client entry chunk.",
+  );
+}
+
 const source = (await exists(distClient)) ? distClient : dist;
 
 if (!(await exists(source))) {
