@@ -13,6 +13,7 @@ import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
 import SourceSignalChip from "@/components/SourceSignalChip";
+import { openAppLocationSettings } from "@/lib/orbit-geo";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
