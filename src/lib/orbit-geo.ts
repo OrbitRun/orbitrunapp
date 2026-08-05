@@ -1,6 +1,8 @@
 import { Capacitor, registerPlugin, type PluginListenerHandle } from "@capacitor/core";
 
 export type OrbitGeoPoint = {
+  sessionId: string;
+  sequence: number;
   timestamp: number;
   latitude: number;
   longitude: number;
@@ -14,10 +16,10 @@ export type OrbitGeoPoint = {
 type OrbitGeoPlugin = {
   checkPermissions(): Promise<{ location: string }>;
   requestPermissions(): Promise<{ location: string }>;
-  start(): Promise<{ started: boolean }>;
+  start(options: { sessionId: string }): Promise<{ started: boolean; sessionId: string }>;
   stop(): Promise<{ stopped: boolean }>;
-  flush(): Promise<{ points: OrbitGeoPoint[]; through: number }>;
-  acknowledge(options: { through: number }): Promise<{ remaining: number }>;
+  flush(): Promise<{ points: OrbitGeoPoint[]; throughSequence: number; sessionId: string }>;
+  acknowledge(options: { throughSequence: number }): Promise<{ remaining: number }>;
   addListener(
     event: "orbitGeoPosition",
     cb: (point: OrbitGeoPoint) => void,
@@ -64,14 +66,28 @@ export type OrbitGeoHandle = {
   stop: () => Promise<void>;
 };
 
+function newSessionId(): string {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  } catch {
+    /* fall through */
+  }
+  return `run-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 /**
  * Starts native background GPS.
  *
- * Order matters: permission → attach listener → start() → flush/replay/ack,
- * so no live or buffered fix can be dropped between the calls.
+ * Ordering guarantees:
+ * - First start: listeners → flush/replay/acknowledge → start(). start() is
+ *   never called before the first flush, so leftovers can never leak into the
+ *   new session.
+ * - Resume: live events are queued while flush() runs; replay + queue are then
+ *   merged, sorted and deduped by `sequence` before direct delivery resumes.
+ * - Stop: flush → replay → acknowledge → stop, then idempotent listener removal.
  *
- * Live and replayed points are merged into one strictly increasing,
- * duplicate-free stream (sorted + deduped by timestamp).
+ * The native buffer is crash resistant on a best-effort basis; OS termination
+ * or GPS/hardware failure can still lose points.
  */
 export async function startOrbitGeo(
   onPosition: (pos: GeolocationPosition) => void,
@@ -80,36 +96,49 @@ export async function startOrbitGeo(
   if (!isOrbitGeoAvailable()) return null;
 
   let stopped = false;
-  let lastTs = 0;
-  const recent = new Set<number>();
+  let queueing = false;
+  let liveQueue: OrbitGeoPoint[] = [];
+  let lastSequence = -1;
+  const seen = new Set<number>();
+  const sessionId = newSessionId();
 
-  const emit = (points: OrbitGeoPoint[]) => {
-    const sorted = [...points].sort((a, b) => a.timestamp - b.timestamp);
+  const deliver = (points: OrbitGeoPoint[]) => {
+    const sorted = [...points]
+      .filter((p) => p && typeof p.sequence === "number")
+      .sort((a, b) => a.sequence - b.sequence);
     for (const p of sorted) {
-      if (!p || typeof p.timestamp !== "number") continue;
-      if (p.timestamp < lastTs || recent.has(p.timestamp)) continue;
-      recent.add(p.timestamp);
-      if (recent.size > 500) {
-        // Trim oldest entries — anything older than lastTs is already filtered.
-        for (const ts of recent) {
-          if (ts < lastTs) recent.delete(ts);
-          if (recent.size <= 250) break;
+      if (p.sequence <= lastSequence || seen.has(p.sequence)) continue;
+      seen.add(p.sequence);
+      if (seen.size > 1000) {
+        for (const s of seen) {
+          if (s <= lastSequence) seen.delete(s);
+          if (seen.size <= 500) break;
         }
       }
-      lastTs = p.timestamp;
+      lastSequence = p.sequence;
       onPosition(toBrowserGeoPosition(p));
     }
   };
 
+  /** flush → merge with queued live points → deliver → acknowledge. */
   const drain = async () => {
+    queueing = true;
     try {
       const res = await OrbitGeo.flush();
-      if (res?.points?.length) {
-        emit(res.points);
-        await OrbitGeo.acknowledge({ through: res.through });
+      const replay = res?.points ?? [];
+      const queued = liveQueue;
+      liveQueue = [];
+      if (replay.length || queued.length) deliver([...replay, ...queued]);
+      if (typeof res?.throughSequence === "number" && res.throughSequence >= 0) {
+        await OrbitGeo.acknowledge({ throughSequence: res.throughSequence });
       }
     } catch {
-      /* ignore */
+      // Deliver whatever was queued so live tracking never stalls.
+      const queued = liveQueue;
+      liveQueue = [];
+      if (queued.length) deliver(queued);
+    } finally {
+      queueing = false;
     }
   };
 
@@ -123,11 +152,13 @@ export async function startOrbitGeo(
     /* continue — start() reports a real failure */
   }
 
-  // 1. Listeners BEFORE start()
+  // 1. Listeners BEFORE anything else.
   const listeners: PluginListenerHandle[] = [];
   listeners.push(
     await OrbitGeo.addListener("orbitGeoPosition", (p) => {
-      if (!stopped) emit([p]);
+      if (stopped) return;
+      if (queueing) liveQueue.push(p);
+      else deliver([p]);
     }),
   );
   if (onError) {
@@ -138,20 +169,40 @@ export async function startOrbitGeo(
     );
   }
 
-  // 2. start()
+  let listenersRemoved = false;
+  const removeListeners = async () => {
+    if (listenersRemoved) return;
+    listenersRemoved = true;
+    for (const l of listeners) {
+      try {
+        await l.remove();
+      } catch {
+        /* ignore */
+      }
+    }
+    try {
+      await appListener?.remove();
+    } catch {
+      /* ignore */
+    }
+    appListener = null;
+  };
+
+  let appListener: PluginListenerHandle | null = null;
+
+  // 2. flush / replay / acknowledge — drains leftovers from any earlier session.
+  await drain();
+
+  // 3. start() — only now does the new session begin.
   try {
-    await OrbitGeo.start();
+    await OrbitGeo.start({ sessionId });
   } catch (e) {
     onError?.({ message: e instanceof Error ? e.message : "Kunne ikke starte GPS." });
-    for (const l of listeners) await l.remove();
+    await removeListeners();
     return null;
   }
 
-  // 3. Replay anything buffered (previous background session / cold start)
-  await drain();
-
-  // 4. Re-drain whenever the app comes back to the foreground
-  let appListener: PluginListenerHandle | null = null;
+  // 4. Re-drain whenever the app comes back to the foreground.
   try {
     const { App } = await import("@capacitor/app");
     appListener = await App.addListener("appStateChange", ({ isActive }) => {
@@ -163,29 +214,16 @@ export async function startOrbitGeo(
 
   return {
     stop: async () => {
+      if (stopped) return;
+      // flush → replay → acknowledge → stop
+      await drain();
       stopped = true;
-      try {
-        await drain();
-      } catch {
-        /* ignore */
-      }
       try {
         await OrbitGeo.stop();
       } catch {
         /* ignore */
       }
-      for (const l of listeners) {
-        try {
-          await l.remove();
-        } catch {
-          /* ignore */
-        }
-      }
-      try {
-        await appListener?.remove();
-      } catch {
-        /* ignore */
-      }
+      await removeListeners();
     },
   };
 }
