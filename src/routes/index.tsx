@@ -13,6 +13,7 @@ import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
 import SourceSignalChip from "@/components/SourceSignalChip";
+import { openAppLocationSettings } from "@/lib/orbit-geo";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -271,6 +272,23 @@ function RunPage() {
             </div>
           </div>
         )}
+        {!t.permissionError && t.needsAlwaysPermission && (
+          <div className="absolute inset-x-3 bottom-3">
+            <div className="glass-strong rounded-xl px-3 py-2 text-[11px] text-center">
+              <p className="text-muted-foreground">
+                Sæt Lokalitet til «Altid», ellers stopper trackingen når skærmen låses.
+              </p>
+              <button
+                type="button"
+                onClick={() => void openAppLocationSettings()}
+                className="mt-1.5 rounded-lg bg-neon px-3 py-1 text-[11px] font-bold text-primary-foreground"
+              >
+                Åbn indstillinger
+              </button>
+            </div>
+          </div>
+        )}
+
         {profile.activityEnvironment !== "indoor" && (
           <div className="absolute bottom-3 right-3 glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 text-[10px] font-semibold">
             <span className="flex items-center gap-1">

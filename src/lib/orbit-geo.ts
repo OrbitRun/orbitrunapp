@@ -3,7 +3,8 @@
 // OrbitGeo uses CLLocationManager with background location updates, so fixes
 // keep arriving while the screen is locked. Every fix is also buffered
 // natively, so `drainSince()` can replay whatever JS missed while the WebView
-// was suspended.
+// was suspended. Events are NOT retained natively — the buffer is the single
+// authoritative source for missed points, which avoids double-counting.
 //
 // Web and Android are untouched — see `geolocation-native.ts`.
 
@@ -19,14 +20,29 @@ export type OrbitGeoPoint = {
   speed: number | null;
   heading: number | null;
   timestamp: number;
+  /** 50–100 m fix: usable for GPS status, not for distance maths. */
+  lowQuality?: boolean;
 };
 
-type PermissionResult = { location: string; coarseLocation?: string };
+/** iOS distinguishes "Always" from "While Using" — a run app needs "always". */
+export type OrbitGeoAuth = "always" | "whenInUse" | "denied" | "prompt";
+
+type PermissionResult = { location: OrbitGeoAuth; coarseLocation?: OrbitGeoAuth };
+
+export type OrbitGeoStartResult = {
+  started: boolean;
+  requiresAlwaysPermission?: boolean;
+  denied?: boolean;
+  permission?: OrbitGeoAuth;
+};
 
 export type OrbitGeoPlugin = {
-  start(options?: Record<string, never>): Promise<{ started: boolean }>;
+  start(options?: Record<string, never>): Promise<OrbitGeoStartResult>;
   stop(): Promise<{ stopped: boolean }>;
-  drain(options: { since: number }): Promise<{ points: OrbitGeoPoint[] }>;
+  drain(options: { since: number; acknowledgeThrough?: number }): Promise<{
+    points: OrbitGeoPoint[];
+  }>;
+  acknowledge(options: { through: number }): Promise<{ remaining: number }>;
   clearBuffer(): Promise<void>;
   getCurrentPosition(): Promise<Partial<OrbitGeoPoint>>;
   checkPermissions(): Promise<PermissionResult>;
@@ -38,6 +54,10 @@ export type OrbitGeoPlugin = {
   addListener(
     event: "orbitLocationError",
     cb: (err: { message: string }) => void,
+  ): Promise<PluginListenerHandle>;
+  addListener(
+    event: "orbitAuthChange",
+    cb: (e: { status: OrbitGeoAuth }) => void,
   ): Promise<PluginListenerHandle>;
 };
 
@@ -67,26 +87,38 @@ export function orbitGeoToPosition(p: OrbitGeoPoint): NativePosition {
   };
 }
 
-export async function requestOrbitGeoPermission(): Promise<"granted" | "denied" | "prompt"> {
+export async function checkOrbitGeoPermission(): Promise<OrbitGeoAuth> {
   try {
     const cur = await OrbitGeo.checkPermissions();
-    if (cur?.location === "granted") return "granted";
-    const res = await OrbitGeo.requestPermissions({ always: true });
-    const s = res?.location;
-    if (s === "granted" || s === "denied") return s;
-    return "prompt";
+    return cur?.location ?? "prompt";
   } catch {
     return "prompt";
   }
 }
 
-export async function startBackgroundTracking(): Promise<boolean> {
+/**
+ * Resolves only once iOS has reported a final status — including the
+ * When-In-Use → Always upgrade, which is a second system prompt.
+ */
+export async function requestOrbitGeoPermission(): Promise<OrbitGeoAuth> {
   try {
-    await OrbitGeo.start();
-    return true;
+    const cur = await OrbitGeo.checkPermissions();
+    if (cur?.location === "always") return "always";
+    if (cur?.location === "denied") return "denied";
+    const res = await OrbitGeo.requestPermissions({ always: true });
+    return res?.location ?? "prompt";
+  } catch {
+    return "prompt";
+  }
+}
+
+export async function startBackgroundTracking(): Promise<OrbitGeoStartResult> {
+  try {
+    const res = await OrbitGeo.start();
+    return res ?? { started: false };
   } catch (e) {
     console.warn("[orbit-geo] start failed", (e as Error)?.message ?? e);
-    return false;
+    return { started: false };
   }
 }
 
@@ -101,6 +133,7 @@ export async function stopBackgroundTracking(): Promise<void> {
 export async function addLocationListener(
   onPoint: (p: OrbitGeoPoint) => void,
   onError?: (message: string) => void,
+  onAuthChange?: (status: OrbitGeoAuth) => void,
 ): Promise<() => void> {
   const handles: PluginListenerHandle[] = [];
   try {
@@ -112,6 +145,11 @@ export async function addLocationListener(
         ),
       );
     }
+    if (onAuthChange) {
+      handles.push(
+        await OrbitGeo.addListener("orbitAuthChange", (e) => onAuthChange(e?.status ?? "prompt")),
+      );
+    }
   } catch {
     /* noop */
   }
@@ -120,12 +158,29 @@ export async function addLocationListener(
   };
 }
 
-export async function drainSince(since: number): Promise<OrbitGeoPoint[]> {
+/**
+ * Returns everything buffered after `since`, optionally dropping every point
+ * up to and including `acknowledgeThrough` so the native buffer stays small.
+ */
+export async function drainSince(
+  since: number,
+  acknowledgeThrough?: number,
+): Promise<OrbitGeoPoint[]> {
   try {
-    const res = await OrbitGeo.drain({ since });
+    const res = await OrbitGeo.drain(
+      acknowledgeThrough != null ? { since, acknowledgeThrough } : { since },
+    );
     return res?.points ?? [];
   } catch {
     return [];
+  }
+}
+
+export async function acknowledgeOrbitGeoThrough(through: number): Promise<void> {
+  try {
+    await OrbitGeo.acknowledge({ through });
+  } catch {
+    /* noop */
   }
 }
 
@@ -144,5 +199,15 @@ export async function orbitGeoCurrentPosition(): Promise<NativePosition | null> 
     return orbitGeoToPosition(p as OrbitGeoPoint);
   } catch {
     return null;
+  }
+}
+
+/** Opens iOS Settings → Orbit Run so the user can switch Location to "Always". */
+export async function openAppLocationSettings(): Promise<void> {
+  try {
+    const { AppLauncher } = await import("@capacitor/app-launcher");
+    await AppLauncher.openUrl({ url: "app-settings:" });
+  } catch {
+    /* noop */
   }
 }

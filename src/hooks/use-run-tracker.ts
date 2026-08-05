@@ -45,6 +45,7 @@ import {
 import {
   addLocationListener as addOrbitGeoListener,
   clearOrbitGeoBuffer,
+  acknowledgeOrbitGeoThrough as orbitGeoAcknowledge,
   drainSince as orbitGeoDrainSince,
   isOrbitGeoAvailable,
   orbitGeoCurrentPosition,
@@ -71,6 +72,9 @@ type State = {
   points: GeoPoint[];
   splits: Split[];
   permissionError: string | null;
+  // iOS only: location is granted as "While Using", so background tracking
+  // will stop when the screen locks until the user picks "Always".
+  needsAlwaysPermission: boolean;
   gpsAccuracyM: number | null;
   gpsReady: boolean;
   ghostDeltaMs: number | null;
@@ -99,6 +103,7 @@ const initial: State = {
   points: [],
   splits: [],
   permissionError: null,
+  needsAlwaysPermission: false,
   gpsAccuracyM: null,
   gpsReady: false,
   ghostDeltaMs: null,
@@ -587,16 +592,24 @@ export function useRunTracker() {
   }, []);
 
   // Feed a native fix into the shared pipeline, tracking the newest timestamp
-  // so we know where to resume from after a background gap.
+  // so we know where to resume from after a background gap. The timestamp
+  // guard also dedupes: a point can never be counted twice, no matter whether
+  // it arrived as a live event or through a drain replay.
   const consumeNativePoint = useCallback(
-    (pos: Parameters<typeof toBrowserPosition>[0]) => {
+    (pos: Parameters<typeof toBrowserPosition>[0], lowQuality = false) => {
       if (pos.timestamp <= lastFixTsRef.current) return;
       lastFixTsRef.current = pos.timestamp;
       setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
+      if (lowQuality) {
+        // 50–100 m fix: good enough to show signal, too noisy for distance.
+        setState((p) => ({ ...p, gpsAccuracyM: pos.coords.accuracy }));
+        return;
+      }
       handlePosition(toBrowserPosition(pos));
     },
     [handlePosition],
   );
+
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
@@ -611,11 +624,20 @@ export function useRunTracker() {
           setState((p) => ({ ...p, permissionError: "Location permission denied." }));
           return;
         }
+        setState((p) => ({ ...p, needsAlwaysPermission: perm !== "always" }));
         orbitGeoStopRef.current = await addOrbitGeoListener(
-          (pt) => consumeNativePoint(orbitGeoToPosition(pt)),
+          (pt) => consumeNativePoint(orbitGeoToPosition(pt), pt.lowQuality === true),
           (message) => handleError({ message } as GeolocationPositionError),
+          (status) => setState((p) => ({ ...p, needsAlwaysPermission: status !== "always" })),
         );
-        await startBackgroundTracking();
+        const res = await startBackgroundTracking();
+        // With "While Using" the run still tracks in the foreground — it just
+        // won't survive a screen lock until Location is set to "Always".
+        setState((p) => ({
+          ...p,
+          needsAlwaysPermission: res.requiresAlwaysPermission === true,
+          permissionError: res.denied ? "Location permission denied." : p.permissionError,
+        }));
         const first = await orbitGeoCurrentPosition();
         if (first) consumeNativePoint(first);
       })();
@@ -682,11 +704,17 @@ export function useRunTracker() {
     let cancelled = false;
     const catchUp = async () => {
       if (!orbitGeoActiveRef.current) return;
-      const missed = await orbitGeoDrainSince(lastFixTsRef.current);
+      const since = lastFixTsRef.current;
+      // Acknowledge everything we already consumed so the native buffer does
+      // not keep thousands of processed fixes on disk during a long run.
+      const missed = await orbitGeoDrainSince(since, since);
       if (cancelled || missed.length === 0) return;
-      for (const pt of missed.sort((a, b) => a.timestamp - b.timestamp)) {
-        consumeNativePoint(orbitGeoToPosition(pt));
+      const ordered = missed.slice().sort((a, b) => a.timestamp - b.timestamp);
+      for (const pt of ordered) {
+        consumeNativePoint(orbitGeoToPosition(pt), pt.lowQuality === true);
       }
+      const newest = ordered[ordered.length - 1]?.timestamp;
+      if (newest) void orbitGeoAcknowledge(newest);
     };
     const onVisible = () => {
       if (document.visibilityState === "visible") void catchUp();
