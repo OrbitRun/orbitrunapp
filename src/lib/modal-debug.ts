@@ -38,6 +38,5 @@ export function pruneOrphanPortals() {
 }
 
 /** Records an overlay open/close in the freeze lifecycle log. */
-export function logModalState(name: string, open: boolean) {
-  logOverlayState(name, open);
-}
+export { logOverlayState };
+export const logModalState = logOverlayState;
