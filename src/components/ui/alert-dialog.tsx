@@ -3,7 +3,7 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { logModalState, resetBodyLocks } from "@/lib/modal-debug";
+import { logOverlayState, resetBodyLocks } from "@/lib/modal-debug";
 
 // AlertDialog is always modal in Radix (no `modal` prop), so the WKWebView
 // freeze is handled by resetting body locks when the content unmounts, plus the
@@ -34,10 +34,10 @@ const AlertDialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
 >(({ className, ...props }, ref) => {
   React.useEffect(() => {
-    logModalState("AlertDialog", true);
+    logOverlayState("AlertDialog", true);
     return () => {
       resetBodyLocks();
-      logModalState("AlertDialog", false);
+      logOverlayState("AlertDialog", false);
     };
   }, []);
 

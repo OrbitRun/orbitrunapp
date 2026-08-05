@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { logModalState, resetBodyLocks } from "@/lib/modal-debug";
+import { logOverlayState, resetBodyLocks } from "@/lib/modal-debug";
 
 // Non-modal for the same WKWebView freeze reason documented in dialog.tsx.
 const Sheet = ({
@@ -66,10 +66,10 @@ const SheetContent = React.forwardRef<
   SheetContentProps
 >(({ side = "right", className, children, ...props }, ref) => {
   React.useEffect(() => {
-    logModalState("Sheet", true);
+    logOverlayState("Sheet", true);
     return () => {
       resetBodyLocks();
-      logModalState("Sheet", false);
+      logOverlayState("Sheet", false);
     };
   }, []);
 
