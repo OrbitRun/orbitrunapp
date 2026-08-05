@@ -108,7 +108,9 @@ export async function addLocationListener(
     handles.push(await OrbitGeo.addListener("orbitLocation", onPoint));
     if (onError) {
       handles.push(
-        await OrbitGeo.addListener("orbitLocationError", (e) => onError(e?.message ?? "Location error")),
+        await OrbitGeo.addListener("orbitLocationError", (e) =>
+          onError(e?.message ?? "Location error"),
+        ),
       );
     }
   } catch {
