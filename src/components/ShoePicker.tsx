@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { loadShoes, type Shoe } from "@/lib/shoes";
 import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-import { logModalState } from "@/lib/modal-debug";
+import { useFreezeTrace, useOverlayTrace } from "@/hooks/use-freeze-trace";
 
 type Props = {
   open: boolean;
@@ -15,10 +15,8 @@ type Props = {
 export default function ShoePicker({ open, onOpenChange, currentShoeId, onSelect }: Props) {
   const { t } = useI18n();
   const [shoes, setShoes] = useState<Shoe[]>([]);
-
-  useEffect(() => {
-    logModalState("ShoePicker", open);
-  }, [open]);
+  useFreezeTrace("ShoePicker");
+  useOverlayTrace("ShoePicker", open);
 
   useEffect(() => {
     if (open) {
