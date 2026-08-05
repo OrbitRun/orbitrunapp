@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { resetBodyLocks } from "@/lib/modal-debug";
 import { useFreezeTrace } from "@/hooks/use-freeze-trace";
+import { logDiagnosticEvent } from "@/lib/freeze-log";
 import {
   saveProfile,
   type ExperienceLevel,
@@ -21,8 +21,13 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   useFreezeTrace("Onboarding");
 
   useEffect(() => {
-    resetBodyLocks();
-    return () => resetBodyLocks();
+    const input = document.querySelector('[data-diag-target="name-input"]');
+    logDiagnosticEvent("name-state-render", input, `state=${JSON.stringify(name)}`);
+  }, [name, step]);
+
+  useEffect(() => {
+    document.body.classList.add("onboarding-open");
+    return () => document.body.classList.remove("onboarding-open");
   }, []);
 
   const goals: RunningGoal[] = ["run5k", "run10k", "halfMarathon", "marathon", "runFaster", "weightLoss"];
@@ -48,7 +53,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5 overflow-y-auto py-8">
+    <div className="absolute inset-0 z-[100] bg-background/95 backdrop-blur-xl grid place-items-center px-5 overflow-y-auto py-8">
       <div className="w-full max-w-md glass-strong rounded-3xl p-6 shadow-card" style={{ touchAction: "manipulation" }}>
         <div className="flex items-center gap-2 text-neon mb-1">
           <Sparkles className="h-4 w-4" />
@@ -72,8 +77,31 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             <div>
               <label className="text-sm font-semibold">{t("onb.step.name")}</label>
               <input
+                data-diag-target="name-input"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onBeforeInput={(e) =>
+                  logDiagnosticEvent(
+                    "name-beforeinput-react",
+                    e.currentTarget,
+                    `state=${JSON.stringify(name)} dom=${JSON.stringify(e.currentTarget.value)}`,
+                  )
+                }
+                onInput={(e) =>
+                  logDiagnosticEvent(
+                    "name-input-react",
+                    e.currentTarget,
+                    `state=${JSON.stringify(name)} dom=${JSON.stringify(e.currentTarget.value)}`,
+                  )
+                }
+                onChange={(e) => {
+                  const next = e.target.value;
+                  logDiagnosticEvent(
+                    "name-onChange",
+                    e.currentTarget,
+                    `previous=${JSON.stringify(name)} next=${JSON.stringify(next)}`,
+                  );
+                  setName(next);
+                }}
                 placeholder={t("profile.namePlaceholder")}
                 enterKeyHint="done"
                 onKeyDown={(e) => {
@@ -136,6 +164,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
 
         <div className="mt-6 flex items-center justify-between gap-2">
           <button
+            data-diag-target="skip-button"
             onClick={step === 0 ? skip : () => setStep(step - 1)}
             className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition flex items-center gap-1.5"
           >
@@ -150,6 +179,7 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
           </button>
           {step < 2 ? (
             <button
+              data-diag-target="next-button"
               onClick={() => setStep(step + 1)}
               className="px-5 py-2.5 rounded-xl bg-neon text-primary-foreground text-xs font-black uppercase tracking-[0.15em] active:scale-95 transition flex items-center gap-1.5"
             >

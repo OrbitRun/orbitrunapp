@@ -39,6 +39,7 @@ export default function ShoePicker({ open, onOpenChange, currentShoeId, onSelect
             return (
               <li key={s.id}>
                 <button
+                  data-diag-target="shoe-button"
                   type="button"
                   onClick={() => onSelect(s.id)}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl glass active:scale-[0.98] transition text-left"
