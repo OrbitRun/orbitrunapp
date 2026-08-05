@@ -948,6 +948,17 @@ export function useRunTracker() {
       nativeWatchIdRef.current = null;
       void nativeClearWatch(id);
     }
+    if (orbitGeoActiveRef.current) {
+      orbitGeoActiveRef.current = false;
+      orbitGeoStopRef.current?.();
+      orbitGeoStopRef.current = null;
+      lastFixTsRef.current = 0;
+      void (async () => {
+        await stopBackgroundTracking();
+        await clearOrbitGeoBuffer();
+      })();
+    }
+
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     indoorStopRef.current?.();
