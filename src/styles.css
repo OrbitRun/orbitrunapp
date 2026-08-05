@@ -57,6 +57,7 @@
 :root,
 .dark {
   --radius: 1rem;
+  --bottom-nav-height: 68px;
 
   /* Deep luxury black canvas */
   --background: oklch(0.14 0.012 240);
