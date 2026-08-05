@@ -74,7 +74,7 @@ function HistoryPage() {
   const totalTime = filteredRuns.reduce((a, r) => a + r.durationMs, 0);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-4">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3">
         <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-bold">
           {t("history.eyebrow")}

@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react";
 import { loadRuns } from "@/lib/run-types";
 import { nativeRequest } from "@/lib/native-http";
-import { isWebPlatform } from "@/lib/geolocation-native";
 
 export type CurrentEnv = {
   tempC: number;
@@ -81,10 +80,9 @@ export function useCurrentEnv(): CurrentEnv | null {
       }
     }
     if (lat == null || lng == null) {
-      // Web only: silent fallback probe. On native we never touch
-      // navigator.geolocation — that would trigger the WKWebView location
-      // dialog without the user asking for it.
-      if (isWebPlatform() && typeof navigator !== "undefined" && navigator.geolocation) {
+      // Fall back to navigator geolocation if available (silent — no prompt
+      // unless user already granted permission for the run).
+      if (typeof navigator !== "undefined" && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             void fetchEnv(pos.coords.latitude, pos.coords.longitude).then((e) => {

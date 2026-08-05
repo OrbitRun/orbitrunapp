@@ -7,7 +7,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useI18n } from "@/lib/i18n";
-import { useFreezeTrace, useOverlayTrace } from "@/hooks/use-freeze-trace";
 import type { Run } from "@/lib/run-types";
 import {
   generateShareCard,
@@ -31,9 +30,6 @@ export default function ShareSheet({ open, onOpenChange, run }: Props) {
   const [note, setNote] = useState<string | null>(null);
   const blobRef = useRef<Blob | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  useFreezeTrace("ShareSheet");
-  useOverlayTrace("ShareSheet", open);
 
   // Regenerate preview whenever mode/photo changes while the sheet is open.
   useEffect(() => {
@@ -180,7 +176,6 @@ export default function ShareSheet({ open, onOpenChange, run }: Props) {
 
         {/* Share button */}
         <button
-          data-diag-target="share-button"
           onClick={handleShare}
           disabled={sharing || generating || !previewUrl}
           className="mt-4 w-full h-14 rounded-2xl bg-neon text-primary-foreground flex items-center justify-center gap-2 text-sm font-black uppercase tracking-[0.18em] active:scale-95 transition disabled:opacity-60"

@@ -37,7 +37,5 @@ dist-ssr
 !.env.example
 
 # Capacitor native shell (regenerated via `npx cap add ios`)
-/ios/
-# ...but the iOS template sources MUST stay in the repo
-!templates/ios/
+ios/
 android/

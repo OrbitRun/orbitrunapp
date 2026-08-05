@@ -36,13 +36,6 @@ export function isNativeGeolocationAvailable(): boolean {
   return Capacitor.isNativePlatform() && getPlatform() !== "web";
 }
 
-// Single source of truth for "may we touch navigator.geolocation?".
-// NEVER call navigator.geolocation without this guard — on iOS/Android the
-// WKWebView would show the "localhost would like to use your location" dialog.
-export function isWebPlatform(): boolean {
-  return getPlatform() === "web" && !Capacitor.isNativePlatform();
-}
-
 // Race a promise against a timeout so a hung bridge surfaces as an error
 // instead of freezing the UI forever.
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {

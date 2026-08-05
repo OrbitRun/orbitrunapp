@@ -5,11 +5,10 @@ import appCss from "../styles.css?url";
 import BottomNav from "@/components/BottomNav";
 import PrAchievement from "@/components/PrAchievement";
 import SplashScreen from "@/components/SplashScreen";
-import FreezeDiagnostics from "@/components/FreezeDiagnostics";
 import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
 import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
-
+import { useGpsWarmup } from "@/hooks/use-gps-warmup";
 import { initSpotifyDeepLinkListener } from "@/lib/spotify";
 
 function NotFoundComponent() {
@@ -100,19 +99,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   useHealthAutoSync();
   useSpotifyRunControl();
-
-  
+  useGpsWarmup();
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
     <I18nProvider>
-      <div className="app-shell">
-        <div className="app-content">
-          <Outlet />
-        </div>
+      <div className="min-h-screen pb-24 mb-[30px]">
+        <Outlet />
         <BottomNav />
         <PrAchievement />
       </div>
-      <FreezeDiagnostics />
       <SplashScreen />
     </I18nProvider>
   );

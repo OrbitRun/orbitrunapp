@@ -98,7 +98,7 @@ function RunDetailPage() {
   const range = Math.max(1, max - min);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-4">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
       <header className="py-3 flex items-center justify-between">
         <Link to="/history" className="h-9 w-9 grid place-items-center rounded-full glass" aria-label={t("history.back")}>
           <ArrowLeft className="h-4 w-4" />
@@ -145,7 +145,6 @@ function RunDetailPage() {
         return (
           <div className="mt-3 flex items-stretch gap-2">
             <button
-              data-diag-target="shoe-button"
               type="button"
               onClick={() => setPickingShoe(true)}
               className="flex-1 min-w-0 flex items-center gap-3 p-3 rounded-2xl glass active:scale-[0.99] transition text-left"
@@ -235,7 +234,6 @@ function RunDetailPage() {
 
       {/* Share button — opens the share sheet */}
       <button
-        data-diag-target="share-button"
         onClick={() => setShareOpen(true)}
         className="mt-3 w-full h-12 rounded-2xl border border-neon/40 bg-neon/10 text-neon flex items-center justify-center gap-2 text-xs font-black uppercase tracking-[0.18em] active:scale-95 transition"
       >

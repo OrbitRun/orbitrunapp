@@ -13,7 +13,6 @@ import FocusRunView from "@/components/FocusRunView";
 import RecoverRunBanner from "@/components/RecoverRunBanner";
 import DailyStatusStrip from "@/components/DailyStatusStrip";
 import SourceSignalChip from "@/components/SourceSignalChip";
-import { openAppLocationSettings } from "@/lib/orbit-geo";
 
 import HealthPermissionSheet, { shouldAskHealthPermission } from "@/components/HealthPermissionSheet";
 
@@ -95,8 +94,12 @@ function RunPage() {
     return () => window.removeEventListener(GHOST_CHANGED_EVENT, onChange);
   }, []);
 
-  // No automatic GPS warm-up: location is only requested when the user
-  // actively starts a run or taps the map's locate button.
+  // Warm GPS as soon as the page mounts (only if permission already granted),
+  // so the first fix is cached when the user taps Start.
+  useEffect(() => {
+    t.warmGps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isActive = t.status === "running" || t.status === "paused";
 
@@ -169,7 +172,7 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-4 run-page-content">
+    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] [padding-bottom:calc(env(safe-area-inset-bottom)+6rem)]">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
@@ -240,7 +243,7 @@ function RunPage() {
 
       <section className="relative">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card run-map flex flex-col items-center justify-center bg-white/5">
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[clamp(160px,28dvh,280px)] flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -252,7 +255,7 @@ function RunPage() {
           <div className="rounded-3xl overflow-hidden border border-border shadow-card">
             <RunMap
               points={t.points}
-              className="run-map w-full"
+              className="h-[clamp(160px,28dvh,280px)] w-full"
               interactive={!isActive}
               ghost={
                 t.ghost
@@ -272,23 +275,6 @@ function RunPage() {
             </div>
           </div>
         )}
-        {!t.permissionError && t.needsAlwaysPermission && (
-          <div className="absolute inset-x-3 bottom-3">
-            <div className="glass-strong rounded-xl px-3 py-2 text-[11px] text-center">
-              <p className="text-muted-foreground">
-                Sæt Lokalitet til «Altid», ellers stopper trackingen når skærmen låses.
-              </p>
-              <button
-                type="button"
-                onClick={() => void openAppLocationSettings()}
-                className="mt-1.5 rounded-lg bg-neon px-3 py-1 text-[11px] font-bold text-primary-foreground"
-              >
-                Åbn indstillinger
-              </button>
-            </div>
-          </div>
-        )}
-
         {profile.activityEnvironment !== "indoor" && (
           <div className="absolute bottom-3 right-3 glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 text-[10px] font-semibold">
             <span className="flex items-center gap-1">

@@ -4,7 +4,6 @@ import RunMap from "@/components/RunMap";
 import MusicHubFull from "@/components/MusicHubFull";
 import ZonePacingChip from "@/components/ZonePacingChip";
 import IndoorRunView from "@/components/IndoorRunView";
-import { resetBodyLocks } from "@/lib/modal-debug";
 import { useI18n } from "@/lib/i18n";
 import { resetZoneCueState, speakPacingCue, speakZoneEntered } from "@/lib/audio-cues";
 import { loadProfile } from "@/lib/user-profile";
@@ -102,13 +101,17 @@ export default function FocusRunView({
   // Reset on unmount so a new run starts fresh.
   useEffect(() => () => resetZoneCueState(), []);
 
-  // Hide the bottom nav only. Scroll locking lives in the app shell CSS, so we
-  // never mutate body styles here (they can survive an interrupted unmount on iOS).
+  // Lock global UI: hide bottom nav, kill body scroll/bounce.
   useEffect(() => {
     document.body.classList.add("focus-mode");
+    const prevOverflow = document.body.style.overflow;
+    const prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
     return () => {
       document.body.classList.remove("focus-mode");
-      resetBodyLocks();
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
     };
   }, []);
 
@@ -209,13 +212,13 @@ export default function FocusRunView({
   if (profile.activityEnvironment === "indoor") {
     return (
       <div
-        className="absolute inset-0 z-[60] flex flex-col bg-background"
+        className="fixed inset-0 z-[60] flex flex-col bg-background"
         style={{
           height: "100dvh",
           touchAction: "none",
           overscrollBehavior: "contain",
-          paddingTop: "0.5rem",
-          paddingBottom: "0.5rem",
+          paddingTop: "max(env(safe-area-inset-top), 0.5rem)",
+          paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
         }}
       >
         <IndoorRunView
@@ -230,13 +233,13 @@ export default function FocusRunView({
 
   return (
     <div
-      className="absolute inset-0 z-[60] flex flex-col bg-background"
+      className="fixed inset-0 z-[60] flex flex-col bg-background"
       style={{
         height: "100dvh",
         touchAction: "none",
         overscrollBehavior: "contain",
-        paddingTop: "0.5rem",
-        paddingBottom: "0.5rem",
+        paddingTop: "max(env(safe-area-inset-top), 0.5rem)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 0.5rem)",
       }}
     >
       {hrSpike && (

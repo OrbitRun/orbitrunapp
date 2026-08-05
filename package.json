@@ -5,15 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node scripts/prepare-capacitor-build.mjs",
     "build:dev": "vite build --mode development",
-    "build:ios": "npm run build:capacitor && npx cap sync ios && node scripts/apply-ios-template.mjs && node scripts/verify-ios-build.mjs",
-    "verify:ios": "node scripts/verify-ios-build.mjs",
+    "build:ios": "npm run build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "build:capacitor": "vite build --config vite.config.capacitor.ts && node scripts/finalize-capacitor-spa.mjs",
-    "preview:capacitor": "vite preview --config vite.config.capacitor.ts"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@capacitor-community/bluetooth-le": "8.1.3",
@@ -23,7 +20,6 @@
     "@capacitor/core": "8.3.3",
     "@capacitor/geolocation": "8.2.0",
     "@capacitor/ios": "8.3.3",
-    "@capacitor/keyboard": "8",
     "@capacitor/local-notifications": "8.1.0",
     "@capacitor/preferences": "8",
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -57,9 +53,9 @@
     "@supabase/supabase-js": "^2.105.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.83.0",
-    "@tanstack/react-router": "1.170.18",
-    "@tanstack/react-start": "1.168.34",
-    "@tanstack/router-plugin": "1.168.23",
+    "@tanstack/react-router": "^1.168.0",
+    "@tanstack/react-start": "^1.167.14",
+    "@tanstack/router-plugin": "^1.167.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -102,31 +98,5 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
-  },
-  "overrides": {
-    "seroval": "^1.6.0",
-    "seroval-plugins": "^1.6.0",
-    "@tanstack/react-router": "1.170.18",
-    "@tanstack/router-core": "1.171.15",
-    "@tanstack/history": "1.162.0",
-    "@tanstack/router-utils": "1.162.2",
-    "@tanstack/start-client-core": "1.170.14",
-    "@tanstack/start-server-core": "1.169.17",
-    "@tanstack/start-plugin-core": "1.171.25",
-    "@tanstack/react-start-client": "1.168.16",
-    "@tanstack/react-start-server": "1.167.22"
-  },
-  "resolutions": {
-    "seroval": "^1.6.0",
-    "seroval-plugins": "^1.6.0",
-    "@tanstack/react-router": "1.170.18",
-    "@tanstack/router-core": "1.171.15",
-    "@tanstack/history": "1.162.0",
-    "@tanstack/router-utils": "1.162.2",
-    "@tanstack/start-client-core": "1.170.14",
-    "@tanstack/start-server-core": "1.169.17",
-    "@tanstack/start-plugin-core": "1.171.25",
-    "@tanstack/react-start-client": "1.168.16",
-    "@tanstack/react-start-server": "1.167.22"
   }
 }

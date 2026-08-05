@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import { resetBodyLocks } from "@/lib/modal-debug";
 import { useI18n } from "@/lib/i18n";
 
 type Kind = "privacy" | "terms";
@@ -22,10 +21,11 @@ export default function LegalSheet({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    // No manual body scroll-lock: the app shell owns scrolling (see styles.css).
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      resetBodyLocks();
+      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 
@@ -56,6 +56,9 @@ export default function LegalSheet({
       <div
         className="relative w-full sm:max-w-md max-h-[88vh] flex flex-col rounded-t-3xl sm:rounded-3xl border border-white/10 bg-gradient-to-br from-[oklch(0.14_0.02_160)] to-[oklch(0.09_0.01_160)] shadow-card"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          paddingBottom: "max(env(safe-area-inset-bottom), 0px)",
+        }}
       >
         <div className="flex items-start gap-3 px-5 pt-5 pb-3 border-b border-white/10">
           <div className="flex-1 min-w-0">

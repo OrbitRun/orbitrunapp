@@ -5,8 +5,9 @@
 //
 // Final export checklist (run locally before opening Xcode):
 //   npm install
-//   npm run build:ios     # builds SPA, syncs iOS, applies + verifies templates
+//   npm run build         # produces dist/index.html (matches webDir)
 //   npx cap add ios       # first time only
+//   npx cap sync ios      # every time the web app changes
 //   npx cap open ios      # Archive → TestFlight
 type CapacitorConfig = {
   appId: string;
@@ -26,7 +27,7 @@ const config: CapacitorConfig = {
   webDir: "dist",
   urlSchemes: ["jonas-orbit-run"],
   ios: {
-    contentInset: "never",
+    contentInset: "always",
     scrollEnabled: true,
   },
   plugins: {
@@ -38,12 +39,6 @@ const config: CapacitorConfig = {
     // already bypass WKWebView CORS for Spotify / Open-Meteo without
     // needing the global patch.
     CapacitorHttp: { enabled: false },
-    // Native resize keeps the WKWebView layout in sync with the keyboard so
-    // the UI stays interactive after it closes. No auto-focus anywhere.
-    Keyboard: {
-      resize: "native",
-      resizeOnFullScreen: true,
-    },
   },
 };
 

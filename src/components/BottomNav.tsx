@@ -17,7 +17,7 @@ export default function BottomNav() {
     obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     return () => obs.disconnect();
   }, []);
-  if (focusMode || !profile.onboarded) return null;
+  if (focusMode) return null;
   const coachEnabled = profile.coachEnabled !== false;
   const items = [
     { to: "/", label: t("nav.run"), Icon: Activity },
@@ -26,10 +26,9 @@ export default function BottomNav() {
     { to: "/profile", label: t("nav.profile"), Icon: User },
   ] as const;
   return (
-    <nav className="bottom-nav relative z-40">
+    <nav className="fixed bottom-0 inset-x-0 z-40 pb-[max(env(safe-area-inset-bottom),12px)] pointer-events-none">
       <div className="mx-auto max-w-md px-4 pb-3">
-
-        <div className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around shadow-card">
+        <div className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around shadow-card pointer-events-auto">
           {items.map(({ to, label, Icon }) => {
             const active = location.pathname === to;
             return (

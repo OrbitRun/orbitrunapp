@@ -31,39 +31,8 @@ hvilket brækkede Mapbox GL's Web Worker → sort kort på iOS. Vores eksplicitt
 WKWebView CORS for Spotify / Open-Meteo uden den globale patch.
 
 Bemærk: `@capacitor-community/background-geolocation` er **fjernet**.
-Baggrunds-GPS leveres på iOS af vores eget native plugin **OrbitGeo**
-(`templates/ios/OrbitGeo.swift`), som bruger `CLLocationManager` med
-`kCLLocationAccuracyBestForNavigation`, `distanceFilter = 3`,
-`activityType = .fitness`, `allowsBackgroundLocationUpdates = true`,
-`pausesLocationUpdatesAutomatically = false` og
-`showsBackgroundLocationIndicator = true`.
-
-Hvert fix sendes til React via Capacitor-eventet `orbitLocation` **og** gemmes
-i en native buffer på disk. Når appen vender tilbage til forgrunden kalder
-`src/hooks/use-run-tracker.ts` `drain({ since })`, så punkter registreret mens
-WebView'en var suspenderet spilles ind i ruten. Der bruges **ikke** silent
-audio. `@capacitor/geolocation` bruges kun på Android; browser-GPS kun på web.
-
-Native filer:
-
-- `templates/ios/OrbitGeo.swift` → kopieres til `ios/App/App/OrbitGeo.swift`
-- `ios/App/App/Info.plist` (fra `templates/Info.plist`)
-- `ios/App/App.xcodeproj/project.pbxproj` (patches automatisk, så
-  `OrbitGeo.swift` indgår i app-targetets Sources)
-
-Registrering sker via `CAPBridgedPlugin` i Swift — Capacitor 6+ kræver ikke
-længere en Objective-C `CAP_PLUGIN`-makrofil.
-
-### Permission-krav
-
-Pluginet skelner mellem `always`, `whenInUse`, `denied` og `prompt`.
-Baggrundstracking (skærmlås) kræver **Altid**. Med "Ved brug" starter løbet
-stadig, men kun i forgrunden — appen viser da et banner med en knap til
-Indstillinger → Orbit Run → Lokalitet → Altid.
-
-Punkterne buffres native og hentes med `drain({ since, acknowledgeThrough })`.
-Events sendes uden `retainUntilConsumed`, så bufferen er den eneste kilde til
-missede punkter og et punkt aldrig tælles to gange.
+Baggrunds-GPS leveres af `@capacitor/geolocation` + `UIBackgroundModes=location`
++ "Always"-permission. Færre plugins = ingen SPM-konflikt.
 
 ---
 
@@ -72,11 +41,12 @@ missede punkter og et punkt aldrig tælles to gange.
 ```bash
 rm -rf node_modules package-lock.json ios
 npm install
+npm run build
 npx cap add ios
-npm run build:ios       # SPA-build + sync + native templates + verifikation
+node scripts/apply-ios-template.mjs   # injicerer Info.plist (Spotify, GPS, Health, BLE, Motion)
+npx cap sync ios
 npx cap open ios
 ```
-
 
 `rm -rf` af lockfile + `ios/` er obligatorisk efter plugin-ændringer —
 det er hovedårsagen til `CapApp-SPM` SPM-fejl i Xcode.
@@ -138,15 +108,18 @@ så web-buildet stadig virker. Almindelige fejl:
 
 Plugin-listen er uændret:
 ```bash
-npm run build:ios
+npm run build
+npx cap sync ios
 ```
 
 Plugin-listen ændret (eller SPM-fejl):
 ```bash
 rm -rf ios
 npm install
+npm run build
 npx cap add ios
-npm run build:ios
+node scripts/apply-ios-template.mjs
+npx cap sync ios
 ```
 
 ---
@@ -158,16 +131,14 @@ npm run build:ios
   plugin-versioner.
 - **"GPS-pluginnet er ikke tilgængeligt i denne build."** → web-bundlen
   indeholder ikke `@capacitor/geolocation`-chunken. Det sker hvis du har
-  kørt `npx cap sync ios` UDEN først at køre `npm run build:ios` efter en
+  kørt `npx cap sync ios` UDEN først at køre `npm run build` efter en
   ændring i `src/lib/capacitor-runtime.ts` eller `src/lib/geolocation-native.ts`.
   Kør hele §6's plugin-flow igen.
 - **GPS-prompt vises ikke** → tjek at `node scripts/apply-ios-template.mjs`
   kørte uden fejl. Slet appen fra enheden og installer igen (iOS cacher
   "Don't Allow"-svar).
-- **GPS dør når skærmen låses** → OrbitGeo er ikke kompileret ind. Tjek at
-  `OrbitGeo.swift` ligger i `ios/App/App/` og står under Build Phases →
-  Compile Sources i Xcode, at Background Modes → Location updates er tændt
-  (§4), og at brugeren har valgt "Always".
+- **GPS dør når skærmen låses** → Background Modes → Location updates skal
+  være tændt i Xcode (§4) **og** brugeren skal have valgt "Always".
 - **Spotify-login fejler ved retur** → Redirect URI matcher ikke
   `jonas-orbit-run://callback`. Sammenlign tegn-for-tegn.
 - **Spotify hænger på "Forbinder…"** → typisk Redirect URI fejl ELLER

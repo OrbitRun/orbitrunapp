@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Activity, Volume2, Wind, X } from "lucide-react";
-import { resetBodyLocks } from "@/lib/modal-debug";
 import { useI18n } from "@/lib/i18n";
 
 export default function CoachInfoModal({
@@ -20,10 +19,11 @@ export default function CoachInfoModal({
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
-    // No manual body scroll-lock: the app shell owns scrolling (see styles.css).
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      resetBodyLocks();
+      document.body.style.overflow = prev;
     };
   }, [open, onClose]);
 
