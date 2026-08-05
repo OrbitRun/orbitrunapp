@@ -1191,6 +1191,10 @@ export function useRunTracker() {
     return () => {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
       if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
+      if (orbitGeoRef.current) {
+        void orbitGeoRef.current.stop();
+        orbitGeoRef.current = null;
+      }
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();
