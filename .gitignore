@@ -38,5 +38,5 @@ dist-ssr
 !.env.example
 
 # Capacitor native shell (regenerated via `npx cap add ios`)
-ios/
-android/
+/ios/
+/android/
