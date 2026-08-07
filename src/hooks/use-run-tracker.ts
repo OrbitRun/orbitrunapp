@@ -572,9 +572,10 @@ export function useRunTracker() {
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
-    // Native iOS background GPS (OrbitGeo plugin) — keeps recording while the
-    // screen is locked and replays buffered points on resume.
-    if (isOrbitGeoAvailable()) {
+    // DIAGNOSTIC: OrbitGeo temporarily disabled to isolate freeze cause.
+    // Re-enable by restoring `isOrbitGeoAvailable()` below.
+    const ORBIT_GEO_ENABLED = false;
+    if (ORBIT_GEO_ENABLED && isOrbitGeoAvailable()) {
       if (orbitGeoRef.current || orbitGeoStartingRef.current) return;
       orbitGeoStartingRef.current = true;
       void (async () => {
