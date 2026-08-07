@@ -86,11 +86,11 @@ public class OrbitGeo: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate {
         }
     }
 
-    @objc func checkPermissions(_ call: CAPPluginCall) {
+    @objc public override func checkPermissions(_ call: CAPPluginCall) {
         call.resolve(["location": statusString(manager.authorizationStatus)])
     }
 
-    @objc func requestPermissions(_ call: CAPPluginCall) {
+    @objc public override func requestPermissions(_ call: CAPPluginCall) {
         let status = manager.authorizationStatus
         if status != .notDetermined {
             // Already decided — upgrade to Always when possible, resolve now.
@@ -135,7 +135,7 @@ public class OrbitGeo: CAPPlugin, CAPBridgedPlugin, CLLocationManagerDelegate {
                 call.reject("Location services are disabled.")
                 return
             }
-            if status == .authorizedAlways {
+            if status == .authorizedAlways || status == .authorizedWhenInUse {
                 self.manager.allowsBackgroundLocationUpdates = true
             }
             self.manager.showsBackgroundLocationIndicator = true
