@@ -170,6 +170,9 @@ function RunMapInner({
 
     return () => {
       cancelled = true;
+      resizeObsRef.current?.disconnect();
+      resizeObsRef.current = null;
+
       startRef.current?.remove();
       startRef.current = null;
       headRef.current?.remove();
