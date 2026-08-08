@@ -66,6 +66,15 @@ det er hovedårsagen til `CapApp-SPM` SPM-fejl i Xcode.
 `scripts/apply-ios-template.mjs` kopierer den ind i `ios/App/App/Info.plist`
 efter `npx cap add ios`. Du behøver ikke åbne plist'en manuelt.
 
+### App icon (automatisk)
+
+Samme script skriver også `resources/ios/AppIcon-1024.png` ind i
+`ios/App/App/Assets.xcassets/AppIcon.appiconset` som single-size ikon
+(Xcode 14+ genererer selv alle mindre størrelser). Derfor kommer Orbit
+Run-logoet automatisk med som app icon i Xcode, TestFlight og App Store.
+Vil du skifte ikon: erstat `resources/ios/AppIcon-1024.png` (1024x1024 PNG,
+**uden** alpha-kanal) og kør scriptet + `npx cap sync ios` igen.
+
 ---
 
 ## 4. Xcode — Signing & Capabilities
