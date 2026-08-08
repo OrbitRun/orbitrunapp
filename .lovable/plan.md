@@ -31,4 +31,4 @@ This preserves container size, layout, styling, data and GPS logic; it only make
 
 ## Verification
 
-Run `git diff --name-only` (expected: `src/routes/index.tsx`, `src/components/RunMap.tsx`) and report the three items separately: spacing, map resize cause/fix, legend removal.
+Run `git diff --name-only` (expected: `src/routes/index.tsx`, `src/components/RunMap.tsx`, `src/components/BottomNav.tsx`) and report the three items separately: spacing, map resize cause/fix, legend removal.
