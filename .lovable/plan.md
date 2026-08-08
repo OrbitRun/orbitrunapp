@@ -1,15 +1,18 @@
 # Run screen: spacing, blank map, legend
 
-Three scoped visual changes. No shell, safe-area, contentInset, BottomNav, GPS/tracking or native file changes.
+Three scoped visual changes. No shell sizing, safe-area model, contentInset, nav height, GPS/tracking or native file changes.
 
-## 1. Spacing around START LØB
+## 1. BottomNav gap + spacing around START LØB
+
+`src/components/BottomNav.tsx`: the fixed nav currently uses `pb-[calc(env(safe-area-inset-bottom)+8px)]`. Reduce the intentional gap to 4px — `pb-[calc(env(safe-area-inset-bottom)+4px)]` — so the pill sits slightly lower, still fully clear of the iOS home indicator. Nav height, structure and styling unchanged.
 
 `src/routes/index.tsx`, the control section (currently `mt-4 flex items-center justify-center gap-4`):
 
-- Gap above the button today: 16px (`mt-4`).
-- Gap below: only the shell's 8px reserve before BottomNav — visibly tighter.
+- With the nav 4px lower, the space below START LØB becomes the shell's 8px reserve + 4px = 12px.
+- Change `mt-4` to `mt-3` (12px) so the gap above the button matches the 12px below.
 
-Change: keep `mt-4` and add `mb-2` (8px) so the total space below becomes 8 + 8 = 16px, matching the 16px above. BottomNav anchoring and the global shell padding stay untouched.
+Global shell padding (`--orbit-nav-h` and the shell bottom reserve) stays exactly as it is.
+
 
 ## 2. Blank Mapbox map
 
@@ -28,4 +31,4 @@ This preserves container size, layout, styling, data and GPS logic; it only make
 
 ## Verification
 
-Run `git diff --name-only` (expected: `src/routes/index.tsx`, `src/components/RunMap.tsx`) and report the three items separately: spacing, map resize cause/fix, legend removal.
+Run `git diff --name-only` (expected: `src/routes/index.tsx`, `src/components/RunMap.tsx`, `src/components/BottomNav.tsx`) and report the three items separately: spacing, map resize cause/fix, legend removal.
