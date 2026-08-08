@@ -26,7 +26,7 @@ export default function BottomNav() {
     { to: "/profile", label: t("nav.profile"), Icon: User },
   ] as const;
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 pb-[calc(env(safe-area-inset-bottom)+8px)] pointer-events-none">
+    <nav className="fixed bottom-0 inset-x-0 z-40 pb-[calc(env(safe-area-inset-bottom)+4px)] pointer-events-none">
       <div className="mx-auto max-w-md px-4">
         <div className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around shadow-card pointer-events-auto">
           {items.map(({ to, label, Icon }) => {
