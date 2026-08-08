@@ -66,6 +66,8 @@ function RunMapInner({
   const highlightMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const userLocMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const userLocCenteredRef = useRef(false);
+  const resizeObsRef = useRef<ResizeObserver | null>(null);
+
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
