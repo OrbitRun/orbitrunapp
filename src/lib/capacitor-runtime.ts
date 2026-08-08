@@ -1,11 +1,6 @@
-// Centralized Capacitor native detection + plugin loaders.
-//
-// CRITICAL: All Capacitor plugin imports MUST be written as literal
-// `import("@capacitor/xyz")` strings so Vite can statically analyze them
-// and emit them as lazy chunks in the production bundle. Previously we used
-// `Function("s", "return import(s)")(specifier)` to hide the imports from
-// the web bundle, but that prevented the plugins from being bundled at all
-// — which is why the native iOS build kept reporting "plugin unavailable".
+// Centralized Capacitor native detection + dynamic plugin loaders.
+// Importing @capacitor/* statically would pull native shims into the web build;
+// instead we lazy-load via dynamic import so web builds stay clean.
 
 export function isCapacitorNative(): boolean {
   if (typeof window === "undefined") return false;
@@ -24,47 +19,25 @@ export function isCapacitorNative(): boolean {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function importPlugin(specifier: string): Promise<any | null> {
+const dynImport = Function("s", "return import(s)") as (s: string) => Promise<any>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function loadCapacitorPlugin<T = any>(specifier: string, exportName: string): Promise<T | null> {
   try {
-    switch (specifier) {
-      case "@capacitor/geolocation":
-        return await import("@capacitor/geolocation");
-      case "@capacitor/app":
-        return await import("@capacitor/app");
-      case "@capacitor/app-launcher":
-        return await import("@capacitor/app-launcher");
-      case "@capacitor/browser":
-        return await import("@capacitor/browser");
-      case "@capacitor/preferences":
-        return await import("@capacitor/preferences");
-      case "@capacitor/local-notifications":
-        return await import("@capacitor/local-notifications");
-      case "@capacitor-community/bluetooth-le":
-        return await import("@capacitor-community/bluetooth-le");
-      case "@capacitor/core":
-        return await import("@capacitor/core");
-      default:
-        // eslint-disable-next-line no-console
-        console.warn("[capacitor-runtime] unknown plugin specifier", specifier);
-        return null;
-    }
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn("[capacitor-runtime] failed to import", specifier, (e as Error)?.message ?? e);
+    const mod = await dynImport(specifier);
+    return (mod?.[exportName] ?? mod?.default?.[exportName] ?? mod?.default) as T;
+  } catch {
     return null;
   }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function loadCapacitorPlugin<T = any>(specifier: string, exportName: string): Promise<T | null> {
-  const mod = await importPlugin(specifier);
-  if (!mod) return null;
-  return (mod?.[exportName] ?? mod?.default?.[exportName] ?? mod?.default) as T;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getCapacitorHttp(): Promise<any | null> {
   if (!isCapacitorNative()) return null;
-  const mod = await importPlugin("@capacitor/core");
-  return mod?.CapacitorHttp ?? mod?.default?.CapacitorHttp ?? null;
+  try {
+    const mod = await dynImport("@capacitor/core");
+    return mod?.CapacitorHttp ?? mod?.default?.CapacitorHttp ?? null;
+  } catch {
+    return null;
+  }
 }

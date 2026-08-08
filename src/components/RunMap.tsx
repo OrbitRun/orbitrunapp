@@ -9,7 +9,9 @@ import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
 import { useI18n } from "@/lib/i18n";
 import {
   isNativeGeolocationAvailable,
+  nativeClearWatch,
   nativeGetCurrentPosition,
+  nativeWatchPosition,
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
@@ -67,19 +69,7 @@ function RunMapInner({
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
-  const [gpsStatus, setGpsStatus] = useState<
-    "idle" | "locating" | "ready" | "denied" | "unavailable" | "error"
-  >("idle");
-  const [gpsError, setGpsError] = useState<string | null>(null);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = window.localStorage.getItem("orbit.lastUserLoc");
-      return raw ? (JSON.parse(raw) as { lat: number; lng: number }) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
 
   // Init map (client-only, dynamic import)
   useEffect(() => {
@@ -96,17 +86,11 @@ function RunMapInner({
       (mapboxgl as any).accessToken = MAPBOX_TOKEN;
       MRef.current = mapboxgl;
 
-      // Default center: cached last user location if available, else a
-      // geographically neutral Denmark center so the fallback doesn't look
-      // like London when the GPS fix is still pending.
-      const initialCenter: [number, number] = userLoc
-        ? [userLoc.lng, userLoc.lat]
-        : [10.2, 56.15];
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: MAPBOX_STYLE,
-        center: initialCenter,
-        zoom: userLoc ? 15 : 6,
+        center: [-0.09, 51.505],
+        zoom: 14,
         attributionControl: true,
         interactive,
         pitchWithRotate: false,
@@ -189,68 +173,46 @@ function RunMapInner({
     if (points.length > 0) return; // run started — tracker takes over
     let cancelled = false;
     let webWatchId: number | null = null;
+    let nativeId: string | null = null;
 
     const onPos = (lat: number, lng: number) => {
       if (cancelled) return;
-      // eslint-disable-next-line no-console
-      console.log("[map] userLoc fix", lat, lng);
       setUserLoc({ lat, lng });
-      setGpsStatus("ready");
-      setGpsError(null);
-      try {
-        window.localStorage.setItem("orbit.lastUserLoc", JSON.stringify({ lat, lng }));
-      } catch {
-        /* noop */
-      }
     };
-
-    setGpsStatus("locating");
 
     (async () => {
       if (isNativeGeolocationAvailable()) {
+        // Trigger the iOS permission prompt explicitly when the map mounts —
+        // covers the case where the user dismissed the app-start warmup prompt.
         const status = await requestNativeGeolocationPermission();
         if (cancelled) return;
-        // eslint-disable-next-line no-console
-        console.log("[map] native perm status", status);
-        if (status === "denied") {
-          setGpsStatus("denied");
-          setGpsError("Lokationsadgang er ikke tilladt. Åbn Indstillinger → Orbit Run → Lokation → Mens appen er i brug.");
-          return;
+        // "prompt" (concurrent request races) → still try; iOS will deliver
+        // a fix once the user taps Allow. Only an explicit "denied" / no
+        // plugin should bail.
+        if (status === "denied" || status === "unavailable") return;
+        const first = await nativeGetCurrentPosition();
+        if (first && !cancelled) {
+          const b = toBrowserPosition(first);
+          onPos(b.coords.latitude, b.coords.longitude);
         }
-        if (status === "unavailable") {
-          setGpsStatus("unavailable");
-          setGpsError("GPS-pluginnet er ikke tilgængeligt i denne build.");
-          return;
-        }
-        for (let i = 0; i < 3 && !cancelled; i++) {
-          const fix = await nativeGetCurrentPosition();
-          if (fix) {
-            const b = toBrowserPosition(fix);
+        nativeId = await nativeWatchPosition(
+          (p) => {
+            const b = toBrowserPosition(p);
             onPos(b.coords.latitude, b.coords.longitude);
-            break;
-          }
-          await new Promise((r) => setTimeout(r, 1000));
-        }
+          },
+          () => {},
+        );
       } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (p) => onPos(p.coords.latitude, p.coords.longitude),
-          (e) => {
-            setGpsStatus("error");
-            setGpsError(e.message || "GPS-fejl");
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 },
+          () => {},
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 },
         );
         webWatchId = navigator.geolocation.watchPosition(
           (p) => onPos(p.coords.latitude, p.coords.longitude),
-          (e) => {
-            setGpsStatus("error");
-            setGpsError(e.message || "GPS-fejl");
-          },
+          () => {},
           { enableHighAccuracy: true, maximumAge: 2000 },
         );
-      } else {
-        setGpsStatus("unavailable");
-        setGpsError("Geolocation er ikke understøttet.");
       }
     })();
 
@@ -259,6 +221,7 @@ function RunMapInner({
       if (webWatchId != null && navigator.geolocation) {
         navigator.geolocation.clearWatch(webWatchId);
       }
+      if (nativeId) void nativeClearWatch(nativeId);
     };
   }, [points.length]);
 
@@ -476,21 +439,9 @@ function RunMapInner({
 
   const showRecenter = interactive && userMoved && points.length > 0;
   const legend = heatmap && showLegend && points.length >= 2;
-  const showGpsBanner =
-    points.length === 0 &&
-    (gpsStatus === "locating" || gpsStatus === "denied" || gpsStatus === "error" || gpsStatus === "unavailable") &&
-    !userLoc;
   return (
     <>
       <div ref={containerRef} className={`relative ${className ?? ""}`}>
-        {showGpsBanner && (
-          <div className="absolute inset-x-3 top-3 z-10 rounded-xl bg-background/85 backdrop-blur border border-border px-3 py-2 text-[11px] font-semibold pointer-events-none">
-            {gpsStatus === "locating" && <span>Henter GPS-signal…</span>}
-            {gpsStatus !== "locating" && (
-              <span className="text-destructive">{gpsError ?? "GPS utilgængelig"}</span>
-            )}
-          </div>
-        )}
         {showRecenter && (
           <button
             type="button"

@@ -119,13 +119,11 @@ export function isConfigured(): boolean {
 export async function beginAuth(): Promise<void> {
   if (!isConfigured()) throw new Error("Spotify Client ID not configured");
   await ensureSpotifyStoragePrimed();
-  // Always wipe any leftover PKCE verifier / stale token before a new auth
-  // round-trip — a stale verifier from a cancelled attempt makes the next
-  // token exchange fail with invalid_grant and locks the UI on "Forbinder…".
-  await setValue(TOKEN_KEY, null);
-  await setValue(VERIFIER_KEY, null);
   const verifier = randomString(96);
   const challenge = base64url(await sha256(verifier));
+  // Persist the PKCE verifier through native storage so it survives the
+  // Safari → app transition (sandbox extension drops can wipe in-memory
+  // sessionStorage on iOS during the OAuth round-trip).
   await setValue(VERIFIER_KEY, verifier);
 
   const params = new URLSearchParams({
@@ -141,57 +139,14 @@ export async function beginAuth(): Promise<void> {
   // eslint-disable-next-line no-console
   console.log("[spotify] beginAuth", { native, redirect_uri: getRedirectUri() });
   if (native) {
-    // Prefer the native AppLauncher plugin so iOS opens the Spotify OAuth URL
-    // outside the WebView. SFSafariViewController (@capacitor/browser) can
-    // hang on 302 redirects to custom URL schemes and never fire appUrlOpen
-    // (ionic-team/capacitor-plugins#2369, #2485, #628).
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const AppLauncher = await loadCapacitorPlugin<any>("@capacitor/app-launcher", "AppLauncher");
-    if (AppLauncher?.openUrl) {
-      // eslint-disable-next-line no-console
-      console.log("[spotify] opening auth URL via AppLauncher");
-      try {
-        const res = await AppLauncher.openUrl({ url: authUrl });
-        // Capacitor returns { completed: boolean } on iOS.
-        if (res && res.completed === false) {
-          throw new Error("iOS afviste at åbne Spotify-login URL'en");
-        }
-        return;
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn("[spotify] AppLauncher.openUrl failed, falling back to in-app Browser", err);
-      }
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn("[spotify] AppLauncher plugin unavailable, falling back to in-app Browser");
-    }
-    // Fallback: in-app Browser. Works for the auth UI itself; the callback
-    // is captured via appUrlOpen registered in initSpotifyDeepLinkListener.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Browser = await loadCapacitorPlugin<any>("@capacitor/browser", "Browser");
     if (Browser?.open) {
-      // eslint-disable-next-line no-console
-      console.log("[spotify] opening auth URL in in-app Browser (fallback)");
       await Browser.open({ url: authUrl, presentationStyle: "popover" });
       return;
     }
     // eslint-disable-next-line no-console
-    console.error("[spotify] no native browser plugin available — auth cannot continue");
-    throw new Error("Spotify-login kunne ikke åbnes. Genbyg iOS-appen.");
-  }
-  // Web fallback. If we're inside an iframe (Lovable editor preview),
-  // Spotify's auth page refuses to be framed (X-Frame-Options: DENY),
-  // which shows up as "This site can't be reached". Break out to the top
-  // window so the user lands on Spotify in the real browser tab.
-  try {
-    if (window.top && window.top !== window.self) {
-      window.top.location.href = authUrl;
-      return;
-    }
-  } catch {
-    // Cross-origin top access denied — fall back to opening a new tab.
-    window.open(authUrl, "_blank", "noopener");
-    return;
+    console.warn("[spotify] @capacitor/browser unavailable, falling back to window.location");
   }
   window.location.href = authUrl;
 }
@@ -387,18 +342,6 @@ async function getValidToken(): Promise<string | null> {
 
 export function logout() {
   setStoredToken(null);
-}
-
-/**
- * Hard reset: clears stored token, in-flight PKCE verifier and the saved
- * workout playlist. Use this to recover from a stuck "Forbinder…" loop
- * (stale verifier from a previous attempt makes the next token exchange fail
- * with `invalid_grant`).
- */
-export async function fullReset(): Promise<void> {
-  await setValue(TOKEN_KEY, null);
-  await setValue(VERIFIER_KEY, null);
-  await setValue(PLAYLIST_KEY, null);
 }
 
 export function isAuthed(): boolean {

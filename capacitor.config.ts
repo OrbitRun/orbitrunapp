@@ -5,7 +5,7 @@
 //
 // Final export checklist (run locally before opening Xcode):
 //   npm install
-//   npm run build:capacitor  # produces dist-capacitor/index.html (matches webDir)
+//   npm run build         # produces dist/index.html (matches webDir)
 //   npx cap add ios       # first time only
 //   npx cap sync ios      # every time the web app changes
 //   npx cap open ios      # Archive → TestFlight
@@ -24,21 +24,18 @@ type CapacitorConfig = {
 const config: CapacitorConfig = {
   appId: "com.orbitrun.app",
   appName: "Orbit Run",
-  webDir: "dist-capacitor",
+  webDir: "dist",
   urlSchemes: ["jonas-orbit-run"],
   ios: {
     contentInset: "always",
     scrollEnabled: true,
   },
   plugins: {
-    // IMPORTANT: keep the global fetch/XHR patch OFF. When enabled,
-    // CapacitorHttp returns base64 strings instead of ArrayBuffers for
-    // binary XHR responses, which breaks Mapbox GL vector-tile decoding
-    // in its Web Worker → black map on iOS. Our explicit
-    // `CapacitorHttp.request(...)` calls in `src/lib/native-http.ts`
-    // already bypass WKWebView CORS for Spotify / Open-Meteo without
-    // needing the global patch.
-    CapacitorHttp: { enabled: false },
+    // Patch window.fetch / XMLHttpRequest to use the native HTTP bridge on
+    // iOS. This bypasses WKWebView CORS restrictions and the "DownloadFailed"
+    // sandbox extension errors that Spotify/Open-Meteo trigger from inside
+    // the capacitor://localhost origin.
+    CapacitorHttp: { enabled: true },
   },
 };
 

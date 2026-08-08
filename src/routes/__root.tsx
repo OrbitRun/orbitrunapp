@@ -7,8 +7,8 @@ import PrAchievement from "@/components/PrAchievement";
 import SplashScreen from "@/components/SplashScreen";
 import { I18nProvider } from "@/lib/i18n";
 import { useHealthAutoSync } from "@/hooks/use-health-auto-sync";
-import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
 import { useGpsWarmup } from "@/hooks/use-gps-warmup";
+import { useSpotifyRunControl } from "@/hooks/use-spotify-run-control";
 import { initSpotifyDeepLinkListener } from "@/lib/spotify";
 
 function NotFoundComponent() {
@@ -63,12 +63,6 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap",
-      },
       { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
@@ -98,8 +92,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   useHealthAutoSync();
-  useSpotifyRunControl();
   useGpsWarmup();
+  useSpotifyRunControl();
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
     <I18nProvider>

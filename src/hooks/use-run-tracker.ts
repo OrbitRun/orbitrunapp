@@ -41,7 +41,6 @@ import {
   requestNativeGeolocationPermission,
   toBrowserPosition,
 } from "@/lib/geolocation-native";
-import { isOrbitGeoAvailable, startOrbitGeo, type OrbitGeoHandle } from "@/lib/orbit-geo";
 import type { MotionSource } from "@/lib/motion-source";
 import { startCadenceAccelerometer, type CadenceSample } from "@/lib/cadence-accelerometer";
 import { startCadenceCamera } from "@/lib/cadence-camera";
@@ -171,8 +170,6 @@ export function useRunTracker() {
   // When running inside a Capacitor native shell, we use the native plugin
   // instead of `navigator.geolocation`. The native watch id is a string.
   const nativeWatchIdRef = useRef<string | null>(null);
-  const orbitGeoRef = useRef<OrbitGeoHandle | null>(null);
-  const orbitGeoStartingRef = useRef(false);
   // Background-geolocation plugin watcher id (iOS/Android, runs while screen
   // is locked / app in background — requires UIBackgroundModes=location).
   
@@ -332,7 +329,7 @@ export function useRunTracker() {
       }
       setState((prev) => {
         const acc = pos.coords.accuracy ?? 999;
-        const gpsReady = acc < 100;
+        const gpsReady = acc <= 20;
         // Always reflect latest GPS quality, even before the run starts, so
         // the "Finder signal…" chip can disappear as soon as a usable fix
         // arrives during the warm-up phase.
@@ -342,11 +339,10 @@ export function useRunTracker() {
         }
 
         // ---- GPS quality gate -------------------------------------------------
-        // Tightened accuracy gate AFTER the route is seeded: reject samples
-        // worse than 30m to prevent zig-zag, but always accept the very first
-        // sample so the map starts drawing immediately even on a cold fix
-        // (iOS often reports 30–50m for the first few seconds).
-        if (acc > 30 && prev.points.length > 0) {
+        // Strict accuracy gate: reject any sample with reported accuracy
+        // worse than 20m to prevent zig-zagging on the map. The first valid
+        // sample is always accepted to seed the trace.
+        if (acc > 20 && prev.points.length > 0) {
           return { ...prev, gpsAccuracyM: acc, gpsReady };
         }
 
@@ -572,28 +568,6 @@ export function useRunTracker() {
 
   // Pre-arm GPS as soon as Start (countdown) is pressed, so points already flow when run begins.
   const armGps = useCallback(() => {
-    // DIAGNOSTIC: OrbitGeo temporarily disabled to isolate freeze cause.
-    // Re-enable by restoring `isOrbitGeoAvailable()` below.
-    const ORBIT_GEO_ENABLED = false;
-    if (ORBIT_GEO_ENABLED && isOrbitGeoAvailable()) {
-      if (orbitGeoRef.current || orbitGeoStartingRef.current) return;
-      orbitGeoStartingRef.current = true;
-      void (async () => {
-        try {
-          const handle = await startOrbitGeo(
-            (pos) => {
-              setState((p) => (p.permissionError ? { ...p, permissionError: null } : p));
-              handlePosition(pos);
-            },
-            (err) => handleError({ message: err.message } as GeolocationPositionError),
-          );
-          if (handle) orbitGeoRef.current = handle;
-        } finally {
-          orbitGeoStartingRef.current = false;
-        }
-      })();
-      return;
-    }
     // Native path (Capacitor iOS/Android) — uses kCLLocationAccuracyBestForNavigation
     // / PRIORITY_HIGH_ACCURACY and keeps streaming while the screen is locked
     // when the iOS shell declares the `location` background mode.
@@ -626,7 +600,7 @@ export function useRunTracker() {
           },
           (err) => handleError({ message: err.message } as GeolocationPositionError),
         );
-        if (id) nativeWatchIdRef.current = id;
+        nativeWatchIdRef.current = id;
       })();
       return;
     }
@@ -918,11 +892,6 @@ export function useRunTracker() {
       nativeWatchIdRef.current = null;
       void nativeClearWatch(id);
     }
-    if (orbitGeoRef.current) {
-      const handle = orbitGeoRef.current;
-      orbitGeoRef.current = null;
-      void handle.stop();
-    }
     workerRef.current?.postMessage({ type: "stop" });
     stopSilentLoop();
     indoorStopRef.current?.();
@@ -1192,10 +1161,6 @@ export function useRunTracker() {
     return () => {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
       if (nativeWatchIdRef.current != null) void nativeClearWatch(nativeWatchIdRef.current);
-      if (orbitGeoRef.current) {
-        void orbitGeoRef.current.stop();
-        orbitGeoRef.current = null;
-      }
       workerRef.current?.terminate();
       workerRef.current = null;
       stopSilentLoop();

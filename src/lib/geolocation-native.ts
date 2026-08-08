@@ -1,17 +1,17 @@
-// Geolocation layer.
+// Capacitor Geolocation bridge — web-safe, native-ready.
 //
-// Platform detection comes straight from Capacitor. On iOS and Android we
-// always use the @capacitor/geolocation plugin (CoreLocation / Play
-// Services). navigator.geolocation is only used when the platform is "web".
+// On the web (or SSR / Cloudflare Worker) every export is a safe no-op:
+// `isNativeGeolocationAvailable()` returns false, and the helpers return
+// null. Inside a Capacitor iOS / Android shell with `@capacitor/geolocation`
+// installed, we use the native plugin which on iOS maps to
+// `kCLLocationAccuracyBestForNavigation` (`enableHighAccuracy: true`) and on
+// Android to `PRIORITY_HIGH_ACCURACY`.
 //
-// Required iOS Info.plist keys (added in the native shell):
+// Required iOS Info.plist keys (added in the native shell, not the web app):
 //   NSLocationWhenInUseUsageDescription
 //   NSLocationAlwaysAndWhenInUseUsageDescription
 //   UIBackgroundModes -> ["location", "audio"]
 // See docs/IOS_SETUP.md for the full setup.
-
-import { Capacitor } from "@capacitor/core";
-import { Geolocation } from "@capacitor/geolocation";
 
 export type NativePosition = {
   coords: {
@@ -26,36 +26,48 @@ export type NativePosition = {
   timestamp: number;
 };
 
-function getPlatform(): "ios" | "android" | "web" {
-  const p = Capacitor.getPlatform();
-  if (p === "ios" || p === "android") return p;
-  return "web";
+type CapacitorGlobal = {
+  isNativePlatform?: () => boolean;
+  getPlatform?: () => string;
+};
+
+function getCapacitor(): CapacitorGlobal | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { Capacitor?: CapacitorGlobal };
+  return w.Capacitor ?? null;
 }
 
 export function isNativeGeolocationAvailable(): boolean {
-  return Capacitor.isNativePlatform() && getPlatform() !== "web";
+  const cap = getCapacitor();
+  if (!cap?.isNativePlatform?.()) return false;
+  const p = cap.getPlatform?.();
+  return p === "ios" || p === "android";
 }
 
-// Race a promise against a timeout so a hung bridge surfaces as an error
-// instead of freezing the UI forever.
-function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const tid = setTimeout(() => reject(new Error(`[geo] ${label} timed out after ${ms}ms`)), ms);
-    p.then(
-      (v) => {
-        clearTimeout(tid);
-        resolve(v);
-      },
-      (e) => {
-        clearTimeout(tid);
-        reject(e);
-      },
-    );
-  });
+// Lazily resolve the plugin so the web bundle never tries to resolve it.
+async function loadPlugin(): Promise<unknown | null> {
+  if (!isNativeGeolocationAvailable()) return null;
+  try {
+    const specifier = "@capacitor/geolocation";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mod: any = await (Function(
+      "s",
+      "return import(s)",
+    ) as (s: string) => Promise<unknown>)(specifier);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const m = mod as any;
+    return m?.Geolocation ?? m?.default?.Geolocation ?? m?.default ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export type GeoPermissionStatus = "granted" | "denied" | "prompt" | "unavailable";
 
+// Dedup concurrent permission requests. On iOS the system dialog is only
+// shown for the FIRST `requestPermissions()` call — competing calls resolve
+// immediately with `"prompt"` before the user has answered, which previously
+// got mapped to `"denied"` and poisoned the run-tracker state.
 let permInflight: Promise<GeoPermissionStatus> | null = null;
 
 function mapState(s: unknown): GeoPermissionStatus {
@@ -65,209 +77,86 @@ function mapState(s: unknown): GeoPermissionStatus {
   return "denied";
 }
 
-// Web-only permission probe (also triggers the browser dialog).
-function webProbePermission(timeoutMs = 12000): Promise<GeoPermissionStatus> {
-  return new Promise((resolve) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      resolve("unavailable");
-      return;
-    }
-    let settled = false;
-    const tid = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      resolve("prompt");
-    }, timeoutMs);
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(tid);
-        resolve("granted");
-      },
-      (err) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(tid);
-        // PERMISSION_DENIED = 1
-        resolve(err && err.code === 1 ? "denied" : "prompt");
-      },
-      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 5000 },
-    );
-  });
-}
-
 export async function requestNativeGeolocationPermission(): Promise<GeoPermissionStatus> {
   if (permInflight) return permInflight;
   permInflight = (async (): Promise<GeoPermissionStatus> => {
-    if (getPlatform() === "web") return webProbePermission();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plugin: any = await loadPlugin();
+    if (!plugin) return "unavailable";
     try {
-      const cur = await withTimeout(Geolocation.checkPermissions(), 8000, "checkPermissions");
+      // Cheap check first — if already granted we skip the dialog entirely.
+      const cur = await plugin.checkPermissions?.();
       const curState = mapState(cur?.location ?? cur?.coarseLocation);
       if (curState === "granted") return "granted";
-      const res = await withTimeout(Geolocation.requestPermissions(), 30000, "requestPermissions");
+      // Call without arguments — the iOS plugin ignores `permissions` and
+      // always calls `requestWhenInUseAuthorization`; passing the array
+      // adds no value and risks alias-handling regressions.
+      const res = await plugin.requestPermissions?.();
       return mapState(res?.location ?? res?.coarseLocation);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn("[geo] native permission flow failed", (e as Error)?.message ?? e);
-      return "prompt";
+    } catch {
+      return "denied";
     }
   })();
   try {
     return await permInflight;
   } finally {
+    // Clear so a later real re-prompt (after the user toggled Settings) works.
     permInflight = null;
   }
 }
 
-function webGetCurrentPosition(timeoutMs: number): Promise<NativePosition | null> {
-  return new Promise((resolve) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      resolve(null);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        resolve({
-          coords: {
-            latitude: p.coords.latitude,
-            longitude: p.coords.longitude,
-            accuracy: p.coords.accuracy,
-            altitude: p.coords.altitude,
-            altitudeAccuracy: p.coords.altitudeAccuracy,
-            heading: p.coords.heading,
-            speed: p.coords.speed,
-          },
-          timestamp: p.timestamp,
-        });
-      },
-      (err) => {
-        // eslint-disable-next-line no-console
-        console.warn("[geo] webGetCurrentPosition err", err?.code, err?.message);
-        resolve(null);
-      },
-      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 5000 },
-    );
-  });
-}
-
 export async function nativeGetCurrentPosition(): Promise<NativePosition | null> {
-  if (getPlatform() === "web") return webGetCurrentPosition(20000);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugin: any = await loadPlugin();
+  if (!plugin) return null;
   try {
-    const pos = await withTimeout(
-      Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 10000,
-      }),
-      22000,
-      "getCurrentPosition",
-    );
-    if (!pos) return null;
-    // eslint-disable-next-line no-console
-    console.log("[geo] getCurrentPosition ok", pos.coords.latitude, pos.coords.longitude, "acc", pos.coords.accuracy);
-    return pos as unknown as NativePosition;
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.warn("[geo] native getCurrentPosition failed", (e as Error)?.message ?? e);
+    const pos = await plugin.getCurrentPosition?.({
+      enableHighAccuracy: true, // iOS: kCLLocationAccuracyBestForNavigation
+      timeout: 8000,
+      maximumAge: 5000,
+    });
+    return pos ?? null;
+  } catch {
     return null;
   }
 }
 
-// Watch IDs are encoded so `nativeClearWatch` knows which API to call:
-//   "web:<number>" → navigator.geolocation.clearWatch(number)
-//   "cap:<string>" → Geolocation.clearWatch({ id: string })
 export async function nativeWatchPosition(
   onPosition: (pos: NativePosition) => void,
   onError: (err: { message: string }) => void,
 ): Promise<string | null> {
-  if (getPlatform() === "web") {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      onError({ message: "Geolocation not available" });
-      return null;
-    }
-    try {
-      const id = navigator.geolocation.watchPosition(
-        (p) => {
-          onPosition({
-            coords: {
-              latitude: p.coords.latitude,
-              longitude: p.coords.longitude,
-              accuracy: p.coords.accuracy,
-              altitude: p.coords.altitude,
-              altitudeAccuracy: p.coords.altitudeAccuracy,
-              heading: p.coords.heading,
-              speed: p.coords.speed,
-            },
-            timestamp: p.timestamp,
-          });
-        },
-        (err) => {
-          // Transient timeouts (code 3) should not surface as a hard error.
-          if (err?.code === 3) return;
-          onError({ message: err?.message ?? "Location error" });
-        },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 60000 },
-      );
-      return `web:${id}`;
-    } catch (e) {
-      onError({ message: (e as Error)?.message ?? "Location error" });
-      return null;
-    }
-  }
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugin: any = await loadPlugin();
+  if (!plugin) return null;
   try {
-    const id = await withTimeout(
-      Geolocation.watchPosition(
-        { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 },
-        (pos, err) => {
-          if (err) {
-            // eslint-disable-next-line no-console
-            console.error("[geo] watch error", err?.message ?? err);
-            onError({ message: err?.message ?? "Location error" });
-            return;
-          }
-          if (pos) {
-            // eslint-disable-next-line no-console
-            console.log("[geo] watch fix", pos.coords.latitude, pos.coords.longitude, "acc", pos.coords.accuracy);
-            onPosition(pos as unknown as NativePosition);
-          }
-        },
-      ),
-      10000,
-      "watchPosition",
+    const id: string = await plugin.watchPosition?.(
+      {
+        enableHighAccuracy: true, // BestForNavigation on iOS
+        timeout: 10000,
+        maximumAge: 0,
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (pos: any, err: any) => {
+        if (err) {
+          onError({ message: err?.message ?? "Location error" });
+          return;
+        }
+        if (pos) onPosition(pos as NativePosition);
+      },
     );
-    if (id) {
-      // eslint-disable-next-line no-console
-      console.log("[geo] watchPosition started cap", id);
-      return `cap:${id}`;
-    }
-    onError({ message: "Could not start location updates" });
-    return null;
+    return id ?? null;
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error("[geo] native watchPosition failed", (e as Error)?.message ?? e);
     onError({ message: (e as Error)?.message ?? "Location error" });
     return null;
   }
 }
 
 export async function nativeClearWatch(id: string): Promise<void> {
-  if (!id) return;
-  if (id.startsWith("web:")) {
-    const n = Number(id.slice(4));
-    if (typeof navigator !== "undefined" && navigator.geolocation && Number.isFinite(n)) {
-      try {
-        navigator.geolocation.clearWatch(n);
-      } catch {
-        /* noop */
-      }
-    }
-    return;
-  }
-  const realId = id.startsWith("cap:") ? id.slice(4) : id;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const plugin: any = await loadPlugin();
+  if (!plugin) return;
   try {
-    await Geolocation.clearWatch({ id: realId });
+    await plugin.clearWatch?.({ id });
   } catch {
     /* noop */
   }
@@ -285,6 +174,7 @@ export function toBrowserPosition(p: NativePosition): GeolocationPosition {
       altitudeAccuracy: p.coords.altitudeAccuracy,
       heading: p.coords.heading,
       speed: p.coords.speed,
+      // Required by the DOM type but not used by the tracker.
       toJSON() {
         return this;
       },

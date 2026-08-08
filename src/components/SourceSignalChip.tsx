@@ -5,7 +5,6 @@ import { useI18n } from "@/lib/i18n";
 type Props = {
   source: MotionSource;
   accuracyM?: number | null;
-  ready?: boolean;
   className?: string;
 };
 
@@ -23,16 +22,9 @@ const LABEL_KEY: Record<MotionSource, string> = {
   camera: "source.camera",
 };
 
-export default function SourceSignalChip({ source, accuracyM, ready, className }: Props) {
+export default function SourceSignalChip({ source, accuracyM, className }: Props) {
   const { t } = useI18n();
   const Icon = ICONS[source];
-  // For GPS: "ready" once we have any usable fix (accuracy known and < 100m).
-  // For non-GPS sources we treat them as always ready (they are sensor-based).
-  const isReady =
-    source === "gps"
-      ? (ready ?? (accuracyM != null && accuracyM < 100))
-      : true;
-  const showSearchingPulse = !isReady;
   return (
     <div
       role="status"
@@ -43,19 +35,11 @@ export default function SourceSignalChip({ source, accuracyM, ready, className }
       }
     >
       <span className="relative flex h-2 w-2">
-        {showSearchingPulse && (
-          <span className="absolute inset-0 rounded-full bg-neon opacity-60 animate-ping" />
-        )}
+        <span className="absolute inset-0 rounded-full bg-neon opacity-60 animate-ping" />
         <span className="relative h-2 w-2 rounded-full bg-neon" />
       </span>
       <Icon className="h-3 w-3 text-neon" />
-      <span>
-        {source === "gps"
-          ? isReady
-            ? t("gps.locked")
-            : t("gps.searching")
-          : t(LABEL_KEY[source])}
-      </span>
+      <span>{t(LABEL_KEY[source])}</span>
       {source === "gps" && accuracyM != null && accuracyM < 999 && (
         <span className="text-muted-foreground">±{Math.round(accuracyM)}m</span>
       )}

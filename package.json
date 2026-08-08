@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && node scripts/prepare-capacitor-build.mjs",
     "build:dev": "vite build --mode development",
-    "build:capacitor": "npm run build && node scripts/prepare-capacitor-build.mjs",
-    "build:ios": "npm run build:capacitor",
+    "build:ios": "npm run build",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
@@ -16,7 +15,6 @@
   "dependencies": {
     "@capacitor-community/bluetooth-le": "8.1.3",
     "@capacitor/app": "8.1.0",
-    "@capacitor/app-launcher": "8.0.1",
     "@capacitor/browser": "8.0.3",
     "@capacitor/core": "8.3.3",
     "@capacitor/geolocation": "8.2.0",
@@ -66,7 +64,6 @@
     "jspdf": "^4.2.1",
     "lucide-react": "^0.575.0",
     "mapbox-gl": "^3.22.0",
-    "nitro": "3.0.260603-beta",
     "react": "^19.2.0",
     "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.0",
@@ -82,9 +79,9 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.3.3",
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.9.1",
+    "@capacitor/cli": "8.3.3",
+    "@lovable.dev/vite-tanstack-config": "^1.4.0",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
