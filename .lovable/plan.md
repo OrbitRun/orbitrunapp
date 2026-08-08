@@ -1,30 +1,27 @@
-## Goal
+# Onboarding keyboard + global iOS shell positioning
 
-Fjern `shadow-neon` (neon glow) fra alle knapper i appen, inkl. "Next/Back" i onboarding-flowet. Dekorative ikke-knap-elementer (avatar, coach pulse-cirkler, stat-badges) bevarer deres glow.
+Two isolated UI corrections. No GPS, tracking, Capacitor, native, dialog, or navigation changes.
 
-## Ændringer
+## 1. Onboarding keyboard
 
-Fjern `shadow-neon` (og `focus:shadow-neon` på inputs) fra knap-classNames i følgende filer:
+`src/components/Onboarding.tsx` line 66 has `autoFocus` on the name input. That is the only auto-focus in the onboarding flow (no `.focus()` or timer-based focus calls exist there).
 
-- `src/components/Onboarding.tsx` — Next/Back-knapper + input focus-glow
-- `src/components/CoachOnboarding.tsx` — Next/Back-knapper + "Lad os løbe"-CTA
-- `src/components/CoachInfoModal.tsx` — primær CTA
-- `src/components/HealthPermissionSheet.tsx` — tilladelses-CTA
-- `src/components/WeatherEditor.tsx` — "Gem"-CTA + valgt vejr-chip
-- `src/components/RecoverRunBanner.tsx` — accept-knap
-- `src/components/RunSummary.tsx` — gem/del-knap
-- `src/components/LegalSheet.tsx` — accept-knap
-- `src/components/ShoesSection.tsx` — tilføj/gem-knap
-- `src/components/MetricPicker.tsx` — valgt metric-chip
-- `src/routes/index.tsx` — "Start run"-badge + play-knap
+- Remove `autoFocus`. Nothing else changes; the keyboard then only opens when the user taps the field.
 
-## Bevares (ikke knapper)
+## 2. Global vertical positioning / overscroll
 
-- `src/routes/profile.tsx` — avatar-cirkel
-- `src/components/CoachOnboarding.tsx` linje 371/389 — pulse/high-five animationscirkler
-- `src/components/EditableStat.tsx` — edit-badge
-- `.shadow-neon` / `.glow-neon` utilities i `src/styles.css` forbliver (bruges stadig af ovenstående)
+Today each route applies its own top safe-area padding (`pt-[max(env(safe-area-inset-top),1rem)]` in `index.tsx`, `profile.tsx`, `coach.tsx`, `history.tsx`, `run.$id.tsx`, `profile_.heart-rate.tsx`, `RunSummary.tsx`), and the document itself is the scroller, so the whole page rubber-bands on iOS.
 
-## Resultat
+Change to a single app-shell scroller:
 
-Alle interaktive knapper bliver flade (beholder `active:scale-95` feedback), mens dekorative neon-accenter på avatar og animationer er uændrede.
+- `src/styles.css`: give `html, body` a fixed full height with `overflow: hidden` (document can no longer rubber-band), keeping the existing `overscroll-behavior: none`.
+- `src/routes/__root.tsx`: the existing shell wrapper (`<div className="min-h-screen pb-24 mb-[30px]">`) becomes the single scroll container — full viewport height, `overflow-y: auto`, `overscroll-behavior-y: contain`, and `padding-top: env(safe-area-inset-top)` applied exactly once here.
+- Remove the per-route `pt-[max(env(safe-area-inset-top),1rem)]` from the 7 files listed above and replace with a plain `pt-4` so spacing stays visually the same without duplicated safe-area insets.
+
+Untouched: `BottomNav` (fixed, own bottom inset), sheets/modals (`LegalSheet`, `HealthPermissionSheet`), and `FocusRunView` — those are fixed overlays outside the scroll flow and keep their own insets.
+
+Result: one fixed top boundary under the status bar, short pages sit still, long pages scroll inside the shell, and the shell cannot be dragged past its bounds.
+
+## Verification
+
+Run `git diff --name-only` and list the changed root/global rules before publishing.
