@@ -103,7 +103,7 @@ function RootComponent() {
   useEffect(() => initSpotifyDeepLinkListener(), []);
   return (
     <I18nProvider>
-      <div id="orbit-shell" className="pb-24 mb-[30px]">
+      <div id="orbit-shell">
         <Outlet />
         <BottomNav />
         <PrAchievement />
