@@ -172,7 +172,7 @@ function RunPage() {
           : tr("status.finished");
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-4">
+    <main className="mx-auto flex min-h-full max-w-md flex-col px-4 pt-4">
       {showOnboarding && <Onboarding onDone={() => setShowOnboarding(false)} />}
       {counting && <CountdownOverlay seconds={profile.countdownSeconds ?? 10} onComplete={launchRun} onCancel={cancelCountdown} />}
       <HealthPermissionSheet open={healthOpen} onOpenChange={setHealthOpen} />
@@ -241,9 +241,9 @@ function RunPage() {
         </div>
       )}
 
-      <section className="relative">
+      <section className="relative flex min-h-[160px] flex-1 flex-col">
         {profile.activityEnvironment === "indoor" ? (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card h-[221px] flex flex-col items-center justify-center bg-white/5">
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card flex-1 min-h-[160px] flex flex-col items-center justify-center bg-white/5">
             <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-black">
               {tr("indoor.preview.title")}
             </div>
@@ -252,10 +252,10 @@ function RunPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card">
+          <div className="rounded-3xl overflow-hidden border border-border shadow-card flex-1 min-h-[160px]">
             <RunMap
               points={t.points}
-              className="h-[221px] w-full"
+              className="h-full w-full"
               interactive={!isActive}
               ghost={
                 t.ghost
@@ -451,7 +451,7 @@ function RunPage() {
           </div>
         </section>
       )}
-      <section className="mt-5 mb-6 flex items-center justify-center gap-4">
+      <section className="mt-4 flex items-center justify-center gap-4">
         {t.status === "idle" || t.status === "finished" ? (
           <button
             onClick={beginCountdown}
