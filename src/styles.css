@@ -140,6 +140,19 @@
     overscroll-behavior: none;
     touch-action: manipulation;
     -webkit-text-size-adjust: 100%;
+    /* Document never scrolls — the app shell is the single scroll container */
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Single global app shell: one safe-area top inset, one scroller */
+  #orbit-shell {
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-top: env(safe-area-inset-top);
   }
   html::-webkit-scrollbar,
   body::-webkit-scrollbar {
