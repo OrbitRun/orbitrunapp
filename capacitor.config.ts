@@ -27,7 +27,7 @@ const config: CapacitorConfig = {
   webDir: "dist",
   urlSchemes: ["jonas-orbit-run"],
   ios: {
-    contentInset: "always",
+    contentInset: "never",
     scrollEnabled: true,
   },
   plugins: {
