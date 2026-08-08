@@ -147,6 +147,7 @@
 
   /* Single global app shell: one safe-area top inset, one scroller */
   #orbit-shell {
+    box-sizing: border-box;
     height: 100dvh;
     overflow-y: auto;
     overflow-x: hidden;
