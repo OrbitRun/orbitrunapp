@@ -52,7 +52,7 @@ export default function RunSummary({ run, onSave, onDiscard }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-xl animate-fade-in">
-      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)] pb-8">
+      <main className="mx-auto max-w-md px-4 pt-4 pb-8">
         <header className="py-3 text-center">
           <div className="text-[10px] uppercase tracking-[0.3em] text-neon font-bold">
             {t("summary.subtitle")}

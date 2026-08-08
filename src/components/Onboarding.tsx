@@ -63,7 +63,6 @@ export default function Onboarding({ onDone }: { onDone: () => void }) {
             <div>
               <label className="text-sm font-semibold">{t("onb.step.name")}</label>
               <input
-                autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("profile.namePlaceholder")}

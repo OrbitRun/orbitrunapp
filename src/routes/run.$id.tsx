@@ -98,7 +98,7 @@ function RunDetailPage() {
   const range = Math.max(1, max - min);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1rem)]">
+    <main className="mx-auto max-w-md px-4 pt-4">
       <header className="py-3 flex items-center justify-between">
         <Link to="/history" className="h-9 w-9 grid place-items-center rounded-full glass" aria-label={t("history.back")}>
           <ArrowLeft className="h-4 w-4" />
