@@ -275,23 +275,8 @@ function RunPage() {
             </div>
           </div>
         )}
-        {profile.activityEnvironment !== "indoor" && (
-          <div className="absolute bottom-3 right-3 glass rounded-xl px-2.5 py-1.5 flex items-center gap-2 text-[10px] font-semibold">
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-3 rounded-full bg-[var(--speed-slow)]" />
-              {tr("map.legend.slow")}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-3 rounded-full bg-[var(--speed-mid)]" />
-              {tr("map.legend.mid")}
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-3 rounded-full bg-[var(--speed-fast)]" />
-              {tr("map.legend.fast")}
-            </span>
-          </div>
-        )}
       </section>
+
 
       <section className="mt-4 flex items-center justify-end px-1">
         <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
@@ -451,7 +436,7 @@ function RunPage() {
           </div>
         </section>
       )}
-      <section className="mt-4 flex items-center justify-center gap-4">
+      <section className="mt-3 flex items-center justify-center gap-4">
         {t.status === "idle" || t.status === "finished" ? (
           <button
             onClick={beginCountdown}

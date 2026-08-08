@@ -66,6 +66,8 @@ function RunMapInner({
   const highlightMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const userLocMarkerRef = useRef<MapboxNS.Marker | null>(null);
   const userLocCenteredRef = useRef(false);
+  const resizeObsRef = useRef<ResizeObserver | null>(null);
+
   const fittedOnceRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [userMoved, setUserMoved] = useState(false);
@@ -142,14 +144,35 @@ function RunMapInner({
             "line-opacity": 1,
           },
         });
+        // The map lives in a flexible-height container; make sure the WebGL
+        // canvas matches the resolved box instead of the (possibly 0px)
+        // size captured at construction time.
+        map.resize();
         setReady(true);
       });
 
       mapRef.current = map;
+
+      // Keep the canvas in sync whenever the flex container changes height.
+      if (typeof ResizeObserver !== "undefined" && containerRef.current) {
+        const ro = new ResizeObserver(() => {
+          try {
+            mapRef.current?.resize();
+          } catch {
+            /* noop */
+          }
+        });
+        ro.observe(containerRef.current);
+        resizeObsRef.current = ro;
+      }
     })();
+
 
     return () => {
       cancelled = true;
+      resizeObsRef.current?.disconnect();
+      resizeObsRef.current = null;
+
       startRef.current?.remove();
       startRef.current = null;
       headRef.current?.remove();
