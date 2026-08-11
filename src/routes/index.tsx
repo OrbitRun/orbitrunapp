@@ -252,11 +252,13 @@ function RunPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-3xl overflow-hidden border border-border shadow-card flex-1 min-h-[160px]">
+          <div className="relative flex rounded-3xl overflow-hidden border border-border shadow-card flex-1 min-h-[160px]">
             <RunMap
               points={t.points}
-              className="h-full w-full"
+              className="min-h-0 w-full flex-1"
+
               interactive={!isActive}
+
               ghost={
                 t.ghost
                   ? { path: t.ghost.path, elapsedMs: t.elapsedMs }
