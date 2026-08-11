@@ -31,11 +31,12 @@ const config: CapacitorConfig = {
     scrollEnabled: true,
   },
   plugins: {
-    // Patch window.fetch / XMLHttpRequest to use the native HTTP bridge on
-    // iOS. This bypasses WKWebView CORS restrictions and the "DownloadFailed"
-    // sandbox extension errors that Spotify/Open-Meteo trigger from inside
-    // the capacitor://localhost origin.
-    CapacitorHttp: { enabled: true },
+    // Intentionally DISABLED. The global window.fetch / XMLHttpRequest patch
+    // breaks Mapbox GL's binary vector-tile decoding inside its Web Worker,
+    // which renders a black map on iOS.
+    // Spotify/Open-Meteo do not depend on this patch: src/lib/native-http.ts
+    // calls CapacitorHttp.request(...) explicitly.
+    CapacitorHttp: { enabled: false },
   },
 };
 
