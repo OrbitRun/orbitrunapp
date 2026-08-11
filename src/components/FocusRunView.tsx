@@ -304,10 +304,11 @@ export default function FocusRunView({
       )}
 
       {/* Map */}
-      <div className="relative mx-3 rounded-3xl overflow-hidden border border-border" style={{ flex: "1 1 0" }}>
+      <div className="relative flex mx-3 rounded-3xl overflow-hidden border border-border" style={{ flex: "1 1 0" }}>
         <RunMap
           points={tracker.points}
-          className="h-full w-full"
+          className="min-h-0 w-full flex-1"
+
           interactive={false}
           ghost={
             tracker.ghost

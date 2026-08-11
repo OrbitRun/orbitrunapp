@@ -3,6 +3,8 @@ import { ClientOnly } from "@tanstack/react-router";
 import { Crosshair } from "lucide-react";
 import type * as MapboxNS from "mapbox-gl";
 import type { GeoPoint } from "@/lib/run-types";
+import { cn } from "@/lib/utils";
+
 import { catmullRomSpline, smoothCoordinates } from "@/lib/run-utils";
 import { MAPBOX_STYLE, MAPBOX_TOKEN, mapboxTransformRequest } from "@/lib/mapbox";
 import { buildPaceSegmentsFromPoints } from "@/lib/run-replay";
@@ -148,7 +150,15 @@ function RunMapInner({
         // canvas matches the resolved box instead of the (possibly 0px)
         // size captured at construction time.
         map.resize();
+        requestAnimationFrame(() => {
+          try {
+            map.resize();
+          } catch {
+            /* noop */
+          }
+        });
         setReady(true);
+
       });
 
       mapRef.current = map;
@@ -464,7 +474,7 @@ function RunMapInner({
   const legend = heatmap && showLegend && points.length >= 2;
   return (
     <>
-      <div ref={containerRef} className={`relative ${className ?? ""}`}>
+      <div ref={containerRef} className={cn("relative", className)}>
         {showRecenter && (
           <button
             type="button"
